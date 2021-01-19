@@ -1,4 +1,4 @@
-module cloud-terminal
+module github.com/willie-lin/cloud-terminal
 
 go 1.15
 
