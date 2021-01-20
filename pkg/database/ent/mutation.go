@@ -3,15 +3,15 @@
 package ent
 
 import (
-	"cloud-terminal/pkg/database/ent/predicate"
-	"cloud-terminal/pkg/database/ent/user"
 	"context"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
+
 	"github.com/facebook/ent"
-	"github.com/google/uuid"
 )
 
 const (
@@ -31,15 +31,16 @@ type UserMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *uuid.UUID
-	_Username     *string
-	_Password     *string
-	_Nickname     *string
-	_TOTPSecret   *string
-	_Online       *bool
-	_Enable       *bool
+	id            *string
+	username      *string
+	password      *string
+	nickname      *string
+	totpSecret    *string
+	online        *bool
+	enable        *bool
 	created_at    *time.Time
-	_Type         *string
+	updated_at    *time.Time
+	_type         *string
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*User, error)
@@ -66,7 +67,7 @@ func newUserMutation(c config, op Op, opts ...userOption) *UserMutation {
 }
 
 // withUserID sets the ID field of the mutation.
-func withUserID(id uuid.UUID) userOption {
+func withUserID(id string) userOption {
 	return func(m *UserMutation) {
 		var (
 			err   error
@@ -118,34 +119,34 @@ func (m UserMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of User entities.
-func (m *UserMutation) SetID(id uuid.UUID) {
+func (m *UserMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID
 // is only available if it was provided to the builder.
-func (m *UserMutation) ID() (id uuid.UUID, exists bool) {
+func (m *UserMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
 	return *m.id, true
 }
 
-// SetUsername sets the "Username" field.
+// SetUsername sets the "username" field.
 func (m *UserMutation) SetUsername(s string) {
-	m._Username = &s
+	m.username = &s
 }
 
-// Username returns the value of the "Username" field in the mutation.
+// Username returns the value of the "username" field in the mutation.
 func (m *UserMutation) Username() (r string, exists bool) {
-	v := m._Username
+	v := m.username
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldUsername returns the old "Username" field's value of the User entity.
+// OldUsername returns the old "username" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *UserMutation) OldUsername(ctx context.Context) (v string, err error) {
@@ -162,26 +163,26 @@ func (m *UserMutation) OldUsername(ctx context.Context) (v string, err error) {
 	return oldValue.Username, nil
 }
 
-// ResetUsername resets all changes to the "Username" field.
+// ResetUsername resets all changes to the "username" field.
 func (m *UserMutation) ResetUsername() {
-	m._Username = nil
+	m.username = nil
 }
 
-// SetPassword sets the "Password" field.
+// SetPassword sets the "password" field.
 func (m *UserMutation) SetPassword(s string) {
-	m._Password = &s
+	m.password = &s
 }
 
-// Password returns the value of the "Password" field in the mutation.
+// Password returns the value of the "password" field in the mutation.
 func (m *UserMutation) Password() (r string, exists bool) {
-	v := m._Password
+	v := m.password
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldPassword returns the old "Password" field's value of the User entity.
+// OldPassword returns the old "password" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *UserMutation) OldPassword(ctx context.Context) (v string, err error) {
@@ -198,26 +199,26 @@ func (m *UserMutation) OldPassword(ctx context.Context) (v string, err error) {
 	return oldValue.Password, nil
 }
 
-// ResetPassword resets all changes to the "Password" field.
+// ResetPassword resets all changes to the "password" field.
 func (m *UserMutation) ResetPassword() {
-	m._Password = nil
+	m.password = nil
 }
 
-// SetNickname sets the "Nickname" field.
+// SetNickname sets the "nickname" field.
 func (m *UserMutation) SetNickname(s string) {
-	m._Nickname = &s
+	m.nickname = &s
 }
 
-// Nickname returns the value of the "Nickname" field in the mutation.
+// Nickname returns the value of the "nickname" field in the mutation.
 func (m *UserMutation) Nickname() (r string, exists bool) {
-	v := m._Nickname
+	v := m.nickname
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldNickname returns the old "Nickname" field's value of the User entity.
+// OldNickname returns the old "nickname" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *UserMutation) OldNickname(ctx context.Context) (v string, err error) {
@@ -234,62 +235,62 @@ func (m *UserMutation) OldNickname(ctx context.Context) (v string, err error) {
 	return oldValue.Nickname, nil
 }
 
-// ResetNickname resets all changes to the "Nickname" field.
+// ResetNickname resets all changes to the "nickname" field.
 func (m *UserMutation) ResetNickname() {
-	m._Nickname = nil
+	m.nickname = nil
 }
 
-// SetTOTPSecret sets the "TOTPSecret" field.
-func (m *UserMutation) SetTOTPSecret(s string) {
-	m._TOTPSecret = &s
+// SetTotpSecret sets the "totpSecret" field.
+func (m *UserMutation) SetTotpSecret(s string) {
+	m.totpSecret = &s
 }
 
-// TOTPSecret returns the value of the "TOTPSecret" field in the mutation.
-func (m *UserMutation) TOTPSecret() (r string, exists bool) {
-	v := m._TOTPSecret
+// TotpSecret returns the value of the "totpSecret" field in the mutation.
+func (m *UserMutation) TotpSecret() (r string, exists bool) {
+	v := m.totpSecret
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldTOTPSecret returns the old "TOTPSecret" field's value of the User entity.
+// OldTotpSecret returns the old "totpSecret" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldTOTPSecret(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldTotpSecret(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldTOTPSecret is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldTotpSecret is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldTOTPSecret requires an ID field in the mutation")
+		return v, fmt.Errorf("OldTotpSecret requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTOTPSecret: %w", err)
+		return v, fmt.Errorf("querying old value for OldTotpSecret: %w", err)
 	}
-	return oldValue.TOTPSecret, nil
+	return oldValue.TotpSecret, nil
 }
 
-// ResetTOTPSecret resets all changes to the "TOTPSecret" field.
-func (m *UserMutation) ResetTOTPSecret() {
-	m._TOTPSecret = nil
+// ResetTotpSecret resets all changes to the "totpSecret" field.
+func (m *UserMutation) ResetTotpSecret() {
+	m.totpSecret = nil
 }
 
-// SetOnline sets the "Online" field.
+// SetOnline sets the "online" field.
 func (m *UserMutation) SetOnline(b bool) {
-	m._Online = &b
+	m.online = &b
 }
 
-// Online returns the value of the "Online" field in the mutation.
+// Online returns the value of the "online" field in the mutation.
 func (m *UserMutation) Online() (r bool, exists bool) {
-	v := m._Online
+	v := m.online
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldOnline returns the old "Online" field's value of the User entity.
+// OldOnline returns the old "online" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *UserMutation) OldOnline(ctx context.Context) (v bool, err error) {
@@ -306,26 +307,26 @@ func (m *UserMutation) OldOnline(ctx context.Context) (v bool, err error) {
 	return oldValue.Online, nil
 }
 
-// ResetOnline resets all changes to the "Online" field.
+// ResetOnline resets all changes to the "online" field.
 func (m *UserMutation) ResetOnline() {
-	m._Online = nil
+	m.online = nil
 }
 
-// SetEnable sets the "Enable" field.
+// SetEnable sets the "enable" field.
 func (m *UserMutation) SetEnable(b bool) {
-	m._Enable = &b
+	m.enable = &b
 }
 
-// Enable returns the value of the "Enable" field in the mutation.
+// Enable returns the value of the "enable" field in the mutation.
 func (m *UserMutation) Enable() (r bool, exists bool) {
-	v := m._Enable
+	v := m.enable
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldEnable returns the old "Enable" field's value of the User entity.
+// OldEnable returns the old "enable" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *UserMutation) OldEnable(ctx context.Context) (v bool, err error) {
@@ -342,9 +343,9 @@ func (m *UserMutation) OldEnable(ctx context.Context) (v bool, err error) {
 	return oldValue.Enable, nil
 }
 
-// ResetEnable resets all changes to the "Enable" field.
+// ResetEnable resets all changes to the "enable" field.
 func (m *UserMutation) ResetEnable() {
-	m._Enable = nil
+	m.enable = nil
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -383,21 +384,57 @@ func (m *UserMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetType sets the "Type" field.
-func (m *UserMutation) SetType(s string) {
-	m._Type = &s
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UserMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
 }
 
-// GetType returns the value of the "Type" field in the mutation.
-func (m *UserMutation) GetType() (r string, exists bool) {
-	v := m._Type
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UserMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldType returns the old "Type" field's value of the User entity.
+// OldUpdatedAt returns the old "updated_at" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UserMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetType sets the "type" field.
+func (m *UserMutation) SetType(s string) {
+	m._type = &s
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *UserMutation) GetType() (r string, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *UserMutation) OldType(ctx context.Context) (v string, err error) {
@@ -414,9 +451,9 @@ func (m *UserMutation) OldType(ctx context.Context) (v string, err error) {
 	return oldValue.Type, nil
 }
 
-// ResetType resets all changes to the "Type" field.
+// ResetType resets all changes to the "type" field.
 func (m *UserMutation) ResetType() {
-	m._Type = nil
+	m._type = nil
 }
 
 // Op returns the operation name.
@@ -433,29 +470,32 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 8)
-	if m._Username != nil {
+	fields := make([]string, 0, 9)
+	if m.username != nil {
 		fields = append(fields, user.FieldUsername)
 	}
-	if m._Password != nil {
+	if m.password != nil {
 		fields = append(fields, user.FieldPassword)
 	}
-	if m._Nickname != nil {
+	if m.nickname != nil {
 		fields = append(fields, user.FieldNickname)
 	}
-	if m._TOTPSecret != nil {
-		fields = append(fields, user.FieldTOTPSecret)
+	if m.totpSecret != nil {
+		fields = append(fields, user.FieldTotpSecret)
 	}
-	if m._Online != nil {
+	if m.online != nil {
 		fields = append(fields, user.FieldOnline)
 	}
-	if m._Enable != nil {
+	if m.enable != nil {
 		fields = append(fields, user.FieldEnable)
 	}
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
-	if m._Type != nil {
+	if m.updated_at != nil {
+		fields = append(fields, user.FieldUpdatedAt)
+	}
+	if m._type != nil {
 		fields = append(fields, user.FieldType)
 	}
 	return fields
@@ -472,14 +512,16 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Password()
 	case user.FieldNickname:
 		return m.Nickname()
-	case user.FieldTOTPSecret:
-		return m.TOTPSecret()
+	case user.FieldTotpSecret:
+		return m.TotpSecret()
 	case user.FieldOnline:
 		return m.Online()
 	case user.FieldEnable:
 		return m.Enable()
 	case user.FieldCreatedAt:
 		return m.CreatedAt()
+	case user.FieldUpdatedAt:
+		return m.UpdatedAt()
 	case user.FieldType:
 		return m.GetType()
 	}
@@ -497,14 +539,16 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldPassword(ctx)
 	case user.FieldNickname:
 		return m.OldNickname(ctx)
-	case user.FieldTOTPSecret:
-		return m.OldTOTPSecret(ctx)
+	case user.FieldTotpSecret:
+		return m.OldTotpSecret(ctx)
 	case user.FieldOnline:
 		return m.OldOnline(ctx)
 	case user.FieldEnable:
 		return m.OldEnable(ctx)
 	case user.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
+	case user.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
 	case user.FieldType:
 		return m.OldType(ctx)
 	}
@@ -537,12 +581,12 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetNickname(v)
 		return nil
-	case user.FieldTOTPSecret:
+	case user.FieldTotpSecret:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetTOTPSecret(v)
+		m.SetTotpSecret(v)
 		return nil
 	case user.FieldOnline:
 		v, ok := value.(bool)
@@ -564,6 +608,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
+		return nil
+	case user.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
 		return nil
 	case user.FieldType:
 		v, ok := value.(string)
@@ -630,8 +681,8 @@ func (m *UserMutation) ResetField(name string) error {
 	case user.FieldNickname:
 		m.ResetNickname()
 		return nil
-	case user.FieldTOTPSecret:
-		m.ResetTOTPSecret()
+	case user.FieldTotpSecret:
+		m.ResetTotpSecret()
 		return nil
 	case user.FieldOnline:
 		m.ResetOnline()
@@ -641,6 +692,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldCreatedAt:
 		m.ResetCreatedAt()
+		return nil
+	case user.FieldUpdatedAt:
+		m.ResetUpdatedAt()
 		return nil
 	case user.FieldType:
 		m.ResetType()

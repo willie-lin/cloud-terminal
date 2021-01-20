@@ -4,8 +4,11 @@ go 1.15
 
 require (
 	github.com/facebook/ent v0.5.4
-	github.com/google/uuid v1.1.4
-	github.com/labstack/echo/v4 v4.1.17 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
-	github.com/sirupsen/logrus v1.7.0 // indirect
+	github.com/go-sql-driver/mysql v1.5.1-0.20200311113236-681ffa848bae
+	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/labstack/echo-contrib v0.9.0
+	github.com/labstack/echo/v4 v4.1.16
+	github.com/lib/pq v1.9.0
+	github.com/mattn/go-sqlite3 v1.14.6
+	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
 )

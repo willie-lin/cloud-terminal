@@ -3,10 +3,11 @@
 package enttest
 
 import (
-	"cloud-terminal/pkg/database/ent"
 	"context"
+
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	// required by schema hooks.
-	_ "cloud-terminal/pkg/database/ent/runtime"
+	_ "github.com/willie-lin/cloud-terminal/pkg/database/ent/runtime"
 
 	"github.com/facebook/ent/dialect/sql/schema"
 )

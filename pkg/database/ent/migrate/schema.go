@@ -11,7 +11,7 @@ import (
 var (
 	// UsersColumns holds the columns for the "Users" table.
 	UsersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "username", Type: field.TypeString},
 		{Name: "password", Type: field.TypeString},
 		{Name: "nickname", Type: field.TypeString},
@@ -19,6 +19,7 @@ var (
 		{Name: "online", Type: field.TypeBool},
 		{Name: "enable", Type: field.TypeBool},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "type", Type: field.TypeString},
 	}
 	// UsersTable holds the schema information for the "Users" table.

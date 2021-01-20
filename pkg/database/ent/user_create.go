@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"cloud-terminal/pkg/database/ent/user"
 	"context"
 	"errors"
 	"fmt"
@@ -11,7 +10,7 @@ import (
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
-	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -21,37 +20,37 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
-// SetUsername sets the "Username" field.
+// SetUsername sets the "username" field.
 func (uc *UserCreate) SetUsername(s string) *UserCreate {
 	uc.mutation.SetUsername(s)
 	return uc
 }
 
-// SetPassword sets the "Password" field.
+// SetPassword sets the "password" field.
 func (uc *UserCreate) SetPassword(s string) *UserCreate {
 	uc.mutation.SetPassword(s)
 	return uc
 }
 
-// SetNickname sets the "Nickname" field.
+// SetNickname sets the "nickname" field.
 func (uc *UserCreate) SetNickname(s string) *UserCreate {
 	uc.mutation.SetNickname(s)
 	return uc
 }
 
-// SetTOTPSecret sets the "TOTPSecret" field.
-func (uc *UserCreate) SetTOTPSecret(s string) *UserCreate {
-	uc.mutation.SetTOTPSecret(s)
+// SetTotpSecret sets the "totpSecret" field.
+func (uc *UserCreate) SetTotpSecret(s string) *UserCreate {
+	uc.mutation.SetTotpSecret(s)
 	return uc
 }
 
-// SetOnline sets the "Online" field.
+// SetOnline sets the "online" field.
 func (uc *UserCreate) SetOnline(b bool) *UserCreate {
 	uc.mutation.SetOnline(b)
 	return uc
 }
 
-// SetEnable sets the "Enable" field.
+// SetEnable sets the "enable" field.
 func (uc *UserCreate) SetEnable(b bool) *UserCreate {
 	uc.mutation.SetEnable(b)
 	return uc
@@ -71,15 +70,29 @@ func (uc *UserCreate) SetNillableCreatedAt(t *time.Time) *UserCreate {
 	return uc
 }
 
-// SetType sets the "Type" field.
+// SetUpdatedAt sets the "updated_at" field.
+func (uc *UserCreate) SetUpdatedAt(t time.Time) *UserCreate {
+	uc.mutation.SetUpdatedAt(t)
+	return uc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (uc *UserCreate) SetNillableUpdatedAt(t *time.Time) *UserCreate {
+	if t != nil {
+		uc.SetUpdatedAt(*t)
+	}
+	return uc
+}
+
+// SetType sets the "type" field.
 func (uc *UserCreate) SetType(s string) *UserCreate {
 	uc.mutation.SetType(s)
 	return uc
 }
 
 // SetID sets the "id" field.
-func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
-	uc.mutation.SetID(u)
+func (uc *UserCreate) SetID(s string) *UserCreate {
+	uc.mutation.SetID(s)
 	return uc
 }
 
@@ -139,33 +152,40 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultCreatedAt()
 		uc.mutation.SetCreatedAt(v)
 	}
+	if _, ok := uc.mutation.UpdatedAt(); !ok {
+		v := user.DefaultUpdatedAt()
+		uc.mutation.SetUpdatedAt(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Username(); !ok {
-		return &ValidationError{Name: "Username", err: errors.New("ent: missing required field \"Username\"")}
+		return &ValidationError{Name: "username", err: errors.New("ent: missing required field \"username\"")}
 	}
 	if _, ok := uc.mutation.Password(); !ok {
-		return &ValidationError{Name: "Password", err: errors.New("ent: missing required field \"Password\"")}
+		return &ValidationError{Name: "password", err: errors.New("ent: missing required field \"password\"")}
 	}
 	if _, ok := uc.mutation.Nickname(); !ok {
-		return &ValidationError{Name: "Nickname", err: errors.New("ent: missing required field \"Nickname\"")}
+		return &ValidationError{Name: "nickname", err: errors.New("ent: missing required field \"nickname\"")}
 	}
-	if _, ok := uc.mutation.TOTPSecret(); !ok {
-		return &ValidationError{Name: "TOTPSecret", err: errors.New("ent: missing required field \"TOTPSecret\"")}
+	if _, ok := uc.mutation.TotpSecret(); !ok {
+		return &ValidationError{Name: "totpSecret", err: errors.New("ent: missing required field \"totpSecret\"")}
 	}
 	if _, ok := uc.mutation.Online(); !ok {
-		return &ValidationError{Name: "Online", err: errors.New("ent: missing required field \"Online\"")}
+		return &ValidationError{Name: "online", err: errors.New("ent: missing required field \"online\"")}
 	}
 	if _, ok := uc.mutation.Enable(); !ok {
-		return &ValidationError{Name: "Enable", err: errors.New("ent: missing required field \"Enable\"")}
+		return &ValidationError{Name: "enable", err: errors.New("ent: missing required field \"enable\"")}
 	}
 	if _, ok := uc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
 	}
+	if _, ok := uc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
 	if _, ok := uc.mutation.GetType(); !ok {
-		return &ValidationError{Name: "Type", err: errors.New("ent: missing required field \"Type\"")}
+		return &ValidationError{Name: "type", err: errors.New("ent: missing required field \"type\"")}
 	}
 	return nil
 }
@@ -187,7 +207,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: user.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
+				Type:   field.TypeString,
 				Column: user.FieldID,
 			},
 		}
@@ -220,13 +240,13 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		})
 		_node.Nickname = value
 	}
-	if value, ok := uc.mutation.TOTPSecret(); ok {
+	if value, ok := uc.mutation.TotpSecret(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldTOTPSecret,
+			Column: user.FieldTotpSecret,
 		})
-		_node.TOTPSecret = value
+		_node.TotpSecret = value
 	}
 	if value, ok := uc.mutation.Online(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -251,6 +271,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldCreatedAt,
 		})
 		_node.CreatedAt = value
+	}
+	if value, ok := uc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: user.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
 	}
 	if value, ok := uc.mutation.GetType(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

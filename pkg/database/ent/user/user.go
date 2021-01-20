@@ -17,14 +17,16 @@ const (
 	FieldPassword = "password"
 	// FieldNickname holds the string denoting the nickname field in the database.
 	FieldNickname = "nickname"
-	// FieldTOTPSecret holds the string denoting the totpsecret field in the database.
-	FieldTOTPSecret = "totp_secret"
+	// FieldTotpSecret holds the string denoting the totpsecret field in the database.
+	FieldTotpSecret = "totp_secret"
 	// FieldOnline holds the string denoting the online field in the database.
 	FieldOnline = "online"
 	// FieldEnable holds the string denoting the enable field in the database.
 	FieldEnable = "enable"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
 
@@ -38,10 +40,11 @@ var Columns = []string{
 	FieldUsername,
 	FieldPassword,
 	FieldNickname,
-	FieldTOTPSecret,
+	FieldTotpSecret,
 	FieldOnline,
 	FieldEnable,
 	FieldCreatedAt,
+	FieldUpdatedAt,
 	FieldType,
 }
 
@@ -58,4 +61,8 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 )

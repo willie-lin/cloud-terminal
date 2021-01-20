@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in cloud-terminal/pkg/database/ent/runtime.go
+// The schema-stitching logic is generated in github.com/willie-lin/cloud-terminal/pkg/database/ent/runtime.go
 
 const (
 	Version = "v0.5.4"                                          // Version of ent codegen.

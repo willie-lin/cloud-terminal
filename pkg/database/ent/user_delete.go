@@ -3,14 +3,14 @@
 package ent
 
 import (
-	"cloud-terminal/pkg/database/ent/predicate"
-	"cloud-terminal/pkg/database/ent/user"
 	"context"
 	"fmt"
 
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 )
 
 // UserDelete is the builder for deleting a User entity.
@@ -69,7 +69,7 @@ func (ud *UserDelete) sqlExec(ctx context.Context) (int, error) {
 		Node: &sqlgraph.NodeSpec{
 			Table: user.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
+				Type:   field.TypeString,
 				Column: user.FieldID,
 			},
 		},

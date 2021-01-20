@@ -3,8 +3,6 @@
 package ent
 
 import (
-	"cloud-terminal/pkg/database/ent/predicate"
-	"cloud-terminal/pkg/database/ent/user"
 	"context"
 	"fmt"
 	"time"
@@ -12,6 +10,8 @@ import (
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -27,37 +27,37 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return uu
 }
 
-// SetUsername sets the "Username" field.
+// SetUsername sets the "username" field.
 func (uu *UserUpdate) SetUsername(s string) *UserUpdate {
 	uu.mutation.SetUsername(s)
 	return uu
 }
 
-// SetPassword sets the "Password" field.
+// SetPassword sets the "password" field.
 func (uu *UserUpdate) SetPassword(s string) *UserUpdate {
 	uu.mutation.SetPassword(s)
 	return uu
 }
 
-// SetNickname sets the "Nickname" field.
+// SetNickname sets the "nickname" field.
 func (uu *UserUpdate) SetNickname(s string) *UserUpdate {
 	uu.mutation.SetNickname(s)
 	return uu
 }
 
-// SetTOTPSecret sets the "TOTPSecret" field.
-func (uu *UserUpdate) SetTOTPSecret(s string) *UserUpdate {
-	uu.mutation.SetTOTPSecret(s)
+// SetTotpSecret sets the "totpSecret" field.
+func (uu *UserUpdate) SetTotpSecret(s string) *UserUpdate {
+	uu.mutation.SetTotpSecret(s)
 	return uu
 }
 
-// SetOnline sets the "Online" field.
+// SetOnline sets the "online" field.
 func (uu *UserUpdate) SetOnline(b bool) *UserUpdate {
 	uu.mutation.SetOnline(b)
 	return uu
 }
 
-// SetEnable sets the "Enable" field.
+// SetEnable sets the "enable" field.
 func (uu *UserUpdate) SetEnable(b bool) *UserUpdate {
 	uu.mutation.SetEnable(b)
 	return uu
@@ -77,7 +77,13 @@ func (uu *UserUpdate) SetNillableCreatedAt(t *time.Time) *UserUpdate {
 	return uu
 }
 
-// SetType sets the "Type" field.
+// SetUpdatedAt sets the "updated_at" field.
+func (uu *UserUpdate) SetUpdatedAt(t time.Time) *UserUpdate {
+	uu.mutation.SetUpdatedAt(t)
+	return uu
+}
+
+// SetType sets the "type" field.
 func (uu *UserUpdate) SetType(s string) *UserUpdate {
 	uu.mutation.SetType(s)
 	return uu
@@ -94,6 +100,7 @@ func (uu *UserUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	uu.defaults()
 	if len(uu.hooks) == 0 {
 		affected, err = uu.sqlSave(ctx)
 	} else {
@@ -139,13 +146,21 @@ func (uu *UserUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (uu *UserUpdate) defaults() {
+	if _, ok := uu.mutation.UpdatedAt(); !ok {
+		v := user.UpdateDefaultUpdatedAt()
+		uu.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
+				Type:   field.TypeString,
 				Column: user.FieldID,
 			},
 		},
@@ -178,11 +193,11 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldNickname,
 		})
 	}
-	if value, ok := uu.mutation.TOTPSecret(); ok {
+	if value, ok := uu.mutation.TotpSecret(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldTOTPSecret,
+			Column: user.FieldTotpSecret,
 		})
 	}
 	if value, ok := uu.mutation.Online(); ok {
@@ -204,6 +219,13 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeTime,
 			Value:  value,
 			Column: user.FieldCreatedAt,
+		})
+	}
+	if value, ok := uu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: user.FieldUpdatedAt,
 		})
 	}
 	if value, ok := uu.mutation.GetType(); ok {
@@ -231,37 +253,37 @@ type UserUpdateOne struct {
 	mutation *UserMutation
 }
 
-// SetUsername sets the "Username" field.
+// SetUsername sets the "username" field.
 func (uuo *UserUpdateOne) SetUsername(s string) *UserUpdateOne {
 	uuo.mutation.SetUsername(s)
 	return uuo
 }
 
-// SetPassword sets the "Password" field.
+// SetPassword sets the "password" field.
 func (uuo *UserUpdateOne) SetPassword(s string) *UserUpdateOne {
 	uuo.mutation.SetPassword(s)
 	return uuo
 }
 
-// SetNickname sets the "Nickname" field.
+// SetNickname sets the "nickname" field.
 func (uuo *UserUpdateOne) SetNickname(s string) *UserUpdateOne {
 	uuo.mutation.SetNickname(s)
 	return uuo
 }
 
-// SetTOTPSecret sets the "TOTPSecret" field.
-func (uuo *UserUpdateOne) SetTOTPSecret(s string) *UserUpdateOne {
-	uuo.mutation.SetTOTPSecret(s)
+// SetTotpSecret sets the "totpSecret" field.
+func (uuo *UserUpdateOne) SetTotpSecret(s string) *UserUpdateOne {
+	uuo.mutation.SetTotpSecret(s)
 	return uuo
 }
 
-// SetOnline sets the "Online" field.
+// SetOnline sets the "online" field.
 func (uuo *UserUpdateOne) SetOnline(b bool) *UserUpdateOne {
 	uuo.mutation.SetOnline(b)
 	return uuo
 }
 
-// SetEnable sets the "Enable" field.
+// SetEnable sets the "enable" field.
 func (uuo *UserUpdateOne) SetEnable(b bool) *UserUpdateOne {
 	uuo.mutation.SetEnable(b)
 	return uuo
@@ -281,7 +303,13 @@ func (uuo *UserUpdateOne) SetNillableCreatedAt(t *time.Time) *UserUpdateOne {
 	return uuo
 }
 
-// SetType sets the "Type" field.
+// SetUpdatedAt sets the "updated_at" field.
+func (uuo *UserUpdateOne) SetUpdatedAt(t time.Time) *UserUpdateOne {
+	uuo.mutation.SetUpdatedAt(t)
+	return uuo
+}
+
+// SetType sets the "type" field.
 func (uuo *UserUpdateOne) SetType(s string) *UserUpdateOne {
 	uuo.mutation.SetType(s)
 	return uuo
@@ -298,6 +326,7 @@ func (uuo *UserUpdateOne) Save(ctx context.Context) (*User, error) {
 		err  error
 		node *User
 	)
+	uuo.defaults()
 	if len(uuo.hooks) == 0 {
 		node, err = uuo.sqlSave(ctx)
 	} else {
@@ -343,13 +372,21 @@ func (uuo *UserUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (uuo *UserUpdateOne) defaults() {
+	if _, ok := uuo.mutation.UpdatedAt(); !ok {
+		v := user.UpdateDefaultUpdatedAt()
+		uuo.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
+				Type:   field.TypeString,
 				Column: user.FieldID,
 			},
 		},
@@ -380,11 +417,11 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Column: user.FieldNickname,
 		})
 	}
-	if value, ok := uuo.mutation.TOTPSecret(); ok {
+	if value, ok := uuo.mutation.TotpSecret(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldTOTPSecret,
+			Column: user.FieldTotpSecret,
 		})
 	}
 	if value, ok := uuo.mutation.Online(); ok {
@@ -406,6 +443,13 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Type:   field.TypeTime,
 			Value:  value,
 			Column: user.FieldCreatedAt,
+		})
+	}
+	if value, ok := uuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: user.FieldUpdatedAt,
 		})
 	}
 	if value, ok := uuo.mutation.GetType(); ok {
