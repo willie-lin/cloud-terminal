@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/willie-lin/cloud-terminal/pkg/database"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"io/ioutil"
 	"net/http"
@@ -39,12 +40,11 @@ func CreateUser() echo.HandlerFunc {
 		//var client *ent.Client
 		//fmt.Println(client)
 		client, err := database.Client()
-
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(client)
-		user := new(ent.User)
+		ur := new(ent.User)
 
 		result, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
@@ -52,35 +52,37 @@ func CreateUser() echo.HandlerFunc {
 			return err
 		}
 		fmt.Println(result)
-		err = json.Unmarshal(result, &user)
+		err = json.Unmarshal(result, &ur)
 		if err != nil {
 			fmt.Println("json解析错误", err)
 			return err
 		}
-		fmt.Println(user.ID)
-		user.ID = utils.UUID()
-		fmt.Println(user.ID)
+		fmt.Println(ur.ID)
+		ur.ID = utils.UUID()
+		fmt.Println(ur.ID)
 
-		pwd, err := utils.GenerateFromPassword([]byte(user.Password))
+		pwd, err := utils.GenerateFromPassword([]byte(ur.Password))
 		if err != nil {
 			fmt.Println("加密密码失败", err)
 			return err
 		}
 		fmt.Println(pwd)
-		user.Password = string(pwd)
+		ur.Password = string(pwd)
 		fmt.Println(pwd)
+
 		u, err := client.User.Create().
-			SetID(user.ID).
-			SetUsername(user.Username).
-			SetPassword(user.Password).
-			SetNickname(user.Nickname).
-			SetTotpSecret(user.TotpSecret).
-			SetOnline(user.Online).
-			SetEnable(user.Enable).
+			SetID(ur.ID).
+			SetUsername(ur.Username).
+			SetPassword(ur.Password).
+			SetNickname(ur.Nickname).
+			SetTotpSecret(ur.TotpSecret).
+			SetOnline(ur.Online).
+			SetEnable(ur.Enable).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).
-			SetType(user.Type).Save(context.Background())
+			SetType(ur.Type).Save(context.Background())
 		if err != nil {
+			panic(err)
 			return err
 		}
 
@@ -90,6 +92,7 @@ func CreateUser() echo.HandlerFunc {
 
 }
 
+// 删除用户
 func DeleteUser() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		client, err := database.Client()
@@ -108,7 +111,18 @@ func DeleteUser() echo.HandlerFunc {
 			fmt.Println("json解析错误", err)
 			return err
 		}
-		err = client.User.DeleteOne(u).Exec(context.Background())
+		fmt.Println(1111)
+		fmt.Println(u.Username)
+		fmt.Println(22222)
+		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		if err != nil {
+			panic(err)
+			return fmt.Errorf("failed querying user: %v", err)
+		}
+		fmt.Println(us.ID)
+
+		//err = client.User.DeleteOneID(u.ID).Exec(context.Background())
+		err = client.User.DeleteOneID(us.ID).Exec(context.Background())
 		if err != nil {
 			panic(err)
 			fmt.Println("删除出错！")
@@ -116,7 +130,74 @@ func DeleteUser() echo.HandlerFunc {
 		}
 		return c.NoContent(http.StatusNoContent)
 	}
+}
 
+// 根据用户名查找
+func FindUserByUsername() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		client, err := database.Client()
+		if err != nil {
+			return err
+		}
+
+		u := new(ent.User)
+		result, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			fmt.Println("接收数据失败：", err)
+			return err
+		}
+		err = json.Unmarshal(result, &u)
+		if err != nil {
+			fmt.Println("json解析错误", err)
+			return err
+		}
+
+		fmt.Println(u.Username)
+
+		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, &us)
+	}
+}
+
+// 根据ID查找
+func FindUserById() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		client, err := database.Client()
+		if err != nil {
+			return err
+		}
+
+		u := new(ent.User)
+		result, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			fmt.Println("接收数据失败：", err)
+			return err
+		}
+		err = json.Unmarshal(result, &u)
+		if err != nil {
+			fmt.Println("json解析错误", err)
+			return err
+		}
+
+		fmt.Println(u.Username)
+
+		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(us.ID)
+
+		un, err := client.User.Query().Where(user.IDEQ(us.ID)).Only(context.Background())
+		if err != nil {
+			return err
+		}
+		fmt.Println(un)
+		return c.JSON(http.StatusOK, &un)
+	}
 }
 
 //u, err := client.User.Create().SetID()

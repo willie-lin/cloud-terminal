@@ -44,6 +44,8 @@ func main() {
 	e.GET("/users", api.GetAllUser())
 	e.POST("/user", api.CreateUser())
 	e.DELETE("/user", api.DeleteUser())
+	e.GET("/user/uname", api.FindUserByUsername())
+	e.GET("/user/uid", api.FindUserById())
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "hello world!!!")

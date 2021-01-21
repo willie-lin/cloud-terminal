@@ -4,6 +4,7 @@ import (
 	"github.com/facebook/ent"
 	"github.com/facebook/ent/dialect/entsql"
 	"github.com/facebook/ent/schema"
+	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
 	"time"
 )
@@ -16,7 +17,7 @@ type User struct {
 // Annotations of the User.
 func (User) Annotations() []schema.Annotation {
 	return []schema.Annotation{
-		entsql.Annotation{Table: "Users"},
+		entsql.Annotation{Table: "users"},
 	}
 }
 
@@ -26,7 +27,7 @@ func (User) Fields() []ent.Field {
 		//field.String("ID").NotEmpty().Unique(),
 		//field.String("ID").MaxLen(30).NotEmpty().Unique().Immutable(),
 		field.String("id").Unique(),
-		field.String("username"),
+		field.String("username").Unique(),
 		field.String("password"),
 		field.String("nickname"),
 		field.String("totpSecret"),
@@ -41,5 +42,7 @@ func (User) Fields() []ent.Field {
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("user_groups", UserGroup.Type).Ref("users"),
+	}
 }
