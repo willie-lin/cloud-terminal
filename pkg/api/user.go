@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/willie-lin/cloud-terminal/pkg/database"
+	"github.com/willie-lin/cloud-terminal/pkg/config"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -18,7 +18,8 @@ import (
 func GetAllUser() echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		client, err := database.Client()
+		//client, err := database.Client()
+		client, err := config.NewClient()
 		if err != nil {
 			panic(err)
 		}
@@ -32,6 +33,82 @@ func GetAllUser() echo.HandlerFunc {
 	}
 }
 
+// 根据用户名查找
+func FindUserByUsername() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		//client, err := database.Client()
+		client, err := config.NewClient()
+		if err != nil {
+			return err
+		}
+
+		u := new(ent.User)
+
+		// 接收raw数据
+		result, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			fmt.Println("ioutil.ReadAll err:", err)
+			return err
+		}
+
+		// 解析raw为json
+		err = json.Unmarshal(result, &u)
+		if err != nil {
+			fmt.Println("json.Unmarshal err:", err)
+			return err
+		}
+
+		fmt.Println(u.Username)
+
+		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, &us)
+	}
+}
+
+// 根据ID查找
+func FindUserById() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		//client, err := database.Client()
+		client, err := config.NewClient()
+		if err != nil {
+			return err
+		}
+
+		u := new(ent.User)
+		// 接收raw数据
+		result, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			fmt.Println("ioutil.ReadAll err:", err)
+			return err
+		}
+		// 解析raw为json
+		err = json.Unmarshal(result, &u)
+		if err != nil {
+			fmt.Println("json.Unmarshal err:", err)
+			return err
+		}
+
+		fmt.Println(u.Username)
+
+		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(us.ID)
+
+		un, err := client.User.Query().Where(user.IDEQ(us.ID)).Only(context.Background())
+		if err != nil {
+			return err
+		}
+		fmt.Println(un)
+		return c.JSON(http.StatusOK, &un)
+	}
+}
+
 // 创建用户
 func CreateUser() echo.HandlerFunc {
 	//return func(c echo.Context, client *ent.Client) (*ent.User, error) {
@@ -39,22 +116,25 @@ func CreateUser() echo.HandlerFunc {
 		//return func(c echo.Context) error {
 		//var client *ent.Client
 		//fmt.Println(client)
-		client, err := database.Client()
+		//client, err := database.Client()
+		client, err := config.NewClient()
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(client)
 		ur := new(ent.User)
 
+		// 接收raw数据
 		result, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
-			fmt.Println("接收数据失败：", err)
+			fmt.Println("ioutil.ReadAll err:", err)
 			return err
 		}
-		fmt.Println(result)
+
+		// 解析raw为json
 		err = json.Unmarshal(result, &ur)
 		if err != nil {
-			fmt.Println("json解析错误", err)
+			fmt.Println("json.Unmarshal err:", err)
 			return err
 		}
 		fmt.Println(ur.ID)
@@ -85,30 +165,113 @@ func CreateUser() echo.HandlerFunc {
 			panic(err)
 			return err
 		}
-
 		return c.JSON(http.StatusOK, &u)
-
 	}
 
 }
 
+// 更新用户
+func UpdateUser() echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		//client, err := database.Client()
+		client, err := config.NewClient()
+
+		if err != nil {
+			panic(err)
+		}
+		ur := new(ent.User)
+		fmt.Println(client)
+
+		// 接收raw数据
+		result, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			fmt.Println("ioutil.ReadAll err:", err)
+			return err
+		}
+
+		// 解析raw为json
+		err = json.Unmarshal(result, &ur)
+		if err != nil {
+			fmt.Println("json.Unmarshal err:", err)
+			return err
+		}
+
+		users, err := client.User.Query().All(context.Background())
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, users)
+	}
+}
+
 // 删除用户
+
 func DeleteUser() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		client, err := database.Client()
+		//client, err := database.Client()
+		client, err := config.NewClient()
 		if err != nil {
 			panic(err)
 			return err
 		}
 		u := new(ent.User)
+
+		// 接收raw数据
 		result, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
-			fmt.Println("接收数据失败：", err)
+			fmt.Println("ioutil.ReadAll err:", err)
 			return err
 		}
+		// 解析raw为json
 		err = json.Unmarshal(result, &u)
 		if err != nil {
-			fmt.Println("json解析错误", err)
+			fmt.Println("json.Unmarshal err:", err)
+			return err
+		}
+		fmt.Println(1111)
+		fmt.Println(u.Username)
+		fmt.Println(22222)
+		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		if err != nil {
+			panic(err)
+			return fmt.Errorf("failed querying user: %v", err)
+		}
+		fmt.Println(us.ID)
+
+		//err = client.User.DeleteOneID(u.ID).Exec(context.Background())
+		err = client.User.DeleteOne(us).Exec(context.Background())
+		if err != nil {
+			panic(err)
+			fmt.Println("删除出错！")
+			return err
+		}
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+// 根据ID删除用户
+func DeleteUserById() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		//client, err := database.Client()
+		client, err := config.NewClient()
+		if err != nil {
+			panic(err)
+			return err
+		}
+		u := new(ent.User)
+
+		// 接收raw数据
+		result, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			fmt.Println("ioutil.ReadAll err:", err)
+			return err
+		}
+		// 解析raw为json
+		err = json.Unmarshal(result, &u)
+		if err != nil {
+			fmt.Println("json.Unmarshal err:", err)
 			return err
 		}
 		fmt.Println(1111)
@@ -129,74 +292,6 @@ func DeleteUser() echo.HandlerFunc {
 			return err
 		}
 		return c.NoContent(http.StatusNoContent)
-	}
-}
-
-// 根据用户名查找
-func FindUserByUsername() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		client, err := database.Client()
-		if err != nil {
-			return err
-		}
-
-		u := new(ent.User)
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("接收数据失败：", err)
-			return err
-		}
-		err = json.Unmarshal(result, &u)
-		if err != nil {
-			fmt.Println("json解析错误", err)
-			return err
-		}
-
-		fmt.Println(u.Username)
-
-		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
-		if err != nil {
-			return err
-		}
-		return c.JSON(http.StatusOK, &us)
-	}
-}
-
-// 根据ID查找
-func FindUserById() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		client, err := database.Client()
-		if err != nil {
-			return err
-		}
-
-		u := new(ent.User)
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("接收数据失败：", err)
-			return err
-		}
-		err = json.Unmarshal(result, &u)
-		if err != nil {
-			fmt.Println("json解析错误", err)
-			return err
-		}
-
-		fmt.Println(u.Username)
-
-		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(us.ID)
-
-		un, err := client.User.Query().Where(user.IDEQ(us.ID)).Only(context.Background())
-		if err != nil {
-			return err
-		}
-		fmt.Println(un)
-		return c.JSON(http.StatusOK, &un)
 	}
 }
 

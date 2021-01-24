@@ -29,8 +29,15 @@ import (
 //	return client
 //}
 
+var (
+	driver  = "mysql"
+	baseUrl = "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true"
+)
+
 func Client() (*ent.Client, error) {
-	drv, err := sql.Open("mysql", "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true")
+	//drv, err := sql.Open("mysql", "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true")
+	drv, err := sql.Open(driver, baseUrl)
+	fmt.Println(drv)
 	//drv, err := sql.Open("mysql", "root:root1234@tcp(127.0.0.1:3306)/ent")
 	if err != nil {
 		return nil, err
