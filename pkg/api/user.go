@@ -176,11 +176,10 @@ func UpdateUser() echo.HandlerFunc {
 
 		//client, err := database.Client()
 		client, err := config.NewClient()
-
 		if err != nil {
 			panic(err)
 		}
-		ur := new(ent.User)
+		u := new(ent.User)
 		fmt.Println(client)
 
 		// 接收raw数据
@@ -191,19 +190,127 @@ func UpdateUser() echo.HandlerFunc {
 		}
 
 		// 解析raw为json
-		err = json.Unmarshal(result, &ur)
+		err = json.Unmarshal(result, &u)
 		if err != nil {
 			fmt.Println("json.Unmarshal err:", err)
 			return err
 		}
+		//us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		//if err != nil {
+		//	panic(err)
+		//	return fmt.Errorf("failed querying user: %v", err)
+		//}
+		//_, err = us.Update().
+		//	SetUsername(u.Username).
+		//	SetPassword(u.Password).
+		//	SetNickname(u.Nickname).
+		//	SetTotpSecret(u.TotpSecret).
+		//	SetOnline(u.Online).
+		//	SetEnable(u.Enable).
+		//	SetCreatedAt(time.Now()).
+		//	SetUpdatedAt(time.Now()).
+		//	SetType(u.Type).Save(context.Background())
+		//if err != nil {
+		//	panic(err)
+		//	fmt.Println("删除出错！")
+		//	return err
+		//}
 
-		users, err := client.User.Query().All(context.Background())
+		ur, err := client.User.Update().
+			Where(user.UsernameEQ(u.Username)).
+			//SetPassword(string(utils.u.Password)).
+			SetNickname(u.Nickname).
+			SetTotpSecret(u.TotpSecret).
+			SetOnline(u.Online).
+			SetEnable(u.Enable).
+			//SetCreatedAt(time.Now()).
+			//SetUpdatedAt(time.Now()).
+			SetType(u.Type).Save(context.Background())
 		if err != nil {
+			//panic(err)
+			fmt.Println("update user err: ", err)
 			return err
 		}
 
-		return c.JSON(http.StatusOK, users)
+		//us, err = client.User.Update().SetNickname()
+
+		return c.JSON(http.StatusOK, &ur)
+
+		//return c.NoContent(http.StatusNoContent)
 	}
+
+}
+
+// 更新用户 by  ID
+func UpdateUserById() echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		//client, err := database.Client()
+		client, err := config.NewClient()
+
+		if err != nil {
+			panic(err)
+		}
+		u := new(ent.User)
+		fmt.Println(client)
+
+		// 接收raw数据
+		result, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			fmt.Println("ioutil.ReadAll err:", err)
+			return err
+		}
+
+		// 解析raw为json
+		err = json.Unmarshal(result, &u)
+		if err != nil {
+			fmt.Println("json.Unmarshal err:", err)
+			return err
+		}
+		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		if err != nil {
+			//panic(err)
+			return fmt.Errorf("failed querying user: %v", err)
+		}
+		//_, err = us.Update().
+		//	SetUsername(u.Username).
+		//	SetPassword(u.Password).
+		//	SetNickname(u.Nickname).
+		//	SetTotpSecret(u.TotpSecret).
+		//	SetOnline(u.Online).
+		//	SetEnable(u.Enable).
+		//	SetCreatedAt(time.Now()).
+		//	SetUpdatedAt(time.Now()).
+		//	SetType(u.Type).Save(context.Background())
+		//if err != nil {
+		//	panic(err)
+		//	fmt.Println("删除出错！")
+		//	return err
+		//}
+
+		ur, err := client.User.UpdateOneID(us.ID).
+			//SetUsername(u.Username).
+			//SetPassword(u.Password).
+			SetNickname(u.Nickname).
+			SetTotpSecret(u.TotpSecret).
+			SetOnline(u.Online).
+			SetEnable(u.Enable).
+			//SetCreatedAt(time.Now()).
+			//SetUpdatedAt(time.Now()).
+			SetType(u.Type).Save(context.Background())
+		if err != nil {
+			//panic(err)
+			fmt.Println("update user err: ", err)
+			return err
+		}
+
+		//us, err = client.User.Update().SetNickname()
+
+		return c.JSON(http.StatusOK, &ur)
+
+		//return c.NoContent(http.StatusNoContent)
+	}
+
 }
 
 // 删除用户
@@ -235,7 +342,7 @@ func DeleteUser() echo.HandlerFunc {
 		fmt.Println(22222)
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
-			panic(err)
+			//panic(err)
 			return fmt.Errorf("failed querying user: %v", err)
 		}
 		fmt.Println(us.ID)
@@ -243,8 +350,8 @@ func DeleteUser() echo.HandlerFunc {
 		//err = client.User.DeleteOneID(u.ID).Exec(context.Background())
 		err = client.User.DeleteOne(us).Exec(context.Background())
 		if err != nil {
-			panic(err)
-			fmt.Println("删除出错！")
+			//panic(err)
+			fmt.Println("Delete user err: ", err)
 			return err
 		}
 		return c.NoContent(http.StatusNoContent)
@@ -279,7 +386,7 @@ func DeleteUserById() echo.HandlerFunc {
 		fmt.Println(22222)
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
-			panic(err)
+			//panic(err)
 			return fmt.Errorf("failed querying user: %v", err)
 		}
 		fmt.Println(us.ID)
@@ -287,8 +394,8 @@ func DeleteUserById() echo.HandlerFunc {
 		//err = client.User.DeleteOneID(u.ID).Exec(context.Background())
 		err = client.User.DeleteOneID(us.ID).Exec(context.Background())
 		if err != nil {
-			panic(err)
-			fmt.Println("删除出错！")
+			//panic(err)
+			fmt.Println("Delete user err: ", err)
 			return err
 		}
 		return c.NoContent(http.StatusNoContent)

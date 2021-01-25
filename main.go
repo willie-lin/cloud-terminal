@@ -69,6 +69,8 @@ func main() {
 	e.GET("/users", api.GetAllUser())
 	e.POST("/user", api.CreateUser())
 	e.PUT("/user", api.UpdateUser())
+	e.PUT("/user/uid", api.UpdateUserById())
+
 	e.DELETE("/user", api.DeleteUser())
 	e.DELETE("/user/uid", api.DeleteUserById())
 	e.GET("/user/uname", api.FindUserByUsername())
