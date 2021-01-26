@@ -70,6 +70,7 @@ func main() {
 	e.POST("/user", api.CreateUser())
 	e.PUT("/user", api.UpdateUser())
 	e.PUT("/user/uid", api.UpdateUserById())
+	e.PUT("/test", api.TestBindJson())
 
 	e.DELETE("/user", api.DeleteUser())
 	e.DELETE("/user/uid", api.DeleteUserById())

@@ -9,7 +9,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -44,21 +43,30 @@ func FindUserByUsername() echo.HandlerFunc {
 
 		u := new(ent.User)
 
-		// 接收raw数据
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("ioutil.ReadAll err:", err)
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+
+		//fmt.Println(u.Username)
+		// 直接解析raw数据为json
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
 			return err
 		}
-
-		// 解析raw为json
-		err = json.Unmarshal(result, &u)
-		if err != nil {
-			fmt.Println("json.Unmarshal err:", err)
-			return err
-		}
-
-		fmt.Println(u.Username)
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
 
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
@@ -78,20 +86,31 @@ func FindUserById() echo.HandlerFunc {
 		}
 
 		u := new(ent.User)
-		// 接收raw数据
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("ioutil.ReadAll err:", err)
-			return err
-		}
-		// 解析raw为json
-		err = json.Unmarshal(result, &u)
-		if err != nil {
-			fmt.Println("json.Unmarshal err:", err)
-			return err
-		}
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+		//
+		//fmt.Println(u.Username)
 
-		fmt.Println(u.Username)
+		// 直接解析raw数据为json
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			return err
+		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
 
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
@@ -122,52 +141,62 @@ func CreateUser() echo.HandlerFunc {
 			panic(err)
 		}
 		fmt.Println(client)
-		ur := new(ent.User)
+		u := new(ent.User)
 
-		// 接收raw数据
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("ioutil.ReadAll err:", err)
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+		// 直接解析raw数据为json
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
 			return err
 		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
 
-		// 解析raw为json
-		err = json.Unmarshal(result, &ur)
-		if err != nil {
-			fmt.Println("json.Unmarshal err:", err)
-			return err
-		}
-		fmt.Println(ur.ID)
-		ur.ID = utils.UUID()
-		fmt.Println(ur.ID)
+		fmt.Println(u.ID)
+		u.ID = utils.UUID()
+		fmt.Println(u.ID)
 
-		pwd, err := utils.GenerateFromPassword([]byte(ur.Password))
+		pwd, err := utils.GenerateFromPassword([]byte(u.Password))
 		if err != nil {
 			fmt.Println("加密密码失败", err)
 			return err
 		}
 		fmt.Println(pwd)
-		ur.Password = string(pwd)
+		u.Password = string(pwd)
 		fmt.Println(pwd)
 
-		u, err := client.User.Create().
-			SetID(ur.ID).
-			SetUsername(ur.Username).
-			SetPassword(ur.Password).
-			SetNickname(ur.Nickname).
-			SetTotpSecret(ur.TotpSecret).
-			SetOnline(ur.Online).
-			SetEnable(ur.Enable).
+		ur, err := client.User.Create().
+			SetID(u.ID).
+			SetUsername(u.Username).
+			SetPassword(u.Password).
+			SetNickname(u.Nickname).
+			SetTotpSecret(u.TotpSecret).
+			SetOnline(u.Online).
+			SetEnable(u.Enable).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).
-			SetType(ur.Type).Save(context.Background())
+			SetType(u.Type).Save(context.Background())
 		if err != nil {
 			panic(err)
 			return err
 		}
-		return c.JSON(http.StatusOK, &u)
+		return c.JSON(http.StatusOK, &ur)
 	}
-
 }
 
 // 更新用户
@@ -182,19 +211,31 @@ func UpdateUser() echo.HandlerFunc {
 		u := new(ent.User)
 		fmt.Println(client)
 
-		// 接收raw数据
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("ioutil.ReadAll err:", err)
-			return err
-		}
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
 
-		// 解析raw为json
-		err = json.Unmarshal(result, &u)
-		if err != nil {
-			fmt.Println("json.Unmarshal err:", err)
+		// 直接解析raw数据为json
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
 			return err
 		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
+
 		//us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		//if err != nil {
 		//	panic(err)
@@ -231,12 +272,7 @@ func UpdateUser() echo.HandlerFunc {
 			fmt.Println("update user err: ", err)
 			return err
 		}
-
-		//us, err = client.User.Update().SetNickname()
-
 		return c.JSON(http.StatusOK, &ur)
-
-		//return c.NoContent(http.StatusNoContent)
 	}
 
 }
@@ -254,39 +290,97 @@ func UpdateUserById() echo.HandlerFunc {
 		u := new(ent.User)
 		fmt.Println(client)
 
-		// 接收raw数据
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("ioutil.ReadAll err:", err)
-			return err
-		}
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
 
-		// 解析raw为json
-		err = json.Unmarshal(result, &u)
-		if err != nil {
-			fmt.Println("json.Unmarshal err:", err)
+		// 直接解析raw数据为json
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
 			return err
 		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
+
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			//panic(err)
 			return fmt.Errorf("failed querying user: %v", err)
 		}
-		//_, err = us.Update().
-		//	SetUsername(u.Username).
-		//	SetPassword(u.Password).
-		//	SetNickname(u.Nickname).
-		//	SetTotpSecret(u.TotpSecret).
-		//	SetOnline(u.Online).
-		//	SetEnable(u.Enable).
-		//	SetCreatedAt(time.Now()).
-		//	SetUpdatedAt(time.Now()).
-		//	SetType(u.Type).Save(context.Background())
+
+		ur, err := client.User.UpdateOneID(us.ID).
+			SetNickname(u.Nickname).
+			SetTotpSecret(u.TotpSecret).
+			SetOnline(u.Online).
+			SetEnable(u.Enable).
+			//SetCreatedAt(time.Now()).
+			//SetUpdatedAt(time.Now()).
+			SetType(u.Type).Save(context.Background())
+		if err != nil {
+			//panic(err)
+			fmt.Println("update user err: ", err)
+			return err
+		}
+
+		return c.JSON(http.StatusOK, &ur)
+	}
+
+}
+
+// 更新用户 by  ID
+func TestBindJson() echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		//client, err := database.Client()
+		client, err := config.NewClient()
+
+		if err != nil {
+			panic(err)
+		}
+		u := new(ent.User)
+		fmt.Println(client)
+
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
 		//if err != nil {
-		//	panic(err)
-		//	fmt.Println("删除出错！")
+		//	fmt.Println("ioutil.ReadAll err:", err)
 		//	return err
 		//}
+		//
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+
+		// 直接解析raw数据为json
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			return err
+		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
+		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		if err != nil {
+			//panic(err)
+			return fmt.Errorf("failed querying user: %v", err)
+		}
 
 		ur, err := client.User.UpdateOneID(us.ID).
 			//SetUsername(u.Username).
@@ -325,18 +419,30 @@ func DeleteUser() echo.HandlerFunc {
 		}
 		u := new(ent.User)
 
-		// 接收raw数据
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("ioutil.ReadAll err:", err)
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+
+		// 直接解析raw数据为json
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
 			return err
 		}
-		// 解析raw为json
-		err = json.Unmarshal(result, &u)
-		if err != nil {
-			fmt.Println("json.Unmarshal err:", err)
-			return err
-		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
+
 		fmt.Println(1111)
 		fmt.Println(u.Username)
 		fmt.Println(22222)
@@ -354,7 +460,7 @@ func DeleteUser() echo.HandlerFunc {
 			fmt.Println("Delete user err: ", err)
 			return err
 		}
-		return c.NoContent(http.StatusNoContent)
+		return c.NoContent(http.StatusOK)
 	}
 }
 
@@ -369,18 +475,30 @@ func DeleteUserById() echo.HandlerFunc {
 		}
 		u := new(ent.User)
 
-		// 接收raw数据
-		result, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			fmt.Println("ioutil.ReadAll err:", err)
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+
+		// 直接解析raw数据为json
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
 			return err
 		}
-		// 解析raw为json
-		err = json.Unmarshal(result, &u)
-		if err != nil {
-			fmt.Println("json.Unmarshal err:", err)
-			return err
-		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
+
 		fmt.Println(1111)
 		fmt.Println(u.Username)
 		fmt.Println(22222)
@@ -398,7 +516,8 @@ func DeleteUserById() echo.HandlerFunc {
 			fmt.Println("Delete user err: ", err)
 			return err
 		}
-		return c.NoContent(http.StatusNoContent)
+		//return c.NoContent(http.StatusNoContent)
+		return c.NoContent(http.StatusOK)
 	}
 }
 
