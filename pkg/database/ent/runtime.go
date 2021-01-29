@@ -7,6 +7,7 @@ import (
 
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -25,4 +26,16 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	usergroupFields := schema.UserGroup{}.Fields()
+	_ = usergroupFields
+	// usergroupDescCreatedAt is the schema descriptor for created_at field.
+	usergroupDescCreatedAt := usergroupFields[2].Descriptor()
+	// usergroup.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usergroup.DefaultCreatedAt = usergroupDescCreatedAt.Default.(func() time.Time)
+	// usergroupDescUpdatedAt is the schema descriptor for updated_at field.
+	usergroupDescUpdatedAt := usergroupFields[3].Descriptor()
+	// usergroup.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usergroup.DefaultUpdatedAt = usergroupDescUpdatedAt.Default.(func() time.Time)
+	// usergroup.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usergroup.UpdateDefaultUpdatedAt = usergroupDescUpdatedAt.UpdateDefault.(func() time.Time)
 }

@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// UsersColumns holds the columns for the "Users" table.
+	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "username", Type: field.TypeString, Unique: true},
@@ -22,19 +22,65 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "type", Type: field.TypeString},
 	}
-	// UsersTable holds the schema information for the "Users" table.
+	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
-		Name:        "Users",
+		Name:        "users",
 		Columns:     UsersColumns,
 		PrimaryKey:  []*schema.Column{UsersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "Users"},
+		Annotation:  &entsql.Annotation{Table: "users"},
+	}
+	// UserGroupsColumns holds the columns for the "user_groups" table.
+	UserGroupsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// UserGroupsTable holds the schema information for the "user_groups" table.
+	UserGroupsTable = &schema.Table{
+		Name:        "user_groups",
+		Columns:     UserGroupsColumns,
+		PrimaryKey:  []*schema.Column{UserGroupsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+		Annotation:  &entsql.Annotation{Table: "user_groups"},
+	}
+	// UserGroupUsersColumns holds the columns for the "user_group_users" table.
+	UserGroupUsersColumns = []*schema.Column{
+		{Name: "user_group_id", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+	}
+	// UserGroupUsersTable holds the schema information for the "user_group_users" table.
+	UserGroupUsersTable = &schema.Table{
+		Name:       "user_group_users",
+		Columns:    UserGroupUsersColumns,
+		PrimaryKey: []*schema.Column{UserGroupUsersColumns[0], UserGroupUsersColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:  "user_group_users_user_group_id",
+				Columns: []*schema.Column{UserGroupUsersColumns[0]},
+
+				RefColumns: []*schema.Column{UserGroupsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:  "user_group_users_user_id",
+				Columns: []*schema.Column{UserGroupUsersColumns[1]},
+
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		UsersTable,
+		UserGroupsTable,
+		UserGroupUsersTable,
 	}
 )
 
 func init() {
+	UserGroupUsersTable.ForeignKeys[0].RefTable = UserGroupsTable
+	UserGroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

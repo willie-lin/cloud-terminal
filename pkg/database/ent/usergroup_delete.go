@@ -9,8 +9,8 @@ import (
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/predicate"
-	"github.com/willie-lin/cloud-terminal/ent/usergroup"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
 )
 
 // UserGroupDelete is the builder for deleting a UserGroup entity.
@@ -69,7 +69,7 @@ func (ugd *UserGroupDelete) sqlExec(ctx context.Context) (int, error) {
 		Node: &sqlgraph.NodeSpec{
 			Table: usergroup.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: usergroup.FieldID,
 			},
 		},

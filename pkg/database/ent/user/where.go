@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/facebook/ent/dialect/sql"
+	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
 )
 
@@ -887,6 +888,34 @@ func TypeEqualFold(v string) predicate.User {
 func TypeContainsFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldType), v))
+	})
+}
+
+// HasUserGroups applies the HasEdge predicate on the "user_groups" edge.
+func HasUserGroups() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(UserGroupsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, UserGroupsTable, UserGroupsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserGroupsWith applies the HasEdge predicate on the "user_groups" edge with a given conditions (other predicates).
+func HasUserGroupsWith(preds ...predicate.UserGroup) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(UserGroupsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, UserGroupsTable, UserGroupsPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

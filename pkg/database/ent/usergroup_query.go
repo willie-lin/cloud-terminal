@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -11,8 +12,9 @@ import (
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/predicate"
-	"github.com/willie-lin/cloud-terminal/ent/usergroup"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
 )
 
 // UserGroupQuery is the builder for querying UserGroup entities.
@@ -23,6 +25,8 @@ type UserGroupQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.UserGroup
+	// eager-loading edges.
+	withUsers *UserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -52,6 +56,28 @@ func (ugq *UserGroupQuery) Order(o ...OrderFunc) *UserGroupQuery {
 	return ugq
 }
 
+// QueryUsers chains the current query on the "users" edge.
+func (ugq *UserGroupQuery) QueryUsers() *UserQuery {
+	query := &UserQuery{config: ugq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := ugq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := ugq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usergroup.Table, usergroup.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, usergroup.UsersTable, usergroup.UsersPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(ugq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first UserGroup entity from the query.
 // Returns a *NotFoundError when no UserGroup was found.
 func (ugq *UserGroupQuery) First(ctx context.Context) (*UserGroup, error) {
@@ -76,8 +102,8 @@ func (ugq *UserGroupQuery) FirstX(ctx context.Context) *UserGroup {
 
 // FirstID returns the first UserGroup ID from the query.
 // Returns a *NotFoundError when no UserGroup ID was found.
-func (ugq *UserGroupQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (ugq *UserGroupQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = ugq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -89,7 +115,7 @@ func (ugq *UserGroupQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (ugq *UserGroupQuery) FirstIDX(ctx context.Context) int {
+func (ugq *UserGroupQuery) FirstIDX(ctx context.Context) string {
 	id, err := ugq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -127,8 +153,8 @@ func (ugq *UserGroupQuery) OnlyX(ctx context.Context) *UserGroup {
 // OnlyID is like Only, but returns the only UserGroup ID in the query.
 // Returns a *NotSingularError when exactly one UserGroup ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (ugq *UserGroupQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (ugq *UserGroupQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = ugq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -144,7 +170,7 @@ func (ugq *UserGroupQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (ugq *UserGroupQuery) OnlyIDX(ctx context.Context) int {
+func (ugq *UserGroupQuery) OnlyIDX(ctx context.Context) string {
 	id, err := ugq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -170,8 +196,8 @@ func (ugq *UserGroupQuery) AllX(ctx context.Context) []*UserGroup {
 }
 
 // IDs executes the query and returns a list of UserGroup IDs.
-func (ugq *UserGroupQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
+func (ugq *UserGroupQuery) IDs(ctx context.Context) ([]string, error) {
+	var ids []string
 	if err := ugq.Select(usergroup.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -179,7 +205,7 @@ func (ugq *UserGroupQuery) IDs(ctx context.Context) ([]int, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (ugq *UserGroupQuery) IDsX(ctx context.Context) []int {
+func (ugq *UserGroupQuery) IDsX(ctx context.Context) []string {
 	ids, err := ugq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -233,14 +259,39 @@ func (ugq *UserGroupQuery) Clone() *UserGroupQuery {
 		offset:     ugq.offset,
 		order:      append([]OrderFunc{}, ugq.order...),
 		predicates: append([]predicate.UserGroup{}, ugq.predicates...),
+		withUsers:  ugq.withUsers.Clone(),
 		// clone intermediate query.
 		sql:  ugq.sql.Clone(),
 		path: ugq.path,
 	}
 }
 
+// WithUsers tells the query-builder to eager-load the nodes that are connected to
+// the "users" edge. The optional arguments are used to configure the query builder of the edge.
+func (ugq *UserGroupQuery) WithUsers(opts ...func(*UserQuery)) *UserGroupQuery {
+	query := &UserQuery{config: ugq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	ugq.withUsers = query
+	return ugq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.UserGroup.Query().
+//		GroupBy(usergroup.FieldName).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (ugq *UserGroupQuery) GroupBy(field string, fields ...string) *UserGroupGroupBy {
 	group := &UserGroupGroupBy{config: ugq.config}
 	group.fields = append([]string{field}, fields...)
@@ -255,6 +306,17 @@ func (ugq *UserGroupQuery) GroupBy(field string, fields ...string) *UserGroupGro
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//	}
+//
+//	client.UserGroup.Query().
+//		Select(usergroup.FieldName).
+//		Scan(ctx, &v)
+//
 func (ugq *UserGroupQuery) Select(field string, fields ...string) *UserGroupSelect {
 	ugq.fields = append([]string{field}, fields...)
 	return &UserGroupSelect{UserGroupQuery: ugq}
@@ -278,8 +340,11 @@ func (ugq *UserGroupQuery) prepareQuery(ctx context.Context) error {
 
 func (ugq *UserGroupQuery) sqlAll(ctx context.Context) ([]*UserGroup, error) {
 	var (
-		nodes = []*UserGroup{}
-		_spec = ugq.querySpec()
+		nodes       = []*UserGroup{}
+		_spec       = ugq.querySpec()
+		loadedTypes = [1]bool{
+			ugq.withUsers != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &UserGroup{config: ugq.config}
@@ -291,6 +356,7 @@ func (ugq *UserGroupQuery) sqlAll(ctx context.Context) ([]*UserGroup, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, ugq.driver, _spec); err != nil {
@@ -299,6 +365,71 @@ func (ugq *UserGroupQuery) sqlAll(ctx context.Context) ([]*UserGroup, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := ugq.withUsers; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		ids := make(map[string]*UserGroup, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
+			node.Edges.Users = []*User{}
+		}
+		var (
+			edgeids []string
+			edges   = make(map[string][]*UserGroup)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: false,
+				Table:   usergroup.UsersTable,
+				Columns: usergroup.UsersPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(usergroup.UsersPrimaryKey[0], fks...))
+			},
+
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{&sql.NullString{}, &sql.NullString{}}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*sql.NullString)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*sql.NullString)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := eout.String
+				inValue := ein.String
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				edgeids = append(edgeids, inValue)
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, ugq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "users": %v`, err)
+		}
+		query.Where(user.IDIn(edgeids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := edges[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected "users" node returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Users = append(nodes[i].Edges.Users, n)
+			}
+		}
+	}
+
 	return nodes, nil
 }
 
@@ -321,7 +452,7 @@ func (ugq *UserGroupQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   usergroup.Table,
 			Columns: usergroup.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: usergroup.FieldID,
 			},
 		},

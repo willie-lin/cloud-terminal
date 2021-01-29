@@ -34,6 +34,27 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges UserEdges `json:"edges"`
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// UserGroups holds the value of the user_groups edge.
+	UserGroups []*UserGroup
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// UserGroupsOrErr returns the UserGroups value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UserGroupsOrErr() ([]*UserGroup, error) {
+	if e.loadedTypes[0] {
+		return e.UserGroups, nil
+	}
+	return nil, &NotLoadedError{edge: "user_groups"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -125,6 +146,11 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 		}
 	}
 	return nil
+}
+
+// QueryUserGroups queries the "user_groups" edge of the User entity.
+func (u *User) QueryUserGroups() *UserGroupQuery {
+	return (&UserClient{config: u.config}).QueryUserGroups(u)
 }
 
 // Update returns a builder for updating this User.

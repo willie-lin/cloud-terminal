@@ -10,9 +10,11 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/migrate"
 
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
 
 	"github.com/facebook/ent/dialect"
 	"github.com/facebook/ent/dialect/sql"
+	"github.com/facebook/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -22,6 +24,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserGroup is the client for interacting with the UserGroup builders.
+	UserGroup *UserGroupClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -36,6 +40,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.User = NewUserClient(c.config)
+	c.UserGroup = NewUserGroupClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -66,9 +71,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	}
 	cfg := config{driver: tx, log: c.log, debug: c.debug, hooks: c.hooks}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:       ctx,
+		config:    cfg,
+		User:      NewUserClient(cfg),
+		UserGroup: NewUserGroupClient(cfg),
 	}, nil
 }
 
@@ -83,8 +89,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	}
 	cfg := config{driver: &txDriver{tx: tx, drv: c.driver}, log: c.log, debug: c.debug, hooks: c.hooks}
 	return &Tx{
-		config: cfg,
-		User:   NewUserClient(cfg),
+		config:    cfg,
+		User:      NewUserClient(cfg),
+		UserGroup: NewUserGroupClient(cfg),
 	}, nil
 }
 
@@ -114,6 +121,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.User.Use(hooks...)
+	c.UserGroup.Use(hooks...)
 }
 
 // UserClient is a client for the User schema.
@@ -199,7 +207,127 @@ func (c *UserClient) GetX(ctx context.Context, id string) *User {
 	return obj
 }
 
+// QueryUserGroups queries the user_groups edge of a User.
+func (c *UserClient) QueryUserGroups(u *User) *UserGroupQuery {
+	query := &UserGroupQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(usergroup.Table, usergroup.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.UserGroupsTable, user.UserGroupsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
+}
+
+// UserGroupClient is a client for the UserGroup schema.
+type UserGroupClient struct {
+	config
+}
+
+// NewUserGroupClient returns a client for the UserGroup from the given config.
+func NewUserGroupClient(c config) *UserGroupClient {
+	return &UserGroupClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usergroup.Hooks(f(g(h())))`.
+func (c *UserGroupClient) Use(hooks ...Hook) {
+	c.hooks.UserGroup = append(c.hooks.UserGroup, hooks...)
+}
+
+// Create returns a create builder for UserGroup.
+func (c *UserGroupClient) Create() *UserGroupCreate {
+	mutation := newUserGroupMutation(c.config, OpCreate)
+	return &UserGroupCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserGroup entities.
+func (c *UserGroupClient) CreateBulk(builders ...*UserGroupCreate) *UserGroupCreateBulk {
+	return &UserGroupCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserGroup.
+func (c *UserGroupClient) Update() *UserGroupUpdate {
+	mutation := newUserGroupMutation(c.config, OpUpdate)
+	return &UserGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserGroupClient) UpdateOne(ug *UserGroup) *UserGroupUpdateOne {
+	mutation := newUserGroupMutation(c.config, OpUpdateOne, withUserGroup(ug))
+	return &UserGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserGroupClient) UpdateOneID(id string) *UserGroupUpdateOne {
+	mutation := newUserGroupMutation(c.config, OpUpdateOne, withUserGroupID(id))
+	return &UserGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserGroup.
+func (c *UserGroupClient) Delete() *UserGroupDelete {
+	mutation := newUserGroupMutation(c.config, OpDelete)
+	return &UserGroupDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *UserGroupClient) DeleteOne(ug *UserGroup) *UserGroupDeleteOne {
+	return c.DeleteOneID(ug.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *UserGroupClient) DeleteOneID(id string) *UserGroupDeleteOne {
+	builder := c.Delete().Where(usergroup.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserGroupDeleteOne{builder}
+}
+
+// Query returns a query builder for UserGroup.
+func (c *UserGroupClient) Query() *UserGroupQuery {
+	return &UserGroupQuery{config: c.config}
+}
+
+// Get returns a UserGroup entity by its id.
+func (c *UserGroupClient) Get(ctx context.Context, id string) (*UserGroup, error) {
+	return c.Query().Where(usergroup.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserGroupClient) GetX(ctx context.Context, id string) *UserGroup {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUsers queries the users edge of a UserGroup.
+func (c *UserGroupClient) QueryUsers(ug *UserGroup) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := ug.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usergroup.Table, usergroup.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, usergroup.UsersTable, usergroup.UsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(ug.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserGroupClient) Hooks() []Hook {
+	return c.hooks.UserGroup
 }
