@@ -1,27 +1,27 @@
-package api
+package handler
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/willie-lin/cloud-terminal/pkg/config"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
 )
 
 // 查询所有用户
-func GetAllUser() echo.HandlerFunc {
+func GetAllUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		//client, err := database.Client()
-		client, err := config.NewClient()
-		if err != nil {
-			panic(err)
-		}
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	panic(err)
+		//}
 		//user := new(ent.User)
 		users, err := client.User.Query().All(context.Background())
 		if err != nil {
@@ -33,13 +33,13 @@ func GetAllUser() echo.HandlerFunc {
 }
 
 // 根据用户名查找
-func FindUserByUsername() echo.HandlerFunc {
+func FindUserByUsername(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		//client, err := database.Client()
-		client, err := config.NewClient()
-		if err != nil {
-			return err
-		}
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	return err
+		//}
 
 		u := new(ent.User)
 
@@ -77,13 +77,13 @@ func FindUserByUsername() echo.HandlerFunc {
 }
 
 // 根据ID查找
-func FindUserById() echo.HandlerFunc {
+func FindUserById(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		//client, err := database.Client()
-		client, err := config.NewClient()
-		if err != nil {
-			return err
-		}
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	return err
+		//}
 
 		u := new(ent.User)
 		//// 接收raw数据
@@ -129,18 +129,19 @@ func FindUserById() echo.HandlerFunc {
 }
 
 // 创建用户
-func CreateUser() echo.HandlerFunc {
+func CreateUser(client *ent.Client) echo.HandlerFunc {
 	//return func(c echo.Context, client *ent.Client) (*ent.User, error) {
 	return func(c echo.Context) (err error) {
 		//return func(c echo.Context) error {
 		//var client *ent.Client
 		//fmt.Println(client)
 		//client, err := database.Client()
-		client, err := config.NewClient()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(client)
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	panic(err)
+		//}
+		//fmt.Println(client)
+
 		u := new(ent.User)
 
 		//// 接收raw数据
@@ -171,7 +172,7 @@ func CreateUser() echo.HandlerFunc {
 		u.ID = utils.UUID()
 		fmt.Println(u.ID)
 
-		pwd, err := utils.GenerateFromPassword([]byte(u.Password))
+		pwd, err := utils.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 		if err != nil {
 			fmt.Println("加密密码失败", err)
 			return err
@@ -200,14 +201,15 @@ func CreateUser() echo.HandlerFunc {
 }
 
 // 更新用户
-func UpdateUser() echo.HandlerFunc {
+func UpdateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		//client, err := database.Client()
-		client, err := config.NewClient()
-		if err != nil {
-			panic(err)
-		}
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	panic(err)
+		//}
+
 		u := new(ent.User)
 		fmt.Println(client)
 
@@ -278,15 +280,16 @@ func UpdateUser() echo.HandlerFunc {
 }
 
 // 更新用户 by  ID
-func UpdateUserById() echo.HandlerFunc {
+func UpdateUserById(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		//client, err := database.Client()
-		client, err := config.NewClient()
+		//client, err := config.NewClient()
+		//
+		//if err != nil {
+		//	panic(err)
+		//}
 
-		if err != nil {
-			panic(err)
-		}
 		u := new(ent.User)
 		fmt.Println(client)
 
@@ -340,15 +343,15 @@ func UpdateUserById() echo.HandlerFunc {
 }
 
 // 更新用户 by  ID
-func TestBindJson() echo.HandlerFunc {
+func TestBindJson(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		//client, err := database.Client()
-		client, err := config.NewClient()
-
-		if err != nil {
-			panic(err)
-		}
+		////client, err := database.Client()
+		//client, err := config.NewClient()
+		//
+		//if err != nil {
+		//	panic(err)
+		//}
 		u := new(ent.User)
 		fmt.Println(client)
 
@@ -409,14 +412,14 @@ func TestBindJson() echo.HandlerFunc {
 
 // 删除用户
 
-func DeleteUser() echo.HandlerFunc {
+func DeleteUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		//client, err := database.Client()
-		client, err := config.NewClient()
-		if err != nil {
-			panic(err)
-			return err
-		}
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	panic(err)
+		//	return err
+		//}
 		u := new(ent.User)
 
 		//// 接收raw数据
@@ -465,14 +468,14 @@ func DeleteUser() echo.HandlerFunc {
 }
 
 // 根据ID删除用户
-func DeleteUserById() echo.HandlerFunc {
+func DeleteUserById(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		//client, err := database.Client()
-		client, err := config.NewClient()
-		if err != nil {
-			panic(err)
-			return err
-		}
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	panic(err)
+		//	return err
+		//}
 		u := new(ent.User)
 
 		//// 接收raw数据

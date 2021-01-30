@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/willie-lin/cloud-terminal/pkg/api"
 	"github.com/willie-lin/cloud-terminal/pkg/config"
+	"github.com/willie-lin/cloud-terminal/pkg/handler"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/acme/autocert"
 	"net/http"
@@ -66,16 +67,17 @@ func main() {
 
 	debugMode(err, client, ctx)
 
-	e.GET("/users", api.GetAllUser())
-	e.POST("/user", api.CreateUser())
-	e.PUT("/user", api.UpdateUser())
-	e.PUT("/user/uid", api.UpdateUserById())
-	e.PUT("/test", api.TestBindJson())
+	e.GET("/users", handler.GetAllUser(client))
+	e.POST("/user", handler.CreateUser(client))
+	e.POST("/api/login", api.Login(client))
+	e.PUT("/user", handler.UpdateUser(client))
+	e.PUT("/user/uid", handler.UpdateUserById(client))
+	e.PUT("/test", handler.TestBindJson(client))
 
-	e.DELETE("/user", api.DeleteUser())
-	e.DELETE("/user/uid", api.DeleteUserById())
-	e.GET("/user/uname", api.FindUserByUsername())
-	e.GET("/user/uid", api.FindUserById())
+	e.DELETE("/user", handler.DeleteUser(client))
+	e.DELETE("/user/uid", handler.DeleteUserById(client))
+	e.GET("/user/uname", handler.FindUserByUsername(client))
+	e.GET("/user/uid", handler.FindUserById(client))
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "hello world!!!")
