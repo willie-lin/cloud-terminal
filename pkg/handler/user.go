@@ -8,6 +8,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
@@ -23,8 +24,10 @@ func GetAllUser(client *ent.Client) echo.HandlerFunc {
 		//	panic(err)
 		//}
 		//user := new(ent.User)
+		log, _ := zap.NewDevelopment()
 		users, err := client.User.Query().All(context.Background())
 		if err != nil {
+			log.Fatal("GetAll User Error: ", zap.Error(err))
 			return err
 		}
 
@@ -58,7 +61,9 @@ func FindUserByUsername(client *ent.Client) echo.HandlerFunc {
 
 		//fmt.Println(u.Username)
 		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
 		//// or for DisallowUnknownFields() wrapped in your custom func
@@ -70,6 +75,7 @@ func FindUserByUsername(client *ent.Client) echo.HandlerFunc {
 
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
+			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 		return c.JSON(http.StatusOK, &us)
@@ -102,7 +108,9 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 		//fmt.Println(u.Username)
 
 		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
 		//// or for DisallowUnknownFields() wrapped in your custom func
@@ -114,6 +122,7 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
+			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 
@@ -121,6 +130,7 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 
 		un, err := client.User.Query().Where(user.IDEQ(us.ID)).Only(context.Background())
 		if err != nil {
+			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 		fmt.Println(un)
@@ -158,7 +168,12 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 		//	return err
 		//}
 		// 直接解析raw数据为json
+		//if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+		//	return err
+		//}
+		log, _ := zap.NewDevelopment()
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
 		//// or for DisallowUnknownFields() wrapped in your custom func
@@ -174,7 +189,8 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 
 		pwd, err := utils.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 		if err != nil {
-			fmt.Println("加密密码失败", err)
+			log.Fatal("generate password error:", zap.Error(err))
+			//fmt.Println("加密密码失败", err)
 			return err
 		}
 		fmt.Println(pwd)
@@ -193,7 +209,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetUpdatedAt(time.Now()).
 			SetType(u.Type).Save(context.Background())
 		if err != nil {
-			panic(err)
+			log.Fatal("Create user error:", zap.Error(err))
 			return err
 		}
 		return c.JSON(http.StatusOK, &ur)
@@ -228,7 +244,9 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 		//}
 
 		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
 		//// or for DisallowUnknownFields() wrapped in your custom func
@@ -271,7 +289,8 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 			SetType(u.Type).Save(context.Background())
 		if err != nil {
 			//panic(err)
-			fmt.Println("update user err: ", err)
+			log.Fatal("Update user error:", zap.Error(err))
+			//fmt.Println("update user err: ", err)
 			return err
 		}
 		return c.JSON(http.StatusOK, &ur)
@@ -307,7 +326,9 @@ func UpdateUserById(client *ent.Client) echo.HandlerFunc {
 		//}
 
 		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
 		//// or for DisallowUnknownFields() wrapped in your custom func
@@ -320,6 +341,7 @@ func UpdateUserById(client *ent.Client) echo.HandlerFunc {
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			//panic(err)
+			log.Fatal("Query user error:", zap.Error(err))
 			return fmt.Errorf("failed querying user: %v", err)
 		}
 
@@ -333,7 +355,8 @@ func UpdateUserById(client *ent.Client) echo.HandlerFunc {
 			SetType(u.Type).Save(context.Background())
 		if err != nil {
 			//panic(err)
-			fmt.Println("update user err: ", err)
+			log.Fatal("Update user error:", zap.Error(err))
+			//fmt.Println("update user err: ", err)
 			return err
 		}
 
@@ -370,7 +393,9 @@ func TestBindJson(client *ent.Client) echo.HandlerFunc {
 		//}
 
 		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
 		//// or for DisallowUnknownFields() wrapped in your custom func
@@ -382,7 +407,8 @@ func TestBindJson(client *ent.Client) echo.HandlerFunc {
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			//panic(err)
-			return fmt.Errorf("failed querying user: %v", err)
+			log.Fatal("Query user error:", zap.Error(err))
+			return err
 		}
 
 		ur, err := client.User.UpdateOneID(us.ID).
@@ -397,7 +423,8 @@ func TestBindJson(client *ent.Client) echo.HandlerFunc {
 			SetType(u.Type).Save(context.Background())
 		if err != nil {
 			//panic(err)
-			fmt.Println("update user err: ", err)
+			//fmt.Println("update user err: ", err)
+			log.Fatal("Update user error:", zap.Error(err))
 			return err
 		}
 
@@ -436,7 +463,9 @@ func DeleteUser(client *ent.Client) echo.HandlerFunc {
 		//}
 
 		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
 		//// or for DisallowUnknownFields() wrapped in your custom func
@@ -452,6 +481,7 @@ func DeleteUser(client *ent.Client) echo.HandlerFunc {
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			//panic(err)
+			log.Fatal("Query user error:", zap.Error(err))
 			return fmt.Errorf("failed querying user: %v", err)
 		}
 		fmt.Println(us.ID)
@@ -460,7 +490,8 @@ func DeleteUser(client *ent.Client) echo.HandlerFunc {
 		err = client.User.DeleteOne(us).Exec(context.Background())
 		if err != nil {
 			//panic(err)
-			fmt.Println("Delete user err: ", err)
+			//fmt.Println("Delete user err: ", err)
+			log.Fatal("Delete user error:", zap.Error(err))
 			return err
 		}
 		return c.NoContent(http.StatusOK)
@@ -492,7 +523,9 @@ func DeleteUserById(client *ent.Client) echo.HandlerFunc {
 		//}
 
 		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
 		//// or for DisallowUnknownFields() wrapped in your custom func
@@ -508,6 +541,7 @@ func DeleteUserById(client *ent.Client) echo.HandlerFunc {
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			//panic(err)
+			log.Fatal("Query user error:", zap.Error(err))
 			return fmt.Errorf("failed querying user: %v", err)
 		}
 		fmt.Println(us.ID)
@@ -516,7 +550,8 @@ func DeleteUserById(client *ent.Client) echo.HandlerFunc {
 		err = client.User.DeleteOneID(us.ID).Exec(context.Background())
 		if err != nil {
 			//panic(err)
-			fmt.Println("Delete user err: ", err)
+			log.Fatal("Delete user error:", zap.Error(err))
+			//fmt.Println("Delete user err: ", err)
 			return err
 		}
 		//return c.NoContent(http.StatusNoContent)

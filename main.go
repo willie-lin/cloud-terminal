@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/willie-lin/cloud-terminal/pkg/api"
 	"github.com/willie-lin/cloud-terminal/pkg/config"
+	"github.com/willie-lin/cloud-terminal/pkg/database"
 	"github.com/willie-lin/cloud-terminal/pkg/handler"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/acme/autocert"
@@ -35,6 +36,7 @@ func createLogger(encoding string) (*zap.Logger, error) {
 }
 
 func main() {
+	log, _ := zap.NewDevelopment()
 	e := echo.New()
 	e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
 	c := jaegertracing.New(e, nil)
@@ -47,9 +49,10 @@ func main() {
 
 	// 连接 数据库
 	//client, err := database.Client()
-	//client, err := database.Client()
-	client, err := config.NewClient()
+	client, err := database.Client()
+	//client, err := config.NewClient()
 	if err != nil {
+		log.Fatal("opening ent client", zap.Error(err))
 		panic(err)
 	}
 	fmt.Println("dddd")

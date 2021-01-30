@@ -9,8 +9,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/migrate"
-	_ "go.uber.org/zap"
-	"log"
+	"go.uber.org/zap"
+
 	"time"
 )
 
@@ -95,18 +95,20 @@ func NewClient() (*ent.Client, error) {
 }
 
 func AutoMigration(client *ent.Client, ctx context.Context) {
+	log, _ := zap.NewDevelopment()
 	if err := client.Schema.Create(ctx); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
+		log.Fatal("failed creating schema resources: %v", zap.Error(err))
 	}
 }
 
 func DebugMode(err error, client *ent.Client, ctx context.Context) {
+	log, _ := zap.NewDevelopment()
 	err = client.Debug().Schema.Create(
 		ctx,
 		migrate.WithDropIndex(true),
 		migrate.WithDropColumn(true),
 	)
 	if err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
+		log.Fatal("failed creating schema resources: %v", zap.Error(err))
 	}
 }
