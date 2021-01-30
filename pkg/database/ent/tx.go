@@ -12,6 +12,18 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Assets is the client for interacting with the Assets builders.
+	Assets *AssetsClient
+	// Command is the client for interacting with the Command builders.
+	Command *CommandClient
+	// Credential is the client for interacting with the Credential builders.
+	Credential *CredentialClient
+	// Property is the client for interacting with the Property builders.
+	Property *PropertyClient
+	// ResourceSharer is the client for interacting with the ResourceSharer builders.
+	ResourceSharer *ResourceSharerClient
+	// Session is the client for interacting with the Session builders.
+	Session *SessionClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserGroup is the client for interacting with the UserGroup builders.
@@ -151,6 +163,12 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Assets = NewAssetsClient(tx.config)
+	tx.Command = NewCommandClient(tx.config)
+	tx.Credential = NewCredentialClient(tx.config)
+	tx.Property = NewPropertyClient(tx.config)
+	tx.ResourceSharer = NewResourceSharerClient(tx.config)
+	tx.Session = NewSessionClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserGroup = NewUserGroupClient(tx.config)
 }
@@ -162,7 +180,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: User.QueryXXX(), the query will be executed
+// applies a query, for example: Assets.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

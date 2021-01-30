@@ -6,6 +6,24 @@ import (
 	"github.com/facebook/ent/dialect/sql"
 )
 
+// Assets is the predicate function for assets builders.
+type Assets func(*sql.Selector)
+
+// Command is the predicate function for command builders.
+type Command func(*sql.Selector)
+
+// Credential is the predicate function for credential builders.
+type Credential func(*sql.Selector)
+
+// Property is the predicate function for property builders.
+type Property func(*sql.Selector)
+
+// ResourceSharer is the predicate function for resourcesharer builders.
+type ResourceSharer func(*sql.Selector)
+
+// Session is the predicate function for session builders.
+type Session func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

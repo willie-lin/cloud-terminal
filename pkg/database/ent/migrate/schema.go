@@ -9,6 +9,92 @@ import (
 )
 
 var (
+	// AssetsColumns holds the columns for the "assets" table.
+	AssetsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// AssetsTable holds the schema information for the "assets" table.
+	AssetsTable = &schema.Table{
+		Name:        "assets",
+		Columns:     AssetsColumns,
+		PrimaryKey:  []*schema.Column{AssetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// CommandsColumns holds the columns for the "commands" table.
+	CommandsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// CommandsTable holds the schema information for the "commands" table.
+	CommandsTable = &schema.Table{
+		Name:        "commands",
+		Columns:     CommandsColumns,
+		PrimaryKey:  []*schema.Column{CommandsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// CredentialsColumns holds the columns for the "credentials" table.
+	CredentialsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// CredentialsTable holds the schema information for the "credentials" table.
+	CredentialsTable = &schema.Table{
+		Name:        "credentials",
+		Columns:     CredentialsColumns,
+		PrimaryKey:  []*schema.Column{CredentialsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// PropertiesColumns holds the columns for the "properties" table.
+	PropertiesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// PropertiesTable holds the schema information for the "properties" table.
+	PropertiesTable = &schema.Table{
+		Name:        "properties",
+		Columns:     PropertiesColumns,
+		PrimaryKey:  []*schema.Column{PropertiesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// ResourceSharersColumns holds the columns for the "resource_sharers" table.
+	ResourceSharersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// ResourceSharersTable holds the schema information for the "resource_sharers" table.
+	ResourceSharersTable = &schema.Table{
+		Name:        "resource_sharers",
+		Columns:     ResourceSharersColumns,
+		PrimaryKey:  []*schema.Column{ResourceSharersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// SessionsColumns holds the columns for the "sessions" table.
+	SessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "protocol", Type: field.TypeString},
+		{Name: "ip", Type: field.TypeString},
+		{Name: "port", Type: field.TypeInt},
+		{Name: "connection_id", Type: field.TypeString},
+		{Name: "asset_id", Type: field.TypeString},
+		{Name: "username", Type: field.TypeString},
+		{Name: "password", Type: field.TypeString},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "client_ip", Type: field.TypeString},
+		{Name: "width", Type: field.TypeInt},
+		{Name: "height", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString},
+		{Name: "recording", Type: field.TypeString},
+		{Name: "private_key", Type: field.TypeString},
+		{Name: "passphrase", Type: field.TypeString},
+		{Name: "code", Type: field.TypeInt},
+		{Name: "message", Type: field.TypeString},
+		{Name: "connected_time", Type: field.TypeTime},
+		{Name: "disconnected_time", Type: field.TypeTime},
+	}
+	// SessionsTable holds the schema information for the "sessions" table.
+	SessionsTable = &schema.Table{
+		Name:        "sessions",
+		Columns:     SessionsColumns,
+		PrimaryKey:  []*schema.Column{SessionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+		Annotation:  &entsql.Annotation{Table: "sessions"},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -74,6 +160,12 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AssetsTable,
+		CommandsTable,
+		CredentialsTable,
+		PropertiesTable,
+		ResourceSharersTable,
+		SessionsTable,
 		UsersTable,
 		UserGroupsTable,
 		UserGroupUsersTable,

@@ -22,6 +22,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/miekg/dns v1.1.35 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/robfig/cron/v3 v3.0.0 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad

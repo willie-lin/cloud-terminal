@@ -9,6 +9,84 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 )
 
+// The AssetsFunc type is an adapter to allow the use of ordinary
+// function as Assets mutator.
+type AssetsFunc func(context.Context, *ent.AssetsMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AssetsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.AssetsMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssetsMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The CommandFunc type is an adapter to allow the use of ordinary
+// function as Command mutator.
+type CommandFunc func(context.Context, *ent.CommandMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommandFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.CommandMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommandMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The CredentialFunc type is an adapter to allow the use of ordinary
+// function as Credential mutator.
+type CredentialFunc func(context.Context, *ent.CredentialMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CredentialFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.CredentialMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CredentialMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The PropertyFunc type is an adapter to allow the use of ordinary
+// function as Property mutator.
+type PropertyFunc func(context.Context, *ent.PropertyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PropertyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.PropertyMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PropertyMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The ResourceSharerFunc type is an adapter to allow the use of ordinary
+// function as ResourceSharer mutator.
+type ResourceSharerFunc func(context.Context, *ent.ResourceSharerMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResourceSharerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ResourceSharerMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ResourceSharerMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The SessionFunc type is an adapter to allow the use of ordinary
+// function as Session mutator.
+type SessionFunc func(context.Context, *ent.SessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.SessionMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SessionMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
