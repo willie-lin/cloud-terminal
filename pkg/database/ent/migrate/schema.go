@@ -12,7 +12,7 @@ var (
 	// AssetsColumns holds the columns for the "assets" table.
 	AssetsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "ip", Type: field.TypeString},
 		{Name: "protocol", Type: field.TypeString},
 		{Name: "port", Type: field.TypeInt},
@@ -48,7 +48,7 @@ var (
 	// CommandsColumns holds the columns for the "commands" table.
 	CommandsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "content", Type: field.TypeJSON},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -59,10 +59,19 @@ var (
 		Columns:     CommandsColumns,
 		PrimaryKey:  []*schema.Column{CommandsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
+		Annotation:  &entsql.Annotation{Table: "commands"},
 	}
 	// CredentialsColumns holds the columns for the "credentials" table.
 	CredentialsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "type", Type: field.TypeString},
+		{Name: "username", Type: field.TypeString},
+		{Name: "password", Type: field.TypeString},
+		{Name: "private_key", Type: field.TypeString},
+		{Name: "passphrase", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// CredentialsTable holds the schema information for the "credentials" table.
 	CredentialsTable = &schema.Table{
@@ -70,10 +79,13 @@ var (
 		Columns:     CredentialsColumns,
 		PrimaryKey:  []*schema.Column{CredentialsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
+		Annotation:  &entsql.Annotation{Table: "credentials"},
 	}
 	// PropertiesColumns holds the columns for the "properties" table.
 	PropertiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "value", Type: field.TypeString},
 	}
 	// PropertiesTable holds the schema information for the "properties" table.
 	PropertiesTable = &schema.Table{
@@ -81,17 +93,19 @@ var (
 		Columns:     PropertiesColumns,
 		PrimaryKey:  []*schema.Column{PropertiesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
+		Annotation:  &entsql.Annotation{Table: "properties"},
 	}
-	// ResourceSharersColumns holds the columns for the "resource_sharers" table.
+	// ResourceSharersColumns holds the columns for the "resourceSharers" table.
 	ResourceSharersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 	}
-	// ResourceSharersTable holds the schema information for the "resource_sharers" table.
+	// ResourceSharersTable holds the schema information for the "resourceSharers" table.
 	ResourceSharersTable = &schema.Table{
-		Name:        "resource_sharers",
+		Name:        "resourceSharers",
 		Columns:     ResourceSharersColumns,
 		PrimaryKey:  []*schema.Column{ResourceSharersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
+		Annotation:  &entsql.Annotation{Table: "resourceSharers"},
 	}
 	// SessionsColumns holds the columns for the "sessions" table.
 	SessionsColumns = []*schema.Column{
@@ -113,8 +127,8 @@ var (
 		{Name: "passphrase", Type: field.TypeString},
 		{Name: "code", Type: field.TypeInt},
 		{Name: "message", Type: field.TypeString},
-		{Name: "connected_time", Type: field.TypeTime},
-		{Name: "disconnected_time", Type: field.TypeTime},
+		{Name: "connected", Type: field.TypeTime},
+		{Name: "disconnected", Type: field.TypeTime},
 	}
 	// SessionsTable holds the schema information for the "sessions" table.
 	SessionsTable = &schema.Table{
@@ -160,6 +174,18 @@ var (
 		ForeignKeys: []*schema.ForeignKey{},
 		Annotation:  &entsql.Annotation{Table: "user_groups"},
 	}
+	// VerificationsColumns holds the columns for the "verifications" table.
+	VerificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// VerificationsTable holds the schema information for the "verifications" table.
+	VerificationsTable = &schema.Table{
+		Name:        "verifications",
+		Columns:     VerificationsColumns,
+		PrimaryKey:  []*schema.Column{VerificationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+		Annotation:  &entsql.Annotation{Table: "verifications"},
+	}
 	// UserGroupUsersColumns holds the columns for the "user_group_users" table.
 	UserGroupUsersColumns = []*schema.Column{
 		{Name: "user_group_id", Type: field.TypeString},
@@ -197,6 +223,7 @@ var (
 		SessionsTable,
 		UsersTable,
 		UserGroupsTable,
+		VerificationsTable,
 		UserGroupUsersTable,
 	}
 )

@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
@@ -12,9 +13,25 @@ import (
 
 // Credential is the model entity for the Credential schema.
 type Credential struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
+	// Type holds the value of the "type" field.
+	Type string `json:"type,omitempty"`
+	// Username holds the value of the "username" field.
+	Username string `json:"username,omitempty"`
+	// Password holds the value of the "password" field.
+	Password string `json:"password,omitempty"`
+	// PrivateKey holds the value of the "private_key" field.
+	PrivateKey string `json:"private_key,omitempty"`
+	// Passphrase holds the value of the "passphrase" field.
+	Passphrase string `json:"passphrase,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -22,8 +39,10 @@ func (*Credential) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case credential.FieldID:
-			values[i] = &sql.NullInt64{}
+		case credential.FieldID, credential.FieldName, credential.FieldType, credential.FieldUsername, credential.FieldPassword, credential.FieldPrivateKey, credential.FieldPassphrase:
+			values[i] = &sql.NullString{}
+		case credential.FieldCreatedAt, credential.FieldUpdatedAt:
+			values[i] = &sql.NullTime{}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Credential", columns[i])
 		}
@@ -40,11 +59,59 @@ func (c *Credential) assignValues(columns []string, values []interface{}) error 
 	for i := range columns {
 		switch columns[i] {
 		case credential.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				c.ID = value.String
 			}
-			c.ID = int(value.Int64)
+		case credential.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				c.Name = value.String
+			}
+		case credential.FieldType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[i])
+			} else if value.Valid {
+				c.Type = value.String
+			}
+		case credential.FieldUsername:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field username", values[i])
+			} else if value.Valid {
+				c.Username = value.String
+			}
+		case credential.FieldPassword:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field password", values[i])
+			} else if value.Valid {
+				c.Password = value.String
+			}
+		case credential.FieldPrivateKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field private_key", values[i])
+			} else if value.Valid {
+				c.PrivateKey = value.String
+			}
+		case credential.FieldPassphrase:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field passphrase", values[i])
+			} else if value.Valid {
+				c.Passphrase = value.String
+			}
+		case credential.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				c.CreatedAt = value.Time
+			}
+		case credential.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				c.UpdatedAt = value.Time
+			}
 		}
 	}
 	return nil
@@ -73,6 +140,22 @@ func (c *Credential) String() string {
 	var builder strings.Builder
 	builder.WriteString("Credential(")
 	builder.WriteString(fmt.Sprintf("id=%v", c.ID))
+	builder.WriteString(", name=")
+	builder.WriteString(c.Name)
+	builder.WriteString(", type=")
+	builder.WriteString(c.Type)
+	builder.WriteString(", username=")
+	builder.WriteString(c.Username)
+	builder.WriteString(", password=")
+	builder.WriteString(c.Password)
+	builder.WriteString(", private_key=")
+	builder.WriteString(c.PrivateKey)
+	builder.WriteString(", passphrase=")
+	builder.WriteString(c.Passphrase)
+	builder.WriteString(", created_at=")
+	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -29,3 +29,6 @@ type User func(*sql.Selector)
 
 // UserGroup is the predicate function for usergroup builders.
 type UserGroup func(*sql.Selector)
+
+// Verification is the predicate function for verification builders.
+type Verification func(*sql.Selector)

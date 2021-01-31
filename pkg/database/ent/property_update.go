@@ -26,6 +26,18 @@ func (pu *PropertyUpdate) Where(ps ...predicate.Property) *PropertyUpdate {
 	return pu
 }
 
+// SetName sets the "name" field.
+func (pu *PropertyUpdate) SetName(s string) *PropertyUpdate {
+	pu.mutation.SetName(s)
+	return pu
+}
+
+// SetValue sets the "value" field.
+func (pu *PropertyUpdate) SetValue(s string) *PropertyUpdate {
+	pu.mutation.SetValue(s)
+	return pu
+}
+
 // Mutation returns the PropertyMutation object of the builder.
 func (pu *PropertyUpdate) Mutation() *PropertyMutation {
 	return pu.mutation
@@ -100,6 +112,20 @@ func (pu *PropertyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := pu.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: property.FieldName,
+		})
+	}
+	if value, ok := pu.mutation.Value(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: property.FieldValue,
+		})
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{property.Label}
@@ -116,6 +142,18 @@ type PropertyUpdateOne struct {
 	config
 	hooks    []Hook
 	mutation *PropertyMutation
+}
+
+// SetName sets the "name" field.
+func (puo *PropertyUpdateOne) SetName(s string) *PropertyUpdateOne {
+	puo.mutation.SetName(s)
+	return puo
+}
+
+// SetValue sets the "value" field.
+func (puo *PropertyUpdateOne) SetValue(s string) *PropertyUpdateOne {
+	puo.mutation.SetValue(s)
+	return puo
 }
 
 // Mutation returns the PropertyMutation object of the builder.
@@ -190,6 +228,20 @@ func (puo *PropertyUpdateOne) sqlSave(ctx context.Context) (_node *Property, err
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Property.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if value, ok := puo.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: property.FieldName,
+		})
+	}
+	if value, ok := puo.mutation.Value(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: property.FieldValue,
+		})
+	}
 	_node = &Property{config: puo.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

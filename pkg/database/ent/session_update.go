@@ -53,15 +53,15 @@ func (su *SessionUpdate) AddPort(i int) *SessionUpdate {
 	return su
 }
 
-// SetConnectionId sets the "connectionId" field.
-func (su *SessionUpdate) SetConnectionId(s string) *SessionUpdate {
-	su.mutation.SetConnectionId(s)
+// SetConnectionID sets the "connection_id" field.
+func (su *SessionUpdate) SetConnectionID(s string) *SessionUpdate {
+	su.mutation.SetConnectionID(s)
 	return su
 }
 
-// SetAssetId sets the "assetId" field.
-func (su *SessionUpdate) SetAssetId(s string) *SessionUpdate {
-	su.mutation.SetAssetId(s)
+// SetAssetID sets the "asset_id" field.
+func (su *SessionUpdate) SetAssetID(s string) *SessionUpdate {
+	su.mutation.SetAssetID(s)
 	return su
 }
 
@@ -83,7 +83,7 @@ func (su *SessionUpdate) SetCreator(s string) *SessionUpdate {
 	return su
 }
 
-// SetClientIP sets the "clientIP" field.
+// SetClientIP sets the "client_ip" field.
 func (su *SessionUpdate) SetClientIP(s string) *SessionUpdate {
 	su.mutation.SetClientIP(s)
 	return su
@@ -127,7 +127,7 @@ func (su *SessionUpdate) SetRecording(s string) *SessionUpdate {
 	return su
 }
 
-// SetPrivateKey sets the "privateKey" field.
+// SetPrivateKey sets the "private_key" field.
 func (su *SessionUpdate) SetPrivateKey(s string) *SessionUpdate {
 	su.mutation.SetPrivateKey(s)
 	return su
@@ -158,23 +158,23 @@ func (su *SessionUpdate) SetMessage(s string) *SessionUpdate {
 	return su
 }
 
-// SetConnectedTime sets the "connectedTime" field.
-func (su *SessionUpdate) SetConnectedTime(t time.Time) *SessionUpdate {
-	su.mutation.SetConnectedTime(t)
+// SetConnected sets the "connected" field.
+func (su *SessionUpdate) SetConnected(t time.Time) *SessionUpdate {
+	su.mutation.SetConnected(t)
 	return su
 }
 
-// SetNillableConnectedTime sets the "connectedTime" field if the given value is not nil.
-func (su *SessionUpdate) SetNillableConnectedTime(t *time.Time) *SessionUpdate {
+// SetNillableConnected sets the "connected" field if the given value is not nil.
+func (su *SessionUpdate) SetNillableConnected(t *time.Time) *SessionUpdate {
 	if t != nil {
-		su.SetConnectedTime(*t)
+		su.SetConnected(*t)
 	}
 	return su
 }
 
-// SetDisconnectedTime sets the "disconnectedTime" field.
-func (su *SessionUpdate) SetDisconnectedTime(t time.Time) *SessionUpdate {
-	su.mutation.SetDisconnectedTime(t)
+// SetDisconnected sets the "disconnected" field.
+func (su *SessionUpdate) SetDisconnected(t time.Time) *SessionUpdate {
+	su.mutation.SetDisconnected(t)
 	return su
 }
 
@@ -273,9 +273,9 @@ func (su *SessionUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (su *SessionUpdate) defaults() {
-	if _, ok := su.mutation.DisconnectedTime(); !ok {
-		v := session.UpdateDefaultDisconnectedTime()
-		su.mutation.SetDisconnectedTime(v)
+	if _, ok := su.mutation.Disconnected(); !ok {
+		v := session.UpdateDefaultDisconnected()
+		su.mutation.SetDisconnected(v)
 	}
 }
 
@@ -325,18 +325,18 @@ func (su *SessionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: session.FieldPort,
 		})
 	}
-	if value, ok := su.mutation.ConnectionId(); ok {
+	if value, ok := su.mutation.ConnectionID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: session.FieldConnectionId,
+			Column: session.FieldConnectionID,
 		})
 	}
-	if value, ok := su.mutation.AssetId(); ok {
+	if value, ok := su.mutation.AssetID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: session.FieldAssetId,
+			Column: session.FieldAssetID,
 		})
 	}
 	if value, ok := su.mutation.Username(); ok {
@@ -444,18 +444,18 @@ func (su *SessionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: session.FieldMessage,
 		})
 	}
-	if value, ok := su.mutation.ConnectedTime(); ok {
+	if value, ok := su.mutation.Connected(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: session.FieldConnectedTime,
+			Column: session.FieldConnected,
 		})
 	}
-	if value, ok := su.mutation.DisconnectedTime(); ok {
+	if value, ok := su.mutation.Disconnected(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: session.FieldDisconnectedTime,
+			Column: session.FieldDisconnected,
 		})
 	}
 	if su.mutation.AssetsCleared() {
@@ -555,15 +555,15 @@ func (suo *SessionUpdateOne) AddPort(i int) *SessionUpdateOne {
 	return suo
 }
 
-// SetConnectionId sets the "connectionId" field.
-func (suo *SessionUpdateOne) SetConnectionId(s string) *SessionUpdateOne {
-	suo.mutation.SetConnectionId(s)
+// SetConnectionID sets the "connection_id" field.
+func (suo *SessionUpdateOne) SetConnectionID(s string) *SessionUpdateOne {
+	suo.mutation.SetConnectionID(s)
 	return suo
 }
 
-// SetAssetId sets the "assetId" field.
-func (suo *SessionUpdateOne) SetAssetId(s string) *SessionUpdateOne {
-	suo.mutation.SetAssetId(s)
+// SetAssetID sets the "asset_id" field.
+func (suo *SessionUpdateOne) SetAssetID(s string) *SessionUpdateOne {
+	suo.mutation.SetAssetID(s)
 	return suo
 }
 
@@ -585,7 +585,7 @@ func (suo *SessionUpdateOne) SetCreator(s string) *SessionUpdateOne {
 	return suo
 }
 
-// SetClientIP sets the "clientIP" field.
+// SetClientIP sets the "client_ip" field.
 func (suo *SessionUpdateOne) SetClientIP(s string) *SessionUpdateOne {
 	suo.mutation.SetClientIP(s)
 	return suo
@@ -629,7 +629,7 @@ func (suo *SessionUpdateOne) SetRecording(s string) *SessionUpdateOne {
 	return suo
 }
 
-// SetPrivateKey sets the "privateKey" field.
+// SetPrivateKey sets the "private_key" field.
 func (suo *SessionUpdateOne) SetPrivateKey(s string) *SessionUpdateOne {
 	suo.mutation.SetPrivateKey(s)
 	return suo
@@ -660,23 +660,23 @@ func (suo *SessionUpdateOne) SetMessage(s string) *SessionUpdateOne {
 	return suo
 }
 
-// SetConnectedTime sets the "connectedTime" field.
-func (suo *SessionUpdateOne) SetConnectedTime(t time.Time) *SessionUpdateOne {
-	suo.mutation.SetConnectedTime(t)
+// SetConnected sets the "connected" field.
+func (suo *SessionUpdateOne) SetConnected(t time.Time) *SessionUpdateOne {
+	suo.mutation.SetConnected(t)
 	return suo
 }
 
-// SetNillableConnectedTime sets the "connectedTime" field if the given value is not nil.
-func (suo *SessionUpdateOne) SetNillableConnectedTime(t *time.Time) *SessionUpdateOne {
+// SetNillableConnected sets the "connected" field if the given value is not nil.
+func (suo *SessionUpdateOne) SetNillableConnected(t *time.Time) *SessionUpdateOne {
 	if t != nil {
-		suo.SetConnectedTime(*t)
+		suo.SetConnected(*t)
 	}
 	return suo
 }
 
-// SetDisconnectedTime sets the "disconnectedTime" field.
-func (suo *SessionUpdateOne) SetDisconnectedTime(t time.Time) *SessionUpdateOne {
-	suo.mutation.SetDisconnectedTime(t)
+// SetDisconnected sets the "disconnected" field.
+func (suo *SessionUpdateOne) SetDisconnected(t time.Time) *SessionUpdateOne {
+	suo.mutation.SetDisconnected(t)
 	return suo
 }
 
@@ -775,9 +775,9 @@ func (suo *SessionUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (suo *SessionUpdateOne) defaults() {
-	if _, ok := suo.mutation.DisconnectedTime(); !ok {
-		v := session.UpdateDefaultDisconnectedTime()
-		suo.mutation.SetDisconnectedTime(v)
+	if _, ok := suo.mutation.Disconnected(); !ok {
+		v := session.UpdateDefaultDisconnected()
+		suo.mutation.SetDisconnected(v)
 	}
 }
 
@@ -825,18 +825,18 @@ func (suo *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err e
 			Column: session.FieldPort,
 		})
 	}
-	if value, ok := suo.mutation.ConnectionId(); ok {
+	if value, ok := suo.mutation.ConnectionID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: session.FieldConnectionId,
+			Column: session.FieldConnectionID,
 		})
 	}
-	if value, ok := suo.mutation.AssetId(); ok {
+	if value, ok := suo.mutation.AssetID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: session.FieldAssetId,
+			Column: session.FieldAssetID,
 		})
 	}
 	if value, ok := suo.mutation.Username(); ok {
@@ -944,18 +944,18 @@ func (suo *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err e
 			Column: session.FieldMessage,
 		})
 	}
-	if value, ok := suo.mutation.ConnectedTime(); ok {
+	if value, ok := suo.mutation.Connected(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: session.FieldConnectedTime,
+			Column: session.FieldConnected,
 		})
 	}
-	if value, ok := suo.mutation.DisconnectedTime(); ok {
+	if value, ok := suo.mutation.Disconnected(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: session.FieldDisconnectedTime,
+			Column: session.FieldDisconnected,
 		})
 	}
 	if suo.mutation.AssetsCleared() {

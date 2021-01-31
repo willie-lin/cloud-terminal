@@ -32,6 +32,7 @@ type hooks struct {
 	Session        []ent.Hook
 	User           []ent.Hook
 	UserGroup      []ent.Hook
+	Verification   []ent.Hook
 }
 
 // Options applies the options on the config object.

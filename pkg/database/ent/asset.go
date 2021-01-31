@@ -25,16 +25,16 @@ type Asset struct {
 	Protocol string `json:"protocol,omitempty"`
 	// Port holds the value of the "port" field.
 	Port int `json:"port,omitempty"`
-	// AccountType holds the value of the "accountType" field.
-	AccountType string `json:"accountType,omitempty"`
+	// AccountType holds the value of the "account_type" field.
+	AccountType string `json:"account_type,omitempty"`
 	// Username holds the value of the "username" field.
 	Username string `json:"username,omitempty"`
 	// Password holds the value of the "password" field.
 	Password string `json:"password,omitempty"`
-	// CredentialId holds the value of the "credentialId" field.
-	CredentialId string `json:"credentialId,omitempty"`
-	// PrivateKey holds the value of the "privateKey" field.
-	PrivateKey string `json:"privateKey,omitempty"`
+	// CredentialID holds the value of the "credential_id" field.
+	CredentialID string `json:"credential_id,omitempty"`
+	// PrivateKey holds the value of the "private_key" field.
+	PrivateKey string `json:"private_key,omitempty"`
 	// Passphrase holds the value of the "passphrase" field.
 	Passphrase string `json:"passphrase,omitempty"`
 	// Description holds the value of the "description" field.
@@ -85,7 +85,7 @@ func (*Asset) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = &sql.NullBool{}
 		case asset.FieldPort:
 			values[i] = &sql.NullInt64{}
-		case asset.FieldID, asset.FieldName, asset.FieldIP, asset.FieldProtocol, asset.FieldAccountType, asset.FieldUsername, asset.FieldPassword, asset.FieldCredentialId, asset.FieldPrivateKey, asset.FieldPassphrase, asset.FieldDescription, asset.FieldTags:
+		case asset.FieldID, asset.FieldName, asset.FieldIP, asset.FieldProtocol, asset.FieldAccountType, asset.FieldUsername, asset.FieldPassword, asset.FieldCredentialID, asset.FieldPrivateKey, asset.FieldPassphrase, asset.FieldDescription, asset.FieldTags:
 			values[i] = &sql.NullString{}
 		case asset.FieldCreatedAt, asset.FieldUpdatedAt:
 			values[i] = &sql.NullTime{}
@@ -138,7 +138,7 @@ func (a *Asset) assignValues(columns []string, values []interface{}) error {
 			}
 		case asset.FieldAccountType:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field accountType", values[i])
+				return fmt.Errorf("unexpected type %T for field account_type", values[i])
 			} else if value.Valid {
 				a.AccountType = value.String
 			}
@@ -154,15 +154,15 @@ func (a *Asset) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				a.Password = value.String
 			}
-		case asset.FieldCredentialId:
+		case asset.FieldCredentialID:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field credentialId", values[i])
+				return fmt.Errorf("unexpected type %T for field credential_id", values[i])
 			} else if value.Valid {
-				a.CredentialId = value.String
+				a.CredentialID = value.String
 			}
 		case asset.FieldPrivateKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field privateKey", values[i])
+				return fmt.Errorf("unexpected type %T for field private_key", values[i])
 			} else if value.Valid {
 				a.PrivateKey = value.String
 			}
@@ -250,15 +250,15 @@ func (a *Asset) String() string {
 	builder.WriteString(a.Protocol)
 	builder.WriteString(", port=")
 	builder.WriteString(fmt.Sprintf("%v", a.Port))
-	builder.WriteString(", accountType=")
+	builder.WriteString(", account_type=")
 	builder.WriteString(a.AccountType)
 	builder.WriteString(", username=")
 	builder.WriteString(a.Username)
 	builder.WriteString(", password=")
 	builder.WriteString(a.Password)
-	builder.WriteString(", credentialId=")
-	builder.WriteString(a.CredentialId)
-	builder.WriteString(", privateKey=")
+	builder.WriteString(", credential_id=")
+	builder.WriteString(a.CredentialID)
+	builder.WriteString(", private_key=")
 	builder.WriteString(a.PrivateKey)
 	builder.WriteString(", passphrase=")
 	builder.WriteString(a.Passphrase)

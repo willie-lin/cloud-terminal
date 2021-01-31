@@ -121,7 +121,7 @@ func Port(v int) predicate.Asset {
 	})
 }
 
-// AccountType applies equality check predicate on the "accountType" field. It's identical to AccountTypeEQ.
+// AccountType applies equality check predicate on the "account_type" field. It's identical to AccountTypeEQ.
 func AccountType(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldAccountType), v))
@@ -142,14 +142,14 @@ func Password(v string) predicate.Asset {
 	})
 }
 
-// CredentialId applies equality check predicate on the "credentialId" field. It's identical to CredentialIdEQ.
-func CredentialId(v string) predicate.Asset {
+// CredentialID applies equality check predicate on the "credential_id" field. It's identical to CredentialIDEQ.
+func CredentialID(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldCredentialId), v))
+		s.Where(sql.EQ(s.C(FieldCredentialID), v))
 	})
 }
 
-// PrivateKey applies equality check predicate on the "privateKey" field. It's identical to PrivateKeyEQ.
+// PrivateKey applies equality check predicate on the "private_key" field. It's identical to PrivateKeyEQ.
 func PrivateKey(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPrivateKey), v))
@@ -607,21 +607,21 @@ func PortLTE(v int) predicate.Asset {
 	})
 }
 
-// AccountTypeEQ applies the EQ predicate on the "accountType" field.
+// AccountTypeEQ applies the EQ predicate on the "account_type" field.
 func AccountTypeEQ(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeNEQ applies the NEQ predicate on the "accountType" field.
+// AccountTypeNEQ applies the NEQ predicate on the "account_type" field.
 func AccountTypeNEQ(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeIn applies the In predicate on the "accountType" field.
+// AccountTypeIn applies the In predicate on the "account_type" field.
 func AccountTypeIn(vs ...string) predicate.Asset {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -638,7 +638,7 @@ func AccountTypeIn(vs ...string) predicate.Asset {
 	})
 }
 
-// AccountTypeNotIn applies the NotIn predicate on the "accountType" field.
+// AccountTypeNotIn applies the NotIn predicate on the "account_type" field.
 func AccountTypeNotIn(vs ...string) predicate.Asset {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -655,63 +655,63 @@ func AccountTypeNotIn(vs ...string) predicate.Asset {
 	})
 }
 
-// AccountTypeGT applies the GT predicate on the "accountType" field.
+// AccountTypeGT applies the GT predicate on the "account_type" field.
 func AccountTypeGT(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeGTE applies the GTE predicate on the "accountType" field.
+// AccountTypeGTE applies the GTE predicate on the "account_type" field.
 func AccountTypeGTE(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeLT applies the LT predicate on the "accountType" field.
+// AccountTypeLT applies the LT predicate on the "account_type" field.
 func AccountTypeLT(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeLTE applies the LTE predicate on the "accountType" field.
+// AccountTypeLTE applies the LTE predicate on the "account_type" field.
 func AccountTypeLTE(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeContains applies the Contains predicate on the "accountType" field.
+// AccountTypeContains applies the Contains predicate on the "account_type" field.
 func AccountTypeContains(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeHasPrefix applies the HasPrefix predicate on the "accountType" field.
+// AccountTypeHasPrefix applies the HasPrefix predicate on the "account_type" field.
 func AccountTypeHasPrefix(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeHasSuffix applies the HasSuffix predicate on the "accountType" field.
+// AccountTypeHasSuffix applies the HasSuffix predicate on the "account_type" field.
 func AccountTypeHasSuffix(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeEqualFold applies the EqualFold predicate on the "accountType" field.
+// AccountTypeEqualFold applies the EqualFold predicate on the "account_type" field.
 func AccountTypeEqualFold(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldAccountType), v))
 	})
 }
 
-// AccountTypeContainsFold applies the ContainsFold predicate on the "accountType" field.
+// AccountTypeContainsFold applies the ContainsFold predicate on the "account_type" field.
 func AccountTypeContainsFold(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldAccountType), v))
@@ -940,22 +940,22 @@ func PasswordContainsFold(v string) predicate.Asset {
 	})
 }
 
-// CredentialIdEQ applies the EQ predicate on the "credentialId" field.
-func CredentialIdEQ(v string) predicate.Asset {
+// CredentialIDEQ applies the EQ predicate on the "credential_id" field.
+func CredentialIDEQ(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldCredentialId), v))
+		s.Where(sql.EQ(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdNEQ applies the NEQ predicate on the "credentialId" field.
-func CredentialIdNEQ(v string) predicate.Asset {
+// CredentialIDNEQ applies the NEQ predicate on the "credential_id" field.
+func CredentialIDNEQ(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldCredentialId), v))
+		s.Where(sql.NEQ(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdIn applies the In predicate on the "credentialId" field.
-func CredentialIdIn(vs ...string) predicate.Asset {
+// CredentialIDIn applies the In predicate on the "credential_id" field.
+func CredentialIDIn(vs ...string) predicate.Asset {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -967,12 +967,12 @@ func CredentialIdIn(vs ...string) predicate.Asset {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldCredentialId), v...))
+		s.Where(sql.In(s.C(FieldCredentialID), v...))
 	})
 }
 
-// CredentialIdNotIn applies the NotIn predicate on the "credentialId" field.
-func CredentialIdNotIn(vs ...string) predicate.Asset {
+// CredentialIDNotIn applies the NotIn predicate on the "credential_id" field.
+func CredentialIDNotIn(vs ...string) predicate.Asset {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -984,88 +984,88 @@ func CredentialIdNotIn(vs ...string) predicate.Asset {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldCredentialId), v...))
+		s.Where(sql.NotIn(s.C(FieldCredentialID), v...))
 	})
 }
 
-// CredentialIdGT applies the GT predicate on the "credentialId" field.
-func CredentialIdGT(v string) predicate.Asset {
+// CredentialIDGT applies the GT predicate on the "credential_id" field.
+func CredentialIDGT(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldCredentialId), v))
+		s.Where(sql.GT(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdGTE applies the GTE predicate on the "credentialId" field.
-func CredentialIdGTE(v string) predicate.Asset {
+// CredentialIDGTE applies the GTE predicate on the "credential_id" field.
+func CredentialIDGTE(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldCredentialId), v))
+		s.Where(sql.GTE(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdLT applies the LT predicate on the "credentialId" field.
-func CredentialIdLT(v string) predicate.Asset {
+// CredentialIDLT applies the LT predicate on the "credential_id" field.
+func CredentialIDLT(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldCredentialId), v))
+		s.Where(sql.LT(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdLTE applies the LTE predicate on the "credentialId" field.
-func CredentialIdLTE(v string) predicate.Asset {
+// CredentialIDLTE applies the LTE predicate on the "credential_id" field.
+func CredentialIDLTE(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldCredentialId), v))
+		s.Where(sql.LTE(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdContains applies the Contains predicate on the "credentialId" field.
-func CredentialIdContains(v string) predicate.Asset {
+// CredentialIDContains applies the Contains predicate on the "credential_id" field.
+func CredentialIDContains(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldCredentialId), v))
+		s.Where(sql.Contains(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdHasPrefix applies the HasPrefix predicate on the "credentialId" field.
-func CredentialIdHasPrefix(v string) predicate.Asset {
+// CredentialIDHasPrefix applies the HasPrefix predicate on the "credential_id" field.
+func CredentialIDHasPrefix(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldCredentialId), v))
+		s.Where(sql.HasPrefix(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdHasSuffix applies the HasSuffix predicate on the "credentialId" field.
-func CredentialIdHasSuffix(v string) predicate.Asset {
+// CredentialIDHasSuffix applies the HasSuffix predicate on the "credential_id" field.
+func CredentialIDHasSuffix(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldCredentialId), v))
+		s.Where(sql.HasSuffix(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdEqualFold applies the EqualFold predicate on the "credentialId" field.
-func CredentialIdEqualFold(v string) predicate.Asset {
+// CredentialIDEqualFold applies the EqualFold predicate on the "credential_id" field.
+func CredentialIDEqualFold(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldCredentialId), v))
+		s.Where(sql.EqualFold(s.C(FieldCredentialID), v))
 	})
 }
 
-// CredentialIdContainsFold applies the ContainsFold predicate on the "credentialId" field.
-func CredentialIdContainsFold(v string) predicate.Asset {
+// CredentialIDContainsFold applies the ContainsFold predicate on the "credential_id" field.
+func CredentialIDContainsFold(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldCredentialId), v))
+		s.Where(sql.ContainsFold(s.C(FieldCredentialID), v))
 	})
 }
 
-// PrivateKeyEQ applies the EQ predicate on the "privateKey" field.
+// PrivateKeyEQ applies the EQ predicate on the "private_key" field.
 func PrivateKeyEQ(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyNEQ applies the NEQ predicate on the "privateKey" field.
+// PrivateKeyNEQ applies the NEQ predicate on the "private_key" field.
 func PrivateKeyNEQ(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyIn applies the In predicate on the "privateKey" field.
+// PrivateKeyIn applies the In predicate on the "private_key" field.
 func PrivateKeyIn(vs ...string) predicate.Asset {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1082,7 +1082,7 @@ func PrivateKeyIn(vs ...string) predicate.Asset {
 	})
 }
 
-// PrivateKeyNotIn applies the NotIn predicate on the "privateKey" field.
+// PrivateKeyNotIn applies the NotIn predicate on the "private_key" field.
 func PrivateKeyNotIn(vs ...string) predicate.Asset {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1099,63 +1099,63 @@ func PrivateKeyNotIn(vs ...string) predicate.Asset {
 	})
 }
 
-// PrivateKeyGT applies the GT predicate on the "privateKey" field.
+// PrivateKeyGT applies the GT predicate on the "private_key" field.
 func PrivateKeyGT(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyGTE applies the GTE predicate on the "privateKey" field.
+// PrivateKeyGTE applies the GTE predicate on the "private_key" field.
 func PrivateKeyGTE(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyLT applies the LT predicate on the "privateKey" field.
+// PrivateKeyLT applies the LT predicate on the "private_key" field.
 func PrivateKeyLT(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyLTE applies the LTE predicate on the "privateKey" field.
+// PrivateKeyLTE applies the LTE predicate on the "private_key" field.
 func PrivateKeyLTE(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyContains applies the Contains predicate on the "privateKey" field.
+// PrivateKeyContains applies the Contains predicate on the "private_key" field.
 func PrivateKeyContains(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyHasPrefix applies the HasPrefix predicate on the "privateKey" field.
+// PrivateKeyHasPrefix applies the HasPrefix predicate on the "private_key" field.
 func PrivateKeyHasPrefix(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyHasSuffix applies the HasSuffix predicate on the "privateKey" field.
+// PrivateKeyHasSuffix applies the HasSuffix predicate on the "private_key" field.
 func PrivateKeyHasSuffix(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyEqualFold applies the EqualFold predicate on the "privateKey" field.
+// PrivateKeyEqualFold applies the EqualFold predicate on the "private_key" field.
 func PrivateKeyEqualFold(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyContainsFold applies the ContainsFold predicate on the "privateKey" field.
+// PrivateKeyContainsFold applies the ContainsFold predicate on the "private_key" field.
 func PrivateKeyContainsFold(v string) predicate.Asset {
 	return predicate.Asset(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldPrivateKey), v))

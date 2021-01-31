@@ -4,7 +4,9 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
@@ -18,6 +20,76 @@ type CredentialCreate struct {
 	hooks    []Hook
 }
 
+// SetName sets the "name" field.
+func (cc *CredentialCreate) SetName(s string) *CredentialCreate {
+	cc.mutation.SetName(s)
+	return cc
+}
+
+// SetType sets the "type" field.
+func (cc *CredentialCreate) SetType(s string) *CredentialCreate {
+	cc.mutation.SetType(s)
+	return cc
+}
+
+// SetUsername sets the "username" field.
+func (cc *CredentialCreate) SetUsername(s string) *CredentialCreate {
+	cc.mutation.SetUsername(s)
+	return cc
+}
+
+// SetPassword sets the "password" field.
+func (cc *CredentialCreate) SetPassword(s string) *CredentialCreate {
+	cc.mutation.SetPassword(s)
+	return cc
+}
+
+// SetPrivateKey sets the "private_key" field.
+func (cc *CredentialCreate) SetPrivateKey(s string) *CredentialCreate {
+	cc.mutation.SetPrivateKey(s)
+	return cc
+}
+
+// SetPassphrase sets the "passphrase" field.
+func (cc *CredentialCreate) SetPassphrase(s string) *CredentialCreate {
+	cc.mutation.SetPassphrase(s)
+	return cc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (cc *CredentialCreate) SetCreatedAt(t time.Time) *CredentialCreate {
+	cc.mutation.SetCreatedAt(t)
+	return cc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (cc *CredentialCreate) SetNillableCreatedAt(t *time.Time) *CredentialCreate {
+	if t != nil {
+		cc.SetCreatedAt(*t)
+	}
+	return cc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cc *CredentialCreate) SetUpdatedAt(t time.Time) *CredentialCreate {
+	cc.mutation.SetUpdatedAt(t)
+	return cc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (cc *CredentialCreate) SetNillableUpdatedAt(t *time.Time) *CredentialCreate {
+	if t != nil {
+		cc.SetUpdatedAt(*t)
+	}
+	return cc
+}
+
+// SetID sets the "id" field.
+func (cc *CredentialCreate) SetID(s string) *CredentialCreate {
+	cc.mutation.SetID(s)
+	return cc
+}
+
 // Mutation returns the CredentialMutation object of the builder.
 func (cc *CredentialCreate) Mutation() *CredentialMutation {
 	return cc.mutation
@@ -29,6 +101,7 @@ func (cc *CredentialCreate) Save(ctx context.Context) (*Credential, error) {
 		err  error
 		node *Credential
 	)
+	cc.defaults()
 	if len(cc.hooks) == 0 {
 		if err = cc.check(); err != nil {
 			return nil, err
@@ -67,8 +140,44 @@ func (cc *CredentialCreate) SaveX(ctx context.Context) *Credential {
 	return v
 }
 
+// defaults sets the default values of the builder before save.
+func (cc *CredentialCreate) defaults() {
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		v := credential.DefaultCreatedAt()
+		cc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := cc.mutation.UpdatedAt(); !ok {
+		v := credential.DefaultUpdatedAt()
+		cc.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cc *CredentialCreate) check() error {
+	if _, ok := cc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
+	}
+	if _, ok := cc.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New("ent: missing required field \"type\"")}
+	}
+	if _, ok := cc.mutation.Username(); !ok {
+		return &ValidationError{Name: "username", err: errors.New("ent: missing required field \"username\"")}
+	}
+	if _, ok := cc.mutation.Password(); !ok {
+		return &ValidationError{Name: "password", err: errors.New("ent: missing required field \"password\"")}
+	}
+	if _, ok := cc.mutation.PrivateKey(); !ok {
+		return &ValidationError{Name: "private_key", err: errors.New("ent: missing required field \"private_key\"")}
+	}
+	if _, ok := cc.mutation.Passphrase(); !ok {
+		return &ValidationError{Name: "passphrase", err: errors.New("ent: missing required field \"passphrase\"")}
+	}
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+	}
+	if _, ok := cc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
 	return nil
 }
 
@@ -80,8 +189,6 @@ func (cc *CredentialCreate) sqlSave(ctx context.Context) (*Credential, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
 	return _node, nil
 }
 
@@ -91,11 +198,79 @@ func (cc *CredentialCreate) createSpec() (*Credential, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: credential.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: credential.FieldID,
 			},
 		}
 	)
+	if id, ok := cc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
+	if value, ok := cc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: credential.FieldName,
+		})
+		_node.Name = value
+	}
+	if value, ok := cc.mutation.GetType(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: credential.FieldType,
+		})
+		_node.Type = value
+	}
+	if value, ok := cc.mutation.Username(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: credential.FieldUsername,
+		})
+		_node.Username = value
+	}
+	if value, ok := cc.mutation.Password(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: credential.FieldPassword,
+		})
+		_node.Password = value
+	}
+	if value, ok := cc.mutation.PrivateKey(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: credential.FieldPrivateKey,
+		})
+		_node.PrivateKey = value
+	}
+	if value, ok := cc.mutation.Passphrase(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: credential.FieldPassphrase,
+		})
+		_node.Passphrase = value
+	}
+	if value, ok := cc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: credential.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := cc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: credential.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
+	}
 	return _node, _spec
 }
 
@@ -113,6 +288,7 @@ func (ccb *CredentialCreateBulk) Save(ctx context.Context) ([]*Credential, error
 	for i := range ccb.builders {
 		func(i int, root context.Context) {
 			builder := ccb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*CredentialMutation)
 				if !ok {
@@ -138,8 +314,6 @@ func (ccb *CredentialCreateBulk) Save(ctx context.Context) ([]*Credential, error
 				if err != nil {
 					return nil, err
 				}
-				id := specs[i].ID.Value.(int64)
-				nodes[i].ID = int(id)
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

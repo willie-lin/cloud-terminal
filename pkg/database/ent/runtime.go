@@ -7,6 +7,7 @@ import (
 
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
@@ -31,6 +32,10 @@ func init() {
 	asset.UpdateDefaultUpdatedAt = assetDescUpdatedAt.UpdateDefault.(func() time.Time)
 	commandFields := schema.Command{}.Fields()
 	_ = commandFields
+	// commandDescName is the schema descriptor for name field.
+	commandDescName := commandFields[1].Descriptor()
+	// command.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	command.NameValidator = commandDescName.Validators[0].(func(string) error)
 	// commandDescCreatedAt is the schema descriptor for created_at field.
 	commandDescCreatedAt := commandFields[3].Descriptor()
 	// command.DefaultCreatedAt holds the default value on creation for the created_at field.
@@ -41,22 +46,30 @@ func init() {
 	command.DefaultUpdatedAt = commandDescUpdatedAt.Default.(func() time.Time)
 	// command.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	command.UpdateDefaultUpdatedAt = commandDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// commandDescID is the schema descriptor for id field.
-	commandDescID := commandFields[0].Descriptor()
-	// command.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	command.IDValidator = commandDescID.Validators[0].(func(string) error)
+	credentialFields := schema.Credential{}.Fields()
+	_ = credentialFields
+	// credentialDescCreatedAt is the schema descriptor for created_at field.
+	credentialDescCreatedAt := credentialFields[7].Descriptor()
+	// credential.DefaultCreatedAt holds the default value on creation for the created_at field.
+	credential.DefaultCreatedAt = credentialDescCreatedAt.Default.(func() time.Time)
+	// credentialDescUpdatedAt is the schema descriptor for updated_at field.
+	credentialDescUpdatedAt := credentialFields[8].Descriptor()
+	// credential.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	credential.DefaultUpdatedAt = credentialDescUpdatedAt.Default.(func() time.Time)
+	// credential.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	credential.UpdateDefaultUpdatedAt = credentialDescUpdatedAt.UpdateDefault.(func() time.Time)
 	sessionFields := schema.Session{}.Fields()
 	_ = sessionFields
-	// sessionDescConnectedTime is the schema descriptor for connectedTime field.
-	sessionDescConnectedTime := sessionFields[18].Descriptor()
-	// session.DefaultConnectedTime holds the default value on creation for the connectedTime field.
-	session.DefaultConnectedTime = sessionDescConnectedTime.Default.(func() time.Time)
-	// sessionDescDisconnectedTime is the schema descriptor for disconnectedTime field.
-	sessionDescDisconnectedTime := sessionFields[19].Descriptor()
-	// session.DefaultDisconnectedTime holds the default value on creation for the disconnectedTime field.
-	session.DefaultDisconnectedTime = sessionDescDisconnectedTime.Default.(func() time.Time)
-	// session.UpdateDefaultDisconnectedTime holds the default value on update for the disconnectedTime field.
-	session.UpdateDefaultDisconnectedTime = sessionDescDisconnectedTime.UpdateDefault.(func() time.Time)
+	// sessionDescConnected is the schema descriptor for connected field.
+	sessionDescConnected := sessionFields[18].Descriptor()
+	// session.DefaultConnected holds the default value on creation for the connected field.
+	session.DefaultConnected = sessionDescConnected.Default.(func() time.Time)
+	// sessionDescDisconnected is the schema descriptor for disconnected field.
+	sessionDescDisconnected := sessionFields[19].Descriptor()
+	// session.DefaultDisconnected holds the default value on creation for the disconnected field.
+	session.DefaultDisconnected = sessionDescDisconnected.Default.(func() time.Time)
+	// session.UpdateDefaultDisconnected holds the default value on update for the disconnected field.
+	session.UpdateDefaultDisconnected = sessionDescDisconnected.UpdateDefault.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.

@@ -59,7 +59,7 @@ func (au *AssetUpdate) AddPort(i int) *AssetUpdate {
 	return au
 }
 
-// SetAccountType sets the "accountType" field.
+// SetAccountType sets the "account_type" field.
 func (au *AssetUpdate) SetAccountType(s string) *AssetUpdate {
 	au.mutation.SetAccountType(s)
 	return au
@@ -77,13 +77,13 @@ func (au *AssetUpdate) SetPassword(s string) *AssetUpdate {
 	return au
 }
 
-// SetCredentialId sets the "credentialId" field.
-func (au *AssetUpdate) SetCredentialId(s string) *AssetUpdate {
-	au.mutation.SetCredentialId(s)
+// SetCredentialID sets the "credential_id" field.
+func (au *AssetUpdate) SetCredentialID(s string) *AssetUpdate {
+	au.mutation.SetCredentialID(s)
 	return au
 }
 
-// SetPrivateKey sets the "privateKey" field.
+// SetPrivateKey sets the "private_key" field.
 func (au *AssetUpdate) SetPrivateKey(s string) *AssetUpdate {
 	au.mutation.SetPrivateKey(s)
 	return au
@@ -297,11 +297,11 @@ func (au *AssetUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: asset.FieldPassword,
 		})
 	}
-	if value, ok := au.mutation.CredentialId(); ok {
+	if value, ok := au.mutation.CredentialID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: asset.FieldCredentialId,
+			Column: asset.FieldCredentialID,
 		})
 	}
 	if value, ok := au.mutation.PrivateKey(); ok {
@@ -437,7 +437,7 @@ func (auo *AssetUpdateOne) AddPort(i int) *AssetUpdateOne {
 	return auo
 }
 
-// SetAccountType sets the "accountType" field.
+// SetAccountType sets the "account_type" field.
 func (auo *AssetUpdateOne) SetAccountType(s string) *AssetUpdateOne {
 	auo.mutation.SetAccountType(s)
 	return auo
@@ -455,13 +455,13 @@ func (auo *AssetUpdateOne) SetPassword(s string) *AssetUpdateOne {
 	return auo
 }
 
-// SetCredentialId sets the "credentialId" field.
-func (auo *AssetUpdateOne) SetCredentialId(s string) *AssetUpdateOne {
-	auo.mutation.SetCredentialId(s)
+// SetCredentialID sets the "credential_id" field.
+func (auo *AssetUpdateOne) SetCredentialID(s string) *AssetUpdateOne {
+	auo.mutation.SetCredentialID(s)
 	return auo
 }
 
-// SetPrivateKey sets the "privateKey" field.
+// SetPrivateKey sets the "private_key" field.
 func (auo *AssetUpdateOne) SetPrivateKey(s string) *AssetUpdateOne {
 	auo.mutation.SetPrivateKey(s)
 	return auo
@@ -673,11 +673,11 @@ func (auo *AssetUpdateOne) sqlSave(ctx context.Context) (_node *Asset, err error
 			Column: asset.FieldPassword,
 		})
 	}
-	if value, ok := auo.mutation.CredentialId(); ok {
+	if value, ok := auo.mutation.CredentialID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: asset.FieldCredentialId,
+			Column: asset.FieldCredentialID,
 		})
 	}
 	if value, ok := auo.mutation.PrivateKey(); ok {

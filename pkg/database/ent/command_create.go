@@ -133,6 +133,11 @@ func (cc *CommandCreate) check() error {
 	if _, ok := cc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
 	}
+	if v, ok := cc.mutation.Name(); ok {
+		if err := command.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+		}
+	}
 	if _, ok := cc.mutation.Content(); !ok {
 		return &ValidationError{Name: "content", err: errors.New("ent: missing required field \"content\"")}
 	}
@@ -141,11 +146,6 @@ func (cc *CommandCreate) check() error {
 	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
-	}
-	if v, ok := cc.mutation.ID(); ok {
-		if err := command.IDValidator(v); err != nil {
-			return &ValidationError{Name: "id", err: fmt.Errorf("ent: validator failed for field \"id\": %w", err)}
-		}
 	}
 	return nil
 }

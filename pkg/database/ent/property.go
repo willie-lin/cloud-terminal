@@ -12,9 +12,13 @@ import (
 
 // Property is the model entity for the Property schema.
 type Property struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
+	// Value holds the value of the "value" field.
+	Value string `json:"value,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -24,6 +28,8 @@ func (*Property) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case property.FieldID:
 			values[i] = &sql.NullInt64{}
+		case property.FieldName, property.FieldValue:
+			values[i] = &sql.NullString{}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Property", columns[i])
 		}
@@ -45,6 +51,18 @@ func (pr *Property) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			pr.ID = int(value.Int64)
+		case property.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				pr.Name = value.String
+			}
+		case property.FieldValue:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field value", values[i])
+			} else if value.Valid {
+				pr.Value = value.String
+			}
 		}
 	}
 	return nil
@@ -73,6 +91,10 @@ func (pr *Property) String() string {
 	var builder strings.Builder
 	builder.WriteString("Property(")
 	builder.WriteString(fmt.Sprintf("id=%v", pr.ID))
+	builder.WriteString(", name=")
+	builder.WriteString(pr.Name)
+	builder.WriteString(", value=")
+	builder.WriteString(pr.Value)
 	builder.WriteByte(')')
 	return builder.String()
 }

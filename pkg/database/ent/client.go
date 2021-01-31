@@ -17,6 +17,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 
 	"github.com/facebook/ent/dialect"
 	"github.com/facebook/ent/dialect/sql"
@@ -44,6 +45,8 @@ type Client struct {
 	User *UserClient
 	// UserGroup is the client for interacting with the UserGroup builders.
 	UserGroup *UserGroupClient
+	// Verification is the client for interacting with the Verification builders.
+	Verification *VerificationClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -65,6 +68,7 @@ func (c *Client) init() {
 	c.Session = NewSessionClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserGroup = NewUserGroupClient(c.config)
+	c.Verification = NewVerificationClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -105,6 +109,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Session:        NewSessionClient(cfg),
 		User:           NewUserClient(cfg),
 		UserGroup:      NewUserGroupClient(cfg),
+		Verification:   NewVerificationClient(cfg),
 	}, nil
 }
 
@@ -128,6 +133,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Session:        NewSessionClient(cfg),
 		User:           NewUserClient(cfg),
 		UserGroup:      NewUserGroupClient(cfg),
+		Verification:   NewVerificationClient(cfg),
 	}, nil
 }
 
@@ -164,6 +170,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Session.Use(hooks...)
 	c.User.Use(hooks...)
 	c.UserGroup.Use(hooks...)
+	c.Verification.Use(hooks...)
 }
 
 // AssetClient is a client for the Asset schema.
@@ -398,7 +405,7 @@ func (c *CredentialClient) UpdateOne(cr *Credential) *CredentialUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *CredentialClient) UpdateOneID(id int) *CredentialUpdateOne {
+func (c *CredentialClient) UpdateOneID(id string) *CredentialUpdateOne {
 	mutation := newCredentialMutation(c.config, OpUpdateOne, withCredentialID(id))
 	return &CredentialUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -415,7 +422,7 @@ func (c *CredentialClient) DeleteOne(cr *Credential) *CredentialDeleteOne {
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *CredentialClient) DeleteOneID(id int) *CredentialDeleteOne {
+func (c *CredentialClient) DeleteOneID(id string) *CredentialDeleteOne {
 	builder := c.Delete().Where(credential.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -428,12 +435,12 @@ func (c *CredentialClient) Query() *CredentialQuery {
 }
 
 // Get returns a Credential entity by its id.
-func (c *CredentialClient) Get(ctx context.Context, id int) (*Credential, error) {
+func (c *CredentialClient) Get(ctx context.Context, id string) (*Credential, error) {
 	return c.Query().Where(credential.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *CredentialClient) GetX(ctx context.Context, id int) *Credential {
+func (c *CredentialClient) GetX(ctx context.Context, id string) *Credential {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -932,4 +939,92 @@ func (c *UserGroupClient) QueryUsers(ug *UserGroup) *UserQuery {
 // Hooks returns the client hooks.
 func (c *UserGroupClient) Hooks() []Hook {
 	return c.hooks.UserGroup
+}
+
+// VerificationClient is a client for the Verification schema.
+type VerificationClient struct {
+	config
+}
+
+// NewVerificationClient returns a client for the Verification from the given config.
+func NewVerificationClient(c config) *VerificationClient {
+	return &VerificationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `verification.Hooks(f(g(h())))`.
+func (c *VerificationClient) Use(hooks ...Hook) {
+	c.hooks.Verification = append(c.hooks.Verification, hooks...)
+}
+
+// Create returns a create builder for Verification.
+func (c *VerificationClient) Create() *VerificationCreate {
+	mutation := newVerificationMutation(c.config, OpCreate)
+	return &VerificationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Verification entities.
+func (c *VerificationClient) CreateBulk(builders ...*VerificationCreate) *VerificationCreateBulk {
+	return &VerificationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Verification.
+func (c *VerificationClient) Update() *VerificationUpdate {
+	mutation := newVerificationMutation(c.config, OpUpdate)
+	return &VerificationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VerificationClient) UpdateOne(v *Verification) *VerificationUpdateOne {
+	mutation := newVerificationMutation(c.config, OpUpdateOne, withVerification(v))
+	return &VerificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VerificationClient) UpdateOneID(id int) *VerificationUpdateOne {
+	mutation := newVerificationMutation(c.config, OpUpdateOne, withVerificationID(id))
+	return &VerificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Verification.
+func (c *VerificationClient) Delete() *VerificationDelete {
+	mutation := newVerificationMutation(c.config, OpDelete)
+	return &VerificationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *VerificationClient) DeleteOne(v *Verification) *VerificationDeleteOne {
+	return c.DeleteOneID(v.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *VerificationClient) DeleteOneID(id int) *VerificationDeleteOne {
+	builder := c.Delete().Where(verification.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VerificationDeleteOne{builder}
+}
+
+// Query returns a query builder for Verification.
+func (c *VerificationClient) Query() *VerificationQuery {
+	return &VerificationQuery{config: c.config}
+}
+
+// Get returns a Verification entity by its id.
+func (c *VerificationClient) Get(ctx context.Context, id int) (*Verification, error) {
+	return c.Query().Where(verification.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VerificationClient) GetX(ctx context.Context, id int) *Verification {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *VerificationClient) Hooks() []Hook {
+	return c.hooks.Verification
 }

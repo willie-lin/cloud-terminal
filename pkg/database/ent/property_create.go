@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
@@ -16,6 +17,18 @@ type PropertyCreate struct {
 	config
 	mutation *PropertyMutation
 	hooks    []Hook
+}
+
+// SetName sets the "name" field.
+func (pc *PropertyCreate) SetName(s string) *PropertyCreate {
+	pc.mutation.SetName(s)
+	return pc
+}
+
+// SetValue sets the "value" field.
+func (pc *PropertyCreate) SetValue(s string) *PropertyCreate {
+	pc.mutation.SetValue(s)
+	return pc
 }
 
 // Mutation returns the PropertyMutation object of the builder.
@@ -69,6 +82,12 @@ func (pc *PropertyCreate) SaveX(ctx context.Context) *Property {
 
 // check runs all checks and user-defined validators on the builder.
 func (pc *PropertyCreate) check() error {
+	if _, ok := pc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
+	}
+	if _, ok := pc.mutation.Value(); !ok {
+		return &ValidationError{Name: "value", err: errors.New("ent: missing required field \"value\"")}
+	}
 	return nil
 }
 
@@ -96,6 +115,22 @@ func (pc *PropertyCreate) createSpec() (*Property, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := pc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: property.FieldName,
+		})
+		_node.Name = value
+	}
+	if value, ok := pc.mutation.Value(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: property.FieldValue,
+		})
+		_node.Value = value
+	}
 	return _node, _spec
 }
 

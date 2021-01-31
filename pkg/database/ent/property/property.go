@@ -7,6 +7,10 @@ const (
 	Label = "property"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
+	// FieldValue holds the string denoting the value field in the database.
+	FieldValue = "value"
 
 	// Table holds the table name of the property in the database.
 	Table = "properties"
@@ -15,6 +19,8 @@ const (
 // Columns holds all SQL columns for property fields.
 var Columns = []string{
 	FieldID,
+	FieldName,
+	FieldValue,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

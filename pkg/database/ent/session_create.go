@@ -39,15 +39,15 @@ func (sc *SessionCreate) SetPort(i int) *SessionCreate {
 	return sc
 }
 
-// SetConnectionId sets the "connectionId" field.
-func (sc *SessionCreate) SetConnectionId(s string) *SessionCreate {
-	sc.mutation.SetConnectionId(s)
+// SetConnectionID sets the "connection_id" field.
+func (sc *SessionCreate) SetConnectionID(s string) *SessionCreate {
+	sc.mutation.SetConnectionID(s)
 	return sc
 }
 
-// SetAssetId sets the "assetId" field.
-func (sc *SessionCreate) SetAssetId(s string) *SessionCreate {
-	sc.mutation.SetAssetId(s)
+// SetAssetID sets the "asset_id" field.
+func (sc *SessionCreate) SetAssetID(s string) *SessionCreate {
+	sc.mutation.SetAssetID(s)
 	return sc
 }
 
@@ -69,7 +69,7 @@ func (sc *SessionCreate) SetCreator(s string) *SessionCreate {
 	return sc
 }
 
-// SetClientIP sets the "clientIP" field.
+// SetClientIP sets the "client_ip" field.
 func (sc *SessionCreate) SetClientIP(s string) *SessionCreate {
 	sc.mutation.SetClientIP(s)
 	return sc
@@ -99,7 +99,7 @@ func (sc *SessionCreate) SetRecording(s string) *SessionCreate {
 	return sc
 }
 
-// SetPrivateKey sets the "privateKey" field.
+// SetPrivateKey sets the "private_key" field.
 func (sc *SessionCreate) SetPrivateKey(s string) *SessionCreate {
 	sc.mutation.SetPrivateKey(s)
 	return sc
@@ -123,30 +123,30 @@ func (sc *SessionCreate) SetMessage(s string) *SessionCreate {
 	return sc
 }
 
-// SetConnectedTime sets the "connectedTime" field.
-func (sc *SessionCreate) SetConnectedTime(t time.Time) *SessionCreate {
-	sc.mutation.SetConnectedTime(t)
+// SetConnected sets the "connected" field.
+func (sc *SessionCreate) SetConnected(t time.Time) *SessionCreate {
+	sc.mutation.SetConnected(t)
 	return sc
 }
 
-// SetNillableConnectedTime sets the "connectedTime" field if the given value is not nil.
-func (sc *SessionCreate) SetNillableConnectedTime(t *time.Time) *SessionCreate {
+// SetNillableConnected sets the "connected" field if the given value is not nil.
+func (sc *SessionCreate) SetNillableConnected(t *time.Time) *SessionCreate {
 	if t != nil {
-		sc.SetConnectedTime(*t)
+		sc.SetConnected(*t)
 	}
 	return sc
 }
 
-// SetDisconnectedTime sets the "disconnectedTime" field.
-func (sc *SessionCreate) SetDisconnectedTime(t time.Time) *SessionCreate {
-	sc.mutation.SetDisconnectedTime(t)
+// SetDisconnected sets the "disconnected" field.
+func (sc *SessionCreate) SetDisconnected(t time.Time) *SessionCreate {
+	sc.mutation.SetDisconnected(t)
 	return sc
 }
 
-// SetNillableDisconnectedTime sets the "disconnectedTime" field if the given value is not nil.
-func (sc *SessionCreate) SetNillableDisconnectedTime(t *time.Time) *SessionCreate {
+// SetNillableDisconnected sets the "disconnected" field if the given value is not nil.
+func (sc *SessionCreate) SetNillableDisconnected(t *time.Time) *SessionCreate {
 	if t != nil {
-		sc.SetDisconnectedTime(*t)
+		sc.SetDisconnected(*t)
 	}
 	return sc
 }
@@ -224,13 +224,13 @@ func (sc *SessionCreate) SaveX(ctx context.Context) *Session {
 
 // defaults sets the default values of the builder before save.
 func (sc *SessionCreate) defaults() {
-	if _, ok := sc.mutation.ConnectedTime(); !ok {
-		v := session.DefaultConnectedTime()
-		sc.mutation.SetConnectedTime(v)
+	if _, ok := sc.mutation.Connected(); !ok {
+		v := session.DefaultConnected()
+		sc.mutation.SetConnected(v)
 	}
-	if _, ok := sc.mutation.DisconnectedTime(); !ok {
-		v := session.DefaultDisconnectedTime()
-		sc.mutation.SetDisconnectedTime(v)
+	if _, ok := sc.mutation.Disconnected(); !ok {
+		v := session.DefaultDisconnected()
+		sc.mutation.SetDisconnected(v)
 	}
 }
 
@@ -245,11 +245,11 @@ func (sc *SessionCreate) check() error {
 	if _, ok := sc.mutation.Port(); !ok {
 		return &ValidationError{Name: "port", err: errors.New("ent: missing required field \"port\"")}
 	}
-	if _, ok := sc.mutation.ConnectionId(); !ok {
-		return &ValidationError{Name: "connectionId", err: errors.New("ent: missing required field \"connectionId\"")}
+	if _, ok := sc.mutation.ConnectionID(); !ok {
+		return &ValidationError{Name: "connection_id", err: errors.New("ent: missing required field \"connection_id\"")}
 	}
-	if _, ok := sc.mutation.AssetId(); !ok {
-		return &ValidationError{Name: "assetId", err: errors.New("ent: missing required field \"assetId\"")}
+	if _, ok := sc.mutation.AssetID(); !ok {
+		return &ValidationError{Name: "asset_id", err: errors.New("ent: missing required field \"asset_id\"")}
 	}
 	if _, ok := sc.mutation.Username(); !ok {
 		return &ValidationError{Name: "username", err: errors.New("ent: missing required field \"username\"")}
@@ -261,7 +261,7 @@ func (sc *SessionCreate) check() error {
 		return &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
 	}
 	if _, ok := sc.mutation.ClientIP(); !ok {
-		return &ValidationError{Name: "clientIP", err: errors.New("ent: missing required field \"clientIP\"")}
+		return &ValidationError{Name: "client_ip", err: errors.New("ent: missing required field \"client_ip\"")}
 	}
 	if _, ok := sc.mutation.Width(); !ok {
 		return &ValidationError{Name: "width", err: errors.New("ent: missing required field \"width\"")}
@@ -276,7 +276,7 @@ func (sc *SessionCreate) check() error {
 		return &ValidationError{Name: "recording", err: errors.New("ent: missing required field \"recording\"")}
 	}
 	if _, ok := sc.mutation.PrivateKey(); !ok {
-		return &ValidationError{Name: "privateKey", err: errors.New("ent: missing required field \"privateKey\"")}
+		return &ValidationError{Name: "private_key", err: errors.New("ent: missing required field \"private_key\"")}
 	}
 	if _, ok := sc.mutation.Passphrase(); !ok {
 		return &ValidationError{Name: "passphrase", err: errors.New("ent: missing required field \"passphrase\"")}
@@ -287,11 +287,11 @@ func (sc *SessionCreate) check() error {
 	if _, ok := sc.mutation.Message(); !ok {
 		return &ValidationError{Name: "message", err: errors.New("ent: missing required field \"message\"")}
 	}
-	if _, ok := sc.mutation.ConnectedTime(); !ok {
-		return &ValidationError{Name: "connectedTime", err: errors.New("ent: missing required field \"connectedTime\"")}
+	if _, ok := sc.mutation.Connected(); !ok {
+		return &ValidationError{Name: "connected", err: errors.New("ent: missing required field \"connected\"")}
 	}
-	if _, ok := sc.mutation.DisconnectedTime(); !ok {
-		return &ValidationError{Name: "disconnectedTime", err: errors.New("ent: missing required field \"disconnectedTime\"")}
+	if _, ok := sc.mutation.Disconnected(); !ok {
+		return &ValidationError{Name: "disconnected", err: errors.New("ent: missing required field \"disconnected\"")}
 	}
 	return nil
 }
@@ -346,21 +346,21 @@ func (sc *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 		})
 		_node.Port = value
 	}
-	if value, ok := sc.mutation.ConnectionId(); ok {
+	if value, ok := sc.mutation.ConnectionID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: session.FieldConnectionId,
+			Column: session.FieldConnectionID,
 		})
-		_node.ConnectionId = value
+		_node.ConnectionID = value
 	}
-	if value, ok := sc.mutation.AssetId(); ok {
+	if value, ok := sc.mutation.AssetID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: session.FieldAssetId,
+			Column: session.FieldAssetID,
 		})
-		_node.AssetId = value
+		_node.AssetID = value
 	}
 	if value, ok := sc.mutation.Username(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -458,21 +458,21 @@ func (sc *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 		})
 		_node.Message = value
 	}
-	if value, ok := sc.mutation.ConnectedTime(); ok {
+	if value, ok := sc.mutation.Connected(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: session.FieldConnectedTime,
+			Column: session.FieldConnected,
 		})
-		_node.ConnectedTime = value
+		_node.Connected = value
 	}
-	if value, ok := sc.mutation.DisconnectedTime(); ok {
+	if value, ok := sc.mutation.Disconnected(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: session.FieldDisconnectedTime,
+			Column: session.FieldDisconnected,
 		})
-		_node.DisconnectedTime = value
+		_node.Disconnected = value
 	}
 	if nodes := sc.mutation.AssetsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

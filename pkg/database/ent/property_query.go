@@ -241,6 +241,19 @@ func (pq *PropertyQuery) Clone() *PropertyQuery {
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Property.Query().
+//		GroupBy(property.FieldName).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (pq *PropertyQuery) GroupBy(field string, fields ...string) *PropertyGroupBy {
 	group := &PropertyGroupBy{config: pq.config}
 	group.fields = append([]string{field}, fields...)
@@ -255,6 +268,17 @@ func (pq *PropertyQuery) GroupBy(field string, fields ...string) *PropertyGroupB
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//	}
+//
+//	client.Property.Query().
+//		Select(property.FieldName).
+//		Scan(ctx, &v)
+//
 func (pq *PropertyQuery) Select(field string, fields ...string) *PropertySelect {
 	pq.fields = append([]string{field}, fields...)
 	return &PropertySelect{PropertyQuery: pq}

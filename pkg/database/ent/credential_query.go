@@ -76,8 +76,8 @@ func (cq *CredentialQuery) FirstX(ctx context.Context) *Credential {
 
 // FirstID returns the first Credential ID from the query.
 // Returns a *NotFoundError when no Credential ID was found.
-func (cq *CredentialQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (cq *CredentialQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = cq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -89,7 +89,7 @@ func (cq *CredentialQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (cq *CredentialQuery) FirstIDX(ctx context.Context) int {
+func (cq *CredentialQuery) FirstIDX(ctx context.Context) string {
 	id, err := cq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -127,8 +127,8 @@ func (cq *CredentialQuery) OnlyX(ctx context.Context) *Credential {
 // OnlyID is like Only, but returns the only Credential ID in the query.
 // Returns a *NotSingularError when exactly one Credential ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (cq *CredentialQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (cq *CredentialQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = cq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func (cq *CredentialQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (cq *CredentialQuery) OnlyIDX(ctx context.Context) int {
+func (cq *CredentialQuery) OnlyIDX(ctx context.Context) string {
 	id, err := cq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -170,8 +170,8 @@ func (cq *CredentialQuery) AllX(ctx context.Context) []*Credential {
 }
 
 // IDs executes the query and returns a list of Credential IDs.
-func (cq *CredentialQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
+func (cq *CredentialQuery) IDs(ctx context.Context) ([]string, error) {
+	var ids []string
 	if err := cq.Select(credential.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (cq *CredentialQuery) IDs(ctx context.Context) ([]int, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (cq *CredentialQuery) IDsX(ctx context.Context) []int {
+func (cq *CredentialQuery) IDsX(ctx context.Context) []string {
 	ids, err := cq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -241,6 +241,19 @@ func (cq *CredentialQuery) Clone() *CredentialQuery {
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Credential.Query().
+//		GroupBy(credential.FieldName).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (cq *CredentialQuery) GroupBy(field string, fields ...string) *CredentialGroupBy {
 	group := &CredentialGroupBy{config: cq.config}
 	group.fields = append([]string{field}, fields...)
@@ -255,6 +268,17 @@ func (cq *CredentialQuery) GroupBy(field string, fields ...string) *CredentialGr
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//	}
+//
+//	client.Credential.Query().
+//		Select(credential.FieldName).
+//		Scan(ctx, &v)
+//
 func (cq *CredentialQuery) Select(field string, fields ...string) *CredentialSelect {
 	cq.fields = append([]string{field}, fields...)
 	return &CredentialSelect{CredentialQuery: cq}
@@ -321,7 +345,7 @@ func (cq *CredentialQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   credential.Table,
 			Columns: credential.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: credential.FieldID,
 			},
 		},

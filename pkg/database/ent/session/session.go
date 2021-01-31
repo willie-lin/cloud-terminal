@@ -17,17 +17,17 @@ const (
 	FieldIP = "ip"
 	// FieldPort holds the string denoting the port field in the database.
 	FieldPort = "port"
-	// FieldConnectionId holds the string denoting the connectionid field in the database.
-	FieldConnectionId = "connection_id"
-	// FieldAssetId holds the string denoting the assetid field in the database.
-	FieldAssetId = "asset_id"
+	// FieldConnectionID holds the string denoting the connection_id field in the database.
+	FieldConnectionID = "connection_id"
+	// FieldAssetID holds the string denoting the asset_id field in the database.
+	FieldAssetID = "asset_id"
 	// FieldUsername holds the string denoting the username field in the database.
 	FieldUsername = "username"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
 	// FieldCreator holds the string denoting the creator field in the database.
 	FieldCreator = "creator"
-	// FieldClientIP holds the string denoting the clientip field in the database.
+	// FieldClientIP holds the string denoting the client_ip field in the database.
 	FieldClientIP = "client_ip"
 	// FieldWidth holds the string denoting the width field in the database.
 	FieldWidth = "width"
@@ -37,7 +37,7 @@ const (
 	FieldStatus = "status"
 	// FieldRecording holds the string denoting the recording field in the database.
 	FieldRecording = "recording"
-	// FieldPrivateKey holds the string denoting the privatekey field in the database.
+	// FieldPrivateKey holds the string denoting the private_key field in the database.
 	FieldPrivateKey = "private_key"
 	// FieldPassphrase holds the string denoting the passphrase field in the database.
 	FieldPassphrase = "passphrase"
@@ -45,10 +45,10 @@ const (
 	FieldCode = "code"
 	// FieldMessage holds the string denoting the message field in the database.
 	FieldMessage = "message"
-	// FieldConnectedTime holds the string denoting the connectedtime field in the database.
-	FieldConnectedTime = "connected_time"
-	// FieldDisconnectedTime holds the string denoting the disconnectedtime field in the database.
-	FieldDisconnectedTime = "disconnected_time"
+	// FieldConnected holds the string denoting the connected field in the database.
+	FieldConnected = "connected"
+	// FieldDisconnected holds the string denoting the disconnected field in the database.
+	FieldDisconnected = "disconnected"
 
 	// EdgeAssets holds the string denoting the assets edge name in mutations.
 	EdgeAssets = "assets"
@@ -70,8 +70,8 @@ var Columns = []string{
 	FieldProtocol,
 	FieldIP,
 	FieldPort,
-	FieldConnectionId,
-	FieldAssetId,
+	FieldConnectionID,
+	FieldAssetID,
 	FieldUsername,
 	FieldPassword,
 	FieldCreator,
@@ -84,8 +84,8 @@ var Columns = []string{
 	FieldPassphrase,
 	FieldCode,
 	FieldMessage,
-	FieldConnectedTime,
-	FieldDisconnectedTime,
+	FieldConnected,
+	FieldDisconnected,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -99,10 +99,10 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultConnectedTime holds the default value on creation for the "connectedTime" field.
-	DefaultConnectedTime func() time.Time
-	// DefaultDisconnectedTime holds the default value on creation for the "disconnectedTime" field.
-	DefaultDisconnectedTime func() time.Time
-	// UpdateDefaultDisconnectedTime holds the default value on update for the "disconnectedTime" field.
-	UpdateDefaultDisconnectedTime func() time.Time
+	// DefaultConnected holds the default value on creation for the "connected" field.
+	DefaultConnected func() time.Time
+	// DefaultDisconnected holds the default value on creation for the "disconnected" field.
+	DefaultDisconnected func() time.Time
+	// UpdateDefaultDisconnected holds the default value on update for the "disconnected" field.
+	UpdateDefaultDisconnected func() time.Time
 )

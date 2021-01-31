@@ -19,15 +19,15 @@ const (
 	FieldProtocol = "protocol"
 	// FieldPort holds the string denoting the port field in the database.
 	FieldPort = "port"
-	// FieldAccountType holds the string denoting the accounttype field in the database.
+	// FieldAccountType holds the string denoting the account_type field in the database.
 	FieldAccountType = "account_type"
 	// FieldUsername holds the string denoting the username field in the database.
 	FieldUsername = "username"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
-	// FieldCredentialId holds the string denoting the credentialid field in the database.
-	FieldCredentialId = "credential_id"
-	// FieldPrivateKey holds the string denoting the privatekey field in the database.
+	// FieldCredentialID holds the string denoting the credential_id field in the database.
+	FieldCredentialID = "credential_id"
+	// FieldPrivateKey holds the string denoting the private_key field in the database.
 	FieldPrivateKey = "private_key"
 	// FieldPassphrase holds the string denoting the passphrase field in the database.
 	FieldPassphrase = "passphrase"
@@ -66,7 +66,7 @@ var Columns = []string{
 	FieldAccountType,
 	FieldUsername,
 	FieldPassword,
-	FieldCredentialId,
+	FieldCredentialID,
 	FieldPrivateKey,
 	FieldPassphrase,
 	FieldDescription,

@@ -45,7 +45,7 @@ func (ac *AssetCreate) SetPort(i int) *AssetCreate {
 	return ac
 }
 
-// SetAccountType sets the "accountType" field.
+// SetAccountType sets the "account_type" field.
 func (ac *AssetCreate) SetAccountType(s string) *AssetCreate {
 	ac.mutation.SetAccountType(s)
 	return ac
@@ -63,13 +63,13 @@ func (ac *AssetCreate) SetPassword(s string) *AssetCreate {
 	return ac
 }
 
-// SetCredentialId sets the "credentialId" field.
-func (ac *AssetCreate) SetCredentialId(s string) *AssetCreate {
-	ac.mutation.SetCredentialId(s)
+// SetCredentialID sets the "credential_id" field.
+func (ac *AssetCreate) SetCredentialID(s string) *AssetCreate {
+	ac.mutation.SetCredentialID(s)
 	return ac
 }
 
-// SetPrivateKey sets the "privateKey" field.
+// SetPrivateKey sets the "private_key" field.
 func (ac *AssetCreate) SetPrivateKey(s string) *AssetCreate {
 	ac.mutation.SetPrivateKey(s)
 	return ac
@@ -229,7 +229,7 @@ func (ac *AssetCreate) check() error {
 		return &ValidationError{Name: "port", err: errors.New("ent: missing required field \"port\"")}
 	}
 	if _, ok := ac.mutation.AccountType(); !ok {
-		return &ValidationError{Name: "accountType", err: errors.New("ent: missing required field \"accountType\"")}
+		return &ValidationError{Name: "account_type", err: errors.New("ent: missing required field \"account_type\"")}
 	}
 	if _, ok := ac.mutation.Username(); !ok {
 		return &ValidationError{Name: "username", err: errors.New("ent: missing required field \"username\"")}
@@ -237,11 +237,11 @@ func (ac *AssetCreate) check() error {
 	if _, ok := ac.mutation.Password(); !ok {
 		return &ValidationError{Name: "password", err: errors.New("ent: missing required field \"password\"")}
 	}
-	if _, ok := ac.mutation.CredentialId(); !ok {
-		return &ValidationError{Name: "credentialId", err: errors.New("ent: missing required field \"credentialId\"")}
+	if _, ok := ac.mutation.CredentialID(); !ok {
+		return &ValidationError{Name: "credential_id", err: errors.New("ent: missing required field \"credential_id\"")}
 	}
 	if _, ok := ac.mutation.PrivateKey(); !ok {
-		return &ValidationError{Name: "privateKey", err: errors.New("ent: missing required field \"privateKey\"")}
+		return &ValidationError{Name: "private_key", err: errors.New("ent: missing required field \"private_key\"")}
 	}
 	if _, ok := ac.mutation.Passphrase(); !ok {
 		return &ValidationError{Name: "passphrase", err: errors.New("ent: missing required field \"passphrase\"")}
@@ -346,13 +346,13 @@ func (ac *AssetCreate) createSpec() (*Asset, *sqlgraph.CreateSpec) {
 		})
 		_node.Password = value
 	}
-	if value, ok := ac.mutation.CredentialId(); ok {
+	if value, ok := ac.mutation.CredentialID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: asset.FieldCredentialId,
+			Column: asset.FieldCredentialID,
 		})
-		_node.CredentialId = value
+		_node.CredentialID = value
 	}
 	if value, ok := ac.mutation.PrivateKey(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

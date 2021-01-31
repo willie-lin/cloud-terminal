@@ -9,7 +9,7 @@ const (
 	FieldID = "id"
 
 	// Table holds the table name of the resourcesharer in the database.
-	Table = "resource_sharers"
+	Table = "resourceSharers"
 )
 
 // Columns holds all SQL columns for resourcesharer fields.

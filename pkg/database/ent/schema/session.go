@@ -28,22 +28,22 @@ func (Session) Fields() []ent.Field {
 		field.String("protocol"),
 		field.String("ip"),
 		field.Int("port"),
-		field.String("connectionId"),
-		field.String("assetId"),
+		field.String("connection_id"),
+		field.String("asset_id"),
 		field.String("username"),
 		field.String("password"),
 		field.String("creator"),
-		field.String("clientIP"),
+		field.String("client_ip"),
 		field.Int("width"),
 		field.Int("height"),
 		field.String("status"),
 		field.String("recording"),
-		field.String("privateKey"),
+		field.String("private_key"),
 		field.String("passphrase"),
 		field.Int("code"),
 		field.String("message"),
-		field.Time("connectedTime").Default(time.Now),
-		field.Time("disconnectedTime").Default(time.Now).
+		field.Time("connected").Default(time.Now),
+		field.Time("disconnected").Default(time.Now).
 			UpdateDefault(time.Now),
 	}
 }

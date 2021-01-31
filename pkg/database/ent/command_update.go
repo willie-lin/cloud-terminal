@@ -72,12 +72,18 @@ func (cu *CommandUpdate) Save(ctx context.Context) (int, error) {
 	)
 	cu.defaults()
 	if len(cu.hooks) == 0 {
+		if err = cu.check(); err != nil {
+			return 0, err
+		}
 		affected, err = cu.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*CommandMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = cu.check(); err != nil {
+				return 0, err
 			}
 			cu.mutation = mutation
 			affected, err = cu.sqlSave(ctx)
@@ -122,6 +128,16 @@ func (cu *CommandUpdate) defaults() {
 		v := command.UpdateDefaultUpdatedAt()
 		cu.mutation.SetUpdatedAt(v)
 	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (cu *CommandUpdate) check() error {
+	if v, ok := cu.mutation.Name(); ok {
+		if err := command.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+		}
+	}
+	return nil
 }
 
 func (cu *CommandUpdate) sqlSave(ctx context.Context) (n int, err error) {
@@ -233,12 +249,18 @@ func (cuo *CommandUpdateOne) Save(ctx context.Context) (*Command, error) {
 	)
 	cuo.defaults()
 	if len(cuo.hooks) == 0 {
+		if err = cuo.check(); err != nil {
+			return nil, err
+		}
 		node, err = cuo.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*CommandMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = cuo.check(); err != nil {
+				return nil, err
 			}
 			cuo.mutation = mutation
 			node, err = cuo.sqlSave(ctx)
@@ -283,6 +305,16 @@ func (cuo *CommandUpdateOne) defaults() {
 		v := command.UpdateDefaultUpdatedAt()
 		cuo.mutation.SetUpdatedAt(v)
 	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (cuo *CommandUpdateOne) check() error {
+	if v, ok := cuo.mutation.Name(); ok {
+		if err := command.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+		}
+	}
+	return nil
 }
 
 func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err error) {
