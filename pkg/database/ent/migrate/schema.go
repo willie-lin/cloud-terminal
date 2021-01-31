@@ -11,24 +11,54 @@ import (
 var (
 	// AssetsColumns holds the columns for the "assets" table.
 	AssetsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "ip", Type: field.TypeString},
+		{Name: "protocol", Type: field.TypeString},
+		{Name: "port", Type: field.TypeInt},
+		{Name: "account_type", Type: field.TypeString},
+		{Name: "username", Type: field.TypeString},
+		{Name: "password", Type: field.TypeString},
+		{Name: "credential_id", Type: field.TypeString},
+		{Name: "private_key", Type: field.TypeString},
+		{Name: "passphrase", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString},
+		{Name: "active", Type: field.TypeBool},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "tags", Type: field.TypeString},
+		{Name: "session_assets", Type: field.TypeString, Nullable: true},
 	}
 	// AssetsTable holds the schema information for the "assets" table.
 	AssetsTable = &schema.Table{
-		Name:        "assets",
-		Columns:     AssetsColumns,
-		PrimaryKey:  []*schema.Column{AssetsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "assets",
+		Columns:    AssetsColumns,
+		PrimaryKey: []*schema.Column{AssetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:  "assets_sessions_assets",
+				Columns: []*schema.Column{AssetsColumns[16]},
+
+				RefColumns: []*schema.Column{SessionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Annotation: &entsql.Annotation{Table: "assets"},
 	}
 	// CommandsColumns holds the columns for the "commands" table.
 	CommandsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "content", Type: field.TypeJSON},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// CommandsTable holds the schema information for the "commands" table.
 	CommandsTable = &schema.Table{
 		Name:        "commands",
 		Columns:     CommandsColumns,
-		PrimaryKey:  []*schema.Column{CommandsColumns[0]},
+		PrimaryKey:  []*schema.Column{CommandsColumns[0], CommandsColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
 	// CredentialsColumns holds the columns for the "credentials" table.
@@ -173,6 +203,7 @@ var (
 )
 
 func init() {
+	AssetsTable.ForeignKeys[0].RefTable = SessionsTable
 	UserGroupUsersTable.ForeignKeys[0].RefTable = UserGroupsTable
 	UserGroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

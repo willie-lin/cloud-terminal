@@ -241,6 +241,19 @@ func (cq *CommandQuery) Clone() *CommandQuery {
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		ID string `json:"Id,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Command.Query().
+//		GroupBy(command.FieldID).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (cq *CommandQuery) GroupBy(field string, fields ...string) *CommandGroupBy {
 	group := &CommandGroupBy{config: cq.config}
 	group.fields = append([]string{field}, fields...)
@@ -255,6 +268,17 @@ func (cq *CommandQuery) GroupBy(field string, fields ...string) *CommandGroupBy 
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		ID string `json:"Id,omitempty"`
+//	}
+//
+//	client.Command.Query().
+//		Select(command.FieldID).
+//		Scan(ctx, &v)
+//
 func (cq *CommandQuery) Select(field string, fields ...string) *CommandSelect {
 	cq.fields = append([]string{field}, fields...)
 	return &CommandSelect{CommandQuery: cq}

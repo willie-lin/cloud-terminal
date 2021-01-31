@@ -6,8 +6,8 @@ import (
 	"github.com/facebook/ent/dialect/sql"
 )
 
-// Assets is the predicate function for assets builders.
-type Assets func(*sql.Selector)
+// Asset is the predicate function for asset builders.
+type Asset func(*sql.Selector)
 
 // Command is the predicate function for command builders.
 type Command func(*sql.Selector)

@@ -4,7 +4,9 @@ import (
 	"github.com/facebook/ent"
 	"github.com/facebook/ent/dialect/entsql"
 	"github.com/facebook/ent/schema"
+	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
+	"time"
 )
 
 // Session holds the schema definition for the Session entity.
@@ -27,25 +29,28 @@ func (Session) Fields() []ent.Field {
 		field.String("ip"),
 		field.Int("port"),
 		field.String("connectionId"),
-		field.String("AssetId"),
-		field.String("Username"),
-		field.String("Password"),
-		field.String("Creator"),
-		field.String("ClientIP"),
-		field.Int("Width"),
-		field.Int("Height"),
-		field.String("Status"),
-		field.String("Recording"),
-		field.String("PrivateKey"),
-		field.String("Passphrase"),
-		field.Int("Code"),
-		field.String("Message"),
-		field.Time("ConnectedTime"),
-		field.Time("DisconnectedTime"),
+		field.String("assetId"),
+		field.String("username"),
+		field.String("password"),
+		field.String("creator"),
+		field.String("clientIP"),
+		field.Int("width"),
+		field.Int("height"),
+		field.String("status"),
+		field.String("recording"),
+		field.String("privateKey"),
+		field.String("passphrase"),
+		field.Int("code"),
+		field.String("message"),
+		field.Time("connectedTime").Default(time.Now),
+		field.Time("disconnectedTime").Default(time.Now).
+			UpdateDefault(time.Now),
 	}
 }
 
 // Edges of the Session.
 func (Session) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.To("assets", Asset.Type),
+	}
 }

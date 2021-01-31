@@ -12,8 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// Assets is the client for interacting with the Assets builders.
-	Assets *AssetsClient
+	// Asset is the client for interacting with the Asset builders.
+	Asset *AssetClient
 	// Command is the client for interacting with the Command builders.
 	Command *CommandClient
 	// Credential is the client for interacting with the Credential builders.
@@ -163,7 +163,7 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.Assets = NewAssetsClient(tx.config)
+	tx.Asset = NewAssetClient(tx.config)
 	tx.Command = NewCommandClient(tx.config)
 	tx.Credential = NewCredentialClient(tx.config)
 	tx.Property = NewPropertyClient(tx.config)
@@ -180,7 +180,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Assets.QueryXXX(), the query will be executed
+// applies a query, for example: Asset.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

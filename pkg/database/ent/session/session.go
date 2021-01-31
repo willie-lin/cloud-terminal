@@ -2,6 +2,10 @@
 
 package session
 
+import (
+	"time"
+)
+
 const (
 	// Label holds the string label denoting the session type in the database.
 	Label = "session"
@@ -46,8 +50,18 @@ const (
 	// FieldDisconnectedTime holds the string denoting the disconnectedtime field in the database.
 	FieldDisconnectedTime = "disconnected_time"
 
+	// EdgeAssets holds the string denoting the assets edge name in mutations.
+	EdgeAssets = "assets"
+
 	// Table holds the table name of the session in the database.
 	Table = "sessions"
+	// AssetsTable is the table the holds the assets relation/edge.
+	AssetsTable = "assets"
+	// AssetsInverseTable is the table name for the Asset entity.
+	// It exists in this package in order to avoid circular dependency with the "asset" package.
+	AssetsInverseTable = "assets"
+	// AssetsColumn is the table column denoting the assets relation/edge.
+	AssetsColumn = "session_assets"
 )
 
 // Columns holds all SQL columns for session fields.
@@ -83,3 +97,12 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultConnectedTime holds the default value on creation for the "connectedTime" field.
+	DefaultConnectedTime func() time.Time
+	// DefaultDisconnectedTime holds the default value on creation for the "disconnectedTime" field.
+	DefaultDisconnectedTime func() time.Time
+	// UpdateDefaultDisconnectedTime holds the default value on update for the "disconnectedTime" field.
+	UpdateDefaultDisconnectedTime func() time.Time
+)

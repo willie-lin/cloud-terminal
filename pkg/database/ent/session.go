@@ -24,36 +24,57 @@ type Session struct {
 	Port int `json:"port,omitempty"`
 	// ConnectionId holds the value of the "connectionId" field.
 	ConnectionId string `json:"connectionId,omitempty"`
-	// AssetId holds the value of the "AssetId" field.
-	AssetId string `json:"AssetId,omitempty"`
-	// Username holds the value of the "Username" field.
-	Username string `json:"Username,omitempty"`
-	// Password holds the value of the "Password" field.
-	Password string `json:"Password,omitempty"`
-	// Creator holds the value of the "Creator" field.
-	Creator string `json:"Creator,omitempty"`
-	// ClientIP holds the value of the "ClientIP" field.
-	ClientIP string `json:"ClientIP,omitempty"`
-	// Width holds the value of the "Width" field.
-	Width int `json:"Width,omitempty"`
-	// Height holds the value of the "Height" field.
-	Height int `json:"Height,omitempty"`
-	// Status holds the value of the "Status" field.
-	Status string `json:"Status,omitempty"`
-	// Recording holds the value of the "Recording" field.
-	Recording string `json:"Recording,omitempty"`
-	// PrivateKey holds the value of the "PrivateKey" field.
-	PrivateKey string `json:"PrivateKey,omitempty"`
-	// Passphrase holds the value of the "Passphrase" field.
-	Passphrase string `json:"Passphrase,omitempty"`
-	// Code holds the value of the "Code" field.
-	Code int `json:"Code,omitempty"`
-	// Message holds the value of the "Message" field.
-	Message string `json:"Message,omitempty"`
-	// ConnectedTime holds the value of the "ConnectedTime" field.
-	ConnectedTime time.Time `json:"ConnectedTime,omitempty"`
-	// DisconnectedTime holds the value of the "DisconnectedTime" field.
-	DisconnectedTime time.Time `json:"DisconnectedTime,omitempty"`
+	// AssetId holds the value of the "assetId" field.
+	AssetId string `json:"assetId,omitempty"`
+	// Username holds the value of the "username" field.
+	Username string `json:"username,omitempty"`
+	// Password holds the value of the "password" field.
+	Password string `json:"password,omitempty"`
+	// Creator holds the value of the "creator" field.
+	Creator string `json:"creator,omitempty"`
+	// ClientIP holds the value of the "clientIP" field.
+	ClientIP string `json:"clientIP,omitempty"`
+	// Width holds the value of the "width" field.
+	Width int `json:"width,omitempty"`
+	// Height holds the value of the "height" field.
+	Height int `json:"height,omitempty"`
+	// Status holds the value of the "status" field.
+	Status string `json:"status,omitempty"`
+	// Recording holds the value of the "recording" field.
+	Recording string `json:"recording,omitempty"`
+	// PrivateKey holds the value of the "privateKey" field.
+	PrivateKey string `json:"privateKey,omitempty"`
+	// Passphrase holds the value of the "passphrase" field.
+	Passphrase string `json:"passphrase,omitempty"`
+	// Code holds the value of the "code" field.
+	Code int `json:"code,omitempty"`
+	// Message holds the value of the "message" field.
+	Message string `json:"message,omitempty"`
+	// ConnectedTime holds the value of the "connectedTime" field.
+	ConnectedTime time.Time `json:"connectedTime,omitempty"`
+	// DisconnectedTime holds the value of the "disconnectedTime" field.
+	DisconnectedTime time.Time `json:"disconnectedTime,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the SessionQuery when eager-loading is set.
+	Edges SessionEdges `json:"edges"`
+}
+
+// SessionEdges holds the relations/edges for other nodes in the graph.
+type SessionEdges struct {
+	// Assets holds the value of the assets edge.
+	Assets []*Asset
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// AssetsOrErr returns the Assets value or an error if the edge
+// was not loaded in eager-loading.
+func (e SessionEdges) AssetsOrErr() ([]*Asset, error) {
+	if e.loadedTypes[0] {
+		return e.Assets, nil
+	}
+	return nil, &NotLoadedError{edge: "assets"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -114,97 +135,102 @@ func (s *Session) assignValues(columns []string, values []interface{}) error {
 			}
 		case session.FieldAssetId:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field AssetId", values[i])
+				return fmt.Errorf("unexpected type %T for field assetId", values[i])
 			} else if value.Valid {
 				s.AssetId = value.String
 			}
 		case session.FieldUsername:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Username", values[i])
+				return fmt.Errorf("unexpected type %T for field username", values[i])
 			} else if value.Valid {
 				s.Username = value.String
 			}
 		case session.FieldPassword:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Password", values[i])
+				return fmt.Errorf("unexpected type %T for field password", values[i])
 			} else if value.Valid {
 				s.Password = value.String
 			}
 		case session.FieldCreator:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Creator", values[i])
+				return fmt.Errorf("unexpected type %T for field creator", values[i])
 			} else if value.Valid {
 				s.Creator = value.String
 			}
 		case session.FieldClientIP:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field ClientIP", values[i])
+				return fmt.Errorf("unexpected type %T for field clientIP", values[i])
 			} else if value.Valid {
 				s.ClientIP = value.String
 			}
 		case session.FieldWidth:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field Width", values[i])
+				return fmt.Errorf("unexpected type %T for field width", values[i])
 			} else if value.Valid {
 				s.Width = int(value.Int64)
 			}
 		case session.FieldHeight:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field Height", values[i])
+				return fmt.Errorf("unexpected type %T for field height", values[i])
 			} else if value.Valid {
 				s.Height = int(value.Int64)
 			}
 		case session.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Status", values[i])
+				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				s.Status = value.String
 			}
 		case session.FieldRecording:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Recording", values[i])
+				return fmt.Errorf("unexpected type %T for field recording", values[i])
 			} else if value.Valid {
 				s.Recording = value.String
 			}
 		case session.FieldPrivateKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field PrivateKey", values[i])
+				return fmt.Errorf("unexpected type %T for field privateKey", values[i])
 			} else if value.Valid {
 				s.PrivateKey = value.String
 			}
 		case session.FieldPassphrase:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Passphrase", values[i])
+				return fmt.Errorf("unexpected type %T for field passphrase", values[i])
 			} else if value.Valid {
 				s.Passphrase = value.String
 			}
 		case session.FieldCode:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field Code", values[i])
+				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
 				s.Code = int(value.Int64)
 			}
 		case session.FieldMessage:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Message", values[i])
+				return fmt.Errorf("unexpected type %T for field message", values[i])
 			} else if value.Valid {
 				s.Message = value.String
 			}
 		case session.FieldConnectedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field ConnectedTime", values[i])
+				return fmt.Errorf("unexpected type %T for field connectedTime", values[i])
 			} else if value.Valid {
 				s.ConnectedTime = value.Time
 			}
 		case session.FieldDisconnectedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field DisconnectedTime", values[i])
+				return fmt.Errorf("unexpected type %T for field disconnectedTime", values[i])
 			} else if value.Valid {
 				s.DisconnectedTime = value.Time
 			}
 		}
 	}
 	return nil
+}
+
+// QueryAssets queries the "assets" edge of the Session entity.
+func (s *Session) QueryAssets() *AssetQuery {
+	return (&SessionClient{config: s.config}).QueryAssets(s)
 }
 
 // Update returns a builder for updating this Session.
@@ -238,35 +264,35 @@ func (s *Session) String() string {
 	builder.WriteString(fmt.Sprintf("%v", s.Port))
 	builder.WriteString(", connectionId=")
 	builder.WriteString(s.ConnectionId)
-	builder.WriteString(", AssetId=")
+	builder.WriteString(", assetId=")
 	builder.WriteString(s.AssetId)
-	builder.WriteString(", Username=")
+	builder.WriteString(", username=")
 	builder.WriteString(s.Username)
-	builder.WriteString(", Password=")
+	builder.WriteString(", password=")
 	builder.WriteString(s.Password)
-	builder.WriteString(", Creator=")
+	builder.WriteString(", creator=")
 	builder.WriteString(s.Creator)
-	builder.WriteString(", ClientIP=")
+	builder.WriteString(", clientIP=")
 	builder.WriteString(s.ClientIP)
-	builder.WriteString(", Width=")
+	builder.WriteString(", width=")
 	builder.WriteString(fmt.Sprintf("%v", s.Width))
-	builder.WriteString(", Height=")
+	builder.WriteString(", height=")
 	builder.WriteString(fmt.Sprintf("%v", s.Height))
-	builder.WriteString(", Status=")
+	builder.WriteString(", status=")
 	builder.WriteString(s.Status)
-	builder.WriteString(", Recording=")
+	builder.WriteString(", recording=")
 	builder.WriteString(s.Recording)
-	builder.WriteString(", PrivateKey=")
+	builder.WriteString(", privateKey=")
 	builder.WriteString(s.PrivateKey)
-	builder.WriteString(", Passphrase=")
+	builder.WriteString(", passphrase=")
 	builder.WriteString(s.Passphrase)
-	builder.WriteString(", Code=")
+	builder.WriteString(", code=")
 	builder.WriteString(fmt.Sprintf("%v", s.Code))
-	builder.WriteString(", Message=")
+	builder.WriteString(", message=")
 	builder.WriteString(s.Message)
-	builder.WriteString(", ConnectedTime=")
+	builder.WriteString(", connectedTime=")
 	builder.WriteString(s.ConnectedTime.Format(time.ANSIC))
-	builder.WriteString(", DisconnectedTime=")
+	builder.WriteString(", disconnectedTime=")
 	builder.WriteString(s.DisconnectedTime.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()

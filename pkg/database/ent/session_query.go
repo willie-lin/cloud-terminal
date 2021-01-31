@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -11,6 +12,7 @@ import (
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 )
@@ -23,6 +25,8 @@ type SessionQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Session
+	// eager-loading edges.
+	withAssets *AssetQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -50,6 +54,28 @@ func (sq *SessionQuery) Offset(offset int) *SessionQuery {
 func (sq *SessionQuery) Order(o ...OrderFunc) *SessionQuery {
 	sq.order = append(sq.order, o...)
 	return sq
+}
+
+// QueryAssets chains the current query on the "assets" edge.
+func (sq *SessionQuery) QueryAssets() *AssetQuery {
+	query := &AssetQuery{config: sq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(session.Table, session.FieldID, selector),
+			sqlgraph.To(asset.Table, asset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, session.AssetsTable, session.AssetsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Session entity from the query.
@@ -233,10 +259,22 @@ func (sq *SessionQuery) Clone() *SessionQuery {
 		offset:     sq.offset,
 		order:      append([]OrderFunc{}, sq.order...),
 		predicates: append([]predicate.Session{}, sq.predicates...),
+		withAssets: sq.withAssets.Clone(),
 		// clone intermediate query.
 		sql:  sq.sql.Clone(),
 		path: sq.path,
 	}
+}
+
+// WithAssets tells the query-builder to eager-load the nodes that are connected to
+// the "assets" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SessionQuery) WithAssets(opts ...func(*AssetQuery)) *SessionQuery {
+	query := &AssetQuery{config: sq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withAssets = query
+	return sq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -302,8 +340,11 @@ func (sq *SessionQuery) prepareQuery(ctx context.Context) error {
 
 func (sq *SessionQuery) sqlAll(ctx context.Context) ([]*Session, error) {
 	var (
-		nodes = []*Session{}
-		_spec = sq.querySpec()
+		nodes       = []*Session{}
+		_spec       = sq.querySpec()
+		loadedTypes = [1]bool{
+			sq.withAssets != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Session{config: sq.config}
@@ -315,6 +356,7 @@ func (sq *SessionQuery) sqlAll(ctx context.Context) ([]*Session, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, sq.driver, _spec); err != nil {
@@ -323,6 +365,36 @@ func (sq *SessionQuery) sqlAll(ctx context.Context) ([]*Session, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := sq.withAssets; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[string]*Session)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Assets = []*Asset{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Asset(func(s *sql.Selector) {
+			s.Where(sql.InValues(session.AssetsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.session_assets
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "session_assets" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "session_assets" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Assets = append(node.Edges.Assets, n)
+		}
+	}
+
 	return nodes, nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/facebook/ent/dialect/sql"
+	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
 )
 
@@ -120,105 +121,105 @@ func ConnectionId(v string) predicate.Session {
 	})
 }
 
-// AssetId applies equality check predicate on the "AssetId" field. It's identical to AssetIdEQ.
+// AssetId applies equality check predicate on the "assetId" field. It's identical to AssetIdEQ.
 func AssetId(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldAssetId), v))
 	})
 }
 
-// Username applies equality check predicate on the "Username" field. It's identical to UsernameEQ.
+// Username applies equality check predicate on the "username" field. It's identical to UsernameEQ.
 func Username(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldUsername), v))
 	})
 }
 
-// Password applies equality check predicate on the "Password" field. It's identical to PasswordEQ.
+// Password applies equality check predicate on the "password" field. It's identical to PasswordEQ.
 func Password(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPassword), v))
 	})
 }
 
-// Creator applies equality check predicate on the "Creator" field. It's identical to CreatorEQ.
+// Creator applies equality check predicate on the "creator" field. It's identical to CreatorEQ.
 func Creator(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreator), v))
 	})
 }
 
-// ClientIP applies equality check predicate on the "ClientIP" field. It's identical to ClientIPEQ.
+// ClientIP applies equality check predicate on the "clientIP" field. It's identical to ClientIPEQ.
 func ClientIP(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldClientIP), v))
 	})
 }
 
-// Width applies equality check predicate on the "Width" field. It's identical to WidthEQ.
+// Width applies equality check predicate on the "width" field. It's identical to WidthEQ.
 func Width(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldWidth), v))
 	})
 }
 
-// Height applies equality check predicate on the "Height" field. It's identical to HeightEQ.
+// Height applies equality check predicate on the "height" field. It's identical to HeightEQ.
 func Height(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldHeight), v))
 	})
 }
 
-// Status applies equality check predicate on the "Status" field. It's identical to StatusEQ.
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldStatus), v))
 	})
 }
 
-// Recording applies equality check predicate on the "Recording" field. It's identical to RecordingEQ.
+// Recording applies equality check predicate on the "recording" field. It's identical to RecordingEQ.
 func Recording(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldRecording), v))
 	})
 }
 
-// PrivateKey applies equality check predicate on the "PrivateKey" field. It's identical to PrivateKeyEQ.
+// PrivateKey applies equality check predicate on the "privateKey" field. It's identical to PrivateKeyEQ.
 func PrivateKey(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPrivateKey), v))
 	})
 }
 
-// Passphrase applies equality check predicate on the "Passphrase" field. It's identical to PassphraseEQ.
+// Passphrase applies equality check predicate on the "passphrase" field. It's identical to PassphraseEQ.
 func Passphrase(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPassphrase), v))
 	})
 }
 
-// Code applies equality check predicate on the "Code" field. It's identical to CodeEQ.
+// Code applies equality check predicate on the "code" field. It's identical to CodeEQ.
 func Code(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCode), v))
 	})
 }
 
-// Message applies equality check predicate on the "Message" field. It's identical to MessageEQ.
+// Message applies equality check predicate on the "message" field. It's identical to MessageEQ.
 func Message(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldMessage), v))
 	})
 }
 
-// ConnectedTime applies equality check predicate on the "ConnectedTime" field. It's identical to ConnectedTimeEQ.
+// ConnectedTime applies equality check predicate on the "connectedTime" field. It's identical to ConnectedTimeEQ.
 func ConnectedTime(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldConnectedTime), v))
 	})
 }
 
-// DisconnectedTime applies equality check predicate on the "DisconnectedTime" field. It's identical to DisconnectedTimeEQ.
+// DisconnectedTime applies equality check predicate on the "disconnectedTime" field. It's identical to DisconnectedTimeEQ.
 func DisconnectedTime(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldDisconnectedTime), v))
@@ -634,21 +635,21 @@ func ConnectionIdContainsFold(v string) predicate.Session {
 	})
 }
 
-// AssetIdEQ applies the EQ predicate on the "AssetId" field.
+// AssetIdEQ applies the EQ predicate on the "assetId" field.
 func AssetIdEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdNEQ applies the NEQ predicate on the "AssetId" field.
+// AssetIdNEQ applies the NEQ predicate on the "assetId" field.
 func AssetIdNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdIn applies the In predicate on the "AssetId" field.
+// AssetIdIn applies the In predicate on the "assetId" field.
 func AssetIdIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -665,7 +666,7 @@ func AssetIdIn(vs ...string) predicate.Session {
 	})
 }
 
-// AssetIdNotIn applies the NotIn predicate on the "AssetId" field.
+// AssetIdNotIn applies the NotIn predicate on the "assetId" field.
 func AssetIdNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -682,84 +683,84 @@ func AssetIdNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// AssetIdGT applies the GT predicate on the "AssetId" field.
+// AssetIdGT applies the GT predicate on the "assetId" field.
 func AssetIdGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdGTE applies the GTE predicate on the "AssetId" field.
+// AssetIdGTE applies the GTE predicate on the "assetId" field.
 func AssetIdGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdLT applies the LT predicate on the "AssetId" field.
+// AssetIdLT applies the LT predicate on the "assetId" field.
 func AssetIdLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdLTE applies the LTE predicate on the "AssetId" field.
+// AssetIdLTE applies the LTE predicate on the "assetId" field.
 func AssetIdLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdContains applies the Contains predicate on the "AssetId" field.
+// AssetIdContains applies the Contains predicate on the "assetId" field.
 func AssetIdContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdHasPrefix applies the HasPrefix predicate on the "AssetId" field.
+// AssetIdHasPrefix applies the HasPrefix predicate on the "assetId" field.
 func AssetIdHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdHasSuffix applies the HasSuffix predicate on the "AssetId" field.
+// AssetIdHasSuffix applies the HasSuffix predicate on the "assetId" field.
 func AssetIdHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdEqualFold applies the EqualFold predicate on the "AssetId" field.
+// AssetIdEqualFold applies the EqualFold predicate on the "assetId" field.
 func AssetIdEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldAssetId), v))
 	})
 }
 
-// AssetIdContainsFold applies the ContainsFold predicate on the "AssetId" field.
+// AssetIdContainsFold applies the ContainsFold predicate on the "assetId" field.
 func AssetIdContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldAssetId), v))
 	})
 }
 
-// UsernameEQ applies the EQ predicate on the "Username" field.
+// UsernameEQ applies the EQ predicate on the "username" field.
 func UsernameEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameNEQ applies the NEQ predicate on the "Username" field.
+// UsernameNEQ applies the NEQ predicate on the "username" field.
 func UsernameNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameIn applies the In predicate on the "Username" field.
+// UsernameIn applies the In predicate on the "username" field.
 func UsernameIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -776,7 +777,7 @@ func UsernameIn(vs ...string) predicate.Session {
 	})
 }
 
-// UsernameNotIn applies the NotIn predicate on the "Username" field.
+// UsernameNotIn applies the NotIn predicate on the "username" field.
 func UsernameNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -793,84 +794,84 @@ func UsernameNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// UsernameGT applies the GT predicate on the "Username" field.
+// UsernameGT applies the GT predicate on the "username" field.
 func UsernameGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameGTE applies the GTE predicate on the "Username" field.
+// UsernameGTE applies the GTE predicate on the "username" field.
 func UsernameGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameLT applies the LT predicate on the "Username" field.
+// UsernameLT applies the LT predicate on the "username" field.
 func UsernameLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameLTE applies the LTE predicate on the "Username" field.
+// UsernameLTE applies the LTE predicate on the "username" field.
 func UsernameLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameContains applies the Contains predicate on the "Username" field.
+// UsernameContains applies the Contains predicate on the "username" field.
 func UsernameContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameHasPrefix applies the HasPrefix predicate on the "Username" field.
+// UsernameHasPrefix applies the HasPrefix predicate on the "username" field.
 func UsernameHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameHasSuffix applies the HasSuffix predicate on the "Username" field.
+// UsernameHasSuffix applies the HasSuffix predicate on the "username" field.
 func UsernameHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameEqualFold applies the EqualFold predicate on the "Username" field.
+// UsernameEqualFold applies the EqualFold predicate on the "username" field.
 func UsernameEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldUsername), v))
 	})
 }
 
-// UsernameContainsFold applies the ContainsFold predicate on the "Username" field.
+// UsernameContainsFold applies the ContainsFold predicate on the "username" field.
 func UsernameContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldUsername), v))
 	})
 }
 
-// PasswordEQ applies the EQ predicate on the "Password" field.
+// PasswordEQ applies the EQ predicate on the "password" field.
 func PasswordEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordNEQ applies the NEQ predicate on the "Password" field.
+// PasswordNEQ applies the NEQ predicate on the "password" field.
 func PasswordNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordIn applies the In predicate on the "Password" field.
+// PasswordIn applies the In predicate on the "password" field.
 func PasswordIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -887,7 +888,7 @@ func PasswordIn(vs ...string) predicate.Session {
 	})
 }
 
-// PasswordNotIn applies the NotIn predicate on the "Password" field.
+// PasswordNotIn applies the NotIn predicate on the "password" field.
 func PasswordNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -904,84 +905,84 @@ func PasswordNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// PasswordGT applies the GT predicate on the "Password" field.
+// PasswordGT applies the GT predicate on the "password" field.
 func PasswordGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordGTE applies the GTE predicate on the "Password" field.
+// PasswordGTE applies the GTE predicate on the "password" field.
 func PasswordGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordLT applies the LT predicate on the "Password" field.
+// PasswordLT applies the LT predicate on the "password" field.
 func PasswordLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordLTE applies the LTE predicate on the "Password" field.
+// PasswordLTE applies the LTE predicate on the "password" field.
 func PasswordLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordContains applies the Contains predicate on the "Password" field.
+// PasswordContains applies the Contains predicate on the "password" field.
 func PasswordContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordHasPrefix applies the HasPrefix predicate on the "Password" field.
+// PasswordHasPrefix applies the HasPrefix predicate on the "password" field.
 func PasswordHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordHasSuffix applies the HasSuffix predicate on the "Password" field.
+// PasswordHasSuffix applies the HasSuffix predicate on the "password" field.
 func PasswordHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordEqualFold applies the EqualFold predicate on the "Password" field.
+// PasswordEqualFold applies the EqualFold predicate on the "password" field.
 func PasswordEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldPassword), v))
 	})
 }
 
-// PasswordContainsFold applies the ContainsFold predicate on the "Password" field.
+// PasswordContainsFold applies the ContainsFold predicate on the "password" field.
 func PasswordContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldPassword), v))
 	})
 }
 
-// CreatorEQ applies the EQ predicate on the "Creator" field.
+// CreatorEQ applies the EQ predicate on the "creator" field.
 func CreatorEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorNEQ applies the NEQ predicate on the "Creator" field.
+// CreatorNEQ applies the NEQ predicate on the "creator" field.
 func CreatorNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorIn applies the In predicate on the "Creator" field.
+// CreatorIn applies the In predicate on the "creator" field.
 func CreatorIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -998,7 +999,7 @@ func CreatorIn(vs ...string) predicate.Session {
 	})
 }
 
-// CreatorNotIn applies the NotIn predicate on the "Creator" field.
+// CreatorNotIn applies the NotIn predicate on the "creator" field.
 func CreatorNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1015,84 +1016,84 @@ func CreatorNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// CreatorGT applies the GT predicate on the "Creator" field.
+// CreatorGT applies the GT predicate on the "creator" field.
 func CreatorGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorGTE applies the GTE predicate on the "Creator" field.
+// CreatorGTE applies the GTE predicate on the "creator" field.
 func CreatorGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorLT applies the LT predicate on the "Creator" field.
+// CreatorLT applies the LT predicate on the "creator" field.
 func CreatorLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorLTE applies the LTE predicate on the "Creator" field.
+// CreatorLTE applies the LTE predicate on the "creator" field.
 func CreatorLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorContains applies the Contains predicate on the "Creator" field.
+// CreatorContains applies the Contains predicate on the "creator" field.
 func CreatorContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorHasPrefix applies the HasPrefix predicate on the "Creator" field.
+// CreatorHasPrefix applies the HasPrefix predicate on the "creator" field.
 func CreatorHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorHasSuffix applies the HasSuffix predicate on the "Creator" field.
+// CreatorHasSuffix applies the HasSuffix predicate on the "creator" field.
 func CreatorHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorEqualFold applies the EqualFold predicate on the "Creator" field.
+// CreatorEqualFold applies the EqualFold predicate on the "creator" field.
 func CreatorEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldCreator), v))
 	})
 }
 
-// CreatorContainsFold applies the ContainsFold predicate on the "Creator" field.
+// CreatorContainsFold applies the ContainsFold predicate on the "creator" field.
 func CreatorContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldCreator), v))
 	})
 }
 
-// ClientIPEQ applies the EQ predicate on the "ClientIP" field.
+// ClientIPEQ applies the EQ predicate on the "clientIP" field.
 func ClientIPEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPNEQ applies the NEQ predicate on the "ClientIP" field.
+// ClientIPNEQ applies the NEQ predicate on the "clientIP" field.
 func ClientIPNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPIn applies the In predicate on the "ClientIP" field.
+// ClientIPIn applies the In predicate on the "clientIP" field.
 func ClientIPIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1109,7 +1110,7 @@ func ClientIPIn(vs ...string) predicate.Session {
 	})
 }
 
-// ClientIPNotIn applies the NotIn predicate on the "ClientIP" field.
+// ClientIPNotIn applies the NotIn predicate on the "clientIP" field.
 func ClientIPNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1126,84 +1127,84 @@ func ClientIPNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// ClientIPGT applies the GT predicate on the "ClientIP" field.
+// ClientIPGT applies the GT predicate on the "clientIP" field.
 func ClientIPGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPGTE applies the GTE predicate on the "ClientIP" field.
+// ClientIPGTE applies the GTE predicate on the "clientIP" field.
 func ClientIPGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPLT applies the LT predicate on the "ClientIP" field.
+// ClientIPLT applies the LT predicate on the "clientIP" field.
 func ClientIPLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPLTE applies the LTE predicate on the "ClientIP" field.
+// ClientIPLTE applies the LTE predicate on the "clientIP" field.
 func ClientIPLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPContains applies the Contains predicate on the "ClientIP" field.
+// ClientIPContains applies the Contains predicate on the "clientIP" field.
 func ClientIPContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPHasPrefix applies the HasPrefix predicate on the "ClientIP" field.
+// ClientIPHasPrefix applies the HasPrefix predicate on the "clientIP" field.
 func ClientIPHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPHasSuffix applies the HasSuffix predicate on the "ClientIP" field.
+// ClientIPHasSuffix applies the HasSuffix predicate on the "clientIP" field.
 func ClientIPHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPEqualFold applies the EqualFold predicate on the "ClientIP" field.
+// ClientIPEqualFold applies the EqualFold predicate on the "clientIP" field.
 func ClientIPEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldClientIP), v))
 	})
 }
 
-// ClientIPContainsFold applies the ContainsFold predicate on the "ClientIP" field.
+// ClientIPContainsFold applies the ContainsFold predicate on the "clientIP" field.
 func ClientIPContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldClientIP), v))
 	})
 }
 
-// WidthEQ applies the EQ predicate on the "Width" field.
+// WidthEQ applies the EQ predicate on the "width" field.
 func WidthEQ(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldWidth), v))
 	})
 }
 
-// WidthNEQ applies the NEQ predicate on the "Width" field.
+// WidthNEQ applies the NEQ predicate on the "width" field.
 func WidthNEQ(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldWidth), v))
 	})
 }
 
-// WidthIn applies the In predicate on the "Width" field.
+// WidthIn applies the In predicate on the "width" field.
 func WidthIn(vs ...int) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1220,7 +1221,7 @@ func WidthIn(vs ...int) predicate.Session {
 	})
 }
 
-// WidthNotIn applies the NotIn predicate on the "Width" field.
+// WidthNotIn applies the NotIn predicate on the "width" field.
 func WidthNotIn(vs ...int) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1237,49 +1238,49 @@ func WidthNotIn(vs ...int) predicate.Session {
 	})
 }
 
-// WidthGT applies the GT predicate on the "Width" field.
+// WidthGT applies the GT predicate on the "width" field.
 func WidthGT(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldWidth), v))
 	})
 }
 
-// WidthGTE applies the GTE predicate on the "Width" field.
+// WidthGTE applies the GTE predicate on the "width" field.
 func WidthGTE(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldWidth), v))
 	})
 }
 
-// WidthLT applies the LT predicate on the "Width" field.
+// WidthLT applies the LT predicate on the "width" field.
 func WidthLT(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldWidth), v))
 	})
 }
 
-// WidthLTE applies the LTE predicate on the "Width" field.
+// WidthLTE applies the LTE predicate on the "width" field.
 func WidthLTE(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldWidth), v))
 	})
 }
 
-// HeightEQ applies the EQ predicate on the "Height" field.
+// HeightEQ applies the EQ predicate on the "height" field.
 func HeightEQ(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldHeight), v))
 	})
 }
 
-// HeightNEQ applies the NEQ predicate on the "Height" field.
+// HeightNEQ applies the NEQ predicate on the "height" field.
 func HeightNEQ(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldHeight), v))
 	})
 }
 
-// HeightIn applies the In predicate on the "Height" field.
+// HeightIn applies the In predicate on the "height" field.
 func HeightIn(vs ...int) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1296,7 +1297,7 @@ func HeightIn(vs ...int) predicate.Session {
 	})
 }
 
-// HeightNotIn applies the NotIn predicate on the "Height" field.
+// HeightNotIn applies the NotIn predicate on the "height" field.
 func HeightNotIn(vs ...int) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1313,49 +1314,49 @@ func HeightNotIn(vs ...int) predicate.Session {
 	})
 }
 
-// HeightGT applies the GT predicate on the "Height" field.
+// HeightGT applies the GT predicate on the "height" field.
 func HeightGT(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldHeight), v))
 	})
 }
 
-// HeightGTE applies the GTE predicate on the "Height" field.
+// HeightGTE applies the GTE predicate on the "height" field.
 func HeightGTE(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldHeight), v))
 	})
 }
 
-// HeightLT applies the LT predicate on the "Height" field.
+// HeightLT applies the LT predicate on the "height" field.
 func HeightLT(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldHeight), v))
 	})
 }
 
-// HeightLTE applies the LTE predicate on the "Height" field.
+// HeightLTE applies the LTE predicate on the "height" field.
 func HeightLTE(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldHeight), v))
 	})
 }
 
-// StatusEQ applies the EQ predicate on the "Status" field.
+// StatusEQ applies the EQ predicate on the "status" field.
 func StatusEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldStatus), v))
 	})
 }
 
-// StatusNEQ applies the NEQ predicate on the "Status" field.
+// StatusNEQ applies the NEQ predicate on the "status" field.
 func StatusNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldStatus), v))
 	})
 }
 
-// StatusIn applies the In predicate on the "Status" field.
+// StatusIn applies the In predicate on the "status" field.
 func StatusIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1372,7 +1373,7 @@ func StatusIn(vs ...string) predicate.Session {
 	})
 }
 
-// StatusNotIn applies the NotIn predicate on the "Status" field.
+// StatusNotIn applies the NotIn predicate on the "status" field.
 func StatusNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1389,84 +1390,84 @@ func StatusNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// StatusGT applies the GT predicate on the "Status" field.
+// StatusGT applies the GT predicate on the "status" field.
 func StatusGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldStatus), v))
 	})
 }
 
-// StatusGTE applies the GTE predicate on the "Status" field.
+// StatusGTE applies the GTE predicate on the "status" field.
 func StatusGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldStatus), v))
 	})
 }
 
-// StatusLT applies the LT predicate on the "Status" field.
+// StatusLT applies the LT predicate on the "status" field.
 func StatusLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldStatus), v))
 	})
 }
 
-// StatusLTE applies the LTE predicate on the "Status" field.
+// StatusLTE applies the LTE predicate on the "status" field.
 func StatusLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldStatus), v))
 	})
 }
 
-// StatusContains applies the Contains predicate on the "Status" field.
+// StatusContains applies the Contains predicate on the "status" field.
 func StatusContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldStatus), v))
 	})
 }
 
-// StatusHasPrefix applies the HasPrefix predicate on the "Status" field.
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
 func StatusHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldStatus), v))
 	})
 }
 
-// StatusHasSuffix applies the HasSuffix predicate on the "Status" field.
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
 func StatusHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldStatus), v))
 	})
 }
 
-// StatusEqualFold applies the EqualFold predicate on the "Status" field.
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
 func StatusEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldStatus), v))
 	})
 }
 
-// StatusContainsFold applies the ContainsFold predicate on the "Status" field.
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldStatus), v))
 	})
 }
 
-// RecordingEQ applies the EQ predicate on the "Recording" field.
+// RecordingEQ applies the EQ predicate on the "recording" field.
 func RecordingEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingNEQ applies the NEQ predicate on the "Recording" field.
+// RecordingNEQ applies the NEQ predicate on the "recording" field.
 func RecordingNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingIn applies the In predicate on the "Recording" field.
+// RecordingIn applies the In predicate on the "recording" field.
 func RecordingIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1483,7 +1484,7 @@ func RecordingIn(vs ...string) predicate.Session {
 	})
 }
 
-// RecordingNotIn applies the NotIn predicate on the "Recording" field.
+// RecordingNotIn applies the NotIn predicate on the "recording" field.
 func RecordingNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1500,84 +1501,84 @@ func RecordingNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// RecordingGT applies the GT predicate on the "Recording" field.
+// RecordingGT applies the GT predicate on the "recording" field.
 func RecordingGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingGTE applies the GTE predicate on the "Recording" field.
+// RecordingGTE applies the GTE predicate on the "recording" field.
 func RecordingGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingLT applies the LT predicate on the "Recording" field.
+// RecordingLT applies the LT predicate on the "recording" field.
 func RecordingLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingLTE applies the LTE predicate on the "Recording" field.
+// RecordingLTE applies the LTE predicate on the "recording" field.
 func RecordingLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingContains applies the Contains predicate on the "Recording" field.
+// RecordingContains applies the Contains predicate on the "recording" field.
 func RecordingContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingHasPrefix applies the HasPrefix predicate on the "Recording" field.
+// RecordingHasPrefix applies the HasPrefix predicate on the "recording" field.
 func RecordingHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingHasSuffix applies the HasSuffix predicate on the "Recording" field.
+// RecordingHasSuffix applies the HasSuffix predicate on the "recording" field.
 func RecordingHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingEqualFold applies the EqualFold predicate on the "Recording" field.
+// RecordingEqualFold applies the EqualFold predicate on the "recording" field.
 func RecordingEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldRecording), v))
 	})
 }
 
-// RecordingContainsFold applies the ContainsFold predicate on the "Recording" field.
+// RecordingContainsFold applies the ContainsFold predicate on the "recording" field.
 func RecordingContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldRecording), v))
 	})
 }
 
-// PrivateKeyEQ applies the EQ predicate on the "PrivateKey" field.
+// PrivateKeyEQ applies the EQ predicate on the "privateKey" field.
 func PrivateKeyEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyNEQ applies the NEQ predicate on the "PrivateKey" field.
+// PrivateKeyNEQ applies the NEQ predicate on the "privateKey" field.
 func PrivateKeyNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyIn applies the In predicate on the "PrivateKey" field.
+// PrivateKeyIn applies the In predicate on the "privateKey" field.
 func PrivateKeyIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1594,7 +1595,7 @@ func PrivateKeyIn(vs ...string) predicate.Session {
 	})
 }
 
-// PrivateKeyNotIn applies the NotIn predicate on the "PrivateKey" field.
+// PrivateKeyNotIn applies the NotIn predicate on the "privateKey" field.
 func PrivateKeyNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1611,84 +1612,84 @@ func PrivateKeyNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// PrivateKeyGT applies the GT predicate on the "PrivateKey" field.
+// PrivateKeyGT applies the GT predicate on the "privateKey" field.
 func PrivateKeyGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyGTE applies the GTE predicate on the "PrivateKey" field.
+// PrivateKeyGTE applies the GTE predicate on the "privateKey" field.
 func PrivateKeyGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyLT applies the LT predicate on the "PrivateKey" field.
+// PrivateKeyLT applies the LT predicate on the "privateKey" field.
 func PrivateKeyLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyLTE applies the LTE predicate on the "PrivateKey" field.
+// PrivateKeyLTE applies the LTE predicate on the "privateKey" field.
 func PrivateKeyLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyContains applies the Contains predicate on the "PrivateKey" field.
+// PrivateKeyContains applies the Contains predicate on the "privateKey" field.
 func PrivateKeyContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyHasPrefix applies the HasPrefix predicate on the "PrivateKey" field.
+// PrivateKeyHasPrefix applies the HasPrefix predicate on the "privateKey" field.
 func PrivateKeyHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyHasSuffix applies the HasSuffix predicate on the "PrivateKey" field.
+// PrivateKeyHasSuffix applies the HasSuffix predicate on the "privateKey" field.
 func PrivateKeyHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyEqualFold applies the EqualFold predicate on the "PrivateKey" field.
+// PrivateKeyEqualFold applies the EqualFold predicate on the "privateKey" field.
 func PrivateKeyEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PrivateKeyContainsFold applies the ContainsFold predicate on the "PrivateKey" field.
+// PrivateKeyContainsFold applies the ContainsFold predicate on the "privateKey" field.
 func PrivateKeyContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldPrivateKey), v))
 	})
 }
 
-// PassphraseEQ applies the EQ predicate on the "Passphrase" field.
+// PassphraseEQ applies the EQ predicate on the "passphrase" field.
 func PassphraseEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseNEQ applies the NEQ predicate on the "Passphrase" field.
+// PassphraseNEQ applies the NEQ predicate on the "passphrase" field.
 func PassphraseNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseIn applies the In predicate on the "Passphrase" field.
+// PassphraseIn applies the In predicate on the "passphrase" field.
 func PassphraseIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1705,7 +1706,7 @@ func PassphraseIn(vs ...string) predicate.Session {
 	})
 }
 
-// PassphraseNotIn applies the NotIn predicate on the "Passphrase" field.
+// PassphraseNotIn applies the NotIn predicate on the "passphrase" field.
 func PassphraseNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1722,84 +1723,84 @@ func PassphraseNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// PassphraseGT applies the GT predicate on the "Passphrase" field.
+// PassphraseGT applies the GT predicate on the "passphrase" field.
 func PassphraseGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseGTE applies the GTE predicate on the "Passphrase" field.
+// PassphraseGTE applies the GTE predicate on the "passphrase" field.
 func PassphraseGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseLT applies the LT predicate on the "Passphrase" field.
+// PassphraseLT applies the LT predicate on the "passphrase" field.
 func PassphraseLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseLTE applies the LTE predicate on the "Passphrase" field.
+// PassphraseLTE applies the LTE predicate on the "passphrase" field.
 func PassphraseLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseContains applies the Contains predicate on the "Passphrase" field.
+// PassphraseContains applies the Contains predicate on the "passphrase" field.
 func PassphraseContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseHasPrefix applies the HasPrefix predicate on the "Passphrase" field.
+// PassphraseHasPrefix applies the HasPrefix predicate on the "passphrase" field.
 func PassphraseHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseHasSuffix applies the HasSuffix predicate on the "Passphrase" field.
+// PassphraseHasSuffix applies the HasSuffix predicate on the "passphrase" field.
 func PassphraseHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseEqualFold applies the EqualFold predicate on the "Passphrase" field.
+// PassphraseEqualFold applies the EqualFold predicate on the "passphrase" field.
 func PassphraseEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldPassphrase), v))
 	})
 }
 
-// PassphraseContainsFold applies the ContainsFold predicate on the "Passphrase" field.
+// PassphraseContainsFold applies the ContainsFold predicate on the "passphrase" field.
 func PassphraseContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldPassphrase), v))
 	})
 }
 
-// CodeEQ applies the EQ predicate on the "Code" field.
+// CodeEQ applies the EQ predicate on the "code" field.
 func CodeEQ(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCode), v))
 	})
 }
 
-// CodeNEQ applies the NEQ predicate on the "Code" field.
+// CodeNEQ applies the NEQ predicate on the "code" field.
 func CodeNEQ(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldCode), v))
 	})
 }
 
-// CodeIn applies the In predicate on the "Code" field.
+// CodeIn applies the In predicate on the "code" field.
 func CodeIn(vs ...int) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1816,7 +1817,7 @@ func CodeIn(vs ...int) predicate.Session {
 	})
 }
 
-// CodeNotIn applies the NotIn predicate on the "Code" field.
+// CodeNotIn applies the NotIn predicate on the "code" field.
 func CodeNotIn(vs ...int) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1833,49 +1834,49 @@ func CodeNotIn(vs ...int) predicate.Session {
 	})
 }
 
-// CodeGT applies the GT predicate on the "Code" field.
+// CodeGT applies the GT predicate on the "code" field.
 func CodeGT(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldCode), v))
 	})
 }
 
-// CodeGTE applies the GTE predicate on the "Code" field.
+// CodeGTE applies the GTE predicate on the "code" field.
 func CodeGTE(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldCode), v))
 	})
 }
 
-// CodeLT applies the LT predicate on the "Code" field.
+// CodeLT applies the LT predicate on the "code" field.
 func CodeLT(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldCode), v))
 	})
 }
 
-// CodeLTE applies the LTE predicate on the "Code" field.
+// CodeLTE applies the LTE predicate on the "code" field.
 func CodeLTE(v int) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCode), v))
 	})
 }
 
-// MessageEQ applies the EQ predicate on the "Message" field.
+// MessageEQ applies the EQ predicate on the "message" field.
 func MessageEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldMessage), v))
 	})
 }
 
-// MessageNEQ applies the NEQ predicate on the "Message" field.
+// MessageNEQ applies the NEQ predicate on the "message" field.
 func MessageNEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldMessage), v))
 	})
 }
 
-// MessageIn applies the In predicate on the "Message" field.
+// MessageIn applies the In predicate on the "message" field.
 func MessageIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1892,7 +1893,7 @@ func MessageIn(vs ...string) predicate.Session {
 	})
 }
 
-// MessageNotIn applies the NotIn predicate on the "Message" field.
+// MessageNotIn applies the NotIn predicate on the "message" field.
 func MessageNotIn(vs ...string) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -1909,84 +1910,84 @@ func MessageNotIn(vs ...string) predicate.Session {
 	})
 }
 
-// MessageGT applies the GT predicate on the "Message" field.
+// MessageGT applies the GT predicate on the "message" field.
 func MessageGT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldMessage), v))
 	})
 }
 
-// MessageGTE applies the GTE predicate on the "Message" field.
+// MessageGTE applies the GTE predicate on the "message" field.
 func MessageGTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldMessage), v))
 	})
 }
 
-// MessageLT applies the LT predicate on the "Message" field.
+// MessageLT applies the LT predicate on the "message" field.
 func MessageLT(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldMessage), v))
 	})
 }
 
-// MessageLTE applies the LTE predicate on the "Message" field.
+// MessageLTE applies the LTE predicate on the "message" field.
 func MessageLTE(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldMessage), v))
 	})
 }
 
-// MessageContains applies the Contains predicate on the "Message" field.
+// MessageContains applies the Contains predicate on the "message" field.
 func MessageContains(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldMessage), v))
 	})
 }
 
-// MessageHasPrefix applies the HasPrefix predicate on the "Message" field.
+// MessageHasPrefix applies the HasPrefix predicate on the "message" field.
 func MessageHasPrefix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldMessage), v))
 	})
 }
 
-// MessageHasSuffix applies the HasSuffix predicate on the "Message" field.
+// MessageHasSuffix applies the HasSuffix predicate on the "message" field.
 func MessageHasSuffix(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldMessage), v))
 	})
 }
 
-// MessageEqualFold applies the EqualFold predicate on the "Message" field.
+// MessageEqualFold applies the EqualFold predicate on the "message" field.
 func MessageEqualFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldMessage), v))
 	})
 }
 
-// MessageContainsFold applies the ContainsFold predicate on the "Message" field.
+// MessageContainsFold applies the ContainsFold predicate on the "message" field.
 func MessageContainsFold(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldMessage), v))
 	})
 }
 
-// ConnectedTimeEQ applies the EQ predicate on the "ConnectedTime" field.
+// ConnectedTimeEQ applies the EQ predicate on the "connectedTime" field.
 func ConnectedTimeEQ(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldConnectedTime), v))
 	})
 }
 
-// ConnectedTimeNEQ applies the NEQ predicate on the "ConnectedTime" field.
+// ConnectedTimeNEQ applies the NEQ predicate on the "connectedTime" field.
 func ConnectedTimeNEQ(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldConnectedTime), v))
 	})
 }
 
-// ConnectedTimeIn applies the In predicate on the "ConnectedTime" field.
+// ConnectedTimeIn applies the In predicate on the "connectedTime" field.
 func ConnectedTimeIn(vs ...time.Time) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -2003,7 +2004,7 @@ func ConnectedTimeIn(vs ...time.Time) predicate.Session {
 	})
 }
 
-// ConnectedTimeNotIn applies the NotIn predicate on the "ConnectedTime" field.
+// ConnectedTimeNotIn applies the NotIn predicate on the "connectedTime" field.
 func ConnectedTimeNotIn(vs ...time.Time) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -2020,49 +2021,49 @@ func ConnectedTimeNotIn(vs ...time.Time) predicate.Session {
 	})
 }
 
-// ConnectedTimeGT applies the GT predicate on the "ConnectedTime" field.
+// ConnectedTimeGT applies the GT predicate on the "connectedTime" field.
 func ConnectedTimeGT(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldConnectedTime), v))
 	})
 }
 
-// ConnectedTimeGTE applies the GTE predicate on the "ConnectedTime" field.
+// ConnectedTimeGTE applies the GTE predicate on the "connectedTime" field.
 func ConnectedTimeGTE(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldConnectedTime), v))
 	})
 }
 
-// ConnectedTimeLT applies the LT predicate on the "ConnectedTime" field.
+// ConnectedTimeLT applies the LT predicate on the "connectedTime" field.
 func ConnectedTimeLT(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldConnectedTime), v))
 	})
 }
 
-// ConnectedTimeLTE applies the LTE predicate on the "ConnectedTime" field.
+// ConnectedTimeLTE applies the LTE predicate on the "connectedTime" field.
 func ConnectedTimeLTE(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldConnectedTime), v))
 	})
 }
 
-// DisconnectedTimeEQ applies the EQ predicate on the "DisconnectedTime" field.
+// DisconnectedTimeEQ applies the EQ predicate on the "disconnectedTime" field.
 func DisconnectedTimeEQ(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldDisconnectedTime), v))
 	})
 }
 
-// DisconnectedTimeNEQ applies the NEQ predicate on the "DisconnectedTime" field.
+// DisconnectedTimeNEQ applies the NEQ predicate on the "disconnectedTime" field.
 func DisconnectedTimeNEQ(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldDisconnectedTime), v))
 	})
 }
 
-// DisconnectedTimeIn applies the In predicate on the "DisconnectedTime" field.
+// DisconnectedTimeIn applies the In predicate on the "disconnectedTime" field.
 func DisconnectedTimeIn(vs ...time.Time) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -2079,7 +2080,7 @@ func DisconnectedTimeIn(vs ...time.Time) predicate.Session {
 	})
 }
 
-// DisconnectedTimeNotIn applies the NotIn predicate on the "DisconnectedTime" field.
+// DisconnectedTimeNotIn applies the NotIn predicate on the "disconnectedTime" field.
 func DisconnectedTimeNotIn(vs ...time.Time) predicate.Session {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -2096,31 +2097,59 @@ func DisconnectedTimeNotIn(vs ...time.Time) predicate.Session {
 	})
 }
 
-// DisconnectedTimeGT applies the GT predicate on the "DisconnectedTime" field.
+// DisconnectedTimeGT applies the GT predicate on the "disconnectedTime" field.
 func DisconnectedTimeGT(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldDisconnectedTime), v))
 	})
 }
 
-// DisconnectedTimeGTE applies the GTE predicate on the "DisconnectedTime" field.
+// DisconnectedTimeGTE applies the GTE predicate on the "disconnectedTime" field.
 func DisconnectedTimeGTE(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldDisconnectedTime), v))
 	})
 }
 
-// DisconnectedTimeLT applies the LT predicate on the "DisconnectedTime" field.
+// DisconnectedTimeLT applies the LT predicate on the "disconnectedTime" field.
 func DisconnectedTimeLT(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldDisconnectedTime), v))
 	})
 }
 
-// DisconnectedTimeLTE applies the LTE predicate on the "DisconnectedTime" field.
+// DisconnectedTimeLTE applies the LTE predicate on the "disconnectedTime" field.
 func DisconnectedTimeLTE(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldDisconnectedTime), v))
+	})
+}
+
+// HasAssets applies the HasEdge predicate on the "assets" edge.
+func HasAssets() predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(AssetsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AssetsTable, AssetsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAssetsWith applies the HasEdge predicate on the "assets" edge with a given conditions (other predicates).
+func HasAssetsWith(preds ...predicate.Asset) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(AssetsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AssetsTable, AssetsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

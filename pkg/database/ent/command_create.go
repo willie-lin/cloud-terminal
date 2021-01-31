@@ -4,7 +4,9 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
@@ -18,6 +20,52 @@ type CommandCreate struct {
 	hooks    []Hook
 }
 
+// SetID sets the "Id" field.
+func (cc *CommandCreate) SetID(s string) *CommandCreate {
+	cc.mutation.SetID(s)
+	return cc
+}
+
+// SetName sets the "Name" field.
+func (cc *CommandCreate) SetName(s string) *CommandCreate {
+	cc.mutation.SetName(s)
+	return cc
+}
+
+// SetContent sets the "Content" field.
+func (cc *CommandCreate) SetContent(s []string) *CommandCreate {
+	cc.mutation.SetContent(s)
+	return cc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (cc *CommandCreate) SetCreatedAt(t time.Time) *CommandCreate {
+	cc.mutation.SetCreatedAt(t)
+	return cc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (cc *CommandCreate) SetNillableCreatedAt(t *time.Time) *CommandCreate {
+	if t != nil {
+		cc.SetCreatedAt(*t)
+	}
+	return cc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cc *CommandCreate) SetUpdatedAt(t time.Time) *CommandCreate {
+	cc.mutation.SetUpdatedAt(t)
+	return cc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (cc *CommandCreate) SetNillableUpdatedAt(t *time.Time) *CommandCreate {
+	if t != nil {
+		cc.SetUpdatedAt(*t)
+	}
+	return cc
+}
+
 // Mutation returns the CommandMutation object of the builder.
 func (cc *CommandCreate) Mutation() *CommandMutation {
 	return cc.mutation
@@ -29,6 +77,7 @@ func (cc *CommandCreate) Save(ctx context.Context) (*Command, error) {
 		err  error
 		node *Command
 	)
+	cc.defaults()
 	if len(cc.hooks) == 0 {
 		if err = cc.check(); err != nil {
 			return nil, err
@@ -67,8 +116,40 @@ func (cc *CommandCreate) SaveX(ctx context.Context) *Command {
 	return v
 }
 
+// defaults sets the default values of the builder before save.
+func (cc *CommandCreate) defaults() {
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		v := command.DefaultCreatedAt()
+		cc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := cc.mutation.UpdatedAt(); !ok {
+		v := command.DefaultUpdatedAt()
+		cc.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cc *CommandCreate) check() error {
+	if _, ok := cc.mutation.ID(); !ok {
+		return &ValidationError{Name: "Id", err: errors.New("ent: missing required field \"Id\"")}
+	}
+	if v, ok := cc.mutation.ID(); ok {
+		if err := command.IDValidator(v); err != nil {
+			return &ValidationError{Name: "Id", err: fmt.Errorf("ent: validator failed for field \"Id\": %w", err)}
+		}
+	}
+	if _, ok := cc.mutation.Name(); !ok {
+		return &ValidationError{Name: "Name", err: errors.New("ent: missing required field \"Name\"")}
+	}
+	if _, ok := cc.mutation.Content(); !ok {
+		return &ValidationError{Name: "Content", err: errors.New("ent: missing required field \"Content\"")}
+	}
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+	}
+	if _, ok := cc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
 	return nil
 }
 
@@ -96,6 +177,46 @@ func (cc *CommandCreate) createSpec() (*Command, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := cc.mutation.ID(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: command.FieldID,
+		})
+		_node.ID = value
+	}
+	if value, ok := cc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: command.FieldName,
+		})
+		_node.Name = value
+	}
+	if value, ok := cc.mutation.Content(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: command.FieldContent,
+		})
+		_node.Content = value
+	}
+	if value, ok := cc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: command.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := cc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: command.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
+	}
 	return _node, _spec
 }
 
@@ -113,6 +234,7 @@ func (ccb *CommandCreateBulk) Save(ctx context.Context) ([]*Command, error) {
 	for i := range ccb.builders {
 		func(i int, root context.Context) {
 			builder := ccb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*CommandMutation)
 				if !ok {

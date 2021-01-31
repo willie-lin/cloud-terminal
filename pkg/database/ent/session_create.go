@@ -10,6 +10,7 @@ import (
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 )
 
@@ -44,93 +45,109 @@ func (sc *SessionCreate) SetConnectionId(s string) *SessionCreate {
 	return sc
 }
 
-// SetAssetId sets the "AssetId" field.
+// SetAssetId sets the "assetId" field.
 func (sc *SessionCreate) SetAssetId(s string) *SessionCreate {
 	sc.mutation.SetAssetId(s)
 	return sc
 }
 
-// SetUsername sets the "Username" field.
+// SetUsername sets the "username" field.
 func (sc *SessionCreate) SetUsername(s string) *SessionCreate {
 	sc.mutation.SetUsername(s)
 	return sc
 }
 
-// SetPassword sets the "Password" field.
+// SetPassword sets the "password" field.
 func (sc *SessionCreate) SetPassword(s string) *SessionCreate {
 	sc.mutation.SetPassword(s)
 	return sc
 }
 
-// SetCreator sets the "Creator" field.
+// SetCreator sets the "creator" field.
 func (sc *SessionCreate) SetCreator(s string) *SessionCreate {
 	sc.mutation.SetCreator(s)
 	return sc
 }
 
-// SetClientIP sets the "ClientIP" field.
+// SetClientIP sets the "clientIP" field.
 func (sc *SessionCreate) SetClientIP(s string) *SessionCreate {
 	sc.mutation.SetClientIP(s)
 	return sc
 }
 
-// SetWidth sets the "Width" field.
+// SetWidth sets the "width" field.
 func (sc *SessionCreate) SetWidth(i int) *SessionCreate {
 	sc.mutation.SetWidth(i)
 	return sc
 }
 
-// SetHeight sets the "Height" field.
+// SetHeight sets the "height" field.
 func (sc *SessionCreate) SetHeight(i int) *SessionCreate {
 	sc.mutation.SetHeight(i)
 	return sc
 }
 
-// SetStatus sets the "Status" field.
+// SetStatus sets the "status" field.
 func (sc *SessionCreate) SetStatus(s string) *SessionCreate {
 	sc.mutation.SetStatus(s)
 	return sc
 }
 
-// SetRecording sets the "Recording" field.
+// SetRecording sets the "recording" field.
 func (sc *SessionCreate) SetRecording(s string) *SessionCreate {
 	sc.mutation.SetRecording(s)
 	return sc
 }
 
-// SetPrivateKey sets the "PrivateKey" field.
+// SetPrivateKey sets the "privateKey" field.
 func (sc *SessionCreate) SetPrivateKey(s string) *SessionCreate {
 	sc.mutation.SetPrivateKey(s)
 	return sc
 }
 
-// SetPassphrase sets the "Passphrase" field.
+// SetPassphrase sets the "passphrase" field.
 func (sc *SessionCreate) SetPassphrase(s string) *SessionCreate {
 	sc.mutation.SetPassphrase(s)
 	return sc
 }
 
-// SetCode sets the "Code" field.
+// SetCode sets the "code" field.
 func (sc *SessionCreate) SetCode(i int) *SessionCreate {
 	sc.mutation.SetCode(i)
 	return sc
 }
 
-// SetMessage sets the "Message" field.
+// SetMessage sets the "message" field.
 func (sc *SessionCreate) SetMessage(s string) *SessionCreate {
 	sc.mutation.SetMessage(s)
 	return sc
 }
 
-// SetConnectedTime sets the "ConnectedTime" field.
+// SetConnectedTime sets the "connectedTime" field.
 func (sc *SessionCreate) SetConnectedTime(t time.Time) *SessionCreate {
 	sc.mutation.SetConnectedTime(t)
 	return sc
 }
 
-// SetDisconnectedTime sets the "DisconnectedTime" field.
+// SetNillableConnectedTime sets the "connectedTime" field if the given value is not nil.
+func (sc *SessionCreate) SetNillableConnectedTime(t *time.Time) *SessionCreate {
+	if t != nil {
+		sc.SetConnectedTime(*t)
+	}
+	return sc
+}
+
+// SetDisconnectedTime sets the "disconnectedTime" field.
 func (sc *SessionCreate) SetDisconnectedTime(t time.Time) *SessionCreate {
 	sc.mutation.SetDisconnectedTime(t)
+	return sc
+}
+
+// SetNillableDisconnectedTime sets the "disconnectedTime" field if the given value is not nil.
+func (sc *SessionCreate) SetNillableDisconnectedTime(t *time.Time) *SessionCreate {
+	if t != nil {
+		sc.SetDisconnectedTime(*t)
+	}
 	return sc
 }
 
@@ -138,6 +155,21 @@ func (sc *SessionCreate) SetDisconnectedTime(t time.Time) *SessionCreate {
 func (sc *SessionCreate) SetID(s string) *SessionCreate {
 	sc.mutation.SetID(s)
 	return sc
+}
+
+// AddAssetIDs adds the "assets" edge to the Asset entity by IDs.
+func (sc *SessionCreate) AddAssetIDs(ids ...string) *SessionCreate {
+	sc.mutation.AddAssetIDs(ids...)
+	return sc
+}
+
+// AddAssets adds the "assets" edges to the Asset entity.
+func (sc *SessionCreate) AddAssets(a ...*Asset) *SessionCreate {
+	ids := make([]string, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return sc.AddAssetIDs(ids...)
 }
 
 // Mutation returns the SessionMutation object of the builder.
@@ -151,6 +183,7 @@ func (sc *SessionCreate) Save(ctx context.Context) (*Session, error) {
 		err  error
 		node *Session
 	)
+	sc.defaults()
 	if len(sc.hooks) == 0 {
 		if err = sc.check(); err != nil {
 			return nil, err
@@ -189,6 +222,18 @@ func (sc *SessionCreate) SaveX(ctx context.Context) *Session {
 	return v
 }
 
+// defaults sets the default values of the builder before save.
+func (sc *SessionCreate) defaults() {
+	if _, ok := sc.mutation.ConnectedTime(); !ok {
+		v := session.DefaultConnectedTime()
+		sc.mutation.SetConnectedTime(v)
+	}
+	if _, ok := sc.mutation.DisconnectedTime(); !ok {
+		v := session.DefaultDisconnectedTime()
+		sc.mutation.SetDisconnectedTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (sc *SessionCreate) check() error {
 	if _, ok := sc.mutation.Protocol(); !ok {
@@ -204,49 +249,49 @@ func (sc *SessionCreate) check() error {
 		return &ValidationError{Name: "connectionId", err: errors.New("ent: missing required field \"connectionId\"")}
 	}
 	if _, ok := sc.mutation.AssetId(); !ok {
-		return &ValidationError{Name: "AssetId", err: errors.New("ent: missing required field \"AssetId\"")}
+		return &ValidationError{Name: "assetId", err: errors.New("ent: missing required field \"assetId\"")}
 	}
 	if _, ok := sc.mutation.Username(); !ok {
-		return &ValidationError{Name: "Username", err: errors.New("ent: missing required field \"Username\"")}
+		return &ValidationError{Name: "username", err: errors.New("ent: missing required field \"username\"")}
 	}
 	if _, ok := sc.mutation.Password(); !ok {
-		return &ValidationError{Name: "Password", err: errors.New("ent: missing required field \"Password\"")}
+		return &ValidationError{Name: "password", err: errors.New("ent: missing required field \"password\"")}
 	}
 	if _, ok := sc.mutation.Creator(); !ok {
-		return &ValidationError{Name: "Creator", err: errors.New("ent: missing required field \"Creator\"")}
+		return &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
 	}
 	if _, ok := sc.mutation.ClientIP(); !ok {
-		return &ValidationError{Name: "ClientIP", err: errors.New("ent: missing required field \"ClientIP\"")}
+		return &ValidationError{Name: "clientIP", err: errors.New("ent: missing required field \"clientIP\"")}
 	}
 	if _, ok := sc.mutation.Width(); !ok {
-		return &ValidationError{Name: "Width", err: errors.New("ent: missing required field \"Width\"")}
+		return &ValidationError{Name: "width", err: errors.New("ent: missing required field \"width\"")}
 	}
 	if _, ok := sc.mutation.Height(); !ok {
-		return &ValidationError{Name: "Height", err: errors.New("ent: missing required field \"Height\"")}
+		return &ValidationError{Name: "height", err: errors.New("ent: missing required field \"height\"")}
 	}
 	if _, ok := sc.mutation.Status(); !ok {
-		return &ValidationError{Name: "Status", err: errors.New("ent: missing required field \"Status\"")}
+		return &ValidationError{Name: "status", err: errors.New("ent: missing required field \"status\"")}
 	}
 	if _, ok := sc.mutation.Recording(); !ok {
-		return &ValidationError{Name: "Recording", err: errors.New("ent: missing required field \"Recording\"")}
+		return &ValidationError{Name: "recording", err: errors.New("ent: missing required field \"recording\"")}
 	}
 	if _, ok := sc.mutation.PrivateKey(); !ok {
-		return &ValidationError{Name: "PrivateKey", err: errors.New("ent: missing required field \"PrivateKey\"")}
+		return &ValidationError{Name: "privateKey", err: errors.New("ent: missing required field \"privateKey\"")}
 	}
 	if _, ok := sc.mutation.Passphrase(); !ok {
-		return &ValidationError{Name: "Passphrase", err: errors.New("ent: missing required field \"Passphrase\"")}
+		return &ValidationError{Name: "passphrase", err: errors.New("ent: missing required field \"passphrase\"")}
 	}
 	if _, ok := sc.mutation.Code(); !ok {
-		return &ValidationError{Name: "Code", err: errors.New("ent: missing required field \"Code\"")}
+		return &ValidationError{Name: "code", err: errors.New("ent: missing required field \"code\"")}
 	}
 	if _, ok := sc.mutation.Message(); !ok {
-		return &ValidationError{Name: "Message", err: errors.New("ent: missing required field \"Message\"")}
+		return &ValidationError{Name: "message", err: errors.New("ent: missing required field \"message\"")}
 	}
 	if _, ok := sc.mutation.ConnectedTime(); !ok {
-		return &ValidationError{Name: "ConnectedTime", err: errors.New("ent: missing required field \"ConnectedTime\"")}
+		return &ValidationError{Name: "connectedTime", err: errors.New("ent: missing required field \"connectedTime\"")}
 	}
 	if _, ok := sc.mutation.DisconnectedTime(); !ok {
-		return &ValidationError{Name: "DisconnectedTime", err: errors.New("ent: missing required field \"DisconnectedTime\"")}
+		return &ValidationError{Name: "disconnectedTime", err: errors.New("ent: missing required field \"disconnectedTime\"")}
 	}
 	return nil
 }
@@ -429,6 +474,25 @@ func (sc *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 		})
 		_node.DisconnectedTime = value
 	}
+	if nodes := sc.mutation.AssetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.AssetsTable,
+			Columns: []string{session.AssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: asset.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -446,6 +510,7 @@ func (scb *SessionCreateBulk) Save(ctx context.Context) ([]*Session, error) {
 	for i := range scb.builders {
 		func(i int, root context.Context) {
 			builder := scb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SessionMutation)
 				if !ok {

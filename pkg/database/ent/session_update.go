@@ -10,6 +10,7 @@ import (
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 )
@@ -58,120 +59,164 @@ func (su *SessionUpdate) SetConnectionId(s string) *SessionUpdate {
 	return su
 }
 
-// SetAssetId sets the "AssetId" field.
+// SetAssetId sets the "assetId" field.
 func (su *SessionUpdate) SetAssetId(s string) *SessionUpdate {
 	su.mutation.SetAssetId(s)
 	return su
 }
 
-// SetUsername sets the "Username" field.
+// SetUsername sets the "username" field.
 func (su *SessionUpdate) SetUsername(s string) *SessionUpdate {
 	su.mutation.SetUsername(s)
 	return su
 }
 
-// SetPassword sets the "Password" field.
+// SetPassword sets the "password" field.
 func (su *SessionUpdate) SetPassword(s string) *SessionUpdate {
 	su.mutation.SetPassword(s)
 	return su
 }
 
-// SetCreator sets the "Creator" field.
+// SetCreator sets the "creator" field.
 func (su *SessionUpdate) SetCreator(s string) *SessionUpdate {
 	su.mutation.SetCreator(s)
 	return su
 }
 
-// SetClientIP sets the "ClientIP" field.
+// SetClientIP sets the "clientIP" field.
 func (su *SessionUpdate) SetClientIP(s string) *SessionUpdate {
 	su.mutation.SetClientIP(s)
 	return su
 }
 
-// SetWidth sets the "Width" field.
+// SetWidth sets the "width" field.
 func (su *SessionUpdate) SetWidth(i int) *SessionUpdate {
 	su.mutation.ResetWidth()
 	su.mutation.SetWidth(i)
 	return su
 }
 
-// AddWidth adds i to the "Width" field.
+// AddWidth adds i to the "width" field.
 func (su *SessionUpdate) AddWidth(i int) *SessionUpdate {
 	su.mutation.AddWidth(i)
 	return su
 }
 
-// SetHeight sets the "Height" field.
+// SetHeight sets the "height" field.
 func (su *SessionUpdate) SetHeight(i int) *SessionUpdate {
 	su.mutation.ResetHeight()
 	su.mutation.SetHeight(i)
 	return su
 }
 
-// AddHeight adds i to the "Height" field.
+// AddHeight adds i to the "height" field.
 func (su *SessionUpdate) AddHeight(i int) *SessionUpdate {
 	su.mutation.AddHeight(i)
 	return su
 }
 
-// SetStatus sets the "Status" field.
+// SetStatus sets the "status" field.
 func (su *SessionUpdate) SetStatus(s string) *SessionUpdate {
 	su.mutation.SetStatus(s)
 	return su
 }
 
-// SetRecording sets the "Recording" field.
+// SetRecording sets the "recording" field.
 func (su *SessionUpdate) SetRecording(s string) *SessionUpdate {
 	su.mutation.SetRecording(s)
 	return su
 }
 
-// SetPrivateKey sets the "PrivateKey" field.
+// SetPrivateKey sets the "privateKey" field.
 func (su *SessionUpdate) SetPrivateKey(s string) *SessionUpdate {
 	su.mutation.SetPrivateKey(s)
 	return su
 }
 
-// SetPassphrase sets the "Passphrase" field.
+// SetPassphrase sets the "passphrase" field.
 func (su *SessionUpdate) SetPassphrase(s string) *SessionUpdate {
 	su.mutation.SetPassphrase(s)
 	return su
 }
 
-// SetCode sets the "Code" field.
+// SetCode sets the "code" field.
 func (su *SessionUpdate) SetCode(i int) *SessionUpdate {
 	su.mutation.ResetCode()
 	su.mutation.SetCode(i)
 	return su
 }
 
-// AddCode adds i to the "Code" field.
+// AddCode adds i to the "code" field.
 func (su *SessionUpdate) AddCode(i int) *SessionUpdate {
 	su.mutation.AddCode(i)
 	return su
 }
 
-// SetMessage sets the "Message" field.
+// SetMessage sets the "message" field.
 func (su *SessionUpdate) SetMessage(s string) *SessionUpdate {
 	su.mutation.SetMessage(s)
 	return su
 }
 
-// SetConnectedTime sets the "ConnectedTime" field.
+// SetConnectedTime sets the "connectedTime" field.
 func (su *SessionUpdate) SetConnectedTime(t time.Time) *SessionUpdate {
 	su.mutation.SetConnectedTime(t)
 	return su
 }
 
-// SetDisconnectedTime sets the "DisconnectedTime" field.
+// SetNillableConnectedTime sets the "connectedTime" field if the given value is not nil.
+func (su *SessionUpdate) SetNillableConnectedTime(t *time.Time) *SessionUpdate {
+	if t != nil {
+		su.SetConnectedTime(*t)
+	}
+	return su
+}
+
+// SetDisconnectedTime sets the "disconnectedTime" field.
 func (su *SessionUpdate) SetDisconnectedTime(t time.Time) *SessionUpdate {
 	su.mutation.SetDisconnectedTime(t)
 	return su
 }
 
+// AddAssetIDs adds the "assets" edge to the Asset entity by IDs.
+func (su *SessionUpdate) AddAssetIDs(ids ...string) *SessionUpdate {
+	su.mutation.AddAssetIDs(ids...)
+	return su
+}
+
+// AddAssets adds the "assets" edges to the Asset entity.
+func (su *SessionUpdate) AddAssets(a ...*Asset) *SessionUpdate {
+	ids := make([]string, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return su.AddAssetIDs(ids...)
+}
+
 // Mutation returns the SessionMutation object of the builder.
 func (su *SessionUpdate) Mutation() *SessionMutation {
 	return su.mutation
+}
+
+// ClearAssets clears all "assets" edges to the Asset entity.
+func (su *SessionUpdate) ClearAssets() *SessionUpdate {
+	su.mutation.ClearAssets()
+	return su
+}
+
+// RemoveAssetIDs removes the "assets" edge to Asset entities by IDs.
+func (su *SessionUpdate) RemoveAssetIDs(ids ...string) *SessionUpdate {
+	su.mutation.RemoveAssetIDs(ids...)
+	return su
+}
+
+// RemoveAssets removes "assets" edges to Asset entities.
+func (su *SessionUpdate) RemoveAssets(a ...*Asset) *SessionUpdate {
+	ids := make([]string, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return su.RemoveAssetIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -180,6 +225,7 @@ func (su *SessionUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	su.defaults()
 	if len(su.hooks) == 0 {
 		affected, err = su.sqlSave(ctx)
 	} else {
@@ -222,6 +268,14 @@ func (su *SessionUpdate) Exec(ctx context.Context) error {
 func (su *SessionUpdate) ExecX(ctx context.Context) {
 	if err := su.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (su *SessionUpdate) defaults() {
+	if _, ok := su.mutation.DisconnectedTime(); !ok {
+		v := session.UpdateDefaultDisconnectedTime()
+		su.mutation.SetDisconnectedTime(v)
 	}
 }
 
@@ -404,6 +458,60 @@ func (su *SessionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: session.FieldDisconnectedTime,
 		})
 	}
+	if su.mutation.AssetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.AssetsTable,
+			Columns: []string{session.AssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: asset.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedAssetsIDs(); len(nodes) > 0 && !su.mutation.AssetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.AssetsTable,
+			Columns: []string{session.AssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: asset.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.AssetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.AssetsTable,
+			Columns: []string{session.AssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: asset.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{session.Label}
@@ -453,120 +561,164 @@ func (suo *SessionUpdateOne) SetConnectionId(s string) *SessionUpdateOne {
 	return suo
 }
 
-// SetAssetId sets the "AssetId" field.
+// SetAssetId sets the "assetId" field.
 func (suo *SessionUpdateOne) SetAssetId(s string) *SessionUpdateOne {
 	suo.mutation.SetAssetId(s)
 	return suo
 }
 
-// SetUsername sets the "Username" field.
+// SetUsername sets the "username" field.
 func (suo *SessionUpdateOne) SetUsername(s string) *SessionUpdateOne {
 	suo.mutation.SetUsername(s)
 	return suo
 }
 
-// SetPassword sets the "Password" field.
+// SetPassword sets the "password" field.
 func (suo *SessionUpdateOne) SetPassword(s string) *SessionUpdateOne {
 	suo.mutation.SetPassword(s)
 	return suo
 }
 
-// SetCreator sets the "Creator" field.
+// SetCreator sets the "creator" field.
 func (suo *SessionUpdateOne) SetCreator(s string) *SessionUpdateOne {
 	suo.mutation.SetCreator(s)
 	return suo
 }
 
-// SetClientIP sets the "ClientIP" field.
+// SetClientIP sets the "clientIP" field.
 func (suo *SessionUpdateOne) SetClientIP(s string) *SessionUpdateOne {
 	suo.mutation.SetClientIP(s)
 	return suo
 }
 
-// SetWidth sets the "Width" field.
+// SetWidth sets the "width" field.
 func (suo *SessionUpdateOne) SetWidth(i int) *SessionUpdateOne {
 	suo.mutation.ResetWidth()
 	suo.mutation.SetWidth(i)
 	return suo
 }
 
-// AddWidth adds i to the "Width" field.
+// AddWidth adds i to the "width" field.
 func (suo *SessionUpdateOne) AddWidth(i int) *SessionUpdateOne {
 	suo.mutation.AddWidth(i)
 	return suo
 }
 
-// SetHeight sets the "Height" field.
+// SetHeight sets the "height" field.
 func (suo *SessionUpdateOne) SetHeight(i int) *SessionUpdateOne {
 	suo.mutation.ResetHeight()
 	suo.mutation.SetHeight(i)
 	return suo
 }
 
-// AddHeight adds i to the "Height" field.
+// AddHeight adds i to the "height" field.
 func (suo *SessionUpdateOne) AddHeight(i int) *SessionUpdateOne {
 	suo.mutation.AddHeight(i)
 	return suo
 }
 
-// SetStatus sets the "Status" field.
+// SetStatus sets the "status" field.
 func (suo *SessionUpdateOne) SetStatus(s string) *SessionUpdateOne {
 	suo.mutation.SetStatus(s)
 	return suo
 }
 
-// SetRecording sets the "Recording" field.
+// SetRecording sets the "recording" field.
 func (suo *SessionUpdateOne) SetRecording(s string) *SessionUpdateOne {
 	suo.mutation.SetRecording(s)
 	return suo
 }
 
-// SetPrivateKey sets the "PrivateKey" field.
+// SetPrivateKey sets the "privateKey" field.
 func (suo *SessionUpdateOne) SetPrivateKey(s string) *SessionUpdateOne {
 	suo.mutation.SetPrivateKey(s)
 	return suo
 }
 
-// SetPassphrase sets the "Passphrase" field.
+// SetPassphrase sets the "passphrase" field.
 func (suo *SessionUpdateOne) SetPassphrase(s string) *SessionUpdateOne {
 	suo.mutation.SetPassphrase(s)
 	return suo
 }
 
-// SetCode sets the "Code" field.
+// SetCode sets the "code" field.
 func (suo *SessionUpdateOne) SetCode(i int) *SessionUpdateOne {
 	suo.mutation.ResetCode()
 	suo.mutation.SetCode(i)
 	return suo
 }
 
-// AddCode adds i to the "Code" field.
+// AddCode adds i to the "code" field.
 func (suo *SessionUpdateOne) AddCode(i int) *SessionUpdateOne {
 	suo.mutation.AddCode(i)
 	return suo
 }
 
-// SetMessage sets the "Message" field.
+// SetMessage sets the "message" field.
 func (suo *SessionUpdateOne) SetMessage(s string) *SessionUpdateOne {
 	suo.mutation.SetMessage(s)
 	return suo
 }
 
-// SetConnectedTime sets the "ConnectedTime" field.
+// SetConnectedTime sets the "connectedTime" field.
 func (suo *SessionUpdateOne) SetConnectedTime(t time.Time) *SessionUpdateOne {
 	suo.mutation.SetConnectedTime(t)
 	return suo
 }
 
-// SetDisconnectedTime sets the "DisconnectedTime" field.
+// SetNillableConnectedTime sets the "connectedTime" field if the given value is not nil.
+func (suo *SessionUpdateOne) SetNillableConnectedTime(t *time.Time) *SessionUpdateOne {
+	if t != nil {
+		suo.SetConnectedTime(*t)
+	}
+	return suo
+}
+
+// SetDisconnectedTime sets the "disconnectedTime" field.
 func (suo *SessionUpdateOne) SetDisconnectedTime(t time.Time) *SessionUpdateOne {
 	suo.mutation.SetDisconnectedTime(t)
 	return suo
 }
 
+// AddAssetIDs adds the "assets" edge to the Asset entity by IDs.
+func (suo *SessionUpdateOne) AddAssetIDs(ids ...string) *SessionUpdateOne {
+	suo.mutation.AddAssetIDs(ids...)
+	return suo
+}
+
+// AddAssets adds the "assets" edges to the Asset entity.
+func (suo *SessionUpdateOne) AddAssets(a ...*Asset) *SessionUpdateOne {
+	ids := make([]string, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return suo.AddAssetIDs(ids...)
+}
+
 // Mutation returns the SessionMutation object of the builder.
 func (suo *SessionUpdateOne) Mutation() *SessionMutation {
 	return suo.mutation
+}
+
+// ClearAssets clears all "assets" edges to the Asset entity.
+func (suo *SessionUpdateOne) ClearAssets() *SessionUpdateOne {
+	suo.mutation.ClearAssets()
+	return suo
+}
+
+// RemoveAssetIDs removes the "assets" edge to Asset entities by IDs.
+func (suo *SessionUpdateOne) RemoveAssetIDs(ids ...string) *SessionUpdateOne {
+	suo.mutation.RemoveAssetIDs(ids...)
+	return suo
+}
+
+// RemoveAssets removes "assets" edges to Asset entities.
+func (suo *SessionUpdateOne) RemoveAssets(a ...*Asset) *SessionUpdateOne {
+	ids := make([]string, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return suo.RemoveAssetIDs(ids...)
 }
 
 // Save executes the query and returns the updated Session entity.
@@ -575,6 +727,7 @@ func (suo *SessionUpdateOne) Save(ctx context.Context) (*Session, error) {
 		err  error
 		node *Session
 	)
+	suo.defaults()
 	if len(suo.hooks) == 0 {
 		node, err = suo.sqlSave(ctx)
 	} else {
@@ -617,6 +770,14 @@ func (suo *SessionUpdateOne) Exec(ctx context.Context) error {
 func (suo *SessionUpdateOne) ExecX(ctx context.Context) {
 	if err := suo.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (suo *SessionUpdateOne) defaults() {
+	if _, ok := suo.mutation.DisconnectedTime(); !ok {
+		v := session.UpdateDefaultDisconnectedTime()
+		suo.mutation.SetDisconnectedTime(v)
 	}
 }
 
@@ -796,6 +957,60 @@ func (suo *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err e
 			Value:  value,
 			Column: session.FieldDisconnectedTime,
 		})
+	}
+	if suo.mutation.AssetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.AssetsTable,
+			Columns: []string{session.AssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: asset.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedAssetsIDs(); len(nodes) > 0 && !suo.mutation.AssetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.AssetsTable,
+			Columns: []string{session.AssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: asset.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.AssetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.AssetsTable,
+			Columns: []string{session.AssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: asset.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Session{config: suo.config}
 	_spec.Assign = _node.assignValues

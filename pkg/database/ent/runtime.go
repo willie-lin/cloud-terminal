@@ -5,7 +5,10 @@ package ent
 import (
 	"time"
 
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/schema"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
 )
@@ -14,6 +17,46 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	assetFields := schema.Asset{}.Fields()
+	_ = assetFields
+	// assetDescCreatedAt is the schema descriptor for created_at field.
+	assetDescCreatedAt := assetFields[13].Descriptor()
+	// asset.DefaultCreatedAt holds the default value on creation for the created_at field.
+	asset.DefaultCreatedAt = assetDescCreatedAt.Default.(func() time.Time)
+	// assetDescUpdatedAt is the schema descriptor for updated_at field.
+	assetDescUpdatedAt := assetFields[14].Descriptor()
+	// asset.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	asset.DefaultUpdatedAt = assetDescUpdatedAt.Default.(func() time.Time)
+	// asset.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	asset.UpdateDefaultUpdatedAt = assetDescUpdatedAt.UpdateDefault.(func() time.Time)
+	commandFields := schema.Command{}.Fields()
+	_ = commandFields
+	// commandDescID is the schema descriptor for Id field.
+	commandDescID := commandFields[0].Descriptor()
+	// command.IDValidator is a validator for the "Id" field. It is called by the builders before save.
+	command.IDValidator = commandDescID.Validators[0].(func(string) error)
+	// commandDescCreatedAt is the schema descriptor for created_at field.
+	commandDescCreatedAt := commandFields[3].Descriptor()
+	// command.DefaultCreatedAt holds the default value on creation for the created_at field.
+	command.DefaultCreatedAt = commandDescCreatedAt.Default.(func() time.Time)
+	// commandDescUpdatedAt is the schema descriptor for updated_at field.
+	commandDescUpdatedAt := commandFields[4].Descriptor()
+	// command.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	command.DefaultUpdatedAt = commandDescUpdatedAt.Default.(func() time.Time)
+	// command.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	command.UpdateDefaultUpdatedAt = commandDescUpdatedAt.UpdateDefault.(func() time.Time)
+	sessionFields := schema.Session{}.Fields()
+	_ = sessionFields
+	// sessionDescConnectedTime is the schema descriptor for connectedTime field.
+	sessionDescConnectedTime := sessionFields[18].Descriptor()
+	// session.DefaultConnectedTime holds the default value on creation for the connectedTime field.
+	session.DefaultConnectedTime = sessionDescConnectedTime.Default.(func() time.Time)
+	// sessionDescDisconnectedTime is the schema descriptor for disconnectedTime field.
+	sessionDescDisconnectedTime := sessionFields[19].Descriptor()
+	// session.DefaultDisconnectedTime holds the default value on creation for the disconnectedTime field.
+	session.DefaultDisconnectedTime = sessionDescDisconnectedTime.Default.(func() time.Time)
+	// session.UpdateDefaultDisconnectedTime holds the default value on update for the disconnectedTime field.
+	session.UpdateDefaultDisconnectedTime = sessionDescDisconnectedTime.UpdateDefault.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.

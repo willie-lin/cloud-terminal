@@ -9,7 +9,7 @@ import (
 
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/migrate"
 
-	"github.com/willie-lin/cloud-terminal/pkg/database/ent/assets"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/property"
@@ -28,8 +28,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// Assets is the client for interacting with the Assets builders.
-	Assets *AssetsClient
+	// Asset is the client for interacting with the Asset builders.
+	Asset *AssetClient
 	// Command is the client for interacting with the Command builders.
 	Command *CommandClient
 	// Credential is the client for interacting with the Credential builders.
@@ -57,7 +57,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
-	c.Assets = NewAssetsClient(c.config)
+	c.Asset = NewAssetClient(c.config)
 	c.Command = NewCommandClient(c.config)
 	c.Credential = NewCredentialClient(c.config)
 	c.Property = NewPropertyClient(c.config)
@@ -97,7 +97,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:            ctx,
 		config:         cfg,
-		Assets:         NewAssetsClient(cfg),
+		Asset:          NewAssetClient(cfg),
 		Command:        NewCommandClient(cfg),
 		Credential:     NewCredentialClient(cfg),
 		Property:       NewPropertyClient(cfg),
@@ -120,7 +120,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := config{driver: &txDriver{tx: tx, drv: c.driver}, log: c.log, debug: c.debug, hooks: c.hooks}
 	return &Tx{
 		config:         cfg,
-		Assets:         NewAssetsClient(cfg),
+		Asset:          NewAssetClient(cfg),
 		Command:        NewCommandClient(cfg),
 		Credential:     NewCredentialClient(cfg),
 		Property:       NewPropertyClient(cfg),
@@ -134,7 +134,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Assets.
+//		Asset.
 //		Query().
 //		Count(ctx)
 //
@@ -156,7 +156,7 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Assets.Use(hooks...)
+	c.Asset.Use(hooks...)
 	c.Command.Use(hooks...)
 	c.Credential.Use(hooks...)
 	c.Property.Use(hooks...)
@@ -166,82 +166,82 @@ func (c *Client) Use(hooks ...Hook) {
 	c.UserGroup.Use(hooks...)
 }
 
-// AssetsClient is a client for the Assets schema.
-type AssetsClient struct {
+// AssetClient is a client for the Asset schema.
+type AssetClient struct {
 	config
 }
 
-// NewAssetsClient returns a client for the Assets from the given config.
-func NewAssetsClient(c config) *AssetsClient {
-	return &AssetsClient{config: c}
+// NewAssetClient returns a client for the Asset from the given config.
+func NewAssetClient(c config) *AssetClient {
+	return &AssetClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `assets.Hooks(f(g(h())))`.
-func (c *AssetsClient) Use(hooks ...Hook) {
-	c.hooks.Assets = append(c.hooks.Assets, hooks...)
+// A call to `Use(f, g, h)` equals to `asset.Hooks(f(g(h())))`.
+func (c *AssetClient) Use(hooks ...Hook) {
+	c.hooks.Asset = append(c.hooks.Asset, hooks...)
 }
 
-// Create returns a create builder for Assets.
-func (c *AssetsClient) Create() *AssetsCreate {
-	mutation := newAssetsMutation(c.config, OpCreate)
-	return &AssetsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a create builder for Asset.
+func (c *AssetClient) Create() *AssetCreate {
+	mutation := newAssetMutation(c.config, OpCreate)
+	return &AssetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Assets entities.
-func (c *AssetsClient) CreateBulk(builders ...*AssetsCreate) *AssetsCreateBulk {
-	return &AssetsCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Asset entities.
+func (c *AssetClient) CreateBulk(builders ...*AssetCreate) *AssetCreateBulk {
+	return &AssetCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Assets.
-func (c *AssetsClient) Update() *AssetsUpdate {
-	mutation := newAssetsMutation(c.config, OpUpdate)
-	return &AssetsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Asset.
+func (c *AssetClient) Update() *AssetUpdate {
+	mutation := newAssetMutation(c.config, OpUpdate)
+	return &AssetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *AssetsClient) UpdateOne(a *Assets) *AssetsUpdateOne {
-	mutation := newAssetsMutation(c.config, OpUpdateOne, withAssets(a))
-	return &AssetsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *AssetClient) UpdateOne(a *Asset) *AssetUpdateOne {
+	mutation := newAssetMutation(c.config, OpUpdateOne, withAsset(a))
+	return &AssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *AssetsClient) UpdateOneID(id int) *AssetsUpdateOne {
-	mutation := newAssetsMutation(c.config, OpUpdateOne, withAssetsID(id))
-	return &AssetsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *AssetClient) UpdateOneID(id string) *AssetUpdateOne {
+	mutation := newAssetMutation(c.config, OpUpdateOne, withAssetID(id))
+	return &AssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Assets.
-func (c *AssetsClient) Delete() *AssetsDelete {
-	mutation := newAssetsMutation(c.config, OpDelete)
-	return &AssetsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Asset.
+func (c *AssetClient) Delete() *AssetDelete {
+	mutation := newAssetMutation(c.config, OpDelete)
+	return &AssetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a delete builder for the given entity.
-func (c *AssetsClient) DeleteOne(a *Assets) *AssetsDeleteOne {
+func (c *AssetClient) DeleteOne(a *Asset) *AssetDeleteOne {
 	return c.DeleteOneID(a.ID)
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *AssetsClient) DeleteOneID(id int) *AssetsDeleteOne {
-	builder := c.Delete().Where(assets.ID(id))
+func (c *AssetClient) DeleteOneID(id string) *AssetDeleteOne {
+	builder := c.Delete().Where(asset.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &AssetsDeleteOne{builder}
+	return &AssetDeleteOne{builder}
 }
 
-// Query returns a query builder for Assets.
-func (c *AssetsClient) Query() *AssetsQuery {
-	return &AssetsQuery{config: c.config}
+// Query returns a query builder for Asset.
+func (c *AssetClient) Query() *AssetQuery {
+	return &AssetQuery{config: c.config}
 }
 
-// Get returns a Assets entity by its id.
-func (c *AssetsClient) Get(ctx context.Context, id int) (*Assets, error) {
-	return c.Query().Where(assets.ID(id)).Only(ctx)
+// Get returns a Asset entity by its id.
+func (c *AssetClient) Get(ctx context.Context, id string) (*Asset, error) {
+	return c.Query().Where(asset.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *AssetsClient) GetX(ctx context.Context, id int) *Assets {
+func (c *AssetClient) GetX(ctx context.Context, id string) *Asset {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -249,9 +249,25 @@ func (c *AssetsClient) GetX(ctx context.Context, id int) *Assets {
 	return obj
 }
 
+// QuerySessions queries the sessions edge of a Asset.
+func (c *AssetClient) QuerySessions(a *Asset) *SessionQuery {
+	query := &SessionQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(asset.Table, asset.FieldID, id),
+			sqlgraph.To(session.Table, session.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, asset.SessionsTable, asset.SessionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
-func (c *AssetsClient) Hooks() []Hook {
-	return c.hooks.Assets
+func (c *AssetClient) Hooks() []Hook {
+	return c.hooks.Asset
 }
 
 // CommandClient is a client for the Command schema.
@@ -687,6 +703,22 @@ func (c *SessionClient) GetX(ctx context.Context, id string) *Session {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryAssets queries the assets edge of a Session.
+func (c *SessionClient) QueryAssets(s *Session) *AssetQuery {
+	query := &AssetQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(session.Table, session.FieldID, id),
+			sqlgraph.To(asset.Table, asset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, session.AssetsTable, session.AssetsColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

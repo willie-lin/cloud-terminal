@@ -3,8 +3,10 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
@@ -12,9 +14,19 @@ import (
 
 // Command is the model entity for the Command schema.
 type Command struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// ID holds the value of the "Id" field.
+	ID string `json:"Id,omitempty"`
+	// Name holds the value of the "Name" field.
+	Name string `json:"Name,omitempty"`
+	// Content holds the value of the "Content" field.
+	Content []string `json:"Content,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -22,8 +34,14 @@ func (*Command) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case command.FieldContent:
+			values[i] = &[]byte{}
 		case command.FieldID:
 			values[i] = &sql.NullInt64{}
+		case command.FieldID, command.FieldName:
+			values[i] = &sql.NullString{}
+		case command.FieldCreatedAt, command.FieldUpdatedAt:
+			values[i] = &sql.NullTime{}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Command", columns[i])
 		}
@@ -45,6 +63,39 @@ func (c *Command) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			c.ID = int(value.Int64)
+		case command.FieldID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field Id", values[i])
+			} else if value.Valid {
+				c.ID = value.String
+			}
+		case command.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field Name", values[i])
+			} else if value.Valid {
+				c.Name = value.String
+			}
+		case command.FieldContent:
+
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field Content", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &c.Content); err != nil {
+					return fmt.Errorf("unmarshal field Content: %v", err)
+				}
+			}
+		case command.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				c.CreatedAt = value.Time
+			}
+		case command.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				c.UpdatedAt = value.Time
+			}
 		}
 	}
 	return nil
@@ -73,6 +124,16 @@ func (c *Command) String() string {
 	var builder strings.Builder
 	builder.WriteString("Command(")
 	builder.WriteString(fmt.Sprintf("id=%v", c.ID))
+	builder.WriteString(", Id=")
+	builder.WriteString(c.ID)
+	builder.WriteString(", Name=")
+	builder.WriteString(c.Name)
+	builder.WriteString(", Content=")
+	builder.WriteString(fmt.Sprintf("%v", c.Content))
+	builder.WriteString(", created_at=")
+	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

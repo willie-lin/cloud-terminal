@@ -1,6 +1,10 @@
 package schema
 
-import "github.com/facebook/ent"
+import (
+	"github.com/facebook/ent"
+	"github.com/facebook/ent/schema/field"
+	"time"
+)
 
 // Command holds the schema definition for the Command entity.
 type Command struct {
@@ -9,7 +13,14 @@ type Command struct {
 
 // Fields of the Command.
 func (Command) Fields() []ent.Field {
-	return nil
+	return []ent.Field{
+		field.String("Id").Unique().NotEmpty(),
+		field.String("Name"),
+		field.Strings("Content"),
+		field.Time("created_at").Default(time.Now),
+		field.Time("updated_at").Default(time.Now).
+			UpdateDefault(time.Now),
+	}
 }
 
 // Edges of the Command.
