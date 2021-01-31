@@ -1196,10 +1196,9 @@ type CommandMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *int
-	_Id           *string
-	_Name         *string
-	_Content      *[]string
+	id            *string
+	name          *string
+	content       *[]string
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
@@ -1228,7 +1227,7 @@ func newCommandMutation(c config, op Op, opts ...commandOption) *CommandMutation
 }
 
 // withCommandID sets the ID field of the mutation.
-func withCommandID(id int) commandOption {
+func withCommandID(id string) commandOption {
 	return func(m *CommandMutation) {
 		var (
 			err   error
@@ -1278,66 +1277,36 @@ func (m CommandMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Command entities.
+func (m *CommandMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID
 // is only available if it was provided to the builder.
-func (m *CommandMutation) ID() (id int, exists bool) {
+func (m *CommandMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
 	return *m.id, true
 }
 
-// SetID sets the "Id" field.
-func (m *CommandMutation) SetID(s string) {
-	m._Id = &s
-}
-
-// ID returns the value of the "Id" field in the mutation.
-func (m *CommandMutation) ID() (r string, exists bool) {
-	v := m._Id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldID returns the old "Id" field's value of the Command entity.
-// If the Command object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CommandMutation) OldID(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldID: %w", err)
-	}
-	return oldValue.ID, nil
-}
-
-// ResetID resets all changes to the "Id" field.
-func (m *CommandMutation) ResetID() {
-	m._Id = nil
-}
-
-// SetName sets the "Name" field.
+// SetName sets the "name" field.
 func (m *CommandMutation) SetName(s string) {
-	m._Name = &s
+	m.name = &s
 }
 
-// Name returns the value of the "Name" field in the mutation.
+// Name returns the value of the "name" field in the mutation.
 func (m *CommandMutation) Name() (r string, exists bool) {
-	v := m._Name
+	v := m.name
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldName returns the old "Name" field's value of the Command entity.
+// OldName returns the old "name" field's value of the Command entity.
 // If the Command object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *CommandMutation) OldName(ctx context.Context) (v string, err error) {
@@ -1354,26 +1323,26 @@ func (m *CommandMutation) OldName(ctx context.Context) (v string, err error) {
 	return oldValue.Name, nil
 }
 
-// ResetName resets all changes to the "Name" field.
+// ResetName resets all changes to the "name" field.
 func (m *CommandMutation) ResetName() {
-	m._Name = nil
+	m.name = nil
 }
 
-// SetContent sets the "Content" field.
+// SetContent sets the "content" field.
 func (m *CommandMutation) SetContent(s []string) {
-	m._Content = &s
+	m.content = &s
 }
 
-// Content returns the value of the "Content" field in the mutation.
+// Content returns the value of the "content" field in the mutation.
 func (m *CommandMutation) Content() (r []string, exists bool) {
-	v := m._Content
+	v := m.content
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldContent returns the old "Content" field's value of the Command entity.
+// OldContent returns the old "content" field's value of the Command entity.
 // If the Command object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *CommandMutation) OldContent(ctx context.Context) (v []string, err error) {
@@ -1390,9 +1359,9 @@ func (m *CommandMutation) OldContent(ctx context.Context) (v []string, err error
 	return oldValue.Content, nil
 }
 
-// ResetContent resets all changes to the "Content" field.
+// ResetContent resets all changes to the "content" field.
 func (m *CommandMutation) ResetContent() {
-	m._Content = nil
+	m.content = nil
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -1481,14 +1450,11 @@ func (m *CommandMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CommandMutation) Fields() []string {
-	fields := make([]string, 0, 5)
-	if m._Id != nil {
-		fields = append(fields, command.FieldID)
-	}
-	if m._Name != nil {
+	fields := make([]string, 0, 4)
+	if m.name != nil {
 		fields = append(fields, command.FieldName)
 	}
-	if m._Content != nil {
+	if m.content != nil {
 		fields = append(fields, command.FieldContent)
 	}
 	if m.created_at != nil {
@@ -1505,8 +1471,6 @@ func (m *CommandMutation) Fields() []string {
 // schema.
 func (m *CommandMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case command.FieldID:
-		return m.ID()
 	case command.FieldName:
 		return m.Name()
 	case command.FieldContent:
@@ -1524,8 +1488,6 @@ func (m *CommandMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *CommandMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case command.FieldID:
-		return m.OldID(ctx)
 	case command.FieldName:
 		return m.OldName(ctx)
 	case command.FieldContent:
@@ -1543,13 +1505,6 @@ func (m *CommandMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *CommandMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case command.FieldID:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetID(v)
-		return nil
 	case command.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -1627,9 +1582,6 @@ func (m *CommandMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *CommandMutation) ResetField(name string) error {
 	switch name {
-	case command.FieldID:
-		m.ResetID()
-		return nil
 	case command.FieldName:
 		m.ResetName()
 		return nil

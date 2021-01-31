@@ -27,19 +27,13 @@ func (cu *CommandUpdate) Where(ps ...predicate.Command) *CommandUpdate {
 	return cu
 }
 
-// SetID sets the "Id" field.
-func (cu *CommandUpdate) SetID(s string) *CommandUpdate {
-	cu.mutation.SetID(s)
-	return cu
-}
-
-// SetName sets the "Name" field.
+// SetName sets the "name" field.
 func (cu *CommandUpdate) SetName(s string) *CommandUpdate {
 	cu.mutation.SetName(s)
 	return cu
 }
 
-// SetContent sets the "Content" field.
+// SetContent sets the "content" field.
 func (cu *CommandUpdate) SetContent(s []string) *CommandUpdate {
 	cu.mutation.SetContent(s)
 	return cu
@@ -78,18 +72,12 @@ func (cu *CommandUpdate) Save(ctx context.Context) (int, error) {
 	)
 	cu.defaults()
 	if len(cu.hooks) == 0 {
-		if err = cu.check(); err != nil {
-			return 0, err
-		}
 		affected, err = cu.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*CommandMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = cu.check(); err != nil {
-				return 0, err
 			}
 			cu.mutation = mutation
 			affected, err = cu.sqlSave(ctx)
@@ -136,23 +124,13 @@ func (cu *CommandUpdate) defaults() {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (cu *CommandUpdate) check() error {
-	if v, ok := cu.mutation.ID(); ok {
-		if err := command.IDValidator(v); err != nil {
-			return &ValidationError{Name: "Id", err: fmt.Errorf("ent: validator failed for field \"Id\": %w", err)}
-		}
-	}
-	return nil
-}
-
 func (cu *CommandUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   command.Table,
 			Columns: command.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: command.FieldID,
 			},
 		},
@@ -163,13 +141,6 @@ func (cu *CommandUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := cu.mutation.ID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: command.FieldID,
-		})
 	}
 	if value, ok := cu.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -217,19 +188,13 @@ type CommandUpdateOne struct {
 	mutation *CommandMutation
 }
 
-// SetID sets the "Id" field.
-func (cuo *CommandUpdateOne) SetID(s string) *CommandUpdateOne {
-	cuo.mutation.SetID(s)
-	return cuo
-}
-
-// SetName sets the "Name" field.
+// SetName sets the "name" field.
 func (cuo *CommandUpdateOne) SetName(s string) *CommandUpdateOne {
 	cuo.mutation.SetName(s)
 	return cuo
 }
 
-// SetContent sets the "Content" field.
+// SetContent sets the "content" field.
 func (cuo *CommandUpdateOne) SetContent(s []string) *CommandUpdateOne {
 	cuo.mutation.SetContent(s)
 	return cuo
@@ -268,18 +233,12 @@ func (cuo *CommandUpdateOne) Save(ctx context.Context) (*Command, error) {
 	)
 	cuo.defaults()
 	if len(cuo.hooks) == 0 {
-		if err = cuo.check(); err != nil {
-			return nil, err
-		}
 		node, err = cuo.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*CommandMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
-			}
-			if err = cuo.check(); err != nil {
-				return nil, err
 			}
 			cuo.mutation = mutation
 			node, err = cuo.sqlSave(ctx)
@@ -326,23 +285,13 @@ func (cuo *CommandUpdateOne) defaults() {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (cuo *CommandUpdateOne) check() error {
-	if v, ok := cuo.mutation.ID(); ok {
-		if err := command.IDValidator(v); err != nil {
-			return &ValidationError{Name: "Id", err: fmt.Errorf("ent: validator failed for field \"Id\": %w", err)}
-		}
-	}
-	return nil
-}
-
 func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   command.Table,
 			Columns: command.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: command.FieldID,
 			},
 		},
@@ -352,13 +301,6 @@ func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err e
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Command.ID for update")}
 	}
 	_spec.Node.ID.Value = id
-	if value, ok := cuo.mutation.ID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: command.FieldID,
-		})
-	}
 	if value, ok := cuo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,

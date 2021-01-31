@@ -310,7 +310,7 @@ func (c *CommandClient) UpdateOne(co *Command) *CommandUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *CommandClient) UpdateOneID(id int) *CommandUpdateOne {
+func (c *CommandClient) UpdateOneID(id string) *CommandUpdateOne {
 	mutation := newCommandMutation(c.config, OpUpdateOne, withCommandID(id))
 	return &CommandUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -327,7 +327,7 @@ func (c *CommandClient) DeleteOne(co *Command) *CommandDeleteOne {
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *CommandClient) DeleteOneID(id int) *CommandDeleteOne {
+func (c *CommandClient) DeleteOneID(id string) *CommandDeleteOne {
 	builder := c.Delete().Where(command.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -340,12 +340,12 @@ func (c *CommandClient) Query() *CommandQuery {
 }
 
 // Get returns a Command entity by its id.
-func (c *CommandClient) Get(ctx context.Context, id int) (*Command, error) {
+func (c *CommandClient) Get(ctx context.Context, id string) (*Command, error) {
 	return c.Query().Where(command.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *CommandClient) GetX(ctx context.Context, id int) *Command {
+func (c *CommandClient) GetX(ctx context.Context, id string) *Command {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

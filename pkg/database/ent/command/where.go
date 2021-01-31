@@ -10,28 +10,28 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Command {
+func ID(id string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Command {
+func IDEQ(id string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Command {
+func IDNEQ(id string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
 	})
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Command {
+func IDIn(ids ...string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -48,7 +48,7 @@ func IDIn(ids ...int) predicate.Command {
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Command {
+func IDNotIn(ids ...string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -65,41 +65,34 @@ func IDNotIn(ids ...int) predicate.Command {
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Command {
+func IDGT(id string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
 	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Command {
+func IDGTE(id string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
 	})
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Command {
+func IDLT(id string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
 	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Command {
+func IDLTE(id string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
 	})
 }
 
-// ID applies equality check predicate on the "Id" field. It's identical to IDEQ.
-func ID(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldID), v))
-	})
-}
-
-// Name applies equality check predicate on the "Name" field. It's identical to NameEQ.
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldName), v))
@@ -120,111 +113,21 @@ func UpdatedAt(v time.Time) predicate.Command {
 	})
 }
 
-// IDEQ applies the EQ predicate on the "Id" field.
-func IDEQ(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldID), v))
-	})
-}
-
-// IDNEQ applies the NEQ predicate on the "Id" field.
-func IDNEQ(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldID), v))
-	})
-}
-
-// IDIn applies the In predicate on the "Id" field.
-func IDIn(vs ...string) predicate.Command {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Command(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldID), v...))
-	})
-}
-
-// IDNotIn applies the NotIn predicate on the "Id" field.
-func IDNotIn(vs ...string) predicate.Command {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Command(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldID), v...))
-	})
-}
-
-// IDGT applies the GT predicate on the "Id" field.
-func IDGT(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldID), v))
-	})
-}
-
-// IDGTE applies the GTE predicate on the "Id" field.
-func IDGTE(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldID), v))
-	})
-}
-
-// IDLT applies the LT predicate on the "Id" field.
-func IDLT(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldID), v))
-	})
-}
-
-// IDLTE applies the LTE predicate on the "Id" field.
-func IDLTE(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldID), v))
-	})
-}
-
-// IDEqualFold applies the EqualFold predicate on the "Id" field.
-func IDEqualFold(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldID), v))
-	})
-}
-
-// IDContainsFold applies the ContainsFold predicate on the "Id" field.
-func IDContainsFold(v string) predicate.Command {
-	return predicate.Command(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldID), v))
-	})
-}
-
-// NameEQ applies the EQ predicate on the "Name" field.
+// NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldName), v))
 	})
 }
 
-// NameNEQ applies the NEQ predicate on the "Name" field.
+// NameNEQ applies the NEQ predicate on the "name" field.
 func NameNEQ(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldName), v))
 	})
 }
 
-// NameIn applies the In predicate on the "Name" field.
+// NameIn applies the In predicate on the "name" field.
 func NameIn(vs ...string) predicate.Command {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -241,7 +144,7 @@ func NameIn(vs ...string) predicate.Command {
 	})
 }
 
-// NameNotIn applies the NotIn predicate on the "Name" field.
+// NameNotIn applies the NotIn predicate on the "name" field.
 func NameNotIn(vs ...string) predicate.Command {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -258,63 +161,63 @@ func NameNotIn(vs ...string) predicate.Command {
 	})
 }
 
-// NameGT applies the GT predicate on the "Name" field.
+// NameGT applies the GT predicate on the "name" field.
 func NameGT(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldName), v))
 	})
 }
 
-// NameGTE applies the GTE predicate on the "Name" field.
+// NameGTE applies the GTE predicate on the "name" field.
 func NameGTE(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldName), v))
 	})
 }
 
-// NameLT applies the LT predicate on the "Name" field.
+// NameLT applies the LT predicate on the "name" field.
 func NameLT(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldName), v))
 	})
 }
 
-// NameLTE applies the LTE predicate on the "Name" field.
+// NameLTE applies the LTE predicate on the "name" field.
 func NameLTE(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldName), v))
 	})
 }
 
-// NameContains applies the Contains predicate on the "Name" field.
+// NameContains applies the Contains predicate on the "name" field.
 func NameContains(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldName), v))
 	})
 }
 
-// NameHasPrefix applies the HasPrefix predicate on the "Name" field.
+// NameHasPrefix applies the HasPrefix predicate on the "name" field.
 func NameHasPrefix(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldName), v))
 	})
 }
 
-// NameHasSuffix applies the HasSuffix predicate on the "Name" field.
+// NameHasSuffix applies the HasSuffix predicate on the "name" field.
 func NameHasSuffix(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldName), v))
 	})
 }
 
-// NameEqualFold applies the EqualFold predicate on the "Name" field.
+// NameEqualFold applies the EqualFold predicate on the "name" field.
 func NameEqualFold(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldName), v))
 	})
 }
 
-// NameContainsFold applies the ContainsFold predicate on the "Name" field.
+// NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.Command {
 	return predicate.Command(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldName), v))

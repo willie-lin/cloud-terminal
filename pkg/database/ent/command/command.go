@@ -11,8 +11,6 @@ const (
 	Label = "command"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldID holds the string denoting the id field in the database.
-	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldContent holds the string denoting the content field in the database.
@@ -28,7 +26,6 @@ const (
 
 // Columns holds all SQL columns for command fields.
 var Columns = []string{
-	FieldID,
 	FieldID,
 	FieldName,
 	FieldContent,
@@ -47,12 +44,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// IDValidator is a validator for the "Id" field. It is called by the builders before save.
-	IDValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// IDValidator is a validator for the "id" field. It is called by the builders before save.
+	IDValidator func(string) error
 )

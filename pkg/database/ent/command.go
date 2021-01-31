@@ -16,13 +16,11 @@ import (
 type Command struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
-	// ID holds the value of the "Id" field.
-	ID string `json:"Id,omitempty"`
-	// Name holds the value of the "Name" field.
-	Name string `json:"Name,omitempty"`
-	// Content holds the value of the "Content" field.
-	Content []string `json:"Content,omitempty"`
+	ID string `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
+	// Content holds the value of the "content" field.
+	Content []string `json:"content,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -36,8 +34,6 @@ func (*Command) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case command.FieldContent:
 			values[i] = &[]byte{}
-		case command.FieldID:
-			values[i] = &sql.NullInt64{}
 		case command.FieldID, command.FieldName:
 			values[i] = &sql.NullString{}
 		case command.FieldCreatedAt, command.FieldUpdatedAt:
@@ -58,30 +54,24 @@ func (c *Command) assignValues(columns []string, values []interface{}) error {
 	for i := range columns {
 		switch columns[i] {
 		case command.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
-			}
-			c.ID = int(value.Int64)
-		case command.FieldID:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Id", values[i])
+				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				c.ID = value.String
 			}
 		case command.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field Name", values[i])
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				c.Name = value.String
 			}
 		case command.FieldContent:
 
 			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field Content", values[i])
+				return fmt.Errorf("unexpected type %T for field content", values[i])
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &c.Content); err != nil {
-					return fmt.Errorf("unmarshal field Content: %v", err)
+					return fmt.Errorf("unmarshal field content: %v", err)
 				}
 			}
 		case command.FieldCreatedAt:
@@ -124,11 +114,9 @@ func (c *Command) String() string {
 	var builder strings.Builder
 	builder.WriteString("Command(")
 	builder.WriteString(fmt.Sprintf("id=%v", c.ID))
-	builder.WriteString(", Id=")
-	builder.WriteString(c.ID)
-	builder.WriteString(", Name=")
+	builder.WriteString(", name=")
 	builder.WriteString(c.Name)
-	builder.WriteString(", Content=")
+	builder.WriteString(", content=")
 	builder.WriteString(fmt.Sprintf("%v", c.Content))
 	builder.WriteString(", created_at=")
 	builder.WriteString(c.CreatedAt.Format(time.ANSIC))

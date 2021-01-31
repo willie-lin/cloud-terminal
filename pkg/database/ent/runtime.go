@@ -31,10 +31,6 @@ func init() {
 	asset.UpdateDefaultUpdatedAt = assetDescUpdatedAt.UpdateDefault.(func() time.Time)
 	commandFields := schema.Command{}.Fields()
 	_ = commandFields
-	// commandDescID is the schema descriptor for Id field.
-	commandDescID := commandFields[0].Descriptor()
-	// command.IDValidator is a validator for the "Id" field. It is called by the builders before save.
-	command.IDValidator = commandDescID.Validators[0].(func(string) error)
 	// commandDescCreatedAt is the schema descriptor for created_at field.
 	commandDescCreatedAt := commandFields[3].Descriptor()
 	// command.DefaultCreatedAt holds the default value on creation for the created_at field.
@@ -45,6 +41,10 @@ func init() {
 	command.DefaultUpdatedAt = commandDescUpdatedAt.Default.(func() time.Time)
 	// command.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	command.UpdateDefaultUpdatedAt = commandDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// commandDescID is the schema descriptor for id field.
+	commandDescID := commandFields[0].Descriptor()
+	// command.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	command.IDValidator = commandDescID.Validators[0].(func(string) error)
 	sessionFields := schema.Session{}.Fields()
 	_ = sessionFields
 	// sessionDescConnectedTime is the schema descriptor for connectedTime field.

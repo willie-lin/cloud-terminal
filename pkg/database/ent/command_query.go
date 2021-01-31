@@ -76,8 +76,8 @@ func (cq *CommandQuery) FirstX(ctx context.Context) *Command {
 
 // FirstID returns the first Command ID from the query.
 // Returns a *NotFoundError when no Command ID was found.
-func (cq *CommandQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (cq *CommandQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = cq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -89,7 +89,7 @@ func (cq *CommandQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (cq *CommandQuery) FirstIDX(ctx context.Context) int {
+func (cq *CommandQuery) FirstIDX(ctx context.Context) string {
 	id, err := cq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -127,8 +127,8 @@ func (cq *CommandQuery) OnlyX(ctx context.Context) *Command {
 // OnlyID is like Only, but returns the only Command ID in the query.
 // Returns a *NotSingularError when exactly one Command ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (cq *CommandQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (cq *CommandQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = cq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func (cq *CommandQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (cq *CommandQuery) OnlyIDX(ctx context.Context) int {
+func (cq *CommandQuery) OnlyIDX(ctx context.Context) string {
 	id, err := cq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -170,8 +170,8 @@ func (cq *CommandQuery) AllX(ctx context.Context) []*Command {
 }
 
 // IDs executes the query and returns a list of Command IDs.
-func (cq *CommandQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
+func (cq *CommandQuery) IDs(ctx context.Context) ([]string, error) {
+	var ids []string
 	if err := cq.Select(command.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (cq *CommandQuery) IDs(ctx context.Context) ([]int, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (cq *CommandQuery) IDsX(ctx context.Context) []int {
+func (cq *CommandQuery) IDsX(ctx context.Context) []string {
 	ids, err := cq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -245,12 +245,12 @@ func (cq *CommandQuery) Clone() *CommandQuery {
 // Example:
 //
 //	var v []struct {
-//		ID string `json:"Id,omitempty"`
+//		Name string `json:"name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Command.Query().
-//		GroupBy(command.FieldID).
+//		GroupBy(command.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -272,11 +272,11 @@ func (cq *CommandQuery) GroupBy(field string, fields ...string) *CommandGroupBy 
 // Example:
 //
 //	var v []struct {
-//		ID string `json:"Id,omitempty"`
+//		Name string `json:"name,omitempty"`
 //	}
 //
 //	client.Command.Query().
-//		Select(command.FieldID).
+//		Select(command.FieldName).
 //		Scan(ctx, &v)
 //
 func (cq *CommandQuery) Select(field string, fields ...string) *CommandSelect {
@@ -345,7 +345,7 @@ func (cq *CommandQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   command.Table,
 			Columns: command.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: command.FieldID,
 			},
 		},

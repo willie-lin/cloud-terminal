@@ -47,7 +47,6 @@ var (
 	}
 	// CommandsColumns holds the columns for the "commands" table.
 	CommandsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "content", Type: field.TypeJSON},
@@ -58,7 +57,7 @@ var (
 	CommandsTable = &schema.Table{
 		Name:        "commands",
 		Columns:     CommandsColumns,
-		PrimaryKey:  []*schema.Column{CommandsColumns[0], CommandsColumns[1]},
+		PrimaryKey:  []*schema.Column{CommandsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
 	// CredentialsColumns holds the columns for the "credentials" table.

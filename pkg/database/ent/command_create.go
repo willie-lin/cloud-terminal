@@ -20,19 +20,13 @@ type CommandCreate struct {
 	hooks    []Hook
 }
 
-// SetID sets the "Id" field.
-func (cc *CommandCreate) SetID(s string) *CommandCreate {
-	cc.mutation.SetID(s)
-	return cc
-}
-
-// SetName sets the "Name" field.
+// SetName sets the "name" field.
 func (cc *CommandCreate) SetName(s string) *CommandCreate {
 	cc.mutation.SetName(s)
 	return cc
 }
 
-// SetContent sets the "Content" field.
+// SetContent sets the "content" field.
 func (cc *CommandCreate) SetContent(s []string) *CommandCreate {
 	cc.mutation.SetContent(s)
 	return cc
@@ -63,6 +57,12 @@ func (cc *CommandCreate) SetNillableUpdatedAt(t *time.Time) *CommandCreate {
 	if t != nil {
 		cc.SetUpdatedAt(*t)
 	}
+	return cc
+}
+
+// SetID sets the "id" field.
+func (cc *CommandCreate) SetID(s string) *CommandCreate {
+	cc.mutation.SetID(s)
 	return cc
 }
 
@@ -130,25 +130,22 @@ func (cc *CommandCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (cc *CommandCreate) check() error {
-	if _, ok := cc.mutation.ID(); !ok {
-		return &ValidationError{Name: "Id", err: errors.New("ent: missing required field \"Id\"")}
-	}
-	if v, ok := cc.mutation.ID(); ok {
-		if err := command.IDValidator(v); err != nil {
-			return &ValidationError{Name: "Id", err: fmt.Errorf("ent: validator failed for field \"Id\": %w", err)}
-		}
-	}
 	if _, ok := cc.mutation.Name(); !ok {
-		return &ValidationError{Name: "Name", err: errors.New("ent: missing required field \"Name\"")}
+		return &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
 	}
 	if _, ok := cc.mutation.Content(); !ok {
-		return &ValidationError{Name: "Content", err: errors.New("ent: missing required field \"Content\"")}
+		return &ValidationError{Name: "content", err: errors.New("ent: missing required field \"content\"")}
 	}
 	if _, ok := cc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
 	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
+	if v, ok := cc.mutation.ID(); ok {
+		if err := command.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf("ent: validator failed for field \"id\": %w", err)}
+		}
 	}
 	return nil
 }
@@ -161,8 +158,6 @@ func (cc *CommandCreate) sqlSave(ctx context.Context) (*Command, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
 	return _node, nil
 }
 
@@ -172,18 +167,14 @@ func (cc *CommandCreate) createSpec() (*Command, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: command.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: command.FieldID,
 			},
 		}
 	)
-	if value, ok := cc.mutation.ID(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: command.FieldID,
-		})
-		_node.ID = value
+	if id, ok := cc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
 	}
 	if value, ok := cc.mutation.Name(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -260,8 +251,6 @@ func (ccb *CommandCreateBulk) Save(ctx context.Context) ([]*Command, error) {
 				if err != nil {
 					return nil, err
 				}
-				id := specs[i].ID.Value.(int64)
-				nodes[i].ID = int(id)
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

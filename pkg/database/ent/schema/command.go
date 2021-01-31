@@ -14,9 +14,9 @@ type Command struct {
 // Fields of the Command.
 func (Command) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("Id").Unique().NotEmpty(),
-		field.String("Name"),
-		field.Strings("Content"),
+		field.String("id").Unique().NotEmpty(),
+		field.String("name"),
+		field.Strings("content"),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).
 			UpdateDefault(time.Now),
