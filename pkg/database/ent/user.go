@@ -36,7 +36,8 @@ type User struct {
 	Type string `json:"type,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges UserEdges `json:"edges"`
+	Edges              UserEdges `json:"edges"`
+	verification_users *string
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
@@ -68,6 +69,8 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = &sql.NullString{}
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = &sql.NullTime{}
+		case user.ForeignKeys[0]: // verification_users
+			values[i] = &sql.NullString{}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type User", columns[i])
 		}
@@ -142,6 +145,13 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
 				u.Type = value.String
+			}
+		case user.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field verification_users", values[i])
+			} else if value.Valid {
+				u.verification_users = new(string)
+				*u.verification_users = value.String
 			}
 		}
 	}

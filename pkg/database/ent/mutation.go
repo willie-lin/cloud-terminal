@@ -16,6 +16,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 
 	"github.com/facebook/ent"
 )
@@ -5691,13 +5692,21 @@ func (m *UserGroupMutation) ResetEdge(name string) error {
 // VerificationMutation represents an operation that mutates the Verification nodes in the graph.
 type VerificationMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Verification, error)
-	predicates    []predicate.Verification
+	op              Op
+	typ             string
+	id              *string
+	client_ip       *string
+	clientUserAgent *string
+	login_time      *time.Time
+	logout_time     *time.Time
+	remember        *bool
+	clearedFields   map[string]struct{}
+	users           map[string]struct{}
+	removedusers    map[string]struct{}
+	clearedusers    bool
+	done            bool
+	oldValue        func(context.Context) (*Verification, error)
+	predicates      []predicate.Verification
 }
 
 var _ ent.Mutation = (*VerificationMutation)(nil)
@@ -5720,7 +5729,7 @@ func newVerificationMutation(c config, op Op, opts ...verificationOption) *Verif
 }
 
 // withVerificationID sets the ID field of the mutation.
-func withVerificationID(id int) verificationOption {
+func withVerificationID(id string) verificationOption {
 	return func(m *VerificationMutation) {
 		var (
 			err   error
@@ -5770,13 +5779,252 @@ func (m VerificationMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Verification entities.
+func (m *VerificationMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID
 // is only available if it was provided to the builder.
-func (m *VerificationMutation) ID() (id int, exists bool) {
+func (m *VerificationMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
 	return *m.id, true
+}
+
+// SetClientIP sets the "client_ip" field.
+func (m *VerificationMutation) SetClientIP(s string) {
+	m.client_ip = &s
+}
+
+// ClientIP returns the value of the "client_ip" field in the mutation.
+func (m *VerificationMutation) ClientIP() (r string, exists bool) {
+	v := m.client_ip
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientIP returns the old "client_ip" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldClientIP(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldClientIP is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldClientIP requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientIP: %w", err)
+	}
+	return oldValue.ClientIP, nil
+}
+
+// ResetClientIP resets all changes to the "client_ip" field.
+func (m *VerificationMutation) ResetClientIP() {
+	m.client_ip = nil
+}
+
+// SetClientUserAgent sets the "clientUserAgent" field.
+func (m *VerificationMutation) SetClientUserAgent(s string) {
+	m.clientUserAgent = &s
+}
+
+// ClientUserAgent returns the value of the "clientUserAgent" field in the mutation.
+func (m *VerificationMutation) ClientUserAgent() (r string, exists bool) {
+	v := m.clientUserAgent
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientUserAgent returns the old "clientUserAgent" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldClientUserAgent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldClientUserAgent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldClientUserAgent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientUserAgent: %w", err)
+	}
+	return oldValue.ClientUserAgent, nil
+}
+
+// ResetClientUserAgent resets all changes to the "clientUserAgent" field.
+func (m *VerificationMutation) ResetClientUserAgent() {
+	m.clientUserAgent = nil
+}
+
+// SetLoginTime sets the "login_time" field.
+func (m *VerificationMutation) SetLoginTime(t time.Time) {
+	m.login_time = &t
+}
+
+// LoginTime returns the value of the "login_time" field in the mutation.
+func (m *VerificationMutation) LoginTime() (r time.Time, exists bool) {
+	v := m.login_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLoginTime returns the old "login_time" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldLoginTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldLoginTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldLoginTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLoginTime: %w", err)
+	}
+	return oldValue.LoginTime, nil
+}
+
+// ResetLoginTime resets all changes to the "login_time" field.
+func (m *VerificationMutation) ResetLoginTime() {
+	m.login_time = nil
+}
+
+// SetLogoutTime sets the "logout_time" field.
+func (m *VerificationMutation) SetLogoutTime(t time.Time) {
+	m.logout_time = &t
+}
+
+// LogoutTime returns the value of the "logout_time" field in the mutation.
+func (m *VerificationMutation) LogoutTime() (r time.Time, exists bool) {
+	v := m.logout_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLogoutTime returns the old "logout_time" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldLogoutTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldLogoutTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldLogoutTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLogoutTime: %w", err)
+	}
+	return oldValue.LogoutTime, nil
+}
+
+// ResetLogoutTime resets all changes to the "logout_time" field.
+func (m *VerificationMutation) ResetLogoutTime() {
+	m.logout_time = nil
+}
+
+// SetRemember sets the "remember" field.
+func (m *VerificationMutation) SetRemember(b bool) {
+	m.remember = &b
+}
+
+// Remember returns the value of the "remember" field in the mutation.
+func (m *VerificationMutation) Remember() (r bool, exists bool) {
+	v := m.remember
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRemember returns the old "remember" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldRemember(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldRemember is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldRemember requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRemember: %w", err)
+	}
+	return oldValue.Remember, nil
+}
+
+// ResetRemember resets all changes to the "remember" field.
+func (m *VerificationMutation) ResetRemember() {
+	m.remember = nil
+}
+
+// AddUserIDs adds the "users" edge to the User entity by ids.
+func (m *VerificationMutation) AddUserIDs(ids ...string) {
+	if m.users == nil {
+		m.users = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.users[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUsers clears the "users" edge to the User entity.
+func (m *VerificationMutation) ClearUsers() {
+	m.clearedusers = true
+}
+
+// UsersCleared returns if the "users" edge to the User entity was cleared.
+func (m *VerificationMutation) UsersCleared() bool {
+	return m.clearedusers
+}
+
+// RemoveUserIDs removes the "users" edge to the User entity by IDs.
+func (m *VerificationMutation) RemoveUserIDs(ids ...string) {
+	if m.removedusers == nil {
+		m.removedusers = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.removedusers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUsers returns the removed IDs of the "users" edge to the User entity.
+func (m *VerificationMutation) RemovedUsersIDs() (ids []string) {
+	for id := range m.removedusers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UsersIDs returns the "users" edge IDs in the mutation.
+func (m *VerificationMutation) UsersIDs() (ids []string) {
+	for id := range m.users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUsers resets all changes to the "users" edge.
+func (m *VerificationMutation) ResetUsers() {
+	m.users = nil
+	m.clearedusers = false
+	m.removedusers = nil
 }
 
 // Op returns the operation name.
@@ -5793,7 +6041,22 @@ func (m *VerificationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VerificationMutation) Fields() []string {
-	fields := make([]string, 0, 0)
+	fields := make([]string, 0, 5)
+	if m.client_ip != nil {
+		fields = append(fields, verification.FieldClientIP)
+	}
+	if m.clientUserAgent != nil {
+		fields = append(fields, verification.FieldClientUserAgent)
+	}
+	if m.login_time != nil {
+		fields = append(fields, verification.FieldLoginTime)
+	}
+	if m.logout_time != nil {
+		fields = append(fields, verification.FieldLogoutTime)
+	}
+	if m.remember != nil {
+		fields = append(fields, verification.FieldRemember)
+	}
 	return fields
 }
 
@@ -5801,6 +6064,18 @@ func (m *VerificationMutation) Fields() []string {
 // return value indicates that this field was not set, or was not defined in the
 // schema.
 func (m *VerificationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case verification.FieldClientIP:
+		return m.ClientIP()
+	case verification.FieldClientUserAgent:
+		return m.ClientUserAgent()
+	case verification.FieldLoginTime:
+		return m.LoginTime()
+	case verification.FieldLogoutTime:
+		return m.LogoutTime()
+	case verification.FieldRemember:
+		return m.Remember()
+	}
 	return nil, false
 }
 
@@ -5808,6 +6083,18 @@ func (m *VerificationMutation) Field(name string) (ent.Value, bool) {
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
 func (m *VerificationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case verification.FieldClientIP:
+		return m.OldClientIP(ctx)
+	case verification.FieldClientUserAgent:
+		return m.OldClientUserAgent(ctx)
+	case verification.FieldLoginTime:
+		return m.OldLoginTime(ctx)
+	case verification.FieldLogoutTime:
+		return m.OldLogoutTime(ctx)
+	case verification.FieldRemember:
+		return m.OldRemember(ctx)
+	}
 	return nil, fmt.Errorf("unknown Verification field %s", name)
 }
 
@@ -5816,6 +6103,41 @@ func (m *VerificationMutation) OldField(ctx context.Context, name string) (ent.V
 // type.
 func (m *VerificationMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case verification.FieldClientIP:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientIP(v)
+		return nil
+	case verification.FieldClientUserAgent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientUserAgent(v)
+		return nil
+	case verification.FieldLoginTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLoginTime(v)
+		return nil
+	case verification.FieldLogoutTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLogoutTime(v)
+		return nil
+	case verification.FieldRemember:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRemember(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Verification field %s", name)
 }
@@ -5837,6 +6159,8 @@ func (m *VerificationMutation) AddedField(name string) (ent.Value, bool) {
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
 func (m *VerificationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Verification numeric field %s", name)
 }
 
@@ -5862,53 +6186,106 @@ func (m *VerificationMutation) ClearField(name string) error {
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
 func (m *VerificationMutation) ResetField(name string) error {
+	switch name {
+	case verification.FieldClientIP:
+		m.ResetClientIP()
+		return nil
+	case verification.FieldClientUserAgent:
+		m.ResetClientUserAgent()
+		return nil
+	case verification.FieldLoginTime:
+		m.ResetLoginTime()
+		return nil
+	case verification.FieldLogoutTime:
+		m.ResetLogoutTime()
+		return nil
+	case verification.FieldRemember:
+		m.ResetRemember()
+		return nil
+	}
 	return fmt.Errorf("unknown Verification field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *VerificationMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.users != nil {
+		edges = append(edges, verification.EdgeUsers)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *VerificationMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case verification.EdgeUsers:
+		ids := make([]ent.Value, 0, len(m.users))
+		for id := range m.users {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *VerificationMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedusers != nil {
+		edges = append(edges, verification.EdgeUsers)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *VerificationMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case verification.EdgeUsers:
+		ids := make([]ent.Value, 0, len(m.removedusers))
+		for id := range m.removedusers {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *VerificationMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedusers {
+		edges = append(edges, verification.EdgeUsers)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *VerificationMutation) EdgeCleared(name string) bool {
+	switch name {
+	case verification.EdgeUsers:
+		return m.clearedusers
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *VerificationMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Verification unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *VerificationMutation) ResetEdge(name string) error {
+	switch name {
+	case verification.EdgeUsers:
+		m.ResetUsers()
+		return nil
+	}
 	return fmt.Errorf("unknown Verification edge %s", name)
 }

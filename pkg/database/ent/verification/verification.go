@@ -2,19 +2,48 @@
 
 package verification
 
+import (
+	"time"
+)
+
 const (
 	// Label holds the string label denoting the verification type in the database.
 	Label = "verification"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldClientIP holds the string denoting the client_ip field in the database.
+	FieldClientIP = "client_ip"
+	// FieldClientUserAgent holds the string denoting the clientuseragent field in the database.
+	FieldClientUserAgent = "client_user_agent"
+	// FieldLoginTime holds the string denoting the login_time field in the database.
+	FieldLoginTime = "login_time"
+	// FieldLogoutTime holds the string denoting the logout_time field in the database.
+	FieldLogoutTime = "logout_time"
+	// FieldRemember holds the string denoting the remember field in the database.
+	FieldRemember = "remember"
+
+	// EdgeUsers holds the string denoting the users edge name in mutations.
+	EdgeUsers = "users"
 
 	// Table holds the table name of the verification in the database.
 	Table = "verifications"
+	// UsersTable is the table the holds the users relation/edge.
+	UsersTable = "users"
+	// UsersInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UsersInverseTable = "users"
+	// UsersColumn is the table column denoting the users relation/edge.
+	UsersColumn = "verification_users"
 )
 
 // Columns holds all SQL columns for verification fields.
 var Columns = []string{
 	FieldID,
+	FieldClientIP,
+	FieldClientUserAgent,
+	FieldLoginTime,
+	FieldLogoutTime,
+	FieldRemember,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -26,3 +55,12 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultLoginTime holds the default value on creation for the "login_time" field.
+	DefaultLoginTime func() time.Time
+	// DefaultLogoutTime holds the default value on creation for the "logout_time" field.
+	DefaultLogoutTime func() time.Time
+	// UpdateDefaultLogoutTime holds the default value on update for the "logout_time" field.
+	UpdateDefaultLogoutTime func() time.Time
+)

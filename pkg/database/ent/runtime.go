@@ -12,6 +12,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -94,4 +95,16 @@ func init() {
 	usergroup.DefaultUpdatedAt = usergroupDescUpdatedAt.Default.(func() time.Time)
 	// usergroup.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	usergroup.UpdateDefaultUpdatedAt = usergroupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	verificationFields := schema.Verification{}.Fields()
+	_ = verificationFields
+	// verificationDescLoginTime is the schema descriptor for login_time field.
+	verificationDescLoginTime := verificationFields[3].Descriptor()
+	// verification.DefaultLoginTime holds the default value on creation for the login_time field.
+	verification.DefaultLoginTime = verificationDescLoginTime.Default.(func() time.Time)
+	// verificationDescLogoutTime is the schema descriptor for logout_time field.
+	verificationDescLogoutTime := verificationFields[4].Descriptor()
+	// verification.DefaultLogoutTime holds the default value on creation for the logout_time field.
+	verification.DefaultLogoutTime = verificationDescLogoutTime.Default.(func() time.Time)
+	// verification.UpdateDefaultLogoutTime holds the default value on update for the logout_time field.
+	verification.UpdateDefaultLogoutTime = verificationDescLogoutTime.UpdateDefault.(func() time.Time)
 }

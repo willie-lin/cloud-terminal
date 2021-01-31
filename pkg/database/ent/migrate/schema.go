@@ -150,14 +150,23 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "type", Type: field.TypeString},
+		{Name: "verification_users", Type: field.TypeString, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
-		Name:        "users",
-		Columns:     UsersColumns,
-		PrimaryKey:  []*schema.Column{UsersColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "users"},
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:  "users_verifications_users",
+				Columns: []*schema.Column{UsersColumns[10]},
+
+				RefColumns: []*schema.Column{VerificationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Annotation: &entsql.Annotation{Table: "users"},
 	}
 	// UserGroupsColumns holds the columns for the "user_groups" table.
 	UserGroupsColumns = []*schema.Column{
@@ -176,7 +185,12 @@ var (
 	}
 	// VerificationsColumns holds the columns for the "verifications" table.
 	VerificationsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "client_ip", Type: field.TypeString},
+		{Name: "client_user_agent", Type: field.TypeString},
+		{Name: "login_time", Type: field.TypeTime},
+		{Name: "logout_time", Type: field.TypeTime},
+		{Name: "remember", Type: field.TypeBool},
 	}
 	// VerificationsTable holds the schema information for the "verifications" table.
 	VerificationsTable = &schema.Table{
@@ -230,6 +244,7 @@ var (
 
 func init() {
 	AssetsTable.ForeignKeys[0].RefTable = SessionsTable
+	UsersTable.ForeignKeys[0].RefTable = VerificationsTable
 	UserGroupUsersTable.ForeignKeys[0].RefTable = UserGroupsTable
 	UserGroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

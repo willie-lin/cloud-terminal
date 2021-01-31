@@ -3,33 +3,36 @@
 package verification
 
 import (
+	"time"
+
 	"github.com/facebook/ent/dialect/sql"
+	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Verification {
+func ID(id string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Verification {
+func IDEQ(id string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Verification {
+func IDNEQ(id string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
 	})
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Verification {
+func IDIn(ids ...string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -46,7 +49,7 @@ func IDIn(ids ...int) predicate.Verification {
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Verification {
+func IDNotIn(ids ...string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -63,30 +66,481 @@ func IDNotIn(ids ...int) predicate.Verification {
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Verification {
+func IDGT(id string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
 	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Verification {
+func IDGTE(id string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
 	})
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Verification {
+func IDLT(id string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
 	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Verification {
+func IDLTE(id string) predicate.Verification {
 	return predicate.Verification(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
+	})
+}
+
+// ClientIP applies equality check predicate on the "client_ip" field. It's identical to ClientIPEQ.
+func ClientIP(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientUserAgent applies equality check predicate on the "clientUserAgent" field. It's identical to ClientUserAgentEQ.
+func ClientUserAgent(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// LoginTime applies equality check predicate on the "login_time" field. It's identical to LoginTimeEQ.
+func LoginTime(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldLoginTime), v))
+	})
+}
+
+// LogoutTime applies equality check predicate on the "logout_time" field. It's identical to LogoutTimeEQ.
+func LogoutTime(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldLogoutTime), v))
+	})
+}
+
+// Remember applies equality check predicate on the "remember" field. It's identical to RememberEQ.
+func Remember(v bool) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldRemember), v))
+	})
+}
+
+// ClientIPEQ applies the EQ predicate on the "client_ip" field.
+func ClientIPEQ(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPNEQ applies the NEQ predicate on the "client_ip" field.
+func ClientIPNEQ(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPIn applies the In predicate on the "client_ip" field.
+func ClientIPIn(vs ...string) predicate.Verification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Verification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldClientIP), v...))
+	})
+}
+
+// ClientIPNotIn applies the NotIn predicate on the "client_ip" field.
+func ClientIPNotIn(vs ...string) predicate.Verification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Verification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldClientIP), v...))
+	})
+}
+
+// ClientIPGT applies the GT predicate on the "client_ip" field.
+func ClientIPGT(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPGTE applies the GTE predicate on the "client_ip" field.
+func ClientIPGTE(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPLT applies the LT predicate on the "client_ip" field.
+func ClientIPLT(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPLTE applies the LTE predicate on the "client_ip" field.
+func ClientIPLTE(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPContains applies the Contains predicate on the "client_ip" field.
+func ClientIPContains(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPHasPrefix applies the HasPrefix predicate on the "client_ip" field.
+func ClientIPHasPrefix(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPHasSuffix applies the HasSuffix predicate on the "client_ip" field.
+func ClientIPHasSuffix(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPEqualFold applies the EqualFold predicate on the "client_ip" field.
+func ClientIPEqualFold(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientIPContainsFold applies the ContainsFold predicate on the "client_ip" field.
+func ClientIPContainsFold(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldClientIP), v))
+	})
+}
+
+// ClientUserAgentEQ applies the EQ predicate on the "clientUserAgent" field.
+func ClientUserAgentEQ(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentNEQ applies the NEQ predicate on the "clientUserAgent" field.
+func ClientUserAgentNEQ(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentIn applies the In predicate on the "clientUserAgent" field.
+func ClientUserAgentIn(vs ...string) predicate.Verification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Verification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldClientUserAgent), v...))
+	})
+}
+
+// ClientUserAgentNotIn applies the NotIn predicate on the "clientUserAgent" field.
+func ClientUserAgentNotIn(vs ...string) predicate.Verification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Verification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldClientUserAgent), v...))
+	})
+}
+
+// ClientUserAgentGT applies the GT predicate on the "clientUserAgent" field.
+func ClientUserAgentGT(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentGTE applies the GTE predicate on the "clientUserAgent" field.
+func ClientUserAgentGTE(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentLT applies the LT predicate on the "clientUserAgent" field.
+func ClientUserAgentLT(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentLTE applies the LTE predicate on the "clientUserAgent" field.
+func ClientUserAgentLTE(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentContains applies the Contains predicate on the "clientUserAgent" field.
+func ClientUserAgentContains(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentHasPrefix applies the HasPrefix predicate on the "clientUserAgent" field.
+func ClientUserAgentHasPrefix(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentHasSuffix applies the HasSuffix predicate on the "clientUserAgent" field.
+func ClientUserAgentHasSuffix(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentEqualFold applies the EqualFold predicate on the "clientUserAgent" field.
+func ClientUserAgentEqualFold(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// ClientUserAgentContainsFold applies the ContainsFold predicate on the "clientUserAgent" field.
+func ClientUserAgentContainsFold(v string) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldClientUserAgent), v))
+	})
+}
+
+// LoginTimeEQ applies the EQ predicate on the "login_time" field.
+func LoginTimeEQ(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldLoginTime), v))
+	})
+}
+
+// LoginTimeNEQ applies the NEQ predicate on the "login_time" field.
+func LoginTimeNEQ(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldLoginTime), v))
+	})
+}
+
+// LoginTimeIn applies the In predicate on the "login_time" field.
+func LoginTimeIn(vs ...time.Time) predicate.Verification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Verification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldLoginTime), v...))
+	})
+}
+
+// LoginTimeNotIn applies the NotIn predicate on the "login_time" field.
+func LoginTimeNotIn(vs ...time.Time) predicate.Verification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Verification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldLoginTime), v...))
+	})
+}
+
+// LoginTimeGT applies the GT predicate on the "login_time" field.
+func LoginTimeGT(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldLoginTime), v))
+	})
+}
+
+// LoginTimeGTE applies the GTE predicate on the "login_time" field.
+func LoginTimeGTE(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldLoginTime), v))
+	})
+}
+
+// LoginTimeLT applies the LT predicate on the "login_time" field.
+func LoginTimeLT(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldLoginTime), v))
+	})
+}
+
+// LoginTimeLTE applies the LTE predicate on the "login_time" field.
+func LoginTimeLTE(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldLoginTime), v))
+	})
+}
+
+// LogoutTimeEQ applies the EQ predicate on the "logout_time" field.
+func LogoutTimeEQ(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldLogoutTime), v))
+	})
+}
+
+// LogoutTimeNEQ applies the NEQ predicate on the "logout_time" field.
+func LogoutTimeNEQ(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldLogoutTime), v))
+	})
+}
+
+// LogoutTimeIn applies the In predicate on the "logout_time" field.
+func LogoutTimeIn(vs ...time.Time) predicate.Verification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Verification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldLogoutTime), v...))
+	})
+}
+
+// LogoutTimeNotIn applies the NotIn predicate on the "logout_time" field.
+func LogoutTimeNotIn(vs ...time.Time) predicate.Verification {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Verification(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldLogoutTime), v...))
+	})
+}
+
+// LogoutTimeGT applies the GT predicate on the "logout_time" field.
+func LogoutTimeGT(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldLogoutTime), v))
+	})
+}
+
+// LogoutTimeGTE applies the GTE predicate on the "logout_time" field.
+func LogoutTimeGTE(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldLogoutTime), v))
+	})
+}
+
+// LogoutTimeLT applies the LT predicate on the "logout_time" field.
+func LogoutTimeLT(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldLogoutTime), v))
+	})
+}
+
+// LogoutTimeLTE applies the LTE predicate on the "logout_time" field.
+func LogoutTimeLTE(v time.Time) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldLogoutTime), v))
+	})
+}
+
+// RememberEQ applies the EQ predicate on the "remember" field.
+func RememberEQ(v bool) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldRemember), v))
+	})
+}
+
+// RememberNEQ applies the NEQ predicate on the "remember" field.
+func RememberNEQ(v bool) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldRemember), v))
+	})
+}
+
+// HasUsers applies the HasEdge predicate on the "users" edge.
+func HasUsers() predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(UsersTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUsersWith applies the HasEdge predicate on the "users" edge with a given conditions (other predicates).
+func HasUsersWith(preds ...predicate.User) predicate.Verification {
+	return predicate.Verification(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(UsersInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

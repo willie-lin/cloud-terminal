@@ -4,10 +4,13 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 )
 
@@ -16,6 +19,73 @@ type VerificationCreate struct {
 	config
 	mutation *VerificationMutation
 	hooks    []Hook
+}
+
+// SetClientIP sets the "client_ip" field.
+func (vc *VerificationCreate) SetClientIP(s string) *VerificationCreate {
+	vc.mutation.SetClientIP(s)
+	return vc
+}
+
+// SetClientUserAgent sets the "clientUserAgent" field.
+func (vc *VerificationCreate) SetClientUserAgent(s string) *VerificationCreate {
+	vc.mutation.SetClientUserAgent(s)
+	return vc
+}
+
+// SetLoginTime sets the "login_time" field.
+func (vc *VerificationCreate) SetLoginTime(t time.Time) *VerificationCreate {
+	vc.mutation.SetLoginTime(t)
+	return vc
+}
+
+// SetNillableLoginTime sets the "login_time" field if the given value is not nil.
+func (vc *VerificationCreate) SetNillableLoginTime(t *time.Time) *VerificationCreate {
+	if t != nil {
+		vc.SetLoginTime(*t)
+	}
+	return vc
+}
+
+// SetLogoutTime sets the "logout_time" field.
+func (vc *VerificationCreate) SetLogoutTime(t time.Time) *VerificationCreate {
+	vc.mutation.SetLogoutTime(t)
+	return vc
+}
+
+// SetNillableLogoutTime sets the "logout_time" field if the given value is not nil.
+func (vc *VerificationCreate) SetNillableLogoutTime(t *time.Time) *VerificationCreate {
+	if t != nil {
+		vc.SetLogoutTime(*t)
+	}
+	return vc
+}
+
+// SetRemember sets the "remember" field.
+func (vc *VerificationCreate) SetRemember(b bool) *VerificationCreate {
+	vc.mutation.SetRemember(b)
+	return vc
+}
+
+// SetID sets the "id" field.
+func (vc *VerificationCreate) SetID(s string) *VerificationCreate {
+	vc.mutation.SetID(s)
+	return vc
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (vc *VerificationCreate) AddUserIDs(ids ...string) *VerificationCreate {
+	vc.mutation.AddUserIDs(ids...)
+	return vc
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (vc *VerificationCreate) AddUsers(u ...*User) *VerificationCreate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return vc.AddUserIDs(ids...)
 }
 
 // Mutation returns the VerificationMutation object of the builder.
@@ -29,6 +99,7 @@ func (vc *VerificationCreate) Save(ctx context.Context) (*Verification, error) {
 		err  error
 		node *Verification
 	)
+	vc.defaults()
 	if len(vc.hooks) == 0 {
 		if err = vc.check(); err != nil {
 			return nil, err
@@ -67,8 +138,35 @@ func (vc *VerificationCreate) SaveX(ctx context.Context) *Verification {
 	return v
 }
 
+// defaults sets the default values of the builder before save.
+func (vc *VerificationCreate) defaults() {
+	if _, ok := vc.mutation.LoginTime(); !ok {
+		v := verification.DefaultLoginTime()
+		vc.mutation.SetLoginTime(v)
+	}
+	if _, ok := vc.mutation.LogoutTime(); !ok {
+		v := verification.DefaultLogoutTime()
+		vc.mutation.SetLogoutTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (vc *VerificationCreate) check() error {
+	if _, ok := vc.mutation.ClientIP(); !ok {
+		return &ValidationError{Name: "client_ip", err: errors.New("ent: missing required field \"client_ip\"")}
+	}
+	if _, ok := vc.mutation.ClientUserAgent(); !ok {
+		return &ValidationError{Name: "clientUserAgent", err: errors.New("ent: missing required field \"clientUserAgent\"")}
+	}
+	if _, ok := vc.mutation.LoginTime(); !ok {
+		return &ValidationError{Name: "login_time", err: errors.New("ent: missing required field \"login_time\"")}
+	}
+	if _, ok := vc.mutation.LogoutTime(); !ok {
+		return &ValidationError{Name: "logout_time", err: errors.New("ent: missing required field \"logout_time\"")}
+	}
+	if _, ok := vc.mutation.Remember(); !ok {
+		return &ValidationError{Name: "remember", err: errors.New("ent: missing required field \"remember\"")}
+	}
 	return nil
 }
 
@@ -80,8 +178,6 @@ func (vc *VerificationCreate) sqlSave(ctx context.Context) (*Verification, error
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
 	return _node, nil
 }
 
@@ -91,11 +187,74 @@ func (vc *VerificationCreate) createSpec() (*Verification, *sqlgraph.CreateSpec)
 		_spec = &sqlgraph.CreateSpec{
 			Table: verification.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: verification.FieldID,
 			},
 		}
 	)
+	if id, ok := vc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
+	if value, ok := vc.mutation.ClientIP(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: verification.FieldClientIP,
+		})
+		_node.ClientIP = value
+	}
+	if value, ok := vc.mutation.ClientUserAgent(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: verification.FieldClientUserAgent,
+		})
+		_node.ClientUserAgent = value
+	}
+	if value, ok := vc.mutation.LoginTime(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldLoginTime,
+		})
+		_node.LoginTime = value
+	}
+	if value, ok := vc.mutation.LogoutTime(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldLogoutTime,
+		})
+		_node.LogoutTime = value
+	}
+	if value, ok := vc.mutation.Remember(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: verification.FieldRemember,
+		})
+		_node.Remember = value
+	}
+	if nodes := vc.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   verification.UsersTable,
+			Columns: []string{verification.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -113,6 +272,7 @@ func (vcb *VerificationCreateBulk) Save(ctx context.Context) ([]*Verification, e
 	for i := range vcb.builders {
 		func(i int, root context.Context) {
 			builder := vcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*VerificationMutation)
 				if !ok {
@@ -138,8 +298,6 @@ func (vcb *VerificationCreateBulk) Save(ctx context.Context) ([]*Verification, e
 				if err != nil {
 					return nil, err
 				}
-				id := specs[i].ID.Value.(int64)
-				nodes[i].ID = int(id)
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

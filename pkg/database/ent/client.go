@@ -981,7 +981,7 @@ func (c *VerificationClient) UpdateOne(v *Verification) *VerificationUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *VerificationClient) UpdateOneID(id int) *VerificationUpdateOne {
+func (c *VerificationClient) UpdateOneID(id string) *VerificationUpdateOne {
 	mutation := newVerificationMutation(c.config, OpUpdateOne, withVerificationID(id))
 	return &VerificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -998,7 +998,7 @@ func (c *VerificationClient) DeleteOne(v *Verification) *VerificationDeleteOne {
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *VerificationClient) DeleteOneID(id int) *VerificationDeleteOne {
+func (c *VerificationClient) DeleteOneID(id string) *VerificationDeleteOne {
 	builder := c.Delete().Where(verification.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1011,17 +1011,33 @@ func (c *VerificationClient) Query() *VerificationQuery {
 }
 
 // Get returns a Verification entity by its id.
-func (c *VerificationClient) Get(ctx context.Context, id int) (*Verification, error) {
+func (c *VerificationClient) Get(ctx context.Context, id string) (*Verification, error) {
 	return c.Query().Where(verification.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *VerificationClient) GetX(ctx context.Context, id int) *Verification {
+func (c *VerificationClient) GetX(ctx context.Context, id string) *Verification {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryUsers queries the users edge of a Verification.
+func (c *VerificationClient) QueryUsers(v *Verification) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(verification.Table, verification.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, verification.UsersTable, verification.UsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

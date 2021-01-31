@@ -5,11 +5,13 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 )
 
@@ -26,9 +28,83 @@ func (vu *VerificationUpdate) Where(ps ...predicate.Verification) *VerificationU
 	return vu
 }
 
+// SetClientIP sets the "client_ip" field.
+func (vu *VerificationUpdate) SetClientIP(s string) *VerificationUpdate {
+	vu.mutation.SetClientIP(s)
+	return vu
+}
+
+// SetClientUserAgent sets the "clientUserAgent" field.
+func (vu *VerificationUpdate) SetClientUserAgent(s string) *VerificationUpdate {
+	vu.mutation.SetClientUserAgent(s)
+	return vu
+}
+
+// SetLoginTime sets the "login_time" field.
+func (vu *VerificationUpdate) SetLoginTime(t time.Time) *VerificationUpdate {
+	vu.mutation.SetLoginTime(t)
+	return vu
+}
+
+// SetNillableLoginTime sets the "login_time" field if the given value is not nil.
+func (vu *VerificationUpdate) SetNillableLoginTime(t *time.Time) *VerificationUpdate {
+	if t != nil {
+		vu.SetLoginTime(*t)
+	}
+	return vu
+}
+
+// SetLogoutTime sets the "logout_time" field.
+func (vu *VerificationUpdate) SetLogoutTime(t time.Time) *VerificationUpdate {
+	vu.mutation.SetLogoutTime(t)
+	return vu
+}
+
+// SetRemember sets the "remember" field.
+func (vu *VerificationUpdate) SetRemember(b bool) *VerificationUpdate {
+	vu.mutation.SetRemember(b)
+	return vu
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (vu *VerificationUpdate) AddUserIDs(ids ...string) *VerificationUpdate {
+	vu.mutation.AddUserIDs(ids...)
+	return vu
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (vu *VerificationUpdate) AddUsers(u ...*User) *VerificationUpdate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return vu.AddUserIDs(ids...)
+}
+
 // Mutation returns the VerificationMutation object of the builder.
 func (vu *VerificationUpdate) Mutation() *VerificationMutation {
 	return vu.mutation
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (vu *VerificationUpdate) ClearUsers() *VerificationUpdate {
+	vu.mutation.ClearUsers()
+	return vu
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (vu *VerificationUpdate) RemoveUserIDs(ids ...string) *VerificationUpdate {
+	vu.mutation.RemoveUserIDs(ids...)
+	return vu
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (vu *VerificationUpdate) RemoveUsers(u ...*User) *VerificationUpdate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return vu.RemoveUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -37,6 +113,7 @@ func (vu *VerificationUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	vu.defaults()
 	if len(vu.hooks) == 0 {
 		affected, err = vu.sqlSave(ctx)
 	} else {
@@ -82,13 +159,21 @@ func (vu *VerificationUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (vu *VerificationUpdate) defaults() {
+	if _, ok := vu.mutation.LogoutTime(); !ok {
+		v := verification.UpdateDefaultLogoutTime()
+		vu.mutation.SetLogoutTime(v)
+	}
+}
+
 func (vu *VerificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   verification.Table,
 			Columns: verification.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: verification.FieldID,
 			},
 		},
@@ -99,6 +184,95 @@ func (vu *VerificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := vu.mutation.ClientIP(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: verification.FieldClientIP,
+		})
+	}
+	if value, ok := vu.mutation.ClientUserAgent(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: verification.FieldClientUserAgent,
+		})
+	}
+	if value, ok := vu.mutation.LoginTime(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldLoginTime,
+		})
+	}
+	if value, ok := vu.mutation.LogoutTime(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldLogoutTime,
+		})
+	}
+	if value, ok := vu.mutation.Remember(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: verification.FieldRemember,
+		})
+	}
+	if vu.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   verification.UsersTable,
+			Columns: []string{verification.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.RemovedUsersIDs(); len(nodes) > 0 && !vu.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   verification.UsersTable,
+			Columns: []string{verification.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   verification.UsersTable,
+			Columns: []string{verification.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, vu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -118,9 +292,83 @@ type VerificationUpdateOne struct {
 	mutation *VerificationMutation
 }
 
+// SetClientIP sets the "client_ip" field.
+func (vuo *VerificationUpdateOne) SetClientIP(s string) *VerificationUpdateOne {
+	vuo.mutation.SetClientIP(s)
+	return vuo
+}
+
+// SetClientUserAgent sets the "clientUserAgent" field.
+func (vuo *VerificationUpdateOne) SetClientUserAgent(s string) *VerificationUpdateOne {
+	vuo.mutation.SetClientUserAgent(s)
+	return vuo
+}
+
+// SetLoginTime sets the "login_time" field.
+func (vuo *VerificationUpdateOne) SetLoginTime(t time.Time) *VerificationUpdateOne {
+	vuo.mutation.SetLoginTime(t)
+	return vuo
+}
+
+// SetNillableLoginTime sets the "login_time" field if the given value is not nil.
+func (vuo *VerificationUpdateOne) SetNillableLoginTime(t *time.Time) *VerificationUpdateOne {
+	if t != nil {
+		vuo.SetLoginTime(*t)
+	}
+	return vuo
+}
+
+// SetLogoutTime sets the "logout_time" field.
+func (vuo *VerificationUpdateOne) SetLogoutTime(t time.Time) *VerificationUpdateOne {
+	vuo.mutation.SetLogoutTime(t)
+	return vuo
+}
+
+// SetRemember sets the "remember" field.
+func (vuo *VerificationUpdateOne) SetRemember(b bool) *VerificationUpdateOne {
+	vuo.mutation.SetRemember(b)
+	return vuo
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (vuo *VerificationUpdateOne) AddUserIDs(ids ...string) *VerificationUpdateOne {
+	vuo.mutation.AddUserIDs(ids...)
+	return vuo
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (vuo *VerificationUpdateOne) AddUsers(u ...*User) *VerificationUpdateOne {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return vuo.AddUserIDs(ids...)
+}
+
 // Mutation returns the VerificationMutation object of the builder.
 func (vuo *VerificationUpdateOne) Mutation() *VerificationMutation {
 	return vuo.mutation
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (vuo *VerificationUpdateOne) ClearUsers() *VerificationUpdateOne {
+	vuo.mutation.ClearUsers()
+	return vuo
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (vuo *VerificationUpdateOne) RemoveUserIDs(ids ...string) *VerificationUpdateOne {
+	vuo.mutation.RemoveUserIDs(ids...)
+	return vuo
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (vuo *VerificationUpdateOne) RemoveUsers(u ...*User) *VerificationUpdateOne {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return vuo.RemoveUserIDs(ids...)
 }
 
 // Save executes the query and returns the updated Verification entity.
@@ -129,6 +377,7 @@ func (vuo *VerificationUpdateOne) Save(ctx context.Context) (*Verification, erro
 		err  error
 		node *Verification
 	)
+	vuo.defaults()
 	if len(vuo.hooks) == 0 {
 		node, err = vuo.sqlSave(ctx)
 	} else {
@@ -174,13 +423,21 @@ func (vuo *VerificationUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (vuo *VerificationUpdateOne) defaults() {
+	if _, ok := vuo.mutation.LogoutTime(); !ok {
+		v := verification.UpdateDefaultLogoutTime()
+		vuo.mutation.SetLogoutTime(v)
+	}
+}
+
 func (vuo *VerificationUpdateOne) sqlSave(ctx context.Context) (_node *Verification, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   verification.Table,
 			Columns: verification.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: verification.FieldID,
 			},
 		},
@@ -190,6 +447,95 @@ func (vuo *VerificationUpdateOne) sqlSave(ctx context.Context) (_node *Verificat
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Verification.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if value, ok := vuo.mutation.ClientIP(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: verification.FieldClientIP,
+		})
+	}
+	if value, ok := vuo.mutation.ClientUserAgent(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: verification.FieldClientUserAgent,
+		})
+	}
+	if value, ok := vuo.mutation.LoginTime(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldLoginTime,
+		})
+	}
+	if value, ok := vuo.mutation.LogoutTime(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldLogoutTime,
+		})
+	}
+	if value, ok := vuo.mutation.Remember(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: verification.FieldRemember,
+		})
+	}
+	if vuo.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   verification.UsersTable,
+			Columns: []string{verification.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.RemovedUsersIDs(); len(nodes) > 0 && !vuo.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   verification.UsersTable,
+			Columns: []string{verification.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   verification.UsersTable,
+			Columns: []string{verification.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_node = &Verification{config: vuo.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

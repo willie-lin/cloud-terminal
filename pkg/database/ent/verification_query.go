@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -12,6 +13,7 @@ import (
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 )
 
@@ -23,6 +25,8 @@ type VerificationQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Verification
+	// eager-loading edges.
+	withUsers *UserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -52,6 +56,28 @@ func (vq *VerificationQuery) Order(o ...OrderFunc) *VerificationQuery {
 	return vq
 }
 
+// QueryUsers chains the current query on the "users" edge.
+func (vq *VerificationQuery) QueryUsers() *UserQuery {
+	query := &UserQuery{config: vq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := vq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := vq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(verification.Table, verification.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, verification.UsersTable, verification.UsersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Verification entity from the query.
 // Returns a *NotFoundError when no Verification was found.
 func (vq *VerificationQuery) First(ctx context.Context) (*Verification, error) {
@@ -76,8 +102,8 @@ func (vq *VerificationQuery) FirstX(ctx context.Context) *Verification {
 
 // FirstID returns the first Verification ID from the query.
 // Returns a *NotFoundError when no Verification ID was found.
-func (vq *VerificationQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (vq *VerificationQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = vq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -89,7 +115,7 @@ func (vq *VerificationQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (vq *VerificationQuery) FirstIDX(ctx context.Context) int {
+func (vq *VerificationQuery) FirstIDX(ctx context.Context) string {
 	id, err := vq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -127,8 +153,8 @@ func (vq *VerificationQuery) OnlyX(ctx context.Context) *Verification {
 // OnlyID is like Only, but returns the only Verification ID in the query.
 // Returns a *NotSingularError when exactly one Verification ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (vq *VerificationQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (vq *VerificationQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = vq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -144,7 +170,7 @@ func (vq *VerificationQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (vq *VerificationQuery) OnlyIDX(ctx context.Context) int {
+func (vq *VerificationQuery) OnlyIDX(ctx context.Context) string {
 	id, err := vq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -170,8 +196,8 @@ func (vq *VerificationQuery) AllX(ctx context.Context) []*Verification {
 }
 
 // IDs executes the query and returns a list of Verification IDs.
-func (vq *VerificationQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
+func (vq *VerificationQuery) IDs(ctx context.Context) ([]string, error) {
+	var ids []string
 	if err := vq.Select(verification.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -179,7 +205,7 @@ func (vq *VerificationQuery) IDs(ctx context.Context) ([]int, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (vq *VerificationQuery) IDsX(ctx context.Context) []int {
+func (vq *VerificationQuery) IDsX(ctx context.Context) []string {
 	ids, err := vq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -233,14 +259,39 @@ func (vq *VerificationQuery) Clone() *VerificationQuery {
 		offset:     vq.offset,
 		order:      append([]OrderFunc{}, vq.order...),
 		predicates: append([]predicate.Verification{}, vq.predicates...),
+		withUsers:  vq.withUsers.Clone(),
 		// clone intermediate query.
 		sql:  vq.sql.Clone(),
 		path: vq.path,
 	}
 }
 
+// WithUsers tells the query-builder to eager-load the nodes that are connected to
+// the "users" edge. The optional arguments are used to configure the query builder of the edge.
+func (vq *VerificationQuery) WithUsers(opts ...func(*UserQuery)) *VerificationQuery {
+	query := &UserQuery{config: vq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	vq.withUsers = query
+	return vq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		ClientIP string `json:"client_ip,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Verification.Query().
+//		GroupBy(verification.FieldClientIP).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (vq *VerificationQuery) GroupBy(field string, fields ...string) *VerificationGroupBy {
 	group := &VerificationGroupBy{config: vq.config}
 	group.fields = append([]string{field}, fields...)
@@ -255,6 +306,17 @@ func (vq *VerificationQuery) GroupBy(field string, fields ...string) *Verificati
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		ClientIP string `json:"client_ip,omitempty"`
+//	}
+//
+//	client.Verification.Query().
+//		Select(verification.FieldClientIP).
+//		Scan(ctx, &v)
+//
 func (vq *VerificationQuery) Select(field string, fields ...string) *VerificationSelect {
 	vq.fields = append([]string{field}, fields...)
 	return &VerificationSelect{VerificationQuery: vq}
@@ -278,8 +340,11 @@ func (vq *VerificationQuery) prepareQuery(ctx context.Context) error {
 
 func (vq *VerificationQuery) sqlAll(ctx context.Context) ([]*Verification, error) {
 	var (
-		nodes = []*Verification{}
-		_spec = vq.querySpec()
+		nodes       = []*Verification{}
+		_spec       = vq.querySpec()
+		loadedTypes = [1]bool{
+			vq.withUsers != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Verification{config: vq.config}
@@ -291,6 +356,7 @@ func (vq *VerificationQuery) sqlAll(ctx context.Context) ([]*Verification, error
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, vq.driver, _spec); err != nil {
@@ -299,6 +365,36 @@ func (vq *VerificationQuery) sqlAll(ctx context.Context) ([]*Verification, error
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := vq.withUsers; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[string]*Verification)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Users = []*User{}
+		}
+		query.withFKs = true
+		query.Where(predicate.User(func(s *sql.Selector) {
+			s.Where(sql.InValues(verification.UsersColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.verification_users
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "verification_users" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "verification_users" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Users = append(node.Edges.Users, n)
+		}
+	}
+
 	return nodes, nil
 }
 
@@ -321,7 +417,7 @@ func (vq *VerificationQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   verification.Table,
 			Columns: verification.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: verification.FieldID,
 			},
 		},
