@@ -13,6 +13,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/property"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/resourcesharer"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
@@ -2667,7 +2668,11 @@ type ResourceSharerMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *int
+	id            *string
+	resource_id   *string
+	resource_type *string
+	user_id       *string
+	userGroup_id  *string
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*ResourceSharer, error)
@@ -2694,7 +2699,7 @@ func newResourceSharerMutation(c config, op Op, opts ...resourcesharerOption) *R
 }
 
 // withResourceSharerID sets the ID field of the mutation.
-func withResourceSharerID(id int) resourcesharerOption {
+func withResourceSharerID(id string) resourcesharerOption {
 	return func(m *ResourceSharerMutation) {
 		var (
 			err   error
@@ -2744,13 +2749,163 @@ func (m ResourceSharerMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ResourceSharer entities.
+func (m *ResourceSharerMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID
 // is only available if it was provided to the builder.
-func (m *ResourceSharerMutation) ID() (id int, exists bool) {
+func (m *ResourceSharerMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
 	return *m.id, true
+}
+
+// SetResourceID sets the "resource_id" field.
+func (m *ResourceSharerMutation) SetResourceID(s string) {
+	m.resource_id = &s
+}
+
+// ResourceID returns the value of the "resource_id" field in the mutation.
+func (m *ResourceSharerMutation) ResourceID() (r string, exists bool) {
+	v := m.resource_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceID returns the old "resource_id" field's value of the ResourceSharer entity.
+// If the ResourceSharer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceSharerMutation) OldResourceID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldResourceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldResourceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceID: %w", err)
+	}
+	return oldValue.ResourceID, nil
+}
+
+// ResetResourceID resets all changes to the "resource_id" field.
+func (m *ResourceSharerMutation) ResetResourceID() {
+	m.resource_id = nil
+}
+
+// SetResourceType sets the "resource_type" field.
+func (m *ResourceSharerMutation) SetResourceType(s string) {
+	m.resource_type = &s
+}
+
+// ResourceType returns the value of the "resource_type" field in the mutation.
+func (m *ResourceSharerMutation) ResourceType() (r string, exists bool) {
+	v := m.resource_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceType returns the old "resource_type" field's value of the ResourceSharer entity.
+// If the ResourceSharer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceSharerMutation) OldResourceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldResourceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldResourceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceType: %w", err)
+	}
+	return oldValue.ResourceType, nil
+}
+
+// ResetResourceType resets all changes to the "resource_type" field.
+func (m *ResourceSharerMutation) ResetResourceType() {
+	m.resource_type = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *ResourceSharerMutation) SetUserID(s string) {
+	m.user_id = &s
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *ResourceSharerMutation) UserID() (r string, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the ResourceSharer entity.
+// If the ResourceSharer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceSharerMutation) OldUserID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *ResourceSharerMutation) ResetUserID() {
+	m.user_id = nil
+}
+
+// SetUserGroupID sets the "userGroup_id" field.
+func (m *ResourceSharerMutation) SetUserGroupID(s string) {
+	m.userGroup_id = &s
+}
+
+// UserGroupID returns the value of the "userGroup_id" field in the mutation.
+func (m *ResourceSharerMutation) UserGroupID() (r string, exists bool) {
+	v := m.userGroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserGroupID returns the old "userGroup_id" field's value of the ResourceSharer entity.
+// If the ResourceSharer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceSharerMutation) OldUserGroupID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUserGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUserGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserGroupID: %w", err)
+	}
+	return oldValue.UserGroupID, nil
+}
+
+// ResetUserGroupID resets all changes to the "userGroup_id" field.
+func (m *ResourceSharerMutation) ResetUserGroupID() {
+	m.userGroup_id = nil
 }
 
 // Op returns the operation name.
@@ -2767,7 +2922,19 @@ func (m *ResourceSharerMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ResourceSharerMutation) Fields() []string {
-	fields := make([]string, 0, 0)
+	fields := make([]string, 0, 4)
+	if m.resource_id != nil {
+		fields = append(fields, resourcesharer.FieldResourceID)
+	}
+	if m.resource_type != nil {
+		fields = append(fields, resourcesharer.FieldResourceType)
+	}
+	if m.user_id != nil {
+		fields = append(fields, resourcesharer.FieldUserID)
+	}
+	if m.userGroup_id != nil {
+		fields = append(fields, resourcesharer.FieldUserGroupID)
+	}
 	return fields
 }
 
@@ -2775,6 +2942,16 @@ func (m *ResourceSharerMutation) Fields() []string {
 // return value indicates that this field was not set, or was not defined in the
 // schema.
 func (m *ResourceSharerMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case resourcesharer.FieldResourceID:
+		return m.ResourceID()
+	case resourcesharer.FieldResourceType:
+		return m.ResourceType()
+	case resourcesharer.FieldUserID:
+		return m.UserID()
+	case resourcesharer.FieldUserGroupID:
+		return m.UserGroupID()
+	}
 	return nil, false
 }
 
@@ -2782,6 +2959,16 @@ func (m *ResourceSharerMutation) Field(name string) (ent.Value, bool) {
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
 func (m *ResourceSharerMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case resourcesharer.FieldResourceID:
+		return m.OldResourceID(ctx)
+	case resourcesharer.FieldResourceType:
+		return m.OldResourceType(ctx)
+	case resourcesharer.FieldUserID:
+		return m.OldUserID(ctx)
+	case resourcesharer.FieldUserGroupID:
+		return m.OldUserGroupID(ctx)
+	}
 	return nil, fmt.Errorf("unknown ResourceSharer field %s", name)
 }
 
@@ -2790,6 +2977,34 @@ func (m *ResourceSharerMutation) OldField(ctx context.Context, name string) (ent
 // type.
 func (m *ResourceSharerMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case resourcesharer.FieldResourceID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceID(v)
+		return nil
+	case resourcesharer.FieldResourceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceType(v)
+		return nil
+	case resourcesharer.FieldUserID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case resourcesharer.FieldUserGroupID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserGroupID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ResourceSharer field %s", name)
 }
@@ -2811,6 +3026,8 @@ func (m *ResourceSharerMutation) AddedField(name string) (ent.Value, bool) {
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
 func (m *ResourceSharerMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown ResourceSharer numeric field %s", name)
 }
 
@@ -2836,6 +3053,20 @@ func (m *ResourceSharerMutation) ClearField(name string) error {
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
 func (m *ResourceSharerMutation) ResetField(name string) error {
+	switch name {
+	case resourcesharer.FieldResourceID:
+		m.ResetResourceID()
+		return nil
+	case resourcesharer.FieldResourceType:
+		m.ResetResourceType()
+		return nil
+	case resourcesharer.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case resourcesharer.FieldUserGroupID:
+		m.ResetUserGroupID()
+		return nil
+	}
 	return fmt.Errorf("unknown ResourceSharer field %s", name)
 }
 

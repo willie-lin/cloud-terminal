@@ -7,6 +7,14 @@ const (
 	Label = "resource_sharer"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldResourceID holds the string denoting the resource_id field in the database.
+	FieldResourceID = "resource_id"
+	// FieldResourceType holds the string denoting the resource_type field in the database.
+	FieldResourceType = "resource_type"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
+	// FieldUserGroupID holds the string denoting the usergroup_id field in the database.
+	FieldUserGroupID = "user_group_id"
 
 	// Table holds the table name of the resourcesharer in the database.
 	Table = "resourceSharers"
@@ -15,6 +23,10 @@ const (
 // Columns holds all SQL columns for resourcesharer fields.
 var Columns = []string{
 	FieldID,
+	FieldResourceID,
+	FieldResourceType,
+	FieldUserID,
+	FieldUserGroupID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

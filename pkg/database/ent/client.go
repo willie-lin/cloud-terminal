@@ -581,7 +581,7 @@ func (c *ResourceSharerClient) UpdateOne(rs *ResourceSharer) *ResourceSharerUpda
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ResourceSharerClient) UpdateOneID(id int) *ResourceSharerUpdateOne {
+func (c *ResourceSharerClient) UpdateOneID(id string) *ResourceSharerUpdateOne {
 	mutation := newResourceSharerMutation(c.config, OpUpdateOne, withResourceSharerID(id))
 	return &ResourceSharerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -598,7 +598,7 @@ func (c *ResourceSharerClient) DeleteOne(rs *ResourceSharer) *ResourceSharerDele
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *ResourceSharerClient) DeleteOneID(id int) *ResourceSharerDeleteOne {
+func (c *ResourceSharerClient) DeleteOneID(id string) *ResourceSharerDeleteOne {
 	builder := c.Delete().Where(resourcesharer.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -611,12 +611,12 @@ func (c *ResourceSharerClient) Query() *ResourceSharerQuery {
 }
 
 // Get returns a ResourceSharer entity by its id.
-func (c *ResourceSharerClient) Get(ctx context.Context, id int) (*ResourceSharer, error) {
+func (c *ResourceSharerClient) Get(ctx context.Context, id string) (*ResourceSharer, error) {
 	return c.Query().Where(resourcesharer.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ResourceSharerClient) GetX(ctx context.Context, id int) *ResourceSharer {
+func (c *ResourceSharerClient) GetX(ctx context.Context, id string) *ResourceSharer {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

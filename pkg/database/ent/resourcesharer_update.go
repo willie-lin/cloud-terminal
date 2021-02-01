@@ -26,6 +26,30 @@ func (rsu *ResourceSharerUpdate) Where(ps ...predicate.ResourceSharer) *Resource
 	return rsu
 }
 
+// SetResourceID sets the "resource_id" field.
+func (rsu *ResourceSharerUpdate) SetResourceID(s string) *ResourceSharerUpdate {
+	rsu.mutation.SetResourceID(s)
+	return rsu
+}
+
+// SetResourceType sets the "resource_type" field.
+func (rsu *ResourceSharerUpdate) SetResourceType(s string) *ResourceSharerUpdate {
+	rsu.mutation.SetResourceType(s)
+	return rsu
+}
+
+// SetUserID sets the "user_id" field.
+func (rsu *ResourceSharerUpdate) SetUserID(s string) *ResourceSharerUpdate {
+	rsu.mutation.SetUserID(s)
+	return rsu
+}
+
+// SetUserGroupID sets the "userGroup_id" field.
+func (rsu *ResourceSharerUpdate) SetUserGroupID(s string) *ResourceSharerUpdate {
+	rsu.mutation.SetUserGroupID(s)
+	return rsu
+}
+
 // Mutation returns the ResourceSharerMutation object of the builder.
 func (rsu *ResourceSharerUpdate) Mutation() *ResourceSharerMutation {
 	return rsu.mutation
@@ -88,7 +112,7 @@ func (rsu *ResourceSharerUpdate) sqlSave(ctx context.Context) (n int, err error)
 			Table:   resourcesharer.Table,
 			Columns: resourcesharer.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: resourcesharer.FieldID,
 			},
 		},
@@ -99,6 +123,34 @@ func (rsu *ResourceSharerUpdate) sqlSave(ctx context.Context) (n int, err error)
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := rsu.mutation.ResourceID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldResourceID,
+		})
+	}
+	if value, ok := rsu.mutation.ResourceType(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldResourceType,
+		})
+	}
+	if value, ok := rsu.mutation.UserID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldUserID,
+		})
+	}
+	if value, ok := rsu.mutation.UserGroupID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldUserGroupID,
+		})
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, rsu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -116,6 +168,30 @@ type ResourceSharerUpdateOne struct {
 	config
 	hooks    []Hook
 	mutation *ResourceSharerMutation
+}
+
+// SetResourceID sets the "resource_id" field.
+func (rsuo *ResourceSharerUpdateOne) SetResourceID(s string) *ResourceSharerUpdateOne {
+	rsuo.mutation.SetResourceID(s)
+	return rsuo
+}
+
+// SetResourceType sets the "resource_type" field.
+func (rsuo *ResourceSharerUpdateOne) SetResourceType(s string) *ResourceSharerUpdateOne {
+	rsuo.mutation.SetResourceType(s)
+	return rsuo
+}
+
+// SetUserID sets the "user_id" field.
+func (rsuo *ResourceSharerUpdateOne) SetUserID(s string) *ResourceSharerUpdateOne {
+	rsuo.mutation.SetUserID(s)
+	return rsuo
+}
+
+// SetUserGroupID sets the "userGroup_id" field.
+func (rsuo *ResourceSharerUpdateOne) SetUserGroupID(s string) *ResourceSharerUpdateOne {
+	rsuo.mutation.SetUserGroupID(s)
+	return rsuo
 }
 
 // Mutation returns the ResourceSharerMutation object of the builder.
@@ -180,7 +256,7 @@ func (rsuo *ResourceSharerUpdateOne) sqlSave(ctx context.Context) (_node *Resour
 			Table:   resourcesharer.Table,
 			Columns: resourcesharer.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: resourcesharer.FieldID,
 			},
 		},
@@ -190,6 +266,34 @@ func (rsuo *ResourceSharerUpdateOne) sqlSave(ctx context.Context) (_node *Resour
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing ResourceSharer.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if value, ok := rsuo.mutation.ResourceID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldResourceID,
+		})
+	}
+	if value, ok := rsuo.mutation.ResourceType(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldResourceType,
+		})
+	}
+	if value, ok := rsuo.mutation.UserID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldUserID,
+		})
+	}
+	if value, ok := rsuo.mutation.UserGroupID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldUserGroupID,
+		})
+	}
 	_node = &ResourceSharer{config: rsuo.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

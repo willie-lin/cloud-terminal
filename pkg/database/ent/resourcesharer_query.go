@@ -76,8 +76,8 @@ func (rsq *ResourceSharerQuery) FirstX(ctx context.Context) *ResourceSharer {
 
 // FirstID returns the first ResourceSharer ID from the query.
 // Returns a *NotFoundError when no ResourceSharer ID was found.
-func (rsq *ResourceSharerQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (rsq *ResourceSharerQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = rsq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -89,7 +89,7 @@ func (rsq *ResourceSharerQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (rsq *ResourceSharerQuery) FirstIDX(ctx context.Context) int {
+func (rsq *ResourceSharerQuery) FirstIDX(ctx context.Context) string {
 	id, err := rsq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -127,8 +127,8 @@ func (rsq *ResourceSharerQuery) OnlyX(ctx context.Context) *ResourceSharer {
 // OnlyID is like Only, but returns the only ResourceSharer ID in the query.
 // Returns a *NotSingularError when exactly one ResourceSharer ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (rsq *ResourceSharerQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (rsq *ResourceSharerQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = rsq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func (rsq *ResourceSharerQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (rsq *ResourceSharerQuery) OnlyIDX(ctx context.Context) int {
+func (rsq *ResourceSharerQuery) OnlyIDX(ctx context.Context) string {
 	id, err := rsq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -170,8 +170,8 @@ func (rsq *ResourceSharerQuery) AllX(ctx context.Context) []*ResourceSharer {
 }
 
 // IDs executes the query and returns a list of ResourceSharer IDs.
-func (rsq *ResourceSharerQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
+func (rsq *ResourceSharerQuery) IDs(ctx context.Context) ([]string, error) {
+	var ids []string
 	if err := rsq.Select(resourcesharer.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (rsq *ResourceSharerQuery) IDs(ctx context.Context) ([]int, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (rsq *ResourceSharerQuery) IDsX(ctx context.Context) []int {
+func (rsq *ResourceSharerQuery) IDsX(ctx context.Context) []string {
 	ids, err := rsq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -241,6 +241,19 @@ func (rsq *ResourceSharerQuery) Clone() *ResourceSharerQuery {
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		ResourceID string `json:"resource_id,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.ResourceSharer.Query().
+//		GroupBy(resourcesharer.FieldResourceID).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (rsq *ResourceSharerQuery) GroupBy(field string, fields ...string) *ResourceSharerGroupBy {
 	group := &ResourceSharerGroupBy{config: rsq.config}
 	group.fields = append([]string{field}, fields...)
@@ -255,6 +268,17 @@ func (rsq *ResourceSharerQuery) GroupBy(field string, fields ...string) *Resourc
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		ResourceID string `json:"resource_id,omitempty"`
+//	}
+//
+//	client.ResourceSharer.Query().
+//		Select(resourcesharer.FieldResourceID).
+//		Scan(ctx, &v)
+//
 func (rsq *ResourceSharerQuery) Select(field string, fields ...string) *ResourceSharerSelect {
 	rsq.fields = append([]string{field}, fields...)
 	return &ResourceSharerSelect{ResourceSharerQuery: rsq}
@@ -321,7 +345,7 @@ func (rsq *ResourceSharerQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   resourcesharer.Table,
 			Columns: resourcesharer.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: resourcesharer.FieldID,
 			},
 		},

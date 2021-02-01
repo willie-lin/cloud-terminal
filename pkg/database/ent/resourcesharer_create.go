@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
@@ -16,6 +17,36 @@ type ResourceSharerCreate struct {
 	config
 	mutation *ResourceSharerMutation
 	hooks    []Hook
+}
+
+// SetResourceID sets the "resource_id" field.
+func (rsc *ResourceSharerCreate) SetResourceID(s string) *ResourceSharerCreate {
+	rsc.mutation.SetResourceID(s)
+	return rsc
+}
+
+// SetResourceType sets the "resource_type" field.
+func (rsc *ResourceSharerCreate) SetResourceType(s string) *ResourceSharerCreate {
+	rsc.mutation.SetResourceType(s)
+	return rsc
+}
+
+// SetUserID sets the "user_id" field.
+func (rsc *ResourceSharerCreate) SetUserID(s string) *ResourceSharerCreate {
+	rsc.mutation.SetUserID(s)
+	return rsc
+}
+
+// SetUserGroupID sets the "userGroup_id" field.
+func (rsc *ResourceSharerCreate) SetUserGroupID(s string) *ResourceSharerCreate {
+	rsc.mutation.SetUserGroupID(s)
+	return rsc
+}
+
+// SetID sets the "id" field.
+func (rsc *ResourceSharerCreate) SetID(s string) *ResourceSharerCreate {
+	rsc.mutation.SetID(s)
+	return rsc
 }
 
 // Mutation returns the ResourceSharerMutation object of the builder.
@@ -69,6 +100,18 @@ func (rsc *ResourceSharerCreate) SaveX(ctx context.Context) *ResourceSharer {
 
 // check runs all checks and user-defined validators on the builder.
 func (rsc *ResourceSharerCreate) check() error {
+	if _, ok := rsc.mutation.ResourceID(); !ok {
+		return &ValidationError{Name: "resource_id", err: errors.New("ent: missing required field \"resource_id\"")}
+	}
+	if _, ok := rsc.mutation.ResourceType(); !ok {
+		return &ValidationError{Name: "resource_type", err: errors.New("ent: missing required field \"resource_type\"")}
+	}
+	if _, ok := rsc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New("ent: missing required field \"user_id\"")}
+	}
+	if _, ok := rsc.mutation.UserGroupID(); !ok {
+		return &ValidationError{Name: "userGroup_id", err: errors.New("ent: missing required field \"userGroup_id\"")}
+	}
 	return nil
 }
 
@@ -80,8 +123,6 @@ func (rsc *ResourceSharerCreate) sqlSave(ctx context.Context) (*ResourceSharer, 
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
 	return _node, nil
 }
 
@@ -91,11 +132,47 @@ func (rsc *ResourceSharerCreate) createSpec() (*ResourceSharer, *sqlgraph.Create
 		_spec = &sqlgraph.CreateSpec{
 			Table: resourcesharer.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeString,
 				Column: resourcesharer.FieldID,
 			},
 		}
 	)
+	if id, ok := rsc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
+	if value, ok := rsc.mutation.ResourceID(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldResourceID,
+		})
+		_node.ResourceID = value
+	}
+	if value, ok := rsc.mutation.ResourceType(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldResourceType,
+		})
+		_node.ResourceType = value
+	}
+	if value, ok := rsc.mutation.UserID(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldUserID,
+		})
+		_node.UserID = value
+	}
+	if value, ok := rsc.mutation.UserGroupID(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resourcesharer.FieldUserGroupID,
+		})
+		_node.UserGroupID = value
+	}
 	return _node, _spec
 }
 
@@ -138,8 +215,6 @@ func (rscb *ResourceSharerCreateBulk) Save(ctx context.Context) ([]*ResourceShar
 				if err != nil {
 					return nil, err
 				}
-				id := specs[i].ID.Value.(int64)
-				nodes[i].ID = int(id)
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

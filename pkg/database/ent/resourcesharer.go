@@ -12,9 +12,17 @@ import (
 
 // ResourceSharer is the model entity for the ResourceSharer schema.
 type ResourceSharer struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
+	// ResourceID holds the value of the "resource_id" field.
+	ResourceID string `json:"resource_id,omitempty"`
+	// ResourceType holds the value of the "resource_type" field.
+	ResourceType string `json:"resource_type,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID string `json:"user_id,omitempty"`
+	// UserGroupID holds the value of the "userGroup_id" field.
+	UserGroupID string `json:"userGroup_id,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -22,8 +30,8 @@ func (*ResourceSharer) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resourcesharer.FieldID:
-			values[i] = &sql.NullInt64{}
+		case resourcesharer.FieldID, resourcesharer.FieldResourceID, resourcesharer.FieldResourceType, resourcesharer.FieldUserID, resourcesharer.FieldUserGroupID:
+			values[i] = &sql.NullString{}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type ResourceSharer", columns[i])
 		}
@@ -40,11 +48,35 @@ func (rs *ResourceSharer) assignValues(columns []string, values []interface{}) e
 	for i := range columns {
 		switch columns[i] {
 		case resourcesharer.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				rs.ID = value.String
 			}
-			rs.ID = int(value.Int64)
+		case resourcesharer.FieldResourceID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_id", values[i])
+			} else if value.Valid {
+				rs.ResourceID = value.String
+			}
+		case resourcesharer.FieldResourceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_type", values[i])
+			} else if value.Valid {
+				rs.ResourceType = value.String
+			}
+		case resourcesharer.FieldUserID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value.Valid {
+				rs.UserID = value.String
+			}
+		case resourcesharer.FieldUserGroupID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field userGroup_id", values[i])
+			} else if value.Valid {
+				rs.UserGroupID = value.String
+			}
 		}
 	}
 	return nil
@@ -73,6 +105,14 @@ func (rs *ResourceSharer) String() string {
 	var builder strings.Builder
 	builder.WriteString("ResourceSharer(")
 	builder.WriteString(fmt.Sprintf("id=%v", rs.ID))
+	builder.WriteString(", resource_id=")
+	builder.WriteString(rs.ResourceID)
+	builder.WriteString(", resource_type=")
+	builder.WriteString(rs.ResourceType)
+	builder.WriteString(", user_id=")
+	builder.WriteString(rs.UserID)
+	builder.WriteString(", userGroup_id=")
+	builder.WriteString(rs.UserGroupID)
 	builder.WriteByte(')')
 	return builder.String()
 }

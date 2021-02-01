@@ -8,28 +8,28 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.ResourceSharer {
+func ID(id string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.ResourceSharer {
+func IDEQ(id string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.ResourceSharer {
+func IDNEQ(id string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
 	})
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.ResourceSharer {
+func IDIn(ids ...string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -46,7 +46,7 @@ func IDIn(ids ...int) predicate.ResourceSharer {
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.ResourceSharer {
+func IDNotIn(ids ...string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -63,30 +63,502 @@ func IDNotIn(ids ...int) predicate.ResourceSharer {
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.ResourceSharer {
+func IDGT(id string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
 	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.ResourceSharer {
+func IDGTE(id string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
 	})
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.ResourceSharer {
+func IDLT(id string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
 	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.ResourceSharer {
+func IDLTE(id string) predicate.ResourceSharer {
 	return predicate.ResourceSharer(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
+	})
+}
+
+// ResourceID applies equality check predicate on the "resource_id" field. It's identical to ResourceIDEQ.
+func ResourceID(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceType applies equality check predicate on the "resource_type" field. It's identical to ResourceTypeEQ.
+func ResourceType(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResourceType), v))
+	})
+}
+
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUserID), v))
+	})
+}
+
+// UserGroupID applies equality check predicate on the "userGroup_id" field. It's identical to UserGroupIDEQ.
+func UserGroupID(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUserGroupID), v))
+	})
+}
+
+// ResourceIDEQ applies the EQ predicate on the "resource_id" field.
+func ResourceIDEQ(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDNEQ applies the NEQ predicate on the "resource_id" field.
+func ResourceIDNEQ(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDIn applies the In predicate on the "resource_id" field.
+func ResourceIDIn(vs ...string) predicate.ResourceSharer {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldResourceID), v...))
+	})
+}
+
+// ResourceIDNotIn applies the NotIn predicate on the "resource_id" field.
+func ResourceIDNotIn(vs ...string) predicate.ResourceSharer {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldResourceID), v...))
+	})
+}
+
+// ResourceIDGT applies the GT predicate on the "resource_id" field.
+func ResourceIDGT(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDGTE applies the GTE predicate on the "resource_id" field.
+func ResourceIDGTE(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDLT applies the LT predicate on the "resource_id" field.
+func ResourceIDLT(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDLTE applies the LTE predicate on the "resource_id" field.
+func ResourceIDLTE(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDContains applies the Contains predicate on the "resource_id" field.
+func ResourceIDContains(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDHasPrefix applies the HasPrefix predicate on the "resource_id" field.
+func ResourceIDHasPrefix(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDHasSuffix applies the HasSuffix predicate on the "resource_id" field.
+func ResourceIDHasSuffix(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDEqualFold applies the EqualFold predicate on the "resource_id" field.
+func ResourceIDEqualFold(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceIDContainsFold applies the ContainsFold predicate on the "resource_id" field.
+func ResourceIDContainsFold(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldResourceID), v))
+	})
+}
+
+// ResourceTypeEQ applies the EQ predicate on the "resource_type" field.
+func ResourceTypeEQ(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeNEQ applies the NEQ predicate on the "resource_type" field.
+func ResourceTypeNEQ(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeIn applies the In predicate on the "resource_type" field.
+func ResourceTypeIn(vs ...string) predicate.ResourceSharer {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldResourceType), v...))
+	})
+}
+
+// ResourceTypeNotIn applies the NotIn predicate on the "resource_type" field.
+func ResourceTypeNotIn(vs ...string) predicate.ResourceSharer {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldResourceType), v...))
+	})
+}
+
+// ResourceTypeGT applies the GT predicate on the "resource_type" field.
+func ResourceTypeGT(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeGTE applies the GTE predicate on the "resource_type" field.
+func ResourceTypeGTE(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeLT applies the LT predicate on the "resource_type" field.
+func ResourceTypeLT(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeLTE applies the LTE predicate on the "resource_type" field.
+func ResourceTypeLTE(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeContains applies the Contains predicate on the "resource_type" field.
+func ResourceTypeContains(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeHasPrefix applies the HasPrefix predicate on the "resource_type" field.
+func ResourceTypeHasPrefix(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeHasSuffix applies the HasSuffix predicate on the "resource_type" field.
+func ResourceTypeHasSuffix(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeEqualFold applies the EqualFold predicate on the "resource_type" field.
+func ResourceTypeEqualFold(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldResourceType), v))
+	})
+}
+
+// ResourceTypeContainsFold applies the ContainsFold predicate on the "resource_type" field.
+func ResourceTypeContainsFold(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldResourceType), v))
+	})
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...string) predicate.ResourceSharer {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldUserID), v...))
+	})
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...string) predicate.ResourceSharer {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldUserID), v...))
+	})
+}
+
+// UserIDGT applies the GT predicate on the "user_id" field.
+func UserIDGT(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDGTE applies the GTE predicate on the "user_id" field.
+func UserIDGTE(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDLT applies the LT predicate on the "user_id" field.
+func UserIDLT(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDLTE applies the LTE predicate on the "user_id" field.
+func UserIDLTE(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDContains applies the Contains predicate on the "user_id" field.
+func UserIDContains(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDHasPrefix applies the HasPrefix predicate on the "user_id" field.
+func UserIDHasPrefix(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDHasSuffix applies the HasSuffix predicate on the "user_id" field.
+func UserIDHasSuffix(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDEqualFold applies the EqualFold predicate on the "user_id" field.
+func UserIDEqualFold(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldUserID), v))
+	})
+}
+
+// UserIDContainsFold applies the ContainsFold predicate on the "user_id" field.
+func UserIDContainsFold(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldUserID), v))
+	})
+}
+
+// UserGroupIDEQ applies the EQ predicate on the "userGroup_id" field.
+func UserGroupIDEQ(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDNEQ applies the NEQ predicate on the "userGroup_id" field.
+func UserGroupIDNEQ(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDIn applies the In predicate on the "userGroup_id" field.
+func UserGroupIDIn(vs ...string) predicate.ResourceSharer {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldUserGroupID), v...))
+	})
+}
+
+// UserGroupIDNotIn applies the NotIn predicate on the "userGroup_id" field.
+func UserGroupIDNotIn(vs ...string) predicate.ResourceSharer {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldUserGroupID), v...))
+	})
+}
+
+// UserGroupIDGT applies the GT predicate on the "userGroup_id" field.
+func UserGroupIDGT(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDGTE applies the GTE predicate on the "userGroup_id" field.
+func UserGroupIDGTE(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDLT applies the LT predicate on the "userGroup_id" field.
+func UserGroupIDLT(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDLTE applies the LTE predicate on the "userGroup_id" field.
+func UserGroupIDLTE(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDContains applies the Contains predicate on the "userGroup_id" field.
+func UserGroupIDContains(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDHasPrefix applies the HasPrefix predicate on the "userGroup_id" field.
+func UserGroupIDHasPrefix(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDHasSuffix applies the HasSuffix predicate on the "userGroup_id" field.
+func UserGroupIDHasSuffix(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDEqualFold applies the EqualFold predicate on the "userGroup_id" field.
+func UserGroupIDEqualFold(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldUserGroupID), v))
+	})
+}
+
+// UserGroupIDContainsFold applies the ContainsFold predicate on the "userGroup_id" field.
+func UserGroupIDContainsFold(v string) predicate.ResourceSharer {
+	return predicate.ResourceSharer(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldUserGroupID), v))
 	})
 }
 

@@ -97,7 +97,11 @@ var (
 	}
 	// ResourceSharersColumns holds the columns for the "resourceSharers" table.
 	ResourceSharersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "resource_id", Type: field.TypeString},
+		{Name: "resource_type", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "user_group_id", Type: field.TypeString},
 	}
 	// ResourceSharersTable holds the schema information for the "resourceSharers" table.
 	ResourceSharersTable = &schema.Table{
