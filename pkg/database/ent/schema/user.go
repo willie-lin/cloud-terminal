@@ -6,6 +6,7 @@ import (
 	"github.com/facebook/ent/schema"
 	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
+	"github.com/facebook/ent/schema/index"
 	"time"
 )
 
@@ -44,5 +45,13 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user_groups", UserGroup.Type).Ref("users"),
+	}
+}
+
+// Index of the User
+
+func (User) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("username"),
 	}
 }
