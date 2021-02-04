@@ -170,6 +170,13 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_username",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[1]},
+			},
+		},
 		Annotation: &entsql.Annotation{Table: "users"},
 	}
 	// UserGroupsColumns holds the columns for the "user_groups" table.

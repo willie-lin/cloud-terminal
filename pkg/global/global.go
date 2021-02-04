@@ -1,7 +1,5 @@
 package global
 
-import (
-	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
-)
+import "github.com/patrickmn/go-cache"
 
-var Client *ent.Client
+var Cache *cache.Cache
