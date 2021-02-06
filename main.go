@@ -6,15 +6,14 @@ import (
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	//echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/swaggo/echo-swagger"
-	"github.com/swaggo/echo-swagger/cloud-terminal/docs/terminal"
-
+	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/api"
 	"github.com/willie-lin/cloud-terminal/pkg/config"
 	"github.com/willie-lin/cloud-terminal/pkg/database"
 	"github.com/willie-lin/cloud-terminal/pkg/handler"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/acme/autocert"
 	"net/http"
 )
 
@@ -38,17 +37,32 @@ func createLogger(encoding string) (*zap.Logger, error) {
 	}.Build()
 }
 
+// @title Swagger Example API
+// @version 1.0
+// @description This is a sample server Petstore server.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host petstore.swagger.io
+// @BasePath /v2
 func main() {
 	log, _ := zap.NewDevelopment()
 	e := echo.New()
-	e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
+	//e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
 	c := jaegertracing.New(e, nil)
 	defer c.Close()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
-	e.Use(middleware.Gzip())
+
+	//e.Use(middleware.Gzip())
 
 	// 连接 数据库
 	//client, err := database.Client()
@@ -73,6 +87,7 @@ func main() {
 
 	debugMode(err, client, ctx)
 
+	e.GET("/user", getUser)
 	e.GET("/users", handler.GetAllUser(client))
 	e.POST("/user", handler.CreateUser(client))
 	e.POST("/api/login", api.Login(client))
@@ -85,12 +100,27 @@ func main() {
 	e.GET("/user/uname", handler.FindUserByUsername(client))
 	e.GET("/user/uid", handler.FindUserById(client))
 
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "hello world!!!")
-	})
+	//e.GET("/", func(c echo.Context) error {
+	//	return c.String(http.StatusOK, "hello world!!!")
+	//})
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	defer client.Close()
 
 	e.Logger.Fatal(e.Start(":2021"))
 
+}
+
+// @Title GetUser
+// @Description 获取用户信息
+// @Accept  json
+// @Param nick_name formData string true "昵称"
+// @Param user_name formData string true "用户名称"
+// @Param password formData string true "密码"
+// @Param age formData int true "年龄"
+// @Success 200 "获取信息成功"
+// @Failure 400 "获取信息失败"
+// @Router /getUser [get]
+func getUser(c echo.Context) error {
+	// User ID from path `users/:id`
+	return c.String(http.StatusOK, "hello")
 }

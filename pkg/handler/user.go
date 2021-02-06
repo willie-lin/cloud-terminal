@@ -14,7 +14,31 @@ import (
 	"time"
 )
 
-// 查询所有用户
+// @Title GetUser
+// @Description 获取用户信息
+// @Accept  json
+// @Param nick_name formData string true "昵称"
+// @Param user_name formData string true "用户名称"
+// @Param password formData string true "密码"
+// @Param age formData int true "年龄"
+// @Success 200 "获取信息成功"
+// @Failure 400 "获取信息失败"
+// @Router /handler.GetAllUser [get]
+// @Title GetUser
+// @Description 获取用户信息
+// @Accept  json
+// @Param nick_name formData string true "昵称"
+// @Param user_name formData string true "用户名称"
+// @Param password formData string true "密码"
+// @Param age formData int true "年龄"
+// @Success 200 "获取信息成功"
+// @Failure 400 "获取信息失败"
+// @Router /getUser [get]
+func GetUser(c echo.Context) error {
+	// User ID from path `users/:id`
+	return c.String(http.StatusOK, "hello")
+}
+
 func GetAllUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 

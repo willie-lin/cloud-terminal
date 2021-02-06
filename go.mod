@@ -14,7 +14,6 @@ require (
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/rizalgowandy/go-swag-sample v0.0.0-20200622105442-b2a2e016ce15 // indirect
 	github.com/swaggo/echo-swagger v1.1.0
 	github.com/swaggo/swag v1.7.0
 	go.uber.org/zap v1.16.0
