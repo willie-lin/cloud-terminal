@@ -6,7 +6,9 @@ import (
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	_ "github.com/swaggo/echo-swagger"
+	"github.com/swaggo/echo-swagger"
+	"github.com/swaggo/echo-swagger/cloud-terminal/docs/terminal"
+
 	"github.com/willie-lin/cloud-terminal/pkg/api"
 	"github.com/willie-lin/cloud-terminal/pkg/config"
 	"github.com/willie-lin/cloud-terminal/pkg/database"
@@ -86,7 +88,7 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "hello world!!!")
 	})
-
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	defer client.Close()
 
 	e.Logger.Fatal(e.Start(":2021"))
