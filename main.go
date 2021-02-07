@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	//echoSwagger "github.com/swaggo/echo-swagger"
+	//echohoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/swaggo/echo-swagger"
 	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/api"
@@ -14,7 +14,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database"
 	"github.com/willie-lin/cloud-terminal/pkg/handler"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 const versionFile = "/app/VERSION"
@@ -87,8 +86,9 @@ func main() {
 
 	debugMode(err, client, ctx)
 
-	e.GET("/user", getUser)
 	e.GET("/users", handler.GetAllUser(client))
+	e.GET("/user/uname", handler.FindUserByUsername(client))
+	e.GET("/user/uid", handler.FindUserById(client))
 	e.POST("/user", handler.CreateUser(client))
 	e.POST("/api/login", api.Login(client))
 	e.PUT("/user", handler.UpdateUser(client))
@@ -97,8 +97,6 @@ func main() {
 
 	e.DELETE("/user", handler.DeleteUser(client))
 	e.DELETE("/user/uid", handler.DeleteUserById(client))
-	e.GET("/user/uname", handler.FindUserByUsername(client))
-	e.GET("/user/uid", handler.FindUserById(client))
 
 	//e.GET("/", func(c echo.Context) error {
 	//	return c.String(http.StatusOK, "hello world!!!")
@@ -108,19 +106,4 @@ func main() {
 
 	e.Logger.Fatal(e.Start(":2021"))
 
-}
-
-// @Title GetUser
-// @Description 获取用户信息
-// @Accept  json
-// @Param nick_name formData string true "昵称"
-// @Param user_name formData string true "用户名称"
-// @Param password formData string true "密码"
-// @Param age formData int true "年龄"
-// @Success 200 "获取信息成功"
-// @Failure 400 "获取信息失败"
-// @Router /getUser [get]
-func getUser(c echo.Context) error {
-	// User ID from path `users/:id`
-	return c.String(http.StatusOK, "hello")
 }

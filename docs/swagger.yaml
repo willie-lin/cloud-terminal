@@ -13,11 +13,27 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
-  /getUser:
+  /handler.DeleteUser:
+    delete:
+      consumes:
+      - application/json
+      description: 删除用户信息
+      parameters:
+      - description: 用户名称
+        in: formData
+        name: username
+        required: true
+        type: string
+      responses:
+        "200":
+          description: 删除信息成功
+        "400":
+          description: 删除信息失败
+  /handler.GetAllUser:
     get:
       consumes:
       - application/json
-      description: 获取用户信息
+      description: 获取所有用户信息
       parameters:
       - description: 昵称
         in: formData

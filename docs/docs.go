@@ -33,9 +33,34 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/getUser": {
+        "/handler.DeleteUser": {
+            "delete": {
+                "description": "删除用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户名称",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除信息成功"
+                    },
+                    "400": {
+                        "description": "删除信息失败"
+                    }
+                }
+            }
+        },
+        "/handler.GetAllUser": {
             "get": {
-                "description": "获取用户信息",
+                "description": "获取所有用户信息",
                 "consumes": [
                     "application/json"
                 ],

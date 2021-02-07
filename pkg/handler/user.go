@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/willie-lin/cloud-terminal/pkg/config"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -14,8 +15,8 @@ import (
 	"time"
 )
 
-// @Title GetUser
-// @Description 获取用户信息
+// @Title GetAllUser
+// @Description 获取所有用户信息
 // @Accept  json
 // @Param nick_name formData string true "昵称"
 // @Param user_name formData string true "用户名称"
@@ -24,19 +25,24 @@ import (
 // @Success 200 "获取信息成功"
 // @Failure 400 "获取信息失败"
 // @Router /handler.GetAllUser [get]
-// @Title GetUser
-// @Description 获取用户信息
-// @Accept  json
-// @Param nick_name formData string true "昵称"
-// @Param user_name formData string true "用户名称"
-// @Param password formData string true "密码"
-// @Param age formData int true "年龄"
-// @Success 200 "获取信息成功"
-// @Failure 400 "获取信息失败"
-// @Router /getUser [get]
-func GetUser(c echo.Context) error {
-	// User ID from path `users/:id`
-	return c.String(http.StatusOK, "hello")
+func getAllUser() echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		//client, err := database.Client()
+		client, err := config.NewClient()
+		if err != nil {
+			panic(err)
+		}
+		//user := new(ent.User)
+		log, _ := zap.NewDevelopment()
+		users, err := client.User.Query().All(context.Background())
+		if err != nil {
+			log.Fatal("GetAll User Error: ", zap.Error(err))
+			return err
+		}
+
+		return c.JSON(http.StatusOK, users)
+	}
 }
 
 func GetAllUser(client *ent.Client) echo.HandlerFunc {
@@ -461,8 +467,18 @@ func TestBindJson(client *ent.Client) echo.HandlerFunc {
 
 }
 
+// @Title DeleteUser
+// @Description 删除用户信息
+// ListAccounts godoc
+// @Summary List accounts
+// @Description get accounts
+// @Accept  json
+// @Produce  json
+//@RequestBody user_name formData string true "用户名称"
+// @Success 200 "删除信息成功"
+// @Failure 400 "删除信息失败"
+// @Router /handler.DeleteUser [DELETE]
 // 删除用户
-
 func DeleteUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		//client, err := database.Client()
@@ -522,6 +538,14 @@ func DeleteUser(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
+// @Title DeleteUser
+// @Description 删除用户信息
+// @Accept  json
+// @Param username formData string true "用户名称"
+// @Success 200 "删除信息成功"
+// @Failure 400 "删除信息失败"
+// @Router /handler.DeleteUser [DELETE]
+// 删除用户
 // 根据ID删除用户
 func DeleteUserById(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
