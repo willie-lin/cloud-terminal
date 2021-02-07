@@ -28,6 +28,7 @@ func (UserGroup) Fields() []ent.Field {
 		//field.String("ID").MaxLen(30).NotEmpty().Unique().Immutable(),
 		field.String("id").Unique(),
 		field.String("name").Unique(),
+		field.JSON("members", []string{}).Optional(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

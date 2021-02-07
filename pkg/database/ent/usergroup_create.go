@@ -27,6 +27,12 @@ func (ugc *UserGroupCreate) SetName(s string) *UserGroupCreate {
 	return ugc
 }
 
+// SetMembers sets the "members" field.
+func (ugc *UserGroupCreate) SetMembers(s []string) *UserGroupCreate {
+	ugc.mutation.SetMembers(s)
+	return ugc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (ugc *UserGroupCreate) SetCreatedAt(t time.Time) *UserGroupCreate {
 	ugc.mutation.SetCreatedAt(t)
@@ -185,6 +191,14 @@ func (ugc *UserGroupCreate) createSpec() (*UserGroup, *sqlgraph.CreateSpec) {
 			Column: usergroup.FieldName,
 		})
 		_node.Name = value
+	}
+	if value, ok := ugc.mutation.Members(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: usergroup.FieldMembers,
+		})
+		_node.Members = value
 	}
 	if value, ok := ugc.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

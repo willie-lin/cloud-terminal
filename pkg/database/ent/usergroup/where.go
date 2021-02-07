@@ -225,6 +225,20 @@ func NameContainsFold(v string) predicate.UserGroup {
 	})
 }
 
+// MembersIsNil applies the IsNil predicate on the "members" field.
+func MembersIsNil() predicate.UserGroup {
+	return predicate.UserGroup(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldMembers)))
+	})
+}
+
+// MembersNotNil applies the NotNil predicate on the "members" field.
+func MembersNotNil() predicate.UserGroup {
+	return predicate.UserGroup(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldMembers)))
+	})
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.UserGroup {
 	return predicate.UserGroup(func(s *sql.Selector) {

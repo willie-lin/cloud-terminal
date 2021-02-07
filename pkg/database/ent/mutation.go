@@ -5434,6 +5434,7 @@ type UserGroupMutation struct {
 	typ           string
 	id            *string
 	name          *string
+	members       *[]string
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
@@ -5564,6 +5565,55 @@ func (m *UserGroupMutation) OldName(ctx context.Context) (v string, err error) {
 // ResetName resets all changes to the "name" field.
 func (m *UserGroupMutation) ResetName() {
 	m.name = nil
+}
+
+// SetMembers sets the "members" field.
+func (m *UserGroupMutation) SetMembers(s []string) {
+	m.members = &s
+}
+
+// Members returns the value of the "members" field in the mutation.
+func (m *UserGroupMutation) Members() (r []string, exists bool) {
+	v := m.members
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMembers returns the old "members" field's value of the UserGroup entity.
+// If the UserGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserGroupMutation) OldMembers(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldMembers is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldMembers requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMembers: %w", err)
+	}
+	return oldValue.Members, nil
+}
+
+// ClearMembers clears the value of the "members" field.
+func (m *UserGroupMutation) ClearMembers() {
+	m.members = nil
+	m.clearedFields[usergroup.FieldMembers] = struct{}{}
+}
+
+// MembersCleared returns if the "members" field was cleared in this mutation.
+func (m *UserGroupMutation) MembersCleared() bool {
+	_, ok := m.clearedFields[usergroup.FieldMembers]
+	return ok
+}
+
+// ResetMembers resets all changes to the "members" field.
+func (m *UserGroupMutation) ResetMembers() {
+	m.members = nil
+	delete(m.clearedFields, usergroup.FieldMembers)
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -5705,9 +5755,12 @@ func (m *UserGroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserGroupMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.name != nil {
 		fields = append(fields, usergroup.FieldName)
+	}
+	if m.members != nil {
+		fields = append(fields, usergroup.FieldMembers)
 	}
 	if m.created_at != nil {
 		fields = append(fields, usergroup.FieldCreatedAt)
@@ -5725,6 +5778,8 @@ func (m *UserGroupMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case usergroup.FieldName:
 		return m.Name()
+	case usergroup.FieldMembers:
+		return m.Members()
 	case usergroup.FieldCreatedAt:
 		return m.CreatedAt()
 	case usergroup.FieldUpdatedAt:
@@ -5740,6 +5795,8 @@ func (m *UserGroupMutation) OldField(ctx context.Context, name string) (ent.Valu
 	switch name {
 	case usergroup.FieldName:
 		return m.OldName(ctx)
+	case usergroup.FieldMembers:
+		return m.OldMembers(ctx)
 	case usergroup.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case usergroup.FieldUpdatedAt:
@@ -5759,6 +5816,13 @@ func (m *UserGroupMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
+		return nil
+	case usergroup.FieldMembers:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMembers(v)
 		return nil
 	case usergroup.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -5803,7 +5867,11 @@ func (m *UserGroupMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *UserGroupMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(usergroup.FieldMembers) {
+		fields = append(fields, usergroup.FieldMembers)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -5816,6 +5884,11 @@ func (m *UserGroupMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *UserGroupMutation) ClearField(name string) error {
+	switch name {
+	case usergroup.FieldMembers:
+		m.ClearMembers()
+		return nil
+	}
 	return fmt.Errorf("unknown UserGroup nullable field %s", name)
 }
 
@@ -5825,6 +5898,9 @@ func (m *UserGroupMutation) ResetField(name string) error {
 	switch name {
 	case usergroup.FieldName:
 		m.ResetName()
+		return nil
+	case usergroup.FieldMembers:
+		m.ResetMembers()
 		return nil
 	case usergroup.FieldCreatedAt:
 		m.ResetCreatedAt()

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -18,6 +19,8 @@ type UserGroup struct {
 	ID string `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Members holds the value of the "members" field.
+	Members []string `json:"members,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -50,6 +53,8 @@ func (*UserGroup) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case usergroup.FieldMembers:
+			values[i] = &[]byte{}
 		case usergroup.FieldID, usergroup.FieldName:
 			values[i] = &sql.NullString{}
 		case usergroup.FieldCreatedAt, usergroup.FieldUpdatedAt:
@@ -80,6 +85,15 @@ func (ug *UserGroup) assignValues(columns []string, values []interface{}) error 
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				ug.Name = value.String
+			}
+		case usergroup.FieldMembers:
+
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field members", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &ug.Members); err != nil {
+					return fmt.Errorf("unmarshal field members: %v", err)
+				}
 			}
 		case usergroup.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -128,6 +142,8 @@ func (ug *UserGroup) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v", ug.ID))
 	builder.WriteString(", name=")
 	builder.WriteString(ug.Name)
+	builder.WriteString(", members=")
+	builder.WriteString(fmt.Sprintf("%v", ug.Members))
 	builder.WriteString(", created_at=")
 	builder.WriteString(ug.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", updated_at=")
