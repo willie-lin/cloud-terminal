@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"github.com/labstack/echo/v4"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"

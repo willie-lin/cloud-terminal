@@ -86,6 +86,10 @@ func main() {
 
 	debugMode(err, client, ctx)
 
+	//e.HTTPErrorHandler = handler.ErrorHandler
+
+	v1 := e.Group("/api/v1")
+	v1.Use()
 	e.GET("/users", handler.GetAllUser(client))
 	e.GET("/user/uname", handler.FindUserByUsername(client))
 	e.GET("/user/uid", handler.FindUserById(client))

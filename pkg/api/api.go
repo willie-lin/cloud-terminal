@@ -2,8 +2,8 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/goccy/go-json"
 	"github.com/labstack/echo/v4"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
@@ -32,17 +32,22 @@ func Login(client *ent.Client) echo.HandlerFunc {
 			return err
 		}
 
+		fmt.Println(u.Password)
+
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			log.Fatal("The account or password you entered is incorrect.", zap.Error(err))
 			return err
 		}
+		fmt.Println(us.Password)
 
 		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(u.Password))
-		if err != utils.ErrMismatchedHashAndPassword {
-			fmt.Println(err)
+		fmt.Println(err)
+		//if err != utils.ErrMismatchedHashAndPassword {
+		if err != nil {
+			//fmt.Println(err)
 			log.Fatal("The account or password you entered is incorrect.", zap.Error(err))
-			return err
+			//return err
 		}
 
 		return c.JSON(http.StatusOK, "登录成功！！！")

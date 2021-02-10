@@ -5,11 +5,10 @@ package docs
 
 import (
 	"bytes"
-	"encoding/json"
-	"strings"
-
 	"github.com/alecthomas/template"
+	"github.com/goccy/go-json"
 	"github.com/swaggo/swag"
+	"strings"
 )
 
 var doc = `{
