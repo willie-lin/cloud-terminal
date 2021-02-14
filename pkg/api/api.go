@@ -26,7 +26,6 @@ func Login(client *ent.Client) echo.HandlerFunc {
 		u := new(ent.User)
 
 		// decode raw to json
-
 		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
 			log.Fatal("json decode error", zap.Error(err))
 			return err

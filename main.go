@@ -6,7 +6,6 @@ import (
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	//echohoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/swaggo/echo-swagger"
 	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/api"
@@ -85,8 +84,6 @@ func main() {
 
 	debugMode(err, client, ctx)
 
-	//e.HTTPErrorHandler = handler.ErrorHandler
-
 	v1 := e.Group("/api/v1")
 	v1.Use()
 	e.GET("/users", handler.GetAllUser(client))
@@ -101,9 +98,6 @@ func main() {
 	e.DELETE("/user", handler.DeleteUser(client))
 	e.DELETE("/user/uid", handler.DeleteUserById(client))
 
-	//e.GET("/", func(c echo.Context) error {
-	//	return c.String(http.StatusOK, "hello world!!!")
-	//})
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	defer client.Close()
 
