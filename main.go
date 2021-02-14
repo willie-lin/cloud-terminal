@@ -11,7 +11,6 @@ import (
 	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/api"
 	"github.com/willie-lin/cloud-terminal/pkg/config"
-	"github.com/willie-lin/cloud-terminal/pkg/database"
 	"github.com/willie-lin/cloud-terminal/pkg/handler"
 	"go.uber.org/zap"
 )
@@ -65,8 +64,8 @@ func main() {
 
 	// 连接 数据库
 	//client, err := database.Client()
-	client, err := database.Client()
-	//client, err := config.NewClient()
+	//client, err := database.Client()
+	client, err := config.NewClient()
 	if err != nil {
 		log.Fatal("opening ent client", zap.Error(err))
 		panic(err)

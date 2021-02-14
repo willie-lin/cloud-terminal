@@ -3,15 +3,12 @@ package config
 import (
 	"context"
 	"fmt"
-	"github.com/facebook/ent/dialect/sql"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/migrate"
 	"go.uber.org/zap"
-
-	"time"
 )
 
 type DatabaseCfg struct {
@@ -31,32 +28,32 @@ type DatabaseCfg struct {
 //	CTX context.Context
 //	Log *log.Logger
 //}
-
-var (
-	driver  = "mysql"
-	baseUrl = "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true"
-)
-
-func Client() (*ent.Client, error) {
-	//drv, err := sql.Open("mysql", "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true")
-	drv, err := sql.Open(driver, baseUrl)
-	fmt.Println(drv)
-	//drv, err := sql.Open("mysql", "root:root1234@tcp(127.0.0.1:3306)/ent")
-	if err != nil {
-		return nil, err
-	}
-	db := drv.DB()
-	//db.SetMaxIdleConns(maxIdleConns)
-	//db.SetConnMaxLifetime(connMaxLifetime)
-	//db.SetMaxOpenConns(maxOpenConns)
-
-	db.SetMaxIdleConns(10)
-	db.SetMaxOpenConns(100)
-	db.SetConnMaxLifetime(time.Hour)
-	fmt.Println("ccc")
-	return ent.NewClient(ent.Driver(drv)), nil
-
-}
+//
+//var (
+//	driver  = "mysql"
+//	baseUrl = "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true"
+//)
+//
+//func Client() (*ent.Client, error) {
+//	//drv, err := sql.Open("mysql", "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true")
+//	drv, err := sql.Open(driver, baseUrl)
+//	fmt.Println(drv)
+//	//drv, err := sql.Open("mysql", "root:root1234@tcp(127.0.0.1:3306)/ent")
+//	if err != nil {
+//		return nil, err
+//	}
+//	db := drv.DB()
+//	//db.SetMaxIdleConns(maxIdleConns)
+//	//db.SetConnMaxLifetime(connMaxLifetime)
+//	//db.SetMaxOpenConns(maxOpenConns)
+//
+//	db.SetMaxIdleConns(10)
+//	db.SetMaxOpenConns(100)
+//	db.SetConnMaxLifetime(time.Hour)
+//	fmt.Println("ccc")
+//	return ent.NewClient(ent.Driver(drv)), nil
+//
+//}
 
 func NewClient() (*ent.Client, error) {
 	var dfg = &DatabaseCfg{
