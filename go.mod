@@ -10,7 +10,7 @@ require (
 	github.com/goccy/go-json v0.4.2
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/labstack/echo-contrib v0.9.0
-	github.com/labstack/echo/v4 v4.1.17
+	github.com/labstack/echo/v4 v4.2.0
 	github.com/lib/pq v1.9.0
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
