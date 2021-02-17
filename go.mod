@@ -3,6 +3,7 @@ module github.com/willie-lin/cloud-terminal
 go 1.15
 
 require (
+	entgo.io/ent v0.6.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/facebook/ent v0.5.4
 	github.com/go-openapi/spec v0.20.2 // indirect
