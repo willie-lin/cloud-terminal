@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bykof/gostradamus"
+
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -69,6 +71,8 @@ func main() {
 		log.Fatal("opening ent client", zap.Error(err))
 		panic(err)
 	}
+	dateTime := gostradamus.Now()
+	fmt.Println(dateTime)
 	fmt.Println("dddd")
 
 	fmt.Println(client)
