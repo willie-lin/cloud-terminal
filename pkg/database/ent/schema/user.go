@@ -6,7 +6,6 @@ import (
 	"github.com/facebook/ent/schema"
 	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
-	"github.com/facebook/ent/schema/index"
 	"time"
 )
 
@@ -28,7 +27,7 @@ func (User) Fields() []ent.Field {
 		//field.String("ID").NotEmpty().Unique(),
 		//field.String("ID").MaxLen(30).NotEmpty().Unique().Immutable(),
 		field.String("id").Unique(),
-		field.String("username").Unique(),
+		field.String("username"),
 		field.String("password"),
 		field.String("email"),
 		field.String("nickname"),
@@ -51,8 +50,8 @@ func (User) Edges() []ent.Edge {
 
 // Index of the User
 
-func (User) Indexes() []ent.Index {
-	return []ent.Index{
-		index.Fields("username"),
-	}
-}
+//func (User) Indexes() []ent.Index {
+//	return []ent.Index{
+//		index.Fields("username"),
+//	}
+//}

@@ -22,7 +22,7 @@ const (
 	EdgeUsers = "users"
 
 	// Table holds the table name of the group in the database.
-	Table = "user_groups"
+	Table = "groups"
 	// UsersTable is the table the holds the users relation/edge. The primary key declared below.
 	UsersTable = "group_users"
 	// UsersInverseTable is the table name for the User entity.

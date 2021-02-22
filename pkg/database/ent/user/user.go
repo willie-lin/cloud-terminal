@@ -41,7 +41,7 @@ const (
 	GroupsTable = "group_users"
 	// GroupsInverseTable is the table name for the Group entity.
 	// It exists in this package in order to avoid circular dependency with the "group" package.
-	GroupsInverseTable = "user_groups"
+	GroupsInverseTable = "groups"
 )
 
 // Columns holds all SQL columns for user fields.

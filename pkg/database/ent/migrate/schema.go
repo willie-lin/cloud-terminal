@@ -81,20 +81,20 @@ var (
 		ForeignKeys: []*schema.ForeignKey{},
 		Annotation:  &entsql.Annotation{Table: "credentials"},
 	}
-	// UserGroupsColumns holds the columns for the "user_groups" table.
-	UserGroupsColumns = []*schema.Column{
+	// GroupsColumns holds the columns for the "groups" table.
+	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
-	// UserGroupsTable holds the schema information for the "user_groups" table.
-	UserGroupsTable = &schema.Table{
-		Name:        "user_groups",
-		Columns:     UserGroupsColumns,
-		PrimaryKey:  []*schema.Column{UserGroupsColumns[0]},
+	// GroupsTable holds the schema information for the "groups" table.
+	GroupsTable = &schema.Table{
+		Name:        "groups",
+		Columns:     GroupsColumns,
+		PrimaryKey:  []*schema.Column{GroupsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "user_groups"},
+		Annotation:  &entsql.Annotation{Table: "groups"},
 	}
 	// PropertiesColumns holds the columns for the "properties" table.
 	PropertiesColumns = []*schema.Column{
@@ -160,7 +160,7 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "username", Type: field.TypeString, Unique: true},
+		{Name: "username", Type: field.TypeString},
 		{Name: "password", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString},
 		{Name: "nickname", Type: field.TypeString},
@@ -184,13 +184,6 @@ var (
 
 				RefColumns: []*schema.Column{VerificationsColumns[0]},
 				OnDelete:   schema.SetNull,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "user_username",
-				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[1]},
 			},
 		},
 		Annotation: &entsql.Annotation{Table: "users"},
@@ -227,7 +220,7 @@ var (
 				Symbol:  "group_users_group_id",
 				Columns: []*schema.Column{GroupUsersColumns[0]},
 
-				RefColumns: []*schema.Column{UserGroupsColumns[0]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
@@ -244,7 +237,7 @@ var (
 		AssetsTable,
 		CommandsTable,
 		CredentialsTable,
-		UserGroupsTable,
+		GroupsTable,
 		PropertiesTable,
 		ResourceSharersTable,
 		SessionsTable,
@@ -257,6 +250,6 @@ var (
 func init() {
 	AssetsTable.ForeignKeys[0].RefTable = SessionsTable
 	UsersTable.ForeignKeys[0].RefTable = VerificationsTable
-	GroupUsersTable.ForeignKeys[0].RefTable = UserGroupsTable
+	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

@@ -289,7 +289,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetType(u.Type).Save(context.Background())
 		if err != nil {
 			log.Fatal("Create user error:", zap.Error(err))
-			return err
+
 		}
 		return c.JSON(http.StatusOK, &ur)
 	}
