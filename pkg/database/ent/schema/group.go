@@ -27,7 +27,7 @@ func (Group) Fields() []ent.Field {
 		//field.String("ID").NotEmpty().Unique(),
 		//field.String("ID").MaxLen(30).NotEmpty().Unique().Immutable(),
 		field.String("id").Unique(),
-		field.String("name"),
+		field.String("name").Unique(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

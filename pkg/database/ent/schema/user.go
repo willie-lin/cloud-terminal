@@ -27,7 +27,7 @@ func (User) Fields() []ent.Field {
 		//field.String("ID").NotEmpty().Unique(),
 		//field.String("ID").MaxLen(30).NotEmpty().Unique().Immutable(),
 		field.String("id").Unique(),
-		field.String("username"),
+		field.String("username").Unique(),
 		field.String("password"),
 		field.String("email"),
 		field.String("nickname"),
