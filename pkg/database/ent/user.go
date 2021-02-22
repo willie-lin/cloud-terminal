@@ -44,20 +44,20 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// UserGroups holds the value of the user_groups edge.
-	UserGroups []*UserGroup
+	// Groups holds the value of the groups edge.
+	Groups []*Group
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// UserGroupsOrErr returns the UserGroups value or an error if the edge
+// GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) UserGroupsOrErr() ([]*UserGroup, error) {
+func (e UserEdges) GroupsOrErr() ([]*Group, error) {
 	if e.loadedTypes[0] {
-		return e.UserGroups, nil
+		return e.Groups, nil
 	}
-	return nil, &NotLoadedError{edge: "user_groups"}
+	return nil, &NotLoadedError{edge: "groups"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -166,9 +166,9 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 	return nil
 }
 
-// QueryUserGroups queries the "user_groups" edge of the User entity.
-func (u *User) QueryUserGroups() *UserGroupQuery {
-	return (&UserClient{config: u.config}).QueryUserGroups(u)
+// QueryGroups queries the "groups" edge of the User entity.
+func (u *User) QueryGroups() *GroupQuery {
+	return (&UserClient{config: u.config}).QueryGroups(u)
 }
 
 // Update returns a builder for updating this User.

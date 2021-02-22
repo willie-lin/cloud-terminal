@@ -15,6 +15,9 @@ type Command func(*sql.Selector)
 // Credential is the predicate function for credential builders.
 type Credential func(*sql.Selector)
 
+// Group is the predicate function for group builders.
+type Group func(*sql.Selector)
+
 // Property is the predicate function for property builders.
 type Property func(*sql.Selector)
 
@@ -26,9 +29,6 @@ type Session func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
-
-// UserGroup is the predicate function for usergroup builders.
-type UserGroup func(*sql.Selector)
 
 // Verification is the predicate function for verification builders.
 type Verification func(*sql.Selector)

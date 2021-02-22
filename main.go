@@ -88,8 +88,8 @@ func main() {
 
 	debugMode(err, client, ctx)
 
-	v1 := e.Group("/api/v1")
-	v1.Use()
+	//v1 := e.Group("/api/v1")
+	//v1.Use()
 	e.GET("/users", handler.GetAllUser(client))
 	e.GET("/user/uname", handler.FindUserByUsername(client))
 	e.GET("/user/uid", handler.FindUserById(client))
@@ -100,6 +100,12 @@ func main() {
 	e.PUT("/test", handler.TestBindJson(client))
 
 	e.DELETE("/user", handler.DeleteUser(client))
+	e.DELETE("/user/uid", handler.DeleteUserById(client))
+	// UserGroup
+	e.GET("/groups", handler.GetAllGroups(client))
+	e.POST("/group", handler.CreateGroup(client))
+	e.DELETE("/user/uid", handler.DeleteUserById(client))
+	e.DELETE("/user/uid", handler.DeleteUserById(client))
 	e.DELETE("/user/uid", handler.DeleteUserById(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)

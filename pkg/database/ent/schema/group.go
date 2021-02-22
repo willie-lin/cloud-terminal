@@ -9,20 +9,20 @@ import (
 	"time"
 )
 
-// UserGroup holds the schema definition for the UserGroup entity.
-type UserGroup struct {
+// Group holds the schema definition for the Group entity.
+type Group struct {
 	ent.Schema
 }
 
 // Annotations of the User.
-func (UserGroup) Annotations() []schema.Annotation {
+func (Group) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entsql.Annotation{Table: "user_groups"},
 	}
 }
 
-// Fields of the UserGroup.
-func (UserGroup) Fields() []ent.Field {
+// Fields of the Group.
+func (Group) Fields() []ent.Field {
 	return []ent.Field{
 		//field.String("ID").NotEmpty().Unique(),
 		//field.String("ID").MaxLen(30).NotEmpty().Unique().Immutable(),
@@ -33,8 +33,8 @@ func (UserGroup) Fields() []ent.Field {
 	}
 }
 
-// Edges of the UserGroup.
-func (UserGroup) Edges() []ent.Edge {
+// Edges of the Group.
+func (Group) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("users", User.Type),
 	}

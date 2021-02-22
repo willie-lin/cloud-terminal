@@ -10,8 +10,8 @@ import (
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
-	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -103,19 +103,19 @@ func (uc *UserCreate) SetID(s string) *UserCreate {
 	return uc
 }
 
-// AddUserGroupIDs adds the "user_groups" edge to the UserGroup entity by IDs.
-func (uc *UserCreate) AddUserGroupIDs(ids ...string) *UserCreate {
-	uc.mutation.AddUserGroupIDs(ids...)
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (uc *UserCreate) AddGroupIDs(ids ...string) *UserCreate {
+	uc.mutation.AddGroupIDs(ids...)
 	return uc
 }
 
-// AddUserGroups adds the "user_groups" edges to the UserGroup entity.
-func (uc *UserCreate) AddUserGroups(u ...*UserGroup) *UserCreate {
-	ids := make([]string, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// AddGroups adds the "groups" edges to the Group entity.
+func (uc *UserCreate) AddGroups(g ...*Group) *UserCreate {
+	ids := make([]string, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
 	}
-	return uc.AddUserGroupIDs(ids...)
+	return uc.AddGroupIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -321,17 +321,17 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		})
 		_node.Type = value
 	}
-	if nodes := uc.mutation.UserGroupsIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.GroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   user.UserGroupsTable,
-			Columns: user.UserGroupsPrimaryKey,
+			Table:   user.GroupsTable,
+			Columns: user.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeString,
-					Column: usergroup.FieldID,
+					Column: group.FieldID,
 				},
 			},
 		}

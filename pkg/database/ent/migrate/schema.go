@@ -81,6 +81,21 @@ var (
 		ForeignKeys: []*schema.ForeignKey{},
 		Annotation:  &entsql.Annotation{Table: "credentials"},
 	}
+	// UserGroupsColumns holds the columns for the "user_groups" table.
+	UserGroupsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// UserGroupsTable holds the schema information for the "user_groups" table.
+	UserGroupsTable = &schema.Table{
+		Name:        "user_groups",
+		Columns:     UserGroupsColumns,
+		PrimaryKey:  []*schema.Column{UserGroupsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+		Annotation:  &entsql.Annotation{Table: "user_groups"},
+	}
 	// PropertiesColumns holds the columns for the "properties" table.
 	PropertiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -180,21 +195,6 @@ var (
 		},
 		Annotation: &entsql.Annotation{Table: "users"},
 	}
-	// UserGroupsColumns holds the columns for the "user_groups" table.
-	UserGroupsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString, Unique: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-	}
-	// UserGroupsTable holds the schema information for the "user_groups" table.
-	UserGroupsTable = &schema.Table{
-		Name:        "user_groups",
-		Columns:     UserGroupsColumns,
-		PrimaryKey:  []*schema.Column{UserGroupsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "user_groups"},
-	}
 	// VerificationsColumns holds the columns for the "verifications" table.
 	VerificationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -212,27 +212,27 @@ var (
 		ForeignKeys: []*schema.ForeignKey{},
 		Annotation:  &entsql.Annotation{Table: "verifications"},
 	}
-	// UserGroupUsersColumns holds the columns for the "user_group_users" table.
-	UserGroupUsersColumns = []*schema.Column{
-		{Name: "user_group_id", Type: field.TypeString},
+	// GroupUsersColumns holds the columns for the "group_users" table.
+	GroupUsersColumns = []*schema.Column{
+		{Name: "group_id", Type: field.TypeString},
 		{Name: "user_id", Type: field.TypeString},
 	}
-	// UserGroupUsersTable holds the schema information for the "user_group_users" table.
-	UserGroupUsersTable = &schema.Table{
-		Name:       "user_group_users",
-		Columns:    UserGroupUsersColumns,
-		PrimaryKey: []*schema.Column{UserGroupUsersColumns[0], UserGroupUsersColumns[1]},
+	// GroupUsersTable holds the schema information for the "group_users" table.
+	GroupUsersTable = &schema.Table{
+		Name:       "group_users",
+		Columns:    GroupUsersColumns,
+		PrimaryKey: []*schema.Column{GroupUsersColumns[0], GroupUsersColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:  "user_group_users_user_group_id",
-				Columns: []*schema.Column{UserGroupUsersColumns[0]},
+				Symbol:  "group_users_group_id",
+				Columns: []*schema.Column{GroupUsersColumns[0]},
 
 				RefColumns: []*schema.Column{UserGroupsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:  "user_group_users_user_id",
-				Columns: []*schema.Column{UserGroupUsersColumns[1]},
+				Symbol:  "group_users_user_id",
+				Columns: []*schema.Column{GroupUsersColumns[1]},
 
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
@@ -244,19 +244,19 @@ var (
 		AssetsTable,
 		CommandsTable,
 		CredentialsTable,
+		UserGroupsTable,
 		PropertiesTable,
 		ResourceSharersTable,
 		SessionsTable,
 		UsersTable,
-		UserGroupsTable,
 		VerificationsTable,
-		UserGroupUsersTable,
+		GroupUsersTable,
 	}
 )
 
 func init() {
 	AssetsTable.ForeignKeys[0].RefTable = SessionsTable
 	UsersTable.ForeignKeys[0].RefTable = VerificationsTable
-	UserGroupUsersTable.ForeignKeys[0].RefTable = UserGroupsTable
-	UserGroupUsersTable.ForeignKeys[1].RefTable = UsersTable
+	GroupUsersTable.ForeignKeys[0].RefTable = UserGroupsTable
+	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

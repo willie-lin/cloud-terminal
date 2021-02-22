@@ -12,24 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// Asset is the client for interacting with the Asset builders.
-	Asset *AssetClient
-	// Command is the client for interacting with the Command builders.
-	Command *CommandClient
-	// Credential is the client for interacting with the Credential builders.
-	Credential *CredentialClient
-	// Group is the client for interacting with the Group builders.
-	Group *GroupClient
-	// Property is the client for interacting with the Property builders.
-	Property *PropertyClient
-	// ResourceSharer is the client for interacting with the ResourceSharer builders.
-	ResourceSharer *ResourceSharerClient
-	// Session is the client for interacting with the Session builders.
-	Session *SessionClient
-	// User is the client for interacting with the User builders.
-	User *UserClient
-	// Verification is the client for interacting with the Verification builders.
-	Verification *VerificationClient
+	// UserGroup is the client for interacting with the UserGroup builders.
+	UserGroup *UserGroupClient
 
 	// lazily loaded.
 	client     *Client
@@ -165,15 +149,7 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.Asset = NewAssetClient(tx.config)
-	tx.Command = NewCommandClient(tx.config)
-	tx.Credential = NewCredentialClient(tx.config)
-	tx.Group = NewGroupClient(tx.config)
-	tx.Property = NewPropertyClient(tx.config)
-	tx.ResourceSharer = NewResourceSharerClient(tx.config)
-	tx.Session = NewSessionClient(tx.config)
-	tx.User = NewUserClient(tx.config)
-	tx.Verification = NewVerificationClient(tx.config)
+	tx.UserGroup = NewUserGroupClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -183,7 +159,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Asset.QueryXXX(), the query will be executed
+// applies a query, for example: UserGroup.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

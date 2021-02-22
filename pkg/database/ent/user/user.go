@@ -32,16 +32,16 @@ const (
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
 
-	// EdgeUserGroups holds the string denoting the user_groups edge name in mutations.
-	EdgeUserGroups = "user_groups"
+	// EdgeGroups holds the string denoting the groups edge name in mutations.
+	EdgeGroups = "groups"
 
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// UserGroupsTable is the table the holds the user_groups relation/edge. The primary key declared below.
-	UserGroupsTable = "user_group_users"
-	// UserGroupsInverseTable is the table name for the UserGroup entity.
-	// It exists in this package in order to avoid circular dependency with the "usergroup" package.
-	UserGroupsInverseTable = "user_groups"
+	// GroupsTable is the table the holds the groups relation/edge. The primary key declared below.
+	GroupsTable = "group_users"
+	// GroupsInverseTable is the table name for the Group entity.
+	// It exists in this package in order to avoid circular dependency with the "group" package.
+	GroupsInverseTable = "user_groups"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -65,9 +65,9 @@ var ForeignKeys = []string{
 }
 
 var (
-	// UserGroupsPrimaryKey and UserGroupsColumn2 are the table columns denoting the
-	// primary key for the user_groups relation (M2M).
-	UserGroupsPrimaryKey = []string{"user_group_id", "user_id"}
+	// GroupsPrimaryKey and GroupsColumn2 are the table columns denoting the
+	// primary key for the groups relation (M2M).
+	GroupsPrimaryKey = []string{"group_id", "user_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

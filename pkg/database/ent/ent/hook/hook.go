@@ -6,122 +6,18 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/ent"
 )
 
-// The AssetFunc type is an adapter to allow the use of ordinary
-// function as Asset mutator.
-type AssetFunc func(context.Context, *ent.AssetMutation) (ent.Value, error)
+// The UserGroupFunc type is an adapter to allow the use of ordinary
+// function as UserGroup mutator.
+type UserGroupFunc func(context.Context, *ent.UserGroupMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f AssetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.AssetMutation)
+func (f UserGroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.UserGroupMutation)
 	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssetMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The CommandFunc type is an adapter to allow the use of ordinary
-// function as Command mutator.
-type CommandFunc func(context.Context, *ent.CommandMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f CommandFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.CommandMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommandMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The CredentialFunc type is an adapter to allow the use of ordinary
-// function as Credential mutator.
-type CredentialFunc func(context.Context, *ent.CredentialMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f CredentialFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.CredentialMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CredentialMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The GroupFunc type is an adapter to allow the use of ordinary
-// function as Group mutator.
-type GroupFunc func(context.Context, *ent.GroupMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f GroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.GroupMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The PropertyFunc type is an adapter to allow the use of ordinary
-// function as Property mutator.
-type PropertyFunc func(context.Context, *ent.PropertyMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f PropertyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.PropertyMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PropertyMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The ResourceSharerFunc type is an adapter to allow the use of ordinary
-// function as ResourceSharer mutator.
-type ResourceSharerFunc func(context.Context, *ent.ResourceSharerMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f ResourceSharerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.ResourceSharerMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ResourceSharerMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The SessionFunc type is an adapter to allow the use of ordinary
-// function as Session mutator.
-type SessionFunc func(context.Context, *ent.SessionMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f SessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.SessionMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SessionMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The UserFunc type is an adapter to allow the use of ordinary
-// function as User mutator.
-type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.UserMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The VerificationFunc type is an adapter to allow the use of ordinary
-// function as Verification mutator.
-type VerificationFunc func(context.Context, *ent.VerificationMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f VerificationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.VerificationMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VerificationMutation", m)
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserGroupMutation", m)
 	}
 	return f(ctx, mv)
 }

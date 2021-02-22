@@ -8,10 +8,10 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
-	"github.com/willie-lin/cloud-terminal/pkg/database/ent/usergroup"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 )
 
@@ -59,6 +59,18 @@ func init() {
 	credential.DefaultUpdatedAt = credentialDescUpdatedAt.Default.(func() time.Time)
 	// credential.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	credential.UpdateDefaultUpdatedAt = credentialDescUpdatedAt.UpdateDefault.(func() time.Time)
+	groupFields := schema.Group{}.Fields()
+	_ = groupFields
+	// groupDescCreatedAt is the schema descriptor for created_at field.
+	groupDescCreatedAt := groupFields[2].Descriptor()
+	// group.DefaultCreatedAt holds the default value on creation for the created_at field.
+	group.DefaultCreatedAt = groupDescCreatedAt.Default.(func() time.Time)
+	// groupDescUpdatedAt is the schema descriptor for updated_at field.
+	groupDescUpdatedAt := groupFields[3].Descriptor()
+	// group.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	group.DefaultUpdatedAt = groupDescUpdatedAt.Default.(func() time.Time)
+	// group.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	group.UpdateDefaultUpdatedAt = groupDescUpdatedAt.UpdateDefault.(func() time.Time)
 	sessionFields := schema.Session{}.Fields()
 	_ = sessionFields
 	// sessionDescConnected is the schema descriptor for connected field.
@@ -83,18 +95,6 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
-	usergroupFields := schema.UserGroup{}.Fields()
-	_ = usergroupFields
-	// usergroupDescCreatedAt is the schema descriptor for created_at field.
-	usergroupDescCreatedAt := usergroupFields[2].Descriptor()
-	// usergroup.DefaultCreatedAt holds the default value on creation for the created_at field.
-	usergroup.DefaultCreatedAt = usergroupDescCreatedAt.Default.(func() time.Time)
-	// usergroupDescUpdatedAt is the schema descriptor for updated_at field.
-	usergroupDescUpdatedAt := usergroupFields[3].Descriptor()
-	// usergroup.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	usergroup.DefaultUpdatedAt = usergroupDescUpdatedAt.Default.(func() time.Time)
-	// usergroup.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	usergroup.UpdateDefaultUpdatedAt = usergroupDescUpdatedAt.UpdateDefault.(func() time.Time)
 	verificationFields := schema.Verification{}.Fields()
 	_ = verificationFields
 	// verificationDescLoginTime is the schema descriptor for login_time field.
