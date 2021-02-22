@@ -30,6 +30,7 @@ func (User) Fields() []ent.Field {
 		field.String("id").Unique(),
 		field.String("username").Unique(),
 		field.String("password"),
+		field.String("email"),
 		field.String("nickname"),
 		field.String("totpSecret"),
 		field.Bool("online"),

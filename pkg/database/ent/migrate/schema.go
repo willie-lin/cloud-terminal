@@ -147,6 +147,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString},
 		{Name: "nickname", Type: field.TypeString},
 		{Name: "totp_secret", Type: field.TypeString},
 		{Name: "online", Type: field.TypeBool},
@@ -164,7 +165,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "users_verifications_users",
-				Columns: []*schema.Column{UsersColumns[10]},
+				Columns: []*schema.Column{UsersColumns[11]},
 
 				RefColumns: []*schema.Column{VerificationsColumns[0]},
 				OnDelete:   schema.SetNull,
@@ -183,7 +184,6 @@ var (
 	UserGroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Unique: true},
-		{Name: "members", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}

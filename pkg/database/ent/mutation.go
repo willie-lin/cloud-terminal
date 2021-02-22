@@ -4618,6 +4618,7 @@ type UserMutation struct {
 	id                 *string
 	username           *string
 	password           *string
+	email              *string
 	nickname           *string
 	totpSecret         *string
 	online             *bool
@@ -4789,6 +4790,42 @@ func (m *UserMutation) OldPassword(ctx context.Context) (v string, err error) {
 // ResetPassword resets all changes to the "password" field.
 func (m *UserMutation) ResetPassword() {
 	m.password = nil
+}
+
+// SetEmail sets the "email" field.
+func (m *UserMutation) SetEmail(s string) {
+	m.email = &s
+}
+
+// Email returns the value of the "email" field in the mutation.
+func (m *UserMutation) Email() (r string, exists bool) {
+	v := m.email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmail returns the old "email" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmail: %w", err)
+	}
+	return oldValue.Email, nil
+}
+
+// ResetEmail resets all changes to the "email" field.
+func (m *UserMutation) ResetEmail() {
+	m.email = nil
 }
 
 // SetNickname sets the "nickname" field.
@@ -5110,12 +5147,15 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.username != nil {
 		fields = append(fields, user.FieldUsername)
 	}
 	if m.password != nil {
 		fields = append(fields, user.FieldPassword)
+	}
+	if m.email != nil {
+		fields = append(fields, user.FieldEmail)
 	}
 	if m.nickname != nil {
 		fields = append(fields, user.FieldNickname)
@@ -5150,6 +5190,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Username()
 	case user.FieldPassword:
 		return m.Password()
+	case user.FieldEmail:
+		return m.Email()
 	case user.FieldNickname:
 		return m.Nickname()
 	case user.FieldTotpSecret:
@@ -5177,6 +5219,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldUsername(ctx)
 	case user.FieldPassword:
 		return m.OldPassword(ctx)
+	case user.FieldEmail:
+		return m.OldEmail(ctx)
 	case user.FieldNickname:
 		return m.OldNickname(ctx)
 	case user.FieldTotpSecret:
@@ -5213,6 +5257,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPassword(v)
+		return nil
+	case user.FieldEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmail(v)
 		return nil
 	case user.FieldNickname:
 		v, ok := value.(string)
@@ -5317,6 +5368,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldPassword:
 		m.ResetPassword()
+		return nil
+	case user.FieldEmail:
+		m.ResetEmail()
 		return nil
 	case user.FieldNickname:
 		m.ResetNickname()
@@ -5434,7 +5488,6 @@ type UserGroupMutation struct {
 	typ           string
 	id            *string
 	name          *string
-	members       *[]string
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
@@ -5565,55 +5618,6 @@ func (m *UserGroupMutation) OldName(ctx context.Context) (v string, err error) {
 // ResetName resets all changes to the "name" field.
 func (m *UserGroupMutation) ResetName() {
 	m.name = nil
-}
-
-// SetMembers sets the "members" field.
-func (m *UserGroupMutation) SetMembers(s []string) {
-	m.members = &s
-}
-
-// Members returns the value of the "members" field in the mutation.
-func (m *UserGroupMutation) Members() (r []string, exists bool) {
-	v := m.members
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldMembers returns the old "members" field's value of the UserGroup entity.
-// If the UserGroup object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserGroupMutation) OldMembers(ctx context.Context) (v []string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldMembers is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldMembers requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldMembers: %w", err)
-	}
-	return oldValue.Members, nil
-}
-
-// ClearMembers clears the value of the "members" field.
-func (m *UserGroupMutation) ClearMembers() {
-	m.members = nil
-	m.clearedFields[usergroup.FieldMembers] = struct{}{}
-}
-
-// MembersCleared returns if the "members" field was cleared in this mutation.
-func (m *UserGroupMutation) MembersCleared() bool {
-	_, ok := m.clearedFields[usergroup.FieldMembers]
-	return ok
-}
-
-// ResetMembers resets all changes to the "members" field.
-func (m *UserGroupMutation) ResetMembers() {
-	m.members = nil
-	delete(m.clearedFields, usergroup.FieldMembers)
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -5755,12 +5759,9 @@ func (m *UserGroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserGroupMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 3)
 	if m.name != nil {
 		fields = append(fields, usergroup.FieldName)
-	}
-	if m.members != nil {
-		fields = append(fields, usergroup.FieldMembers)
 	}
 	if m.created_at != nil {
 		fields = append(fields, usergroup.FieldCreatedAt)
@@ -5778,8 +5779,6 @@ func (m *UserGroupMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case usergroup.FieldName:
 		return m.Name()
-	case usergroup.FieldMembers:
-		return m.Members()
 	case usergroup.FieldCreatedAt:
 		return m.CreatedAt()
 	case usergroup.FieldUpdatedAt:
@@ -5795,8 +5794,6 @@ func (m *UserGroupMutation) OldField(ctx context.Context, name string) (ent.Valu
 	switch name {
 	case usergroup.FieldName:
 		return m.OldName(ctx)
-	case usergroup.FieldMembers:
-		return m.OldMembers(ctx)
 	case usergroup.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case usergroup.FieldUpdatedAt:
@@ -5816,13 +5813,6 @@ func (m *UserGroupMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
-		return nil
-	case usergroup.FieldMembers:
-		v, ok := value.([]string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetMembers(v)
 		return nil
 	case usergroup.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -5867,11 +5857,7 @@ func (m *UserGroupMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *UserGroupMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(usergroup.FieldMembers) {
-		fields = append(fields, usergroup.FieldMembers)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -5884,11 +5870,6 @@ func (m *UserGroupMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *UserGroupMutation) ClearField(name string) error {
-	switch name {
-	case usergroup.FieldMembers:
-		m.ClearMembers()
-		return nil
-	}
 	return fmt.Errorf("unknown UserGroup nullable field %s", name)
 }
 
@@ -5898,9 +5879,6 @@ func (m *UserGroupMutation) ResetField(name string) error {
 	switch name {
 	case usergroup.FieldName:
 		m.ResetName()
-		return nil
-	case usergroup.FieldMembers:
-		m.ResetMembers()
 		return nil
 	case usergroup.FieldCreatedAt:
 		m.ResetCreatedAt()

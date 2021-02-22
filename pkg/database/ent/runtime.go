@@ -74,11 +74,11 @@ func init() {
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.
-	userDescCreatedAt := userFields[7].Descriptor()
+	userDescCreatedAt := userFields[8].Descriptor()
 	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
 	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 	// userDescUpdatedAt is the schema descriptor for updated_at field.
-	userDescUpdatedAt := userFields[8].Descriptor()
+	userDescUpdatedAt := userFields[9].Descriptor()
 	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -86,11 +86,11 @@ func init() {
 	usergroupFields := schema.UserGroup{}.Fields()
 	_ = usergroupFields
 	// usergroupDescCreatedAt is the schema descriptor for created_at field.
-	usergroupDescCreatedAt := usergroupFields[3].Descriptor()
+	usergroupDescCreatedAt := usergroupFields[2].Descriptor()
 	// usergroup.DefaultCreatedAt holds the default value on creation for the created_at field.
 	usergroup.DefaultCreatedAt = usergroupDescCreatedAt.Default.(func() time.Time)
 	// usergroupDescUpdatedAt is the schema descriptor for updated_at field.
-	usergroupDescUpdatedAt := usergroupFields[4].Descriptor()
+	usergroupDescUpdatedAt := usergroupFields[3].Descriptor()
 	// usergroup.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	usergroup.DefaultUpdatedAt = usergroupDescUpdatedAt.Default.(func() time.Time)
 	// usergroup.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

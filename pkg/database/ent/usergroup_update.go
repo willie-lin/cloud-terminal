@@ -34,18 +34,6 @@ func (ugu *UserGroupUpdate) SetName(s string) *UserGroupUpdate {
 	return ugu
 }
 
-// SetMembers sets the "members" field.
-func (ugu *UserGroupUpdate) SetMembers(s []string) *UserGroupUpdate {
-	ugu.mutation.SetMembers(s)
-	return ugu
-}
-
-// ClearMembers clears the value of the "members" field.
-func (ugu *UserGroupUpdate) ClearMembers() *UserGroupUpdate {
-	ugu.mutation.ClearMembers()
-	return ugu
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (ugu *UserGroupUpdate) SetCreatedAt(t time.Time) *UserGroupUpdate {
 	ugu.mutation.SetCreatedAt(t)
@@ -192,19 +180,6 @@ func (ugu *UserGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: usergroup.FieldName,
 		})
 	}
-	if value, ok := ugu.mutation.Members(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: usergroup.FieldMembers,
-		})
-	}
-	if ugu.mutation.MembersCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: usergroup.FieldMembers,
-		})
-	}
 	if value, ok := ugu.mutation.CreatedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -294,18 +269,6 @@ type UserGroupUpdateOne struct {
 // SetName sets the "name" field.
 func (uguo *UserGroupUpdateOne) SetName(s string) *UserGroupUpdateOne {
 	uguo.mutation.SetName(s)
-	return uguo
-}
-
-// SetMembers sets the "members" field.
-func (uguo *UserGroupUpdateOne) SetMembers(s []string) *UserGroupUpdateOne {
-	uguo.mutation.SetMembers(s)
-	return uguo
-}
-
-// ClearMembers clears the value of the "members" field.
-func (uguo *UserGroupUpdateOne) ClearMembers() *UserGroupUpdateOne {
-	uguo.mutation.ClearMembers()
 	return uguo
 }
 
@@ -451,19 +414,6 @@ func (uguo *UserGroupUpdateOne) sqlSave(ctx context.Context) (_node *UserGroup, 
 			Type:   field.TypeString,
 			Value:  value,
 			Column: usergroup.FieldName,
-		})
-	}
-	if value, ok := uguo.mutation.Members(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: usergroup.FieldMembers,
-		})
-	}
-	if uguo.mutation.MembersCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: usergroup.FieldMembers,
 		})
 	}
 	if value, ok := uguo.mutation.CreatedAt(); ok {

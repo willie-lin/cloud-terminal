@@ -6,6 +6,7 @@ require (
 	entgo.io/ent v0.6.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bykof/gostradamus v1.0.4 // indirect
+	github.com/casbin/casbin v1.9.1 // indirect
 	github.com/facebook/ent v0.5.4
 	github.com/go-openapi/spec v0.20.2 // indirect
 	github.com/go-sql-driver/mysql v1.5.1-0.20200311113236-681ffa848bae

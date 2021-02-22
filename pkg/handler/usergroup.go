@@ -30,7 +30,6 @@ func CreateUserGroup(client *ent.Client) echo.HandlerFunc {
 		ugs, err := client.UserGroup.Create().
 			SetID(ug.ID).
 			SetName(ug.Name).
-			SetMembers(ug.Members).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).Save(context.Background())
 		if err != nil {

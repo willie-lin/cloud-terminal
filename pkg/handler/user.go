@@ -168,6 +168,54 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
+// 根据email 查找用户
+
+func FindUserByEmail(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		//client, err := database.Client()
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	return err
+		//}
+
+		u := new(ent.User)
+
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+
+		//fmt.Println(u.Username)
+		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
+		if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
+			return err
+		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
+
+		us, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+		if err != nil {
+			log.Fatal("Query user error:", zap.Error(err))
+			return err
+		}
+		return c.JSON(http.StatusOK, &us)
+	}
+}
+
 // 创建用户
 func CreateUser(client *ent.Client) echo.HandlerFunc {
 	//return func(c echo.Context, client *ent.Client) (*ent.User, error) {
@@ -231,6 +279,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetID(u.ID).
 			SetUsername(u.Username).
 			SetPassword(u.Password).
+			SetEmail(u.Email).
 			SetNickname(u.Nickname).
 			SetTotpSecret(u.TotpSecret).
 			SetOnline(u.Online).
@@ -310,6 +359,7 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 		ur, err := client.User.Update().
 			Where(user.UsernameEQ(u.Username)).
 			//SetPassword(string(utils.u.Password)).
+			SetEmail(u.Email).
 			SetNickname(u.Nickname).
 			SetTotpSecret(u.TotpSecret).
 			SetOnline(u.Online).
@@ -376,6 +426,7 @@ func UpdateUserById(client *ent.Client) echo.HandlerFunc {
 		}
 
 		ur, err := client.User.UpdateOneID(us.ID).
+			SetEmail(us.Email).
 			SetNickname(u.Nickname).
 			SetTotpSecret(u.TotpSecret).
 			SetOnline(u.Online).
