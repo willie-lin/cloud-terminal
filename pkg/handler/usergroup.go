@@ -8,9 +8,8 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
-	"net/http"
-
 	"go.uber.org/zap"
+	"net/http"
 )
 
 type GroupUser struct {
@@ -43,6 +42,38 @@ func AddUserToGroup(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(u.ID, g.ID)
 
 		_ = client.Group.UpdateOne(g).AddUsers(u).Exec(context.Background())
+
+		return c.NoContent(http.StatusOK)
+	}
+}
+
+// 向用户组添加用户
+func DeleteUserFromGroup(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		//var item UserGroup
+
+		gu := new(GroupUser)
+		//fmt.Println(gu)
+
+		//
+		log, _ := zap.NewDevelopment()
+		if err := json.NewDecoder(c.Request().Body).Decode(&gu); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
+			return err
+		}
+		//fmt.Println(1111111)
+		//fmt.Println(gu.UserId)
+		//fmt.Println(gu.GroupId)
+		//fmt.Println(22222222)
+
+		u, _ := client.User.Query().Where(user.IDEQ(gu.UserId)).Only(context.Background())
+		g, _ := client.Group.Query().Where(group.IDEQ(gu.GroupId)).Only(context.Background())
+
+		fmt.Println(u.ID, g.ID)
+
+		_ = client.Group.UpdateOne(g).RemoveUsers(u).Exec(context.Background())
+
+		//_ = client.Group.UpdateOne(g).
 
 		return c.NoContent(http.StatusOK)
 	}

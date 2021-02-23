@@ -110,6 +110,7 @@ func main() {
 	e.DELETE("/user/uid", handler.DeleteUserById(client))
 
 	e.POST("/user2group", handler.AddUserToGroup(client))
+	e.PUT("/user4group", handler.DeleteUserFromGroup(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	defer client.Close()
