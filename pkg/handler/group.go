@@ -56,12 +56,10 @@ func DeleteGroup(client *ent.Client) echo.HandlerFunc {
 
 		ugs, err := client.Group.Query().Where(group.NameEQ(g.Name)).Only(context.Background())
 		if err != nil {
-			log.Fatal("Query Group Error:", zap.Error(err))
 			return err
 		}
 		err = client.Group.DeleteOne(ugs).Exec(context.Background())
 		if err != nil {
-			log.Fatal("Delete Group Error ", zap.Error(err))
 			return err
 		}
 		return c.NoContent(http.StatusOK)
@@ -83,12 +81,10 @@ func DeleteGroupById(client *ent.Client) echo.HandlerFunc {
 
 		gs, err := client.Group.Query().Where(group.NameEQ(g.Name)).Only(context.Background())
 		if err != nil {
-			log.Fatal("Query Group Error:", zap.Error(err))
 			return err
 		}
 		err = client.Group.DeleteOneID(gs.ID).Exec(context.Background())
 		if err != nil {
-			log.Fatal("Delete Group Error ", zap.Error(err))
 			return err
 		}
 		return c.NoContent(http.StatusOK)
@@ -156,7 +152,6 @@ func FindGroupById(client *ent.Client) echo.HandlerFunc {
 
 		gr, err := client.Group.Query().Where(group.NameEQ(g.Name)).Only(context.Background())
 		if err != nil {
-			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 
@@ -164,7 +159,6 @@ func FindGroupById(client *ent.Client) echo.HandlerFunc {
 
 		gp, err := client.Group.Query().Where(group.IDEQ(gr.ID)).Only(context.Background())
 		if err != nil {
-			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 		fmt.Println(gp)
@@ -212,7 +206,6 @@ func FindGroupByName(client *ent.Client) echo.HandlerFunc {
 
 		gr, err := client.Group.Query().Where(group.NameEQ(g.Name)).Only(context.Background())
 		if err != nil {
-			//log.Fatal("Group not found:", zap.Error(err))
 			return err
 		}
 		return c.JSON(http.StatusOK, &gr)

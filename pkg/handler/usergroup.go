@@ -81,7 +81,6 @@ func DeleteUserFromGroup(client *ent.Client) echo.HandlerFunc {
 
 		g, err := client.Group.Query().Where(group.IDEQ(gu.GroupId)).Only(context.Background())
 		if err != nil {
-			log.Fatal("user not found", zap.Error(err))
 			return err
 		}
 
@@ -163,10 +162,12 @@ func DeleteGroupFromUser(client *ent.Client) echo.HandlerFunc {
 
 		u, err := client.User.Query().Where(user.IDEQ(gu.UserId)).Only(context.Background())
 		if err != nil {
-			log.Fatal("user not found", zap.Error(err))
+			return err
 		}
-		g, _ := client.Group.Query().Where(group.IDEQ(gu.GroupId)).Only(context.Background())
-
+		g, err := client.Group.Query().Where(group.IDEQ(gu.GroupId)).Only(context.Background())
+		if err != nil {
+			return err
+		}
 		fmt.Println(u.ID, g.ID)
 
 		_ = client.User.UpdateOne(u).RemoveGroups(g).Exec(context.Background())

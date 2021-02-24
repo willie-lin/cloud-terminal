@@ -105,7 +105,6 @@ func FindUserByUsername(client *ent.Client) echo.HandlerFunc {
 
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
-			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 		return c.JSON(http.StatusOK, &us)
@@ -152,7 +151,6 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
-			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 
@@ -160,7 +158,6 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 
 		un, err := client.User.Query().Where(user.IDEQ(us.ID)).Only(context.Background())
 		if err != nil {
-			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 		fmt.Println(un)
@@ -209,7 +206,6 @@ func FindUserByEmail(client *ent.Client) echo.HandlerFunc {
 
 		us, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {
-			log.Fatal("Query user error:", zap.Error(err))
 			return err
 		}
 		return c.JSON(http.StatusOK, &us)
@@ -267,7 +263,6 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 
 		pwd, err := utils.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 		if err != nil {
-			log.Fatal("generate password error:", zap.Error(err))
 			//fmt.Println("加密密码失败", err)
 			return err
 		}
@@ -288,7 +283,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetUpdatedAt(time.Now()).
 			SetType(u.Type).Save(context.Background())
 		if err != nil {
-			log.Fatal("Create user error:", zap.Error(err))
+			return err
 
 		}
 		return c.JSON(http.StatusOK, &ur)
@@ -369,7 +364,7 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 			SetType(u.Type).Save(context.Background())
 		if err != nil {
 			//panic(err)
-			log.Fatal("Update user error:", zap.Error(err))
+			//log.Fatal("Update user error:", zap.Error(err))
 			//fmt.Println("update user err: ", err)
 			return err
 		}
@@ -421,7 +416,7 @@ func UpdateUserById(client *ent.Client) echo.HandlerFunc {
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			//panic(err)
-			log.Fatal("Query user error:", zap.Error(err))
+			//log.Fatal("Query user error:", zap.Error(err))
 			return fmt.Errorf("failed querying user: %v", err)
 		}
 
@@ -436,7 +431,7 @@ func UpdateUserById(client *ent.Client) echo.HandlerFunc {
 			SetType(u.Type).Save(context.Background())
 		if err != nil {
 			//panic(err)
-			log.Fatal("Update user error:", zap.Error(err))
+			//log.Fatal("Update user error:", zap.Error(err))
 			//fmt.Println("update user err: ", err)
 			return err
 		}
@@ -505,7 +500,7 @@ func TestBindJson(client *ent.Client) echo.HandlerFunc {
 		if err != nil {
 			//panic(err)
 			//fmt.Println("update user err: ", err)
-			log.Fatal("Update user error:", zap.Error(err))
+			//log.Fatal("Update user error:", zap.Error(err))
 			return err
 		}
 
@@ -572,7 +567,7 @@ func DeleteUser(client *ent.Client) echo.HandlerFunc {
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			//panic(err)
-			log.Fatal("Query user error:", zap.Error(err))
+			//log.Fatal("Query user error:", zap.Error(err))
 			return fmt.Errorf("failed querying user: %v", err)
 		}
 		fmt.Println(us.ID)
@@ -582,7 +577,7 @@ func DeleteUser(client *ent.Client) echo.HandlerFunc {
 		if err != nil {
 			//panic(err)
 			//fmt.Println("Delete user err: ", err)
-			log.Fatal("Delete user error:", zap.Error(err))
+			//log.Fatal("Delete user error:", zap.Error(err))
 			return err
 		}
 		return c.NoContent(http.StatusOK)
@@ -640,7 +635,7 @@ func DeleteUserById(client *ent.Client) echo.HandlerFunc {
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
 			//panic(err)
-			log.Fatal("Query user error:", zap.Error(err))
+			//log.Fatal("Query user error:", zap.Error(err))
 			return fmt.Errorf("failed querying user: %v", err)
 		}
 		fmt.Println(us.ID)
@@ -649,7 +644,7 @@ func DeleteUserById(client *ent.Client) echo.HandlerFunc {
 		err = client.User.DeleteOneID(us.ID).Exec(context.Background())
 		if err != nil {
 			//panic(err)
-			log.Fatal("Delete user error:", zap.Error(err))
+			//log.Fatal("Delete user error:", zap.Error(err))
 			//fmt.Println("Delete user err: ", err)
 			return err
 		}
