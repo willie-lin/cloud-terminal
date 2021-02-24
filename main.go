@@ -103,6 +103,7 @@ func main() {
 	e.DELETE("/user/uid", handler.DeleteUserById(client))
 	// UserGroup
 	e.GET("/groups", handler.GetAllGroups(client))
+	e.GET("/group/name", handler.FindGroupByName(client))
 	e.POST("/group", handler.CreateGroup(client))
 	e.DELETE("/group/uid", handler.DeleteGroupById(client))
 	e.DELETE("/group/name", handler.DeleteGroup(client))

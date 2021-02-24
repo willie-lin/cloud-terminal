@@ -2,11 +2,11 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/labstack/echo/v4"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
-
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"go.uber.org/zap"
 
@@ -34,7 +34,7 @@ func CreateGroup(client *ent.Client) echo.HandlerFunc {
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).Save(context.Background())
 		if err != nil {
-			log.Fatal("Create Group Error", zap.Error(err))
+			//log.Fatal("Create Group Error", zap.Error(err))
 			return err
 		}
 		return c.JSON(http.StatusOK, &ugs)
@@ -113,5 +113,108 @@ func GetAllGroups(client *ent.Client) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, groups)
+	}
+}
+
+// 根据ID查找
+func FindGroupById(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		//client, err := database.Client()
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	return err
+		//}
+
+		g := new(ent.Group)
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+		//
+		//fmt.Println(u.Username)
+
+		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
+		if err := json.NewDecoder(c.Request().Body).Decode(&g); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
+			return err
+		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
+
+		gr, err := client.Group.Query().Where(group.NameEQ(g.Name)).Only(context.Background())
+		if err != nil {
+			log.Fatal("Query user error:", zap.Error(err))
+			return err
+		}
+
+		fmt.Println(gr.ID)
+
+		gp, err := client.Group.Query().Where(group.IDEQ(gr.ID)).Only(context.Background())
+		if err != nil {
+			log.Fatal("Query user error:", zap.Error(err))
+			return err
+		}
+		fmt.Println(gp)
+		return c.JSON(http.StatusOK, &gp)
+	}
+}
+
+// 根据用户名查找
+func FindGroupByName(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		//client, err := database.Client()
+		//client, err := config.NewClient()
+		//if err != nil {
+		//	return err
+		//}
+
+		g := new(ent.Group)
+
+		//// 接收raw数据
+		//result, err := ioutil.ReadAll(c.Request().Body)
+		//if err != nil {
+		//	fmt.Println("ioutil.ReadAll err:", err)
+		//	return err
+		//}
+		//// 解析raw为json
+		//err = json.Unmarshal(result, &u)
+		//if err != nil {
+		//	fmt.Println("json.Unmarshal err:", err)
+		//	return err
+		//}
+
+		//fmt.Println(u.Username)
+		// 直接解析raw数据为json
+		log, _ := zap.NewDevelopment()
+		if err := json.NewDecoder(c.Request().Body).Decode(&g); err != nil {
+			log.Fatal("json decode error", zap.Error(err))
+			return err
+		}
+		//// or for DisallowUnknownFields() wrapped in your custom func
+		//decoder := json.NewDecoder(c.Request().Body)
+		//decoder.DisallowUnknownFields()
+		//if err := decoder.Decode(&payload); err != nil {
+		//	return err
+		//}
+
+		gr, err := client.Group.Query().Where(group.NameEQ(g.Name)).Only(context.Background())
+		if err != nil {
+			//log.Fatal("Group not found:", zap.Error(err))
+			return err
+		}
+		return c.JSON(http.StatusOK, &gr)
 	}
 }

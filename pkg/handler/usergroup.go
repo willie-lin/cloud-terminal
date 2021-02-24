@@ -68,11 +68,22 @@ func DeleteUserFromGroup(client *ent.Client) echo.HandlerFunc {
 
 		u, err := client.User.Query().Where(user.IDEQ(gu.UserId)).Only(context.Background())
 		if err != nil {
-			log.Fatal("user not found", zap.Error(err))
+			//log.Fatal("user not found", zap.Error(err))
+			return err
 		}
-		g, _ := client.Group.Query().Where(group.IDEQ(gu.GroupId)).Only(context.Background())
+
+		g, err := client.Group.Query().Where(group.IDEQ(gu.GroupId)).Only(context.Background())
+		if err != nil {
+			log.Fatal("user not found", zap.Error(err))
+			return err
+		}
 
 		fmt.Println(u.ID, g.ID)
+
+		//users, err = g.QueryUsers().All(context.Background())
+		//if err != nil {
+		//	return err
+		//}
 
 		_ = client.Group.UpdateOne(g).RemoveUsers(u).Exec(context.Background())
 
@@ -104,9 +115,11 @@ func AddGroupToUser(client *ent.Client) echo.HandlerFunc {
 		u, _ := client.User.Query().Where(user.IDEQ(gu.UserId)).Only(context.Background())
 		g, _ := client.Group.Query().Where(group.IDEQ(gu.GroupId)).Only(context.Background())
 
+		//client.Group.Query().Where(u.na).Only(context.Background())
+
 		fmt.Println(u.ID, g.ID)
 
-		_ = client.User.UpdateOne(u).AddGroups(g).Exec(context.Background())
+		_ = client.User.UpdateOne(u).AddGroups(g).SaveX(context.Background())
 
 		return c.NoContent(http.StatusOK)
 	}
