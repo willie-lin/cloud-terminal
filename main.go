@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
+	"github.com/willie-lin/cloud-terminal/pkg/utils"
+	"go.elastic.co/apm/module/apmechov4"
 
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo/v4"
@@ -17,24 +19,6 @@ import (
 )
 
 const versionFile = "/app/VERSION"
-
-func createLogger(encoding string) (*zap.Logger, error) {
-	if encoding == "json" {
-		return zap.NewProduction()
-	}
-	return zap.Config{
-		Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
-		Development: false,
-		Sampling: &zap.SamplingConfig{
-			Initial:    100,
-			Thereafter: 100,
-		},
-		Encoding:         "console",
-		EncoderConfig:    zap.NewDevelopmentEncoderConfig(),
-		OutputPaths:      []string{"stderr"},
-		ErrorOutputPaths: []string{"stderr"},
-	}.Build()
-}
 
 // @title Swagger Example API
 // @version 1.0
@@ -51,11 +35,15 @@ func createLogger(encoding string) (*zap.Logger, error) {
 // @host petstore.swagger.io
 // @BasePath /v2
 func main() {
+
+	utils.InitLogger()
 	log, _ := zap.NewDevelopment()
+	//log := zap.NewProductionEncoderConfig()
 	e := echo.New()
 	//e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
 	c := jaegertracing.New(e, nil)
 	defer c.Close()
+	e.Use(apmechov4.Middleware())
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -69,7 +57,7 @@ func main() {
 	client, err := config.NewClient()
 	if err != nil {
 		log.Fatal("opening ent client", zap.Error(err))
-		panic(err)
+		return
 	}
 	dateTime := gostradamus.Now()
 	fmt.Println(dateTime)

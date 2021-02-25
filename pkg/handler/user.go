@@ -160,7 +160,7 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		fmt.Println(un)
+		//fmt.Println(un)
 		return c.JSON(http.StatusOK, &un)
 	}
 }
