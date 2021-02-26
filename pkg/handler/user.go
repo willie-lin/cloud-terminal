@@ -72,7 +72,6 @@ func FindUserByUsername(client *ent.Client) echo.HandlerFunc {
 		//client, err := config.NewClient()
 		//if err != nil {
 		//	return err
-		//}
 
 		u := new(ent.User)
 
@@ -166,7 +165,6 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 }
 
 // 根据email 查找用户
-
 func FindUserByEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		//client, err := database.Client()

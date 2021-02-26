@@ -190,7 +190,8 @@ func FindGroupWithUser(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-func FindAllGroupWithUser(client *ent.Client) echo.HandlerFunc {
+// 根据组名查询组用户
+func FindUserByGroupName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		g := new(ent.Group)
@@ -201,7 +202,7 @@ func FindAllGroupWithUser(client *ent.Client) echo.HandlerFunc {
 			return err
 		}
 
-		users, err := client.Group.Query().Where(group.Name(g.Name)).QueryUsers().All(context.Background())
+		users, err := client.Group.Query().WithUsers().Where(group.Name(g.Name)).QueryUsers().All(context.Background())
 		if err != nil {
 			return err
 		}
@@ -210,7 +211,8 @@ func FindAllGroupWithUser(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-func FindAllUserWithGroup(client *ent.Client) echo.HandlerFunc {
+// 根据用户名查找所属组
+func FindGroupByUsername(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		u := new(ent.User)
@@ -222,6 +224,48 @@ func FindAllUserWithGroup(client *ent.Client) echo.HandlerFunc {
 		}
 
 		groups, err := client.User.Query().Where(user.Username(u.Username)).QueryGroups().All(context.Background())
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, &groups)
+	}
+}
+
+// 获取所有用户关联组用户的组关系
+func GetAllUsersWithGroups(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		//u := new(ent.User)
+		//
+		//log, _ := zap.NewDevelopment()
+		//if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+		//	log.Fatal("json decode error", zap.Error(err))
+		//	return err
+		//}
+
+		users, err := client.User.Query().WithGroups().Where(user.HasGroupsWith()).All(context.Background())
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, &users)
+	}
+}
+
+// 获取所有组关联用户的组的用户关系
+func GetAllGroupsWithUsers(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		//u := new(ent.User)
+		//
+		//log, _ := zap.NewDevelopment()
+		//if err := json.NewDecoder(c.Request().Body).Decode(&u); err != nil {
+		//	log.Fatal("json decode error", zap.Error(err))
+		//	return err
+		//}
+
+		groups, err := client.Group.Query().WithUsers().Where(group.HasUsersWith()).All(context.Background())
 		if err != nil {
 			return err
 		}

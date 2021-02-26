@@ -105,8 +105,11 @@ func main() {
 	e.PUT("/group4user", handler.DeleteUserFromGroup(client))
 
 	e.GET("/group/group8user", handler.FindGroupWithUser(client))
-	e.GET("/group/allegro8user", handler.FindAllGroupWithUser(client))
-	e.GET("/group/alluser8group", handler.FindAllUserWithGroup(client))
+	e.GET("/group/user_group_name", handler.FindUserByGroupName(client))
+	e.GET("/group/group_user_username", handler.FindGroupByUsername(client))
+
+	e.GET("/group/user_with_group", handler.GetAllUsersWithGroups(client))
+	e.GET("/group/group_with_user", handler.GetAllGroupsWithUsers(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	defer client.Close()
