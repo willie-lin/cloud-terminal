@@ -31,10 +31,6 @@ func AddUserToGroup(client *ent.Client) echo.HandlerFunc {
 			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
-		//fmt.Println(1111111)
-		//fmt.Println(gu.UserId)
-		//fmt.Println(gu.GroupId)
-		//fmt.Println(22222222)
 
 		u, err := client.User.Query().Where(user.IDEQ(gu.UserId)).Only(context.Background())
 		if err != nil {
@@ -68,10 +64,6 @@ func DeleteUserFromGroup(client *ent.Client) echo.HandlerFunc {
 			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
-		//fmt.Println(1111111)
-		//fmt.Println(gu.UserId)
-		//fmt.Println(gu.GroupId)
-		//fmt.Println(22222222)
 
 		u, err := client.User.Query().Where(user.IDEQ(gu.UserId)).Only(context.Background())
 		if err != nil {
@@ -113,10 +105,6 @@ func AddGroupToUser(client *ent.Client) echo.HandlerFunc {
 			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
-		//fmt.Println(1111111)
-		//fmt.Println(gu.UserId)
-		//fmt.Println(gu.GroupId)
-		//fmt.Println(22222222)
 
 		u, err := client.User.Query().Where(user.IDEQ(gu.UserId)).Only(context.Background())
 		if err != nil {
@@ -155,10 +143,6 @@ func DeleteGroupFromUser(client *ent.Client) echo.HandlerFunc {
 			log.Fatal("json decode error", zap.Error(err))
 			return err
 		}
-		//fmt.Println(1111111)
-		//fmt.Println(gu.UserId)
-		//fmt.Println(gu.GroupId)
-		//fmt.Println(22222222)
 
 		u, err := client.User.Query().Where(user.IDEQ(gu.UserId)).Only(context.Background())
 		if err != nil {
