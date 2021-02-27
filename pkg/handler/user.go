@@ -150,6 +150,7 @@ func FindUserById(client *ent.Client) echo.HandlerFunc {
 
 		us, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if err != nil {
+			//log.Fatal("user not found", zap.Error(err))
 			return err
 		}
 

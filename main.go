@@ -38,12 +38,14 @@ func main() {
 
 	utils.InitLogger()
 	log, _ := zap.NewDevelopment()
+	//log, _ := zap.NewProduction()
 	//log := zap.NewProductionEncoderConfig()
 	e := echo.New()
 	//e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
 	c := jaegertracing.New(e, nil)
 	defer c.Close()
 	e.Use(apmechov4.Middleware())
+	//e.Use(logger.ZapLogger(log))
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
