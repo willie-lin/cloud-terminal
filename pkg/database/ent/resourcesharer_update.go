@@ -266,6 +266,13 @@ func (rsuo *ResourceSharerUpdateOne) sqlSave(ctx context.Context) (_node *Resour
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing ResourceSharer.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if ps := rsuo.mutation.predicates; len(ps) > 0 {
+		_spec.Predicate = func(selector *sql.Selector) {
+			for i := range ps {
+				ps[i](selector)
+			}
+		}
+	}
 	if value, ok := rsuo.mutation.ResourceID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,

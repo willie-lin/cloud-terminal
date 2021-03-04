@@ -447,6 +447,13 @@ func (vuo *VerificationUpdateOne) sqlSave(ctx context.Context) (_node *Verificat
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Verification.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if ps := vuo.mutation.predicates; len(ps) > 0 {
+		_spec.Predicate = func(selector *sql.Selector) {
+			for i := range ps {
+				ps[i](selector)
+			}
+		}
+	}
 	if value, ok := vuo.mutation.ClientIP(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,

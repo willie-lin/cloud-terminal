@@ -63,7 +63,7 @@ func (sq *SessionQuery) QueryAssets() *AssetQuery {
 		if err := sq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sq.sqlQuery()
+		selector := sq.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -299,7 +299,7 @@ func (sq *SessionQuery) GroupBy(field string, fields ...string) *SessionGroupBy 
 		if err := sq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		return sq.sqlQuery(), nil
+		return sq.sqlQuery(ctx), nil
 	}
 	return group
 }
@@ -456,7 +456,7 @@ func (sq *SessionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (sq *SessionQuery) sqlQuery() *sql.Selector {
+func (sq *SessionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(sq.driver.Dialect())
 	t1 := builder.Table(session.Table)
 	selector := builder.Select(t1.Columns(session.Columns...)...).From(t1)
@@ -751,7 +751,7 @@ func (ss *SessionSelect) Scan(ctx context.Context, v interface{}) error {
 	if err := ss.prepareQuery(ctx); err != nil {
 		return err
 	}
-	ss.sql = ss.SessionQuery.sqlQuery()
+	ss.sql = ss.SessionQuery.sqlQuery(ctx)
 	return ss.sqlScan(ctx, v)
 }
 

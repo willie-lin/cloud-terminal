@@ -261,7 +261,7 @@ func (rsq *ResourceSharerQuery) GroupBy(field string, fields ...string) *Resourc
 		if err := rsq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		return rsq.sqlQuery(), nil
+		return rsq.sqlQuery(ctx), nil
 	}
 	return group
 }
@@ -384,7 +384,7 @@ func (rsq *ResourceSharerQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (rsq *ResourceSharerQuery) sqlQuery() *sql.Selector {
+func (rsq *ResourceSharerQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(rsq.driver.Dialect())
 	t1 := builder.Table(resourcesharer.Table)
 	selector := builder.Select(t1.Columns(resourcesharer.Columns...)...).From(t1)
@@ -679,7 +679,7 @@ func (rss *ResourceSharerSelect) Scan(ctx context.Context, v interface{}) error 
 	if err := rss.prepareQuery(ctx); err != nil {
 		return err
 	}
-	rss.sql = rss.ResourceSharerQuery.sqlQuery()
+	rss.sql = rss.ResourceSharerQuery.sqlQuery(ctx)
 	return rss.sqlScan(ctx, v)
 }
 

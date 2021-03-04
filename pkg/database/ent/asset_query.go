@@ -63,7 +63,7 @@ func (aq *AssetQuery) QuerySessions() *SessionQuery {
 		if err := aq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := aq.sqlQuery()
+		selector := aq.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -299,7 +299,7 @@ func (aq *AssetQuery) GroupBy(field string, fields ...string) *AssetGroupBy {
 		if err := aq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		return aq.sqlQuery(), nil
+		return aq.sqlQuery(ctx), nil
 	}
 	return group
 }
@@ -459,7 +459,7 @@ func (aq *AssetQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (aq *AssetQuery) sqlQuery() *sql.Selector {
+func (aq *AssetQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(aq.driver.Dialect())
 	t1 := builder.Table(asset.Table)
 	selector := builder.Select(t1.Columns(asset.Columns...)...).From(t1)
@@ -754,7 +754,7 @@ func (as *AssetSelect) Scan(ctx context.Context, v interface{}) error {
 	if err := as.prepareQuery(ctx); err != nil {
 		return err
 	}
-	as.sql = as.AssetQuery.sqlQuery()
+	as.sql = as.AssetQuery.sqlQuery(ctx)
 	return as.sqlScan(ctx, v)
 }
 

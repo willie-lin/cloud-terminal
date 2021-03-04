@@ -63,7 +63,7 @@ func (vq *VerificationQuery) QueryUsers() *UserQuery {
 		if err := vq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := vq.sqlQuery()
+		selector := vq.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -299,7 +299,7 @@ func (vq *VerificationQuery) GroupBy(field string, fields ...string) *Verificati
 		if err := vq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		return vq.sqlQuery(), nil
+		return vq.sqlQuery(ctx), nil
 	}
 	return group
 }
@@ -456,7 +456,7 @@ func (vq *VerificationQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (vq *VerificationQuery) sqlQuery() *sql.Selector {
+func (vq *VerificationQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(vq.driver.Dialect())
 	t1 := builder.Table(verification.Table)
 	selector := builder.Select(t1.Columns(verification.Columns...)...).From(t1)
@@ -751,7 +751,7 @@ func (vs *VerificationSelect) Scan(ctx context.Context, v interface{}) error {
 	if err := vs.prepareQuery(ctx); err != nil {
 		return err
 	}
-	vs.sql = vs.VerificationQuery.sqlQuery()
+	vs.sql = vs.VerificationQuery.sqlQuery(ctx)
 	return vs.sqlScan(ctx, v)
 }
 

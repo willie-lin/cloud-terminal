@@ -797,6 +797,13 @@ func (suo *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err e
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Session.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if ps := suo.mutation.predicates; len(ps) > 0 {
+		_spec.Predicate = func(selector *sql.Selector) {
+			for i := range ps {
+				ps[i](selector)
+			}
+		}
+	}
 	if value, ok := suo.mutation.Protocol(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,

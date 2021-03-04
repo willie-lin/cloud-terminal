@@ -56,7 +56,7 @@ type Asset struct {
 // AssetEdges holds the relations/edges for other nodes in the graph.
 type AssetEdges struct {
 	// Sessions holds the value of the sessions edge.
-	Sessions *Session
+	Sessions *Session `json:"sessions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool

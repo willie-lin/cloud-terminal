@@ -261,7 +261,7 @@ func (cq *CredentialQuery) GroupBy(field string, fields ...string) *CredentialGr
 		if err := cq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		return cq.sqlQuery(), nil
+		return cq.sqlQuery(ctx), nil
 	}
 	return group
 }
@@ -384,7 +384,7 @@ func (cq *CredentialQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (cq *CredentialQuery) sqlQuery() *sql.Selector {
+func (cq *CredentialQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(cq.driver.Dialect())
 	t1 := builder.Table(credential.Table)
 	selector := builder.Select(t1.Columns(credential.Columns...)...).From(t1)
@@ -679,7 +679,7 @@ func (cs *CredentialSelect) Scan(ctx context.Context, v interface{}) error {
 	if err := cs.prepareQuery(ctx); err != nil {
 		return err
 	}
-	cs.sql = cs.CredentialQuery.sqlQuery()
+	cs.sql = cs.CredentialQuery.sqlQuery(ctx)
 	return cs.sqlScan(ctx, v)
 }
 

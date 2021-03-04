@@ -261,7 +261,7 @@ func (cq *CommandQuery) GroupBy(field string, fields ...string) *CommandGroupBy 
 		if err := cq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		return cq.sqlQuery(), nil
+		return cq.sqlQuery(ctx), nil
 	}
 	return group
 }
@@ -384,7 +384,7 @@ func (cq *CommandQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (cq *CommandQuery) sqlQuery() *sql.Selector {
+func (cq *CommandQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(cq.driver.Dialect())
 	t1 := builder.Table(command.Table)
 	selector := builder.Select(t1.Columns(command.Columns...)...).From(t1)
@@ -679,7 +679,7 @@ func (cs *CommandSelect) Scan(ctx context.Context, v interface{}) error {
 	if err := cs.prepareQuery(ctx); err != nil {
 		return err
 	}
-	cs.sql = cs.CommandQuery.sqlQuery()
+	cs.sql = cs.CommandQuery.sqlQuery(ctx)
 	return cs.sqlScan(ctx, v)
 }
 

@@ -43,7 +43,6 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
-		Annotation: &entsql.Annotation{Table: "assets"},
 	}
 	// CommandsColumns holds the columns for the "commands" table.
 	CommandsColumns = []*schema.Column{
@@ -59,7 +58,6 @@ var (
 		Columns:     CommandsColumns,
 		PrimaryKey:  []*schema.Column{CommandsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "commands"},
 	}
 	// CredentialsColumns holds the columns for the "credentials" table.
 	CredentialsColumns = []*schema.Column{
@@ -79,7 +77,6 @@ var (
 		Columns:     CredentialsColumns,
 		PrimaryKey:  []*schema.Column{CredentialsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "credentials"},
 	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
@@ -94,7 +91,6 @@ var (
 		Columns:     GroupsColumns,
 		PrimaryKey:  []*schema.Column{GroupsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "groups"},
 	}
 	// PropertiesColumns holds the columns for the "properties" table.
 	PropertiesColumns = []*schema.Column{
@@ -108,7 +104,6 @@ var (
 		Columns:     PropertiesColumns,
 		PrimaryKey:  []*schema.Column{PropertiesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "properties"},
 	}
 	// ResourceSharersColumns holds the columns for the "resourceSharers" table.
 	ResourceSharersColumns = []*schema.Column{
@@ -124,7 +119,6 @@ var (
 		Columns:     ResourceSharersColumns,
 		PrimaryKey:  []*schema.Column{ResourceSharersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "resourceSharers"},
 	}
 	// SessionsColumns holds the columns for the "sessions" table.
 	SessionsColumns = []*schema.Column{
@@ -155,7 +149,6 @@ var (
 		Columns:     SessionsColumns,
 		PrimaryKey:  []*schema.Column{SessionsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "sessions"},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -186,7 +179,6 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
-		Annotation: &entsql.Annotation{Table: "users"},
 	}
 	// VerificationsColumns holds the columns for the "verifications" table.
 	VerificationsColumns = []*schema.Column{
@@ -203,7 +195,6 @@ var (
 		Columns:     VerificationsColumns,
 		PrimaryKey:  []*schema.Column{VerificationsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
-		Annotation:  &entsql.Annotation{Table: "verifications"},
 	}
 	// GroupUsersColumns holds the columns for the "group_users" table.
 	GroupUsersColumns = []*schema.Column{
@@ -249,7 +240,34 @@ var (
 
 func init() {
 	AssetsTable.ForeignKeys[0].RefTable = SessionsTable
+	AssetsTable.Annotation = &entsql.Annotation{
+		Table: "assets",
+	}
+	CommandsTable.Annotation = &entsql.Annotation{
+		Table: "commands",
+	}
+	CredentialsTable.Annotation = &entsql.Annotation{
+		Table: "credentials",
+	}
+	GroupsTable.Annotation = &entsql.Annotation{
+		Table: "groups",
+	}
+	PropertiesTable.Annotation = &entsql.Annotation{
+		Table: "properties",
+	}
+	ResourceSharersTable.Annotation = &entsql.Annotation{
+		Table: "resourceSharers",
+	}
+	SessionsTable.Annotation = &entsql.Annotation{
+		Table: "sessions",
+	}
 	UsersTable.ForeignKeys[0].RefTable = VerificationsTable
+	UsersTable.Annotation = &entsql.Annotation{
+		Table: "users",
+	}
+	VerificationsTable.Annotation = &entsql.Annotation{
+		Table: "verifications",
+	}
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

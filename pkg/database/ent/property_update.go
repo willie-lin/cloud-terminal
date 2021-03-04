@@ -228,6 +228,13 @@ func (puo *PropertyUpdateOne) sqlSave(ctx context.Context) (_node *Property, err
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Property.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if ps := puo.mutation.predicates; len(ps) > 0 {
+		_spec.Predicate = func(selector *sql.Selector) {
+			for i := range ps {
+				ps[i](selector)
+			}
+		}
+	}
 	if value, ok := puo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,

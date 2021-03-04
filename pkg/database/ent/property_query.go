@@ -261,7 +261,7 @@ func (pq *PropertyQuery) GroupBy(field string, fields ...string) *PropertyGroupB
 		if err := pq.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		return pq.sqlQuery(), nil
+		return pq.sqlQuery(ctx), nil
 	}
 	return group
 }
@@ -384,7 +384,7 @@ func (pq *PropertyQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (pq *PropertyQuery) sqlQuery() *sql.Selector {
+func (pq *PropertyQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(pq.driver.Dialect())
 	t1 := builder.Table(property.Table)
 	selector := builder.Select(t1.Columns(property.Columns...)...).From(t1)
@@ -679,7 +679,7 @@ func (ps *PropertySelect) Scan(ctx context.Context, v interface{}) error {
 	if err := ps.prepareQuery(ctx); err != nil {
 		return err
 	}
-	ps.sql = ps.PropertyQuery.sqlQuery()
+	ps.sql = ps.PropertyQuery.sqlQuery(ctx)
 	return ps.sqlScan(ctx, v)
 }
 
