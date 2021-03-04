@@ -2,8 +2,8 @@ package database
 
 import (
 	"context"
+	"entgo.io/ent/dialect/sql"
 	"fmt"
-	"github.com/facebook/ent/dialect/sql"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/facebook/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 )
 

@@ -5,7 +5,6 @@ package hook
 import (
 	"context"
 	"fmt"
-
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 )
 

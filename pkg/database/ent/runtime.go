@@ -3,8 +3,6 @@
 package ent
 
 import (
-	"time"
-
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
@@ -13,6 +11,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
+	"time"
 )
 
 // The init function reads all schema descriptors with runtime code

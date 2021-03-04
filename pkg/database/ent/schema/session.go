@@ -1,11 +1,11 @@
 package schema
 
 import (
-	"github.com/facebook/ent"
-	"github.com/facebook/ent/dialect/entsql"
-	"github.com/facebook/ent/schema"
-	"github.com/facebook/ent/schema/edge"
-	"github.com/facebook/ent/schema/field"
+	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
+	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
 	"time"
 )
 

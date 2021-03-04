@@ -5,9 +5,8 @@ package ent
 import (
 	"context"
 	"fmt"
-	"log"
-
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/migrate"
+	"log"
 
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
@@ -19,9 +18,9 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 
-	"github.com/facebook/ent/dialect"
-	"github.com/facebook/ent/dialect/sql"
-	"github.com/facebook/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.

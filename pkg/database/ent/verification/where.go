@@ -5,8 +5,8 @@ package verification
 import (
 	"time"
 
-	"github.com/facebook/ent/dialect/sql"
-	"github.com/facebook/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/predicate"
 )
 
