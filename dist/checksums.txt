@@ -1,0 +1,5 @@
+0fbbd9f69c45d0b441cff3e59cb9755e9d06d5126bf12a072cb2e333b2b7bc9e  cloud-terminal_v0.1.1-next_Darwin_x86_64.tar.gz
+acf7a0b3a227f98bf9df9720a144bab452dd25b3c2a7e0209e0e1a8119ff7d1e  cloud-terminal_v0.1.1-next_Linux_arm64.tar.gz
+b525546054d0b64bac7f3b51d5b08e42fe7a9dd4ab9a67a679b822e63c360bb9  cloud-terminal_v0.1.1-next_Windows_x86_64.tar.gz
+b963a94834732da0d6c631b5d49d34cc771fe46cd9f4d2b6df69931cbd5d4c04  cloud-terminal_v0.1.1-next_Darwin_arm64.tar.gz
+cb449b067592b2d20bb3c9231d7bfd2e204a39e3c229a66552c2780e0fec703c  cloud-terminal_v0.1.1-next_Linux_x86_64.tar.gz
