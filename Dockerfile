@@ -1,10 +1,14 @@
-FROM golang:1.16.0-alpine3.9
+FROM golang:alpine as builder
 
-# 为镜像设置必要的环境变量
-ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64 \
-	GOPROXY="https://goproxy.cn,direct"
+ENV GO111MODULE=on
 
-RUN mkdir /app
+ENV GOPROXY=https://goproxy.io,direct
+
+WORKDIR /app
+
+COPY . .
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+RUN apk add gcc g++
+RUN go env && CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-linkmode external -extldflags "-static"' -o cloud-terminal main.go
+
