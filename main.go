@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
-	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"go.elastic.co/apm/module/apmechov4"
 
 	"github.com/labstack/echo-contrib/jaegertracing"
@@ -36,7 +35,7 @@ const versionFile = "/app/VERSION"
 // @BasePath /v2
 func main() {
 
-	utils.InitLogger()
+	//utils.InitLogger()
 	log, _ := zap.NewDevelopment()
 	//log, _ := zap.NewProduction()
 	//log := zap.NewProductionEncoderConfig()
@@ -67,6 +66,8 @@ func main() {
 
 	fmt.Println(client)
 	fmt.Println("eeee")
+
+	defer client.Close()
 	ctx := context.Background()
 
 	//autoMigration := database.AutoMigration
@@ -114,7 +115,6 @@ func main() {
 	e.GET("/group/group_with_user", handler.GetAllGroupsWithUsers(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
-	defer client.Close()
 
 	e.Logger.Fatal(e.Start(":2021"))
 

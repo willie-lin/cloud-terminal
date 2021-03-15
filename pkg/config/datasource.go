@@ -60,10 +60,11 @@ func NewClient() (*ent.Client, error) {
 		User:     "root",
 		Password: "root1234",
 		DbName:   "terminal",
-		Host:     "127.0.0.1",
-		Port:     3306,
-		//Type:     "mysql",
-		Type: "sqlite3",
+		Host:     "mysql",
+		//Host:     "127.0.0.1",
+		Port: 3306,
+		Type: "mysql",
+		//Type: "sqlite3",
 	}
 	var client *ent.Client
 	var err error
@@ -96,6 +97,7 @@ func AutoMigration(client *ent.Client, ctx context.Context) {
 	log, _ := zap.NewDevelopment()
 	if err := client.Schema.Create(ctx); err != nil {
 		log.Fatal("failed creating schema resources: %v", zap.Error(err))
+		//log.Fatalf("failed creating schema resources: %v", err)
 	}
 }
 
@@ -108,5 +110,6 @@ func DebugMode(err error, client *ent.Client, ctx context.Context) {
 	)
 	if err != nil {
 		log.Fatal("failed creating schema resources: %v", zap.Error(err))
+		//log.Fatalf("failed creating schema resources: %v", err)
 	}
 }
