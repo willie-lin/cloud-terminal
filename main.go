@@ -81,6 +81,7 @@ func main() {
 
 	//v1 := e.Group("/api/v1")
 	//v1.Use()
+	e.GET("/", handler.Hello(client))
 	e.GET("/users", handler.GetAllUser(client))
 	e.GET("/user/uname", handler.FindUserByUsername(client))
 	e.GET("/user/uid", handler.FindUserById(client))
