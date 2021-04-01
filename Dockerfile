@@ -1,4 +1,4 @@
-FROM golang:1.16 as build
+FROM golang:1.15 as build
 
 MAINTAINER Linjiezui "linjiezui@gmail.com"
 
