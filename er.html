@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+</head>
+<body>
+		<div class="mermaid" id="er-diagram">
+erDiagram
+    Asset {
+        string id
+        string name
+        string ip
+        string protocol
+        int port
+        string account_type
+        string username
+        string password
+        string credential_id
+        string private_key
+        string passphrase
+        string description
+        bool active
+        timeDOTTime created_at
+        timeDOTTime updated_at
+        string tags
+    }
+    Command {
+        string id
+        string name
+        LBRACKRBRACKstring content
+        timeDOTTime created_at
+        timeDOTTime updated_at
+    }
+    Credential {
+        string id
+        string name
+        string type
+        string username
+        string password
+        string private_key
+        string passphrase
+        timeDOTTime created_at
+        timeDOTTime updated_at
+    }
+    Group {
+        string id
+        string name
+        timeDOTTime created_at
+        timeDOTTime updated_at
+    }
+    Property {
+        int id
+        string name
+        string value
+    }
+    ResourceSharer {
+        string id
+        string resource_id
+        string resource_type
+        string user_id
+        string userGroup_id
+    }
+    Session {
+        string id
+        string protocol
+        string ip
+        int port
+        string connection_id
+        string asset_id
+        string username
+        string password
+        string creator
+        string client_ip
+        int width
+        int height
+        string status
+        string recording
+        string private_key
+        string passphrase
+        int code
+        string message
+        timeDOTTime connected
+        timeDOTTime disconnected
+    }
+    User {
+        string id
+        string username
+        string password
+        string email
+        string nickname
+        string totpSecret
+        bool online
+        bool enable
+        timeDOTTime created_at
+        timeDOTTime updated_at
+        string type
+    }
+    Verification {
+        string id
+        string client_ip
+        string clientUserAgent
+        timeDOTTime login_time
+        timeDOTTime logout_time
+        bool remember
+    }
+    	Group }o--o{ User : "users/groups"
+    	Session |o--o{ Asset : "assets/sessions"
+    	Verification |o--o{ User : "users"
+		</div>
+	<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+	<script>
+		mermaid.mermaidAPI.initialize({
+			startOnLoad: true,
+		});
+		var observer = new MutationObserver((event) => {
+			document.querySelectorAll('text[id^=entity]').forEach(text => {
+				text.textContent = text.textContent.replace('DOT', '.');
+				text.textContent = text.textContent.replace('STAR', '*');
+				text.textContent = text.textContent.replace('LBRACK', '[');
+				text.textContent = text.textContent.replace('RBRACK', ']');
+			});
+			observer.disconnect();
+		});
+		observer.observe(document.getElementById('er-diagram'), { attributes: true, childList: true });
+	</script>
+</body>
+</html>
