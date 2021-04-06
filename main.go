@@ -6,7 +6,6 @@ import (
 	"github.com/bykof/gostradamus"
 	"go.elastic.co/apm/module/apmechov4"
 
-	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/swaggo/echo-swagger"
@@ -41,8 +40,8 @@ func main() {
 	//log := zap.NewProductionEncoderConfig()
 	e := echo.New()
 	//e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
-	c := jaegertracing.New(e, nil)
-	defer c.Close()
+	//c := jaegertracing.New(e, nil)
+	//defer c.Close()
 	e.Use(apmechov4.Middleware())
 	//e.Use(logger.ZapLogger(log))
 
