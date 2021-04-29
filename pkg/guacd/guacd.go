@@ -123,10 +123,12 @@ func  NewTunnel(address string, config Configuration) (ret *Tunnel, err error)  
 	if err := ret.WriteInstructionAndFlush(NewInstruction("select", selectArg)); err != nil {
 		return nil, err
 	}
+
 	args, err != ret.expect("args")
 	if err != nil {
 		return
 	}
+
 	width := config.GetParameter("width")
 	height := config.GetParameter("height")
 	// send size
