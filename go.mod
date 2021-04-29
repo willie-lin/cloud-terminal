@@ -3,7 +3,7 @@ module github.com/willie-lin/cloud-terminal
 go 1.16
 
 require (
-	entgo.io/ent v0.7.0
+	entgo.io/ent v0.8.0
 	github.com/PuerkitoBio/goquery v1.6.1 // indirect
 	github.com/a8m/enter v0.0.0-20210402080910-2c4af71ad0ff // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -22,7 +22,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/labstack/echo-contrib v0.9.0
-	github.com/labstack/echo/v4 v4.2.0
+	github.com/labstack/echo/v4 v4.2.2
 	github.com/lib/pq v1.10.0
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
