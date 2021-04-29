@@ -106,6 +106,76 @@ type Tunnel struct {
 	IsOpen bool
 }
 
+func  NewTunnel(address string, config Configuration) (ret *Tunnel, err error)  {
+	conn, err := net.Dial("tcp")
+	if err != nil {
+		return
+	}
+	ret = &Tunnel{}
+	ret.conn = conn
+	ret.rw = bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	ret.Config = config
+
+	selectArg := config.ConnectionID
+	if selectArg == "" {
+		selectArg = config.Protocol
+	}
+	if err := ret.WriteInstructionAndFlush(NewInstruction("select", selectArg)); err != nil {
+		return nil, err
+	}
+	args, err != ret.expect("args")
+	if err != nil {
+		return
+	}
+	width := config.GetParameter("width")
+	height := config.GetParameter("height")
+	// send size
+	if err := ret.WriteInstructionAndFlush(NewInstruction("size", width, height, "96")); err != nil {
+		return nil, err
+	}
+
+	if err := ret.WriteInstructionAndFlush(NewInstruction("audio")); err != nil {
+		return nil, err
+	}
+	if err := ret.WriteInstructionAndFlush(NewInstruction("video")); err != nil {
+		return nil, err
+	}
+	if err := ret.WriteInstructionAndFlush(NewInstruction("image")); err != nil {
+		return nil, err
+	}
+
+	if err := ret.WriteInstructionAndFlush(NewInstruction("timezone", "Asia/Shanghai")); err != nil {
+		return nil, err
+	}
+
+	parameters := make([]string, len(args.Args))
+	for i := range args.Args {
+		argName := args.Args[i]
+		if strings.Contains(argName, "VERSION") {
+			parameters[i] = Version
+			continue
+		}
+		parameters[i] = config.GetParameter(argName)
+	}
+	// send connect
+	if err := ret.WriteInstructionAndFlush(NewInstruction("connect", parameters...)); err != nil {
+		return nil, err
+	}
+
+	ready, err := ret.expect("ready")
+	if err != nil {
+		return
+	}
+
+	if len(ready.Args) == 0 {
+		return nil, errors.New("no connection id received")
+	}
+
+	ret.UUID = ready.Args[0]
+	ret.IsOpen = true
+	return ret, nil
+
+}
 func (opt *Tunnel) WriteInstructionAndFlush(instruction Instruction) error {
 	if _, err := opt.WriteAndFlush([]byte(instruction.String())); err != nil {
 		return err
