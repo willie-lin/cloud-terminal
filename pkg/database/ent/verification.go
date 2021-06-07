@@ -55,11 +55,11 @@ func (*Verification) scanValues(columns []string) ([]interface{}, error) {
 	for i := range columns {
 		switch columns[i] {
 		case verification.FieldRemember:
-			values[i] = &sql.NullBool{}
+			values[i] = new(sql.NullBool)
 		case verification.FieldID, verification.FieldClientIP, verification.FieldClientUserAgent:
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullString)
 		case verification.FieldLoginTime, verification.FieldLogoutTime:
-			values[i] = &sql.NullTime{}
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Verification", columns[i])
 		}

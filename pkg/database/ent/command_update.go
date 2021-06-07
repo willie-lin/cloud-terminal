@@ -200,6 +200,7 @@ func (cu *CommandUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // CommandUpdateOne is the builder for updating a single Command entity.
 type CommandUpdateOne struct {
 	config
+	fields   []string
 	hooks    []Hook
 	mutation *CommandMutation
 }
@@ -239,6 +240,13 @@ func (cuo *CommandUpdateOne) SetUpdatedAt(t time.Time) *CommandUpdateOne {
 // Mutation returns the CommandMutation object of the builder.
 func (cuo *CommandUpdateOne) Mutation() *CommandMutation {
 	return cuo.mutation
+}
+
+// Select allows selecting one or more fields (columns) of the returned entity.
+// The default is selecting all fields defined in the entity schema.
+func (cuo *CommandUpdateOne) Select(field string, fields ...string) *CommandUpdateOne {
+	cuo.fields = append([]string{field}, fields...)
+	return cuo
 }
 
 // Save executes the query and returns the updated Command entity.
@@ -333,6 +341,18 @@ func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err e
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Command.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if fields := cuo.fields; len(fields) > 0 {
+		_spec.Node.Columns = make([]string, 0, len(fields))
+		_spec.Node.Columns = append(_spec.Node.Columns, command.FieldID)
+		for _, f := range fields {
+			if !command.ValidColumn(f) {
+				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
+			}
+			if f != command.FieldID {
+				_spec.Node.Columns = append(_spec.Node.Columns, f)
+			}
+		}
+	}
 	if ps := cuo.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

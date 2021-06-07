@@ -41,10 +41,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldTags holds the string denoting the tags field in the database.
 	FieldTags = "tags"
-
 	// EdgeSessions holds the string denoting the sessions edge name in mutations.
 	EdgeSessions = "sessions"
-
 	// Table holds the table name of the asset in the database.
 	Table = "assets"
 	// SessionsTable is the table the holds the sessions relation/edge.
@@ -76,9 +74,11 @@ var Columns = []string{
 	FieldTags,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the Asset type.
+// ForeignKeys holds the SQL foreign-keys that are owned by the "assets"
+// table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"session_assets",
+	"user_assets",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

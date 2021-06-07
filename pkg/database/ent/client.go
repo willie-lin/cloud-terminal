@@ -95,7 +95,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	}
 	tx, err := newTx(ctx, c.driver)
 	if err != nil {
-		return nil, fmt.Errorf("ent: starting a transaction: %v", err)
+		return nil, fmt.Errorf("ent: starting a transaction: %w", err)
 	}
 	cfg := c.config
 	cfg.driver = tx
@@ -123,7 +123,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		BeginTx(context.Context, *sql.TxOptions) (dialect.Tx, error)
 	}).BeginTx(ctx, opts)
 	if err != nil {
-		return nil, fmt.Errorf("ent: starting a transaction: %v", err)
+		return nil, fmt.Errorf("ent: starting a transaction: %w", err)
 	}
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
@@ -244,7 +244,9 @@ func (c *AssetClient) DeleteOneID(id string) *AssetDeleteOne {
 
 // Query returns a query builder for Asset.
 func (c *AssetClient) Query() *AssetQuery {
-	return &AssetQuery{config: c.config}
+	return &AssetQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a Asset entity by its id.
@@ -348,7 +350,9 @@ func (c *CommandClient) DeleteOneID(id string) *CommandDeleteOne {
 
 // Query returns a query builder for Command.
 func (c *CommandClient) Query() *CommandQuery {
-	return &CommandQuery{config: c.config}
+	return &CommandQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a Command entity by its id.
@@ -436,7 +440,9 @@ func (c *CredentialClient) DeleteOneID(id string) *CredentialDeleteOne {
 
 // Query returns a query builder for Credential.
 func (c *CredentialClient) Query() *CredentialQuery {
-	return &CredentialQuery{config: c.config}
+	return &CredentialQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a Credential entity by its id.
@@ -524,7 +530,9 @@ func (c *GroupClient) DeleteOneID(id string) *GroupDeleteOne {
 
 // Query returns a query builder for Group.
 func (c *GroupClient) Query() *GroupQuery {
-	return &GroupQuery{config: c.config}
+	return &GroupQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a Group entity by its id.
@@ -628,7 +636,9 @@ func (c *PropertyClient) DeleteOneID(id int) *PropertyDeleteOne {
 
 // Query returns a query builder for Property.
 func (c *PropertyClient) Query() *PropertyQuery {
-	return &PropertyQuery{config: c.config}
+	return &PropertyQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a Property entity by its id.
@@ -716,7 +726,9 @@ func (c *ResourceSharerClient) DeleteOneID(id string) *ResourceSharerDeleteOne {
 
 // Query returns a query builder for ResourceSharer.
 func (c *ResourceSharerClient) Query() *ResourceSharerQuery {
-	return &ResourceSharerQuery{config: c.config}
+	return &ResourceSharerQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a ResourceSharer entity by its id.
@@ -804,7 +816,9 @@ func (c *SessionClient) DeleteOneID(id string) *SessionDeleteOne {
 
 // Query returns a query builder for Session.
 func (c *SessionClient) Query() *SessionQuery {
-	return &SessionQuery{config: c.config}
+	return &SessionQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a Session entity by its id.
@@ -908,7 +922,9 @@ func (c *UserClient) DeleteOneID(id string) *UserDeleteOne {
 
 // Query returns a query builder for User.
 func (c *UserClient) Query() *UserQuery {
-	return &UserQuery{config: c.config}
+	return &UserQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a User entity by its id.
@@ -934,6 +950,22 @@ func (c *UserClient) QueryGroups(u *User) *GroupQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(group.Table, group.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, user.GroupsTable, user.GroupsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssets queries the assets edge of a User.
+func (c *UserClient) QueryAssets(u *User) *AssetQuery {
+	query := &AssetQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(asset.Table, asset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AssetsTable, user.AssetsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -1012,7 +1044,9 @@ func (c *VerificationClient) DeleteOneID(id string) *VerificationDeleteOne {
 
 // Query returns a query builder for Verification.
 func (c *VerificationClient) Query() *VerificationQuery {
-	return &VerificationQuery{config: c.config}
+	return &VerificationQuery{
+		config: c.config,
+	}
 }
 
 // Get returns a Verification entity by its id.

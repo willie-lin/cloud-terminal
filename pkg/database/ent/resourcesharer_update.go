@@ -166,6 +166,7 @@ func (rsu *ResourceSharerUpdate) sqlSave(ctx context.Context) (n int, err error)
 // ResourceSharerUpdateOne is the builder for updating a single ResourceSharer entity.
 type ResourceSharerUpdateOne struct {
 	config
+	fields   []string
 	hooks    []Hook
 	mutation *ResourceSharerMutation
 }
@@ -197,6 +198,13 @@ func (rsuo *ResourceSharerUpdateOne) SetUserGroupID(s string) *ResourceSharerUpd
 // Mutation returns the ResourceSharerMutation object of the builder.
 func (rsuo *ResourceSharerUpdateOne) Mutation() *ResourceSharerMutation {
 	return rsuo.mutation
+}
+
+// Select allows selecting one or more fields (columns) of the returned entity.
+// The default is selecting all fields defined in the entity schema.
+func (rsuo *ResourceSharerUpdateOne) Select(field string, fields ...string) *ResourceSharerUpdateOne {
+	rsuo.fields = append([]string{field}, fields...)
+	return rsuo
 }
 
 // Save executes the query and returns the updated ResourceSharer entity.
@@ -266,6 +274,18 @@ func (rsuo *ResourceSharerUpdateOne) sqlSave(ctx context.Context) (_node *Resour
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing ResourceSharer.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if fields := rsuo.fields; len(fields) > 0 {
+		_spec.Node.Columns = make([]string, 0, len(fields))
+		_spec.Node.Columns = append(_spec.Node.Columns, resourcesharer.FieldID)
+		for _, f := range fields {
+			if !resourcesharer.ValidColumn(f) {
+				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
+			}
+			if f != resourcesharer.FieldID {
+				_spec.Node.Columns = append(_spec.Node.Columns, f)
+			}
+		}
+	}
 	if ps := rsuo.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

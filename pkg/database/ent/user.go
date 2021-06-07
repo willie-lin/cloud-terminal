@@ -46,9 +46,11 @@ type User struct {
 type UserEdges struct {
 	// Groups holds the value of the groups edge.
 	Groups []*Group `json:"groups,omitempty"`
+	// Assets holds the value of the assets edge.
+	Assets []*Asset `json:"assets,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // GroupsOrErr returns the Groups value or an error if the edge
@@ -60,19 +62,28 @@ func (e UserEdges) GroupsOrErr() ([]*Group, error) {
 	return nil, &NotLoadedError{edge: "groups"}
 }
 
+// AssetsOrErr returns the Assets value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AssetsOrErr() ([]*Asset, error) {
+	if e.loadedTypes[1] {
+		return e.Assets, nil
+	}
+	return nil, &NotLoadedError{edge: "assets"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
 		case user.FieldOnline, user.FieldEnable:
-			values[i] = &sql.NullBool{}
+			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldNickname, user.FieldTotpSecret, user.FieldType:
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
-			values[i] = &sql.NullTime{}
+			values[i] = new(sql.NullTime)
 		case user.ForeignKeys[0]: // verification_users
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type User", columns[i])
 		}
@@ -169,6 +180,11 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 // QueryGroups queries the "groups" edge of the User entity.
 func (u *User) QueryGroups() *GroupQuery {
 	return (&UserClient{config: u.config}).QueryGroups(u)
+}
+
+// QueryAssets queries the "assets" edge of the User entity.
+func (u *User) QueryAssets() *AssetQuery {
+	return (&UserClient{config: u.config}).QueryAssets(u)
 }
 
 // Update returns a builder for updating this User.

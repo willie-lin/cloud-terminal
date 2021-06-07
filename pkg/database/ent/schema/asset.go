@@ -50,5 +50,7 @@ func (Asset) Edges() []ent.Edge {
 		edge.From("sessions", Session.Type).
 			Ref("assets").
 			Unique(),
+		//	edge.From("groups", Group.Type).Ref("assets"),
+		//	edge.From("users", User.Type).Ref("users"),
 	}
 }

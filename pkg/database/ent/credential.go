@@ -40,9 +40,9 @@ func (*Credential) scanValues(columns []string) ([]interface{}, error) {
 	for i := range columns {
 		switch columns[i] {
 		case credential.FieldID, credential.FieldName, credential.FieldType, credential.FieldUsername, credential.FieldPassword, credential.FieldPrivateKey, credential.FieldPassphrase:
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullString)
 		case credential.FieldCreatedAt, credential.FieldUpdatedAt:
-			values[i] = &sql.NullTime{}
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Credential", columns[i])
 		}

@@ -727,7 +727,7 @@ func (m *AssetMutation) ClearSessions() {
 	m.clearedsessions = true
 }
 
-// SessionsCleared returns if the "sessions" edge to the Session entity was cleared.
+// SessionsCleared reports if the "sessions" edge to the Session entity was cleared.
 func (m *AssetMutation) SessionsCleared() bool {
 	return m.clearedsessions
 }
@@ -2548,7 +2548,7 @@ func (m *GroupMutation) ClearUsers() {
 	m.clearedusers = true
 }
 
-// UsersCleared returns if the "users" edge to the User entity was cleared.
+// UsersCleared reports if the "users" edge to the User entity was cleared.
 func (m *GroupMutation) UsersCleared() bool {
 	return m.clearedusers
 }
@@ -3640,6 +3640,7 @@ type SessionMutation struct {
 	message       *string
 	connected     *time.Time
 	disconnected  *time.Time
+	mode          *string
 	clearedFields map[string]struct{}
 	assets        map[string]struct{}
 	removedassets map[string]struct{}
@@ -4498,6 +4499,42 @@ func (m *SessionMutation) ResetDisconnected() {
 	m.disconnected = nil
 }
 
+// SetMode sets the "mode" field.
+func (m *SessionMutation) SetMode(s string) {
+	m.mode = &s
+}
+
+// Mode returns the value of the "mode" field in the mutation.
+func (m *SessionMutation) Mode() (r string, exists bool) {
+	v := m.mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMode returns the old "mode" field's value of the Session entity.
+// If the Session object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SessionMutation) OldMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMode: %w", err)
+	}
+	return oldValue.Mode, nil
+}
+
+// ResetMode resets all changes to the "mode" field.
+func (m *SessionMutation) ResetMode() {
+	m.mode = nil
+}
+
 // AddAssetIDs adds the "assets" edge to the Asset entity by ids.
 func (m *SessionMutation) AddAssetIDs(ids ...string) {
 	if m.assets == nil {
@@ -4513,7 +4550,7 @@ func (m *SessionMutation) ClearAssets() {
 	m.clearedassets = true
 }
 
-// AssetsCleared returns if the "assets" edge to the Asset entity was cleared.
+// AssetsCleared reports if the "assets" edge to the Asset entity was cleared.
 func (m *SessionMutation) AssetsCleared() bool {
 	return m.clearedassets
 }
@@ -4565,7 +4602,7 @@ func (m *SessionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SessionMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.protocol != nil {
 		fields = append(fields, session.FieldProtocol)
 	}
@@ -4623,6 +4660,9 @@ func (m *SessionMutation) Fields() []string {
 	if m.disconnected != nil {
 		fields = append(fields, session.FieldDisconnected)
 	}
+	if m.mode != nil {
+		fields = append(fields, session.FieldMode)
+	}
 	return fields
 }
 
@@ -4669,6 +4709,8 @@ func (m *SessionMutation) Field(name string) (ent.Value, bool) {
 		return m.Connected()
 	case session.FieldDisconnected:
 		return m.Disconnected()
+	case session.FieldMode:
+		return m.Mode()
 	}
 	return nil, false
 }
@@ -4716,6 +4758,8 @@ func (m *SessionMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldConnected(ctx)
 	case session.FieldDisconnected:
 		return m.OldDisconnected(ctx)
+	case session.FieldMode:
+		return m.OldMode(ctx)
 	}
 	return nil, fmt.Errorf("unknown Session field %s", name)
 }
@@ -4857,6 +4901,13 @@ func (m *SessionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDisconnected(v)
+		return nil
+	case session.FieldMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMode(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Session field %s", name)
@@ -5015,6 +5066,9 @@ func (m *SessionMutation) ResetField(name string) error {
 	case session.FieldDisconnected:
 		m.ResetDisconnected()
 		return nil
+	case session.FieldMode:
+		m.ResetMode()
+		return nil
 	}
 	return fmt.Errorf("unknown Session field %s", name)
 }
@@ -5123,6 +5177,9 @@ type UserMutation struct {
 	groups        map[string]struct{}
 	removedgroups map[string]struct{}
 	clearedgroups bool
+	assets        map[string]struct{}
+	removedassets map[string]struct{}
+	clearedassets bool
 	done          bool
 	oldValue      func(context.Context) (*User, error)
 	predicates    []predicate.User
@@ -5588,7 +5645,7 @@ func (m *UserMutation) ClearGroups() {
 	m.clearedgroups = true
 }
 
-// GroupsCleared returns if the "groups" edge to the Group entity was cleared.
+// GroupsCleared reports if the "groups" edge to the Group entity was cleared.
 func (m *UserMutation) GroupsCleared() bool {
 	return m.clearedgroups
 }
@@ -5624,6 +5681,59 @@ func (m *UserMutation) ResetGroups() {
 	m.groups = nil
 	m.clearedgroups = false
 	m.removedgroups = nil
+}
+
+// AddAssetIDs adds the "assets" edge to the Asset entity by ids.
+func (m *UserMutation) AddAssetIDs(ids ...string) {
+	if m.assets == nil {
+		m.assets = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.assets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAssets clears the "assets" edge to the Asset entity.
+func (m *UserMutation) ClearAssets() {
+	m.clearedassets = true
+}
+
+// AssetsCleared reports if the "assets" edge to the Asset entity was cleared.
+func (m *UserMutation) AssetsCleared() bool {
+	return m.clearedassets
+}
+
+// RemoveAssetIDs removes the "assets" edge to the Asset entity by IDs.
+func (m *UserMutation) RemoveAssetIDs(ids ...string) {
+	if m.removedassets == nil {
+		m.removedassets = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.removedassets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAssets returns the removed IDs of the "assets" edge to the Asset entity.
+func (m *UserMutation) RemovedAssetsIDs() (ids []string) {
+	for id := range m.removedassets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AssetsIDs returns the "assets" edge IDs in the mutation.
+func (m *UserMutation) AssetsIDs() (ids []string) {
+	for id := range m.assets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAssets resets all changes to the "assets" edge.
+func (m *UserMutation) ResetAssets() {
+	m.assets = nil
+	m.clearedassets = false
+	m.removedassets = nil
 }
 
 // Op returns the operation name.
@@ -5892,9 +6002,12 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.groups != nil {
 		edges = append(edges, user.EdgeGroups)
+	}
+	if m.assets != nil {
+		edges = append(edges, user.EdgeAssets)
 	}
 	return edges
 }
@@ -5909,15 +6022,24 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeAssets:
+		ids := make([]ent.Value, 0, len(m.assets))
+		for id := range m.assets {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedgroups != nil {
 		edges = append(edges, user.EdgeGroups)
+	}
+	if m.removedassets != nil {
+		edges = append(edges, user.EdgeAssets)
 	}
 	return edges
 }
@@ -5932,15 +6054,24 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeAssets:
+		ids := make([]ent.Value, 0, len(m.removedassets))
+		for id := range m.removedassets {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedgroups {
 		edges = append(edges, user.EdgeGroups)
+	}
+	if m.clearedassets {
+		edges = append(edges, user.EdgeAssets)
 	}
 	return edges
 }
@@ -5951,6 +6082,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
 	case user.EdgeGroups:
 		return m.clearedgroups
+	case user.EdgeAssets:
+		return m.clearedassets
 	}
 	return false
 }
@@ -5969,6 +6102,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
 	case user.EdgeGroups:
 		m.ResetGroups()
+		return nil
+	case user.EdgeAssets:
+		m.ResetAssets()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)
@@ -6274,7 +6410,7 @@ func (m *VerificationMutation) ClearUsers() {
 	m.clearedusers = true
 }
 
-// UsersCleared returns if the "users" edge to the User entity was cleared.
+// UsersCleared reports if the "users" edge to the User entity was cleared.
 func (m *VerificationMutation) UsersCleared() bool {
 	return m.clearedusers
 }

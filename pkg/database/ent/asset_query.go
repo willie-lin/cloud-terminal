@@ -21,6 +21,7 @@ type AssetQuery struct {
 	config
 	limit      *int
 	offset     *int
+	unique     *bool
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Asset
@@ -47,6 +48,13 @@ func (aq *AssetQuery) Limit(limit int) *AssetQuery {
 // Offset adds an offset step to the query.
 func (aq *AssetQuery) Offset(offset int) *AssetQuery {
 	aq.offset = &offset
+	return aq
+}
+
+// Unique configures the query builder to filter duplicate records on query.
+// By default, unique is set to true, and can be disabled using this method.
+func (aq *AssetQuery) Unique(unique bool) *AssetQuery {
+	aq.unique = &unique
 	return aq
 }
 
@@ -377,10 +385,14 @@ func (aq *AssetQuery) sqlAll(ctx context.Context) ([]*Asset, error) {
 		ids := make([]string, 0, len(nodes))
 		nodeids := make(map[string][]*Asset)
 		for i := range nodes {
-			if fk := nodes[i].session_assets; fk != nil {
-				ids = append(ids, *fk)
-				nodeids[*fk] = append(nodeids[*fk], nodes[i])
+			if nodes[i].session_assets == nil {
+				continue
 			}
+			fk := *nodes[i].session_assets
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
 		}
 		query.Where(session.IDIn(ids...))
 		neighbors, err := query.All(ctx)
@@ -409,7 +421,7 @@ func (aq *AssetQuery) sqlCount(ctx context.Context) (int, error) {
 func (aq *AssetQuery) sqlExist(ctx context.Context) (bool, error) {
 	n, err := aq.sqlCount(ctx)
 	if err != nil {
-		return false, fmt.Errorf("ent: check existence: %v", err)
+		return false, fmt.Errorf("ent: check existence: %w", err)
 	}
 	return n > 0, nil
 }
@@ -426,6 +438,9 @@ func (aq *AssetQuery) querySpec() *sqlgraph.QuerySpec {
 		},
 		From:   aq.sql,
 		Unique: true,
+	}
+	if unique := aq.unique; unique != nil {
+		_spec.Unique = *unique
 	}
 	if fields := aq.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
@@ -452,7 +467,7 @@ func (aq *AssetQuery) querySpec() *sqlgraph.QuerySpec {
 	if ps := aq.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
-				ps[i](selector, asset.ValidColumn)
+				ps[i](selector)
 			}
 		}
 	}
@@ -471,7 +486,7 @@ func (aq *AssetQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		p(selector)
 	}
 	for _, p := range aq.order {
-		p(selector, asset.ValidColumn)
+		p(selector)
 	}
 	if offset := aq.offset; offset != nil {
 		// limit is mandatory for offset clause. We start
@@ -737,7 +752,7 @@ func (agb *AssetGroupBy) sqlQuery() *sql.Selector {
 	columns := make([]string, 0, len(agb.fields)+len(agb.fns))
 	columns = append(columns, agb.fields...)
 	for _, fn := range agb.fns {
-		columns = append(columns, fn(selector, asset.ValidColumn))
+		columns = append(columns, fn(selector))
 	}
 	return selector.Select(columns...).GroupBy(agb.fields...)
 }

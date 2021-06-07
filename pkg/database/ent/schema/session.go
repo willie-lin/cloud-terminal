@@ -45,6 +45,7 @@ func (Session) Fields() []ent.Field {
 		field.Time("connected").Default(time.Now),
 		field.Time("disconnected").Default(time.Now).
 			UpdateDefault(time.Now),
+		field.String("mode"),
 	}
 }
 

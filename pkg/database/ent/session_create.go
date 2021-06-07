@@ -151,6 +151,12 @@ func (sc *SessionCreate) SetNillableDisconnected(t *time.Time) *SessionCreate {
 	return sc
 }
 
+// SetMode sets the "mode" field.
+func (sc *SessionCreate) SetMode(s string) *SessionCreate {
+	sc.mutation.SetMode(s)
+	return sc
+}
+
 // SetID sets the "id" field.
 func (sc *SessionCreate) SetID(s string) *SessionCreate {
 	sc.mutation.SetID(s)
@@ -292,6 +298,9 @@ func (sc *SessionCreate) check() error {
 	}
 	if _, ok := sc.mutation.Disconnected(); !ok {
 		return &ValidationError{Name: "disconnected", err: errors.New("ent: missing required field \"disconnected\"")}
+	}
+	if _, ok := sc.mutation.Mode(); !ok {
+		return &ValidationError{Name: "mode", err: errors.New("ent: missing required field \"mode\"")}
 	}
 	return nil
 }
@@ -473,6 +482,14 @@ func (sc *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 			Column: session.FieldDisconnected,
 		})
 		_node.Disconnected = value
+	}
+	if value, ok := sc.mutation.Mode(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: session.FieldMode,
+		})
+		_node.Mode = value
 	}
 	if nodes := sc.mutation.AssetsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

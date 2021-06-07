@@ -33,11 +33,11 @@ func (*Command) scanValues(columns []string) ([]interface{}, error) {
 	for i := range columns {
 		switch columns[i] {
 		case command.FieldContent:
-			values[i] = &[]byte{}
+			values[i] = new([]byte)
 		case command.FieldID, command.FieldName:
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullString)
 		case command.FieldCreatedAt, command.FieldUpdatedAt:
-			values[i] = &sql.NullTime{}
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Command", columns[i])
 		}
@@ -71,7 +71,7 @@ func (c *Command) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field content", values[i])
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &c.Content); err != nil {
-					return fmt.Errorf("unmarshal field content: %v", err)
+					return fmt.Errorf("unmarshal field content: %w", err)
 				}
 			}
 		case command.FieldCreatedAt:

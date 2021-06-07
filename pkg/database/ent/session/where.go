@@ -226,6 +226,13 @@ func Disconnected(v time.Time) predicate.Session {
 	})
 }
 
+// Mode applies equality check predicate on the "mode" field. It's identical to ModeEQ.
+func Mode(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldMode), v))
+	})
+}
+
 // ProtocolEQ applies the EQ predicate on the "protocol" field.
 func ProtocolEQ(v string) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
@@ -2122,6 +2129,117 @@ func DisconnectedLT(v time.Time) predicate.Session {
 func DisconnectedLTE(v time.Time) predicate.Session {
 	return predicate.Session(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldDisconnected), v))
+	})
+}
+
+// ModeEQ applies the EQ predicate on the "mode" field.
+func ModeEQ(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldMode), v))
+	})
+}
+
+// ModeNEQ applies the NEQ predicate on the "mode" field.
+func ModeNEQ(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldMode), v))
+	})
+}
+
+// ModeIn applies the In predicate on the "mode" field.
+func ModeIn(vs ...string) predicate.Session {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Session(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldMode), v...))
+	})
+}
+
+// ModeNotIn applies the NotIn predicate on the "mode" field.
+func ModeNotIn(vs ...string) predicate.Session {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Session(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldMode), v...))
+	})
+}
+
+// ModeGT applies the GT predicate on the "mode" field.
+func ModeGT(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldMode), v))
+	})
+}
+
+// ModeGTE applies the GTE predicate on the "mode" field.
+func ModeGTE(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldMode), v))
+	})
+}
+
+// ModeLT applies the LT predicate on the "mode" field.
+func ModeLT(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldMode), v))
+	})
+}
+
+// ModeLTE applies the LTE predicate on the "mode" field.
+func ModeLTE(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldMode), v))
+	})
+}
+
+// ModeContains applies the Contains predicate on the "mode" field.
+func ModeContains(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldMode), v))
+	})
+}
+
+// ModeHasPrefix applies the HasPrefix predicate on the "mode" field.
+func ModeHasPrefix(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldMode), v))
+	})
+}
+
+// ModeHasSuffix applies the HasSuffix predicate on the "mode" field.
+func ModeHasSuffix(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldMode), v))
+	})
+}
+
+// ModeEqualFold applies the EqualFold predicate on the "mode" field.
+func ModeEqualFold(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldMode), v))
+	})
+}
+
+// ModeContainsFold applies the ContainsFold predicate on the "mode" field.
+func ModeContainsFold(v string) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldMode), v))
 	})
 }
 

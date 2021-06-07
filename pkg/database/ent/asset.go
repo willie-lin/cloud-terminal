@@ -51,6 +51,7 @@ type Asset struct {
 	// The values are being populated by the AssetQuery when eager-loading is set.
 	Edges          AssetEdges `json:"edges"`
 	session_assets *string
+	user_assets    *string
 }
 
 // AssetEdges holds the relations/edges for other nodes in the graph.
@@ -82,15 +83,17 @@ func (*Asset) scanValues(columns []string) ([]interface{}, error) {
 	for i := range columns {
 		switch columns[i] {
 		case asset.FieldActive:
-			values[i] = &sql.NullBool{}
+			values[i] = new(sql.NullBool)
 		case asset.FieldPort:
-			values[i] = &sql.NullInt64{}
+			values[i] = new(sql.NullInt64)
 		case asset.FieldID, asset.FieldName, asset.FieldIP, asset.FieldProtocol, asset.FieldAccountType, asset.FieldUsername, asset.FieldPassword, asset.FieldCredentialID, asset.FieldPrivateKey, asset.FieldPassphrase, asset.FieldDescription, asset.FieldTags:
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullString)
 		case asset.FieldCreatedAt, asset.FieldUpdatedAt:
-			values[i] = &sql.NullTime{}
+			values[i] = new(sql.NullTime)
 		case asset.ForeignKeys[0]: // session_assets
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullString)
+		case asset.ForeignKeys[1]: // user_assets
+			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Asset", columns[i])
 		}
@@ -208,6 +211,13 @@ func (a *Asset) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				a.session_assets = new(string)
 				*a.session_assets = value.String
+			}
+		case asset.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field user_assets", values[i])
+			} else if value.Valid {
+				a.user_assets = new(string)
+				*a.user_assets = value.String
 			}
 		}
 	}

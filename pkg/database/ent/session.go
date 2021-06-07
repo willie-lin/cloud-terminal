@@ -54,6 +54,8 @@ type Session struct {
 	Connected time.Time `json:"connected,omitempty"`
 	// Disconnected holds the value of the "disconnected" field.
 	Disconnected time.Time `json:"disconnected,omitempty"`
+	// Mode holds the value of the "mode" field.
+	Mode string `json:"mode,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SessionQuery when eager-loading is set.
 	Edges SessionEdges `json:"edges"`
@@ -83,11 +85,11 @@ func (*Session) scanValues(columns []string) ([]interface{}, error) {
 	for i := range columns {
 		switch columns[i] {
 		case session.FieldPort, session.FieldWidth, session.FieldHeight, session.FieldCode:
-			values[i] = &sql.NullInt64{}
-		case session.FieldID, session.FieldProtocol, session.FieldIP, session.FieldConnectionID, session.FieldAssetID, session.FieldUsername, session.FieldPassword, session.FieldCreator, session.FieldClientIP, session.FieldStatus, session.FieldRecording, session.FieldPrivateKey, session.FieldPassphrase, session.FieldMessage:
-			values[i] = &sql.NullString{}
+			values[i] = new(sql.NullInt64)
+		case session.FieldID, session.FieldProtocol, session.FieldIP, session.FieldConnectionID, session.FieldAssetID, session.FieldUsername, session.FieldPassword, session.FieldCreator, session.FieldClientIP, session.FieldStatus, session.FieldRecording, session.FieldPrivateKey, session.FieldPassphrase, session.FieldMessage, session.FieldMode:
+			values[i] = new(sql.NullString)
 		case session.FieldConnected, session.FieldDisconnected:
-			values[i] = &sql.NullTime{}
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Session", columns[i])
 		}
@@ -223,6 +225,12 @@ func (s *Session) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				s.Disconnected = value.Time
 			}
+		case session.FieldMode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field mode", values[i])
+			} else if value.Valid {
+				s.Mode = value.String
+			}
 		}
 	}
 	return nil
@@ -294,6 +302,8 @@ func (s *Session) String() string {
 	builder.WriteString(s.Connected.Format(time.ANSIC))
 	builder.WriteString(", disconnected=")
 	builder.WriteString(s.Disconnected.Format(time.ANSIC))
+	builder.WriteString(", mode=")
+	builder.WriteString(s.Mode)
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -21,10 +21,8 @@ const (
 	FieldLogoutTime = "logout_time"
 	// FieldRemember holds the string denoting the remember field in the database.
 	FieldRemember = "remember"
-
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
-
 	// Table holds the table name of the verification in the database.
 	Table = "verifications"
 	// UsersTable is the table the holds the users relation/edge.

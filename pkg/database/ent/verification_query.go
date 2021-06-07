@@ -22,6 +22,7 @@ type VerificationQuery struct {
 	config
 	limit      *int
 	offset     *int
+	unique     *bool
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Verification
@@ -47,6 +48,13 @@ func (vq *VerificationQuery) Limit(limit int) *VerificationQuery {
 // Offset adds an offset step to the query.
 func (vq *VerificationQuery) Offset(offset int) *VerificationQuery {
 	vq.offset = &offset
+	return vq
+}
+
+// Unique configures the query builder to filter duplicate records on query.
+// By default, unique is set to true, and can be disabled using this method.
+func (vq *VerificationQuery) Unique(unique bool) *VerificationQuery {
+	vq.unique = &unique
 	return vq
 }
 
@@ -406,7 +414,7 @@ func (vq *VerificationQuery) sqlCount(ctx context.Context) (int, error) {
 func (vq *VerificationQuery) sqlExist(ctx context.Context) (bool, error) {
 	n, err := vq.sqlCount(ctx)
 	if err != nil {
-		return false, fmt.Errorf("ent: check existence: %v", err)
+		return false, fmt.Errorf("ent: check existence: %w", err)
 	}
 	return n > 0, nil
 }
@@ -423,6 +431,9 @@ func (vq *VerificationQuery) querySpec() *sqlgraph.QuerySpec {
 		},
 		From:   vq.sql,
 		Unique: true,
+	}
+	if unique := vq.unique; unique != nil {
+		_spec.Unique = *unique
 	}
 	if fields := vq.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
@@ -449,7 +460,7 @@ func (vq *VerificationQuery) querySpec() *sqlgraph.QuerySpec {
 	if ps := vq.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
-				ps[i](selector, verification.ValidColumn)
+				ps[i](selector)
 			}
 		}
 	}
@@ -468,7 +479,7 @@ func (vq *VerificationQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		p(selector)
 	}
 	for _, p := range vq.order {
-		p(selector, verification.ValidColumn)
+		p(selector)
 	}
 	if offset := vq.offset; offset != nil {
 		// limit is mandatory for offset clause. We start
@@ -734,7 +745,7 @@ func (vgb *VerificationGroupBy) sqlQuery() *sql.Selector {
 	columns := make([]string, 0, len(vgb.fields)+len(vgb.fns))
 	columns = append(columns, vgb.fields...)
 	for _, fn := range vgb.fns {
-		columns = append(columns, fn(selector, verification.ValidColumn))
+		columns = append(columns, fn(selector))
 	}
 	return selector.Select(columns...).GroupBy(vgb.fields...)
 }

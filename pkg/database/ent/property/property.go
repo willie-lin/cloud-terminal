@@ -11,7 +11,6 @@ const (
 	FieldName = "name"
 	// FieldValue holds the string denoting the value field in the database.
 	FieldValue = "value"
-
 	// Table holds the table name of the property in the database.
 	Table = "properties"
 )

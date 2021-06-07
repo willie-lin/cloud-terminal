@@ -20,6 +20,7 @@ type ResourceSharerQuery struct {
 	config
 	limit      *int
 	offset     *int
+	unique     *bool
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.ResourceSharer
@@ -43,6 +44,13 @@ func (rsq *ResourceSharerQuery) Limit(limit int) *ResourceSharerQuery {
 // Offset adds an offset step to the query.
 func (rsq *ResourceSharerQuery) Offset(offset int) *ResourceSharerQuery {
 	rsq.offset = &offset
+	return rsq
+}
+
+// Unique configures the query builder to filter duplicate records on query.
+// By default, unique is set to true, and can be disabled using this method.
+func (rsq *ResourceSharerQuery) Unique(unique bool) *ResourceSharerQuery {
+	rsq.unique = &unique
 	return rsq
 }
 
@@ -334,7 +342,7 @@ func (rsq *ResourceSharerQuery) sqlCount(ctx context.Context) (int, error) {
 func (rsq *ResourceSharerQuery) sqlExist(ctx context.Context) (bool, error) {
 	n, err := rsq.sqlCount(ctx)
 	if err != nil {
-		return false, fmt.Errorf("ent: check existence: %v", err)
+		return false, fmt.Errorf("ent: check existence: %w", err)
 	}
 	return n > 0, nil
 }
@@ -351,6 +359,9 @@ func (rsq *ResourceSharerQuery) querySpec() *sqlgraph.QuerySpec {
 		},
 		From:   rsq.sql,
 		Unique: true,
+	}
+	if unique := rsq.unique; unique != nil {
+		_spec.Unique = *unique
 	}
 	if fields := rsq.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
@@ -377,7 +388,7 @@ func (rsq *ResourceSharerQuery) querySpec() *sqlgraph.QuerySpec {
 	if ps := rsq.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
-				ps[i](selector, resourcesharer.ValidColumn)
+				ps[i](selector)
 			}
 		}
 	}
@@ -396,7 +407,7 @@ func (rsq *ResourceSharerQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		p(selector)
 	}
 	for _, p := range rsq.order {
-		p(selector, resourcesharer.ValidColumn)
+		p(selector)
 	}
 	if offset := rsq.offset; offset != nil {
 		// limit is mandatory for offset clause. We start
@@ -662,7 +673,7 @@ func (rsgb *ResourceSharerGroupBy) sqlQuery() *sql.Selector {
 	columns := make([]string, 0, len(rsgb.fields)+len(rsgb.fns))
 	columns = append(columns, rsgb.fields...)
 	for _, fn := range rsgb.fns {
-		columns = append(columns, fn(selector, resourcesharer.ValidColumn))
+		columns = append(columns, fn(selector))
 	}
 	return selector.Select(columns...).GroupBy(rsgb.fields...)
 }

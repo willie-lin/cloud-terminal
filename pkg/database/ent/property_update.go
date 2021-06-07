@@ -140,6 +140,7 @@ func (pu *PropertyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // PropertyUpdateOne is the builder for updating a single Property entity.
 type PropertyUpdateOne struct {
 	config
+	fields   []string
 	hooks    []Hook
 	mutation *PropertyMutation
 }
@@ -159,6 +160,13 @@ func (puo *PropertyUpdateOne) SetValue(s string) *PropertyUpdateOne {
 // Mutation returns the PropertyMutation object of the builder.
 func (puo *PropertyUpdateOne) Mutation() *PropertyMutation {
 	return puo.mutation
+}
+
+// Select allows selecting one or more fields (columns) of the returned entity.
+// The default is selecting all fields defined in the entity schema.
+func (puo *PropertyUpdateOne) Select(field string, fields ...string) *PropertyUpdateOne {
+	puo.fields = append([]string{field}, fields...)
+	return puo
 }
 
 // Save executes the query and returns the updated Property entity.
@@ -228,6 +236,18 @@ func (puo *PropertyUpdateOne) sqlSave(ctx context.Context) (_node *Property, err
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Property.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if fields := puo.fields; len(fields) > 0 {
+		_spec.Node.Columns = make([]string, 0, len(fields))
+		_spec.Node.Columns = append(_spec.Node.Columns, property.FieldID)
+		for _, f := range fields {
+			if !property.ValidColumn(f) {
+				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
+			}
+			if f != property.FieldID {
+				_spec.Node.Columns = append(_spec.Node.Columns, f)
+			}
+		}
+	}
 	if ps := puo.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

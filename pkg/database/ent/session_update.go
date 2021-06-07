@@ -178,6 +178,12 @@ func (su *SessionUpdate) SetDisconnected(t time.Time) *SessionUpdate {
 	return su
 }
 
+// SetMode sets the "mode" field.
+func (su *SessionUpdate) SetMode(s string) *SessionUpdate {
+	su.mutation.SetMode(s)
+	return su
+}
+
 // AddAssetIDs adds the "assets" edge to the Asset entity by IDs.
 func (su *SessionUpdate) AddAssetIDs(ids ...string) *SessionUpdate {
 	su.mutation.AddAssetIDs(ids...)
@@ -458,6 +464,13 @@ func (su *SessionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: session.FieldDisconnected,
 		})
 	}
+	if value, ok := su.mutation.Mode(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: session.FieldMode,
+		})
+	}
 	if su.mutation.AssetsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -526,6 +539,7 @@ func (su *SessionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // SessionUpdateOne is the builder for updating a single Session entity.
 type SessionUpdateOne struct {
 	config
+	fields   []string
 	hooks    []Hook
 	mutation *SessionMutation
 }
@@ -680,6 +694,12 @@ func (suo *SessionUpdateOne) SetDisconnected(t time.Time) *SessionUpdateOne {
 	return suo
 }
 
+// SetMode sets the "mode" field.
+func (suo *SessionUpdateOne) SetMode(s string) *SessionUpdateOne {
+	suo.mutation.SetMode(s)
+	return suo
+}
+
 // AddAssetIDs adds the "assets" edge to the Asset entity by IDs.
 func (suo *SessionUpdateOne) AddAssetIDs(ids ...string) *SessionUpdateOne {
 	suo.mutation.AddAssetIDs(ids...)
@@ -719,6 +739,13 @@ func (suo *SessionUpdateOne) RemoveAssets(a ...*Asset) *SessionUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return suo.RemoveAssetIDs(ids...)
+}
+
+// Select allows selecting one or more fields (columns) of the returned entity.
+// The default is selecting all fields defined in the entity schema.
+func (suo *SessionUpdateOne) Select(field string, fields ...string) *SessionUpdateOne {
+	suo.fields = append([]string{field}, fields...)
+	return suo
 }
 
 // Save executes the query and returns the updated Session entity.
@@ -797,6 +824,18 @@ func (suo *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err e
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Session.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if fields := suo.fields; len(fields) > 0 {
+		_spec.Node.Columns = make([]string, 0, len(fields))
+		_spec.Node.Columns = append(_spec.Node.Columns, session.FieldID)
+		for _, f := range fields {
+			if !session.ValidColumn(f) {
+				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
+			}
+			if f != session.FieldID {
+				_spec.Node.Columns = append(_spec.Node.Columns, f)
+			}
+		}
+	}
 	if ps := suo.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -963,6 +1002,13 @@ func (suo *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err e
 			Type:   field.TypeTime,
 			Value:  value,
 			Column: session.FieldDisconnected,
+		})
+	}
+	if value, ok := suo.mutation.Mode(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: session.FieldMode,
 		})
 	}
 	if suo.mutation.AssetsCleared() {

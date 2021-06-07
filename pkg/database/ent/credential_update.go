@@ -236,6 +236,7 @@ func (cu *CredentialUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // CredentialUpdateOne is the builder for updating a single Credential entity.
 type CredentialUpdateOne struct {
 	config
+	fields   []string
 	hooks    []Hook
 	mutation *CredentialMutation
 }
@@ -299,6 +300,13 @@ func (cuo *CredentialUpdateOne) SetUpdatedAt(t time.Time) *CredentialUpdateOne {
 // Mutation returns the CredentialMutation object of the builder.
 func (cuo *CredentialUpdateOne) Mutation() *CredentialMutation {
 	return cuo.mutation
+}
+
+// Select allows selecting one or more fields (columns) of the returned entity.
+// The default is selecting all fields defined in the entity schema.
+func (cuo *CredentialUpdateOne) Select(field string, fields ...string) *CredentialUpdateOne {
+	cuo.fields = append([]string{field}, fields...)
+	return cuo
 }
 
 // Save executes the query and returns the updated Credential entity.
@@ -377,6 +385,18 @@ func (cuo *CredentialUpdateOne) sqlSave(ctx context.Context) (_node *Credential,
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Credential.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if fields := cuo.fields; len(fields) > 0 {
+		_spec.Node.Columns = make([]string, 0, len(fields))
+		_spec.Node.Columns = append(_spec.Node.Columns, credential.FieldID)
+		for _, f := range fields {
+			if !credential.ValidColumn(f) {
+				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
+			}
+			if f != credential.FieldID {
+				_spec.Node.Columns = append(_spec.Node.Columns, f)
+			}
+		}
+	}
 	if ps := cuo.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

@@ -15,7 +15,6 @@ const (
 	FieldUserID = "user_id"
 	// FieldUserGroupID holds the string denoting the usergroup_id field in the database.
 	FieldUserGroupID = "user_group_id"
-
 	// Table holds the table name of the resourcesharer in the database.
 	Table = "resourceSharers"
 )

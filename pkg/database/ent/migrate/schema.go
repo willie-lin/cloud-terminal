@@ -28,6 +28,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "tags", Type: field.TypeString},
 		{Name: "session_assets", Type: field.TypeString, Nullable: true},
+		{Name: "user_assets", Type: field.TypeString, Nullable: true},
 	}
 	// AssetsTable holds the schema information for the "assets" table.
 	AssetsTable = &schema.Table{
@@ -36,10 +37,15 @@ var (
 		PrimaryKey: []*schema.Column{AssetsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:  "assets_sessions_assets",
-				Columns: []*schema.Column{AssetsColumns[16]},
-
+				Symbol:     "assets_sessions_assets",
+				Columns:    []*schema.Column{AssetsColumns[16]},
 				RefColumns: []*schema.Column{SessionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "assets_users_assets",
+				Columns:    []*schema.Column{AssetsColumns[17]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -142,6 +148,7 @@ var (
 		{Name: "message", Type: field.TypeString},
 		{Name: "connected", Type: field.TypeTime},
 		{Name: "disconnected", Type: field.TypeTime},
+		{Name: "mode", Type: field.TypeString},
 	}
 	// SessionsTable holds the schema information for the "sessions" table.
 	SessionsTable = &schema.Table{
@@ -172,9 +179,8 @@ var (
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:  "users_verifications_users",
-				Columns: []*schema.Column{UsersColumns[11]},
-
+				Symbol:     "users_verifications_users",
+				Columns:    []*schema.Column{UsersColumns[11]},
 				RefColumns: []*schema.Column{VerificationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -208,16 +214,14 @@ var (
 		PrimaryKey: []*schema.Column{GroupUsersColumns[0], GroupUsersColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:  "group_users_group_id",
-				Columns: []*schema.Column{GroupUsersColumns[0]},
-
+				Symbol:     "group_users_group_id",
+				Columns:    []*schema.Column{GroupUsersColumns[0]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:  "group_users_user_id",
-				Columns: []*schema.Column{GroupUsersColumns[1]},
-
+				Symbol:     "group_users_user_id",
+				Columns:    []*schema.Column{GroupUsersColumns[1]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -240,6 +244,7 @@ var (
 
 func init() {
 	AssetsTable.ForeignKeys[0].RefTable = SessionsTable
+	AssetsTable.ForeignKeys[1].RefTable = UsersTable
 	AssetsTable.Annotation = &entsql.Annotation{
 		Table: "assets",
 	}

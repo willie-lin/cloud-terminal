@@ -22,6 +22,7 @@ type GroupQuery struct {
 	config
 	limit      *int
 	offset     *int
+	unique     *bool
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Group
@@ -47,6 +48,13 @@ func (gq *GroupQuery) Limit(limit int) *GroupQuery {
 // Offset adds an offset step to the query.
 func (gq *GroupQuery) Offset(offset int) *GroupQuery {
 	gq.offset = &offset
+	return gq
+}
+
+// Unique configures the query builder to filter duplicate records on query.
+// By default, unique is set to true, and can be disabled using this method.
+func (gq *GroupQuery) Unique(unique bool) *GroupQuery {
+	gq.unique = &unique
 	return gq
 }
 
@@ -387,7 +395,6 @@ func (gq *GroupQuery) sqlAll(ctx context.Context) ([]*Group, error) {
 			Predicate: func(s *sql.Selector) {
 				s.Where(sql.InValues(group.UsersPrimaryKey[0], fks...))
 			},
-
 			ScanValues: func() [2]interface{} {
 				return [2]interface{}{&sql.NullString{}, &sql.NullString{}}
 			},
@@ -406,13 +413,15 @@ func (gq *GroupQuery) sqlAll(ctx context.Context) ([]*Group, error) {
 				if !ok {
 					return fmt.Errorf("unexpected node id in edges: %v", outValue)
 				}
-				edgeids = append(edgeids, inValue)
+				if _, ok := edges[inValue]; !ok {
+					edgeids = append(edgeids, inValue)
+				}
 				edges[inValue] = append(edges[inValue], node)
 				return nil
 			},
 		}
 		if err := sqlgraph.QueryEdges(ctx, gq.driver, _spec); err != nil {
-			return nil, fmt.Errorf(`query edges "users": %v`, err)
+			return nil, fmt.Errorf(`query edges "users": %w`, err)
 		}
 		query.Where(user.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
@@ -441,7 +450,7 @@ func (gq *GroupQuery) sqlCount(ctx context.Context) (int, error) {
 func (gq *GroupQuery) sqlExist(ctx context.Context) (bool, error) {
 	n, err := gq.sqlCount(ctx)
 	if err != nil {
-		return false, fmt.Errorf("ent: check existence: %v", err)
+		return false, fmt.Errorf("ent: check existence: %w", err)
 	}
 	return n > 0, nil
 }
@@ -458,6 +467,9 @@ func (gq *GroupQuery) querySpec() *sqlgraph.QuerySpec {
 		},
 		From:   gq.sql,
 		Unique: true,
+	}
+	if unique := gq.unique; unique != nil {
+		_spec.Unique = *unique
 	}
 	if fields := gq.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
@@ -484,7 +496,7 @@ func (gq *GroupQuery) querySpec() *sqlgraph.QuerySpec {
 	if ps := gq.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
-				ps[i](selector, group.ValidColumn)
+				ps[i](selector)
 			}
 		}
 	}
@@ -503,7 +515,7 @@ func (gq *GroupQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		p(selector)
 	}
 	for _, p := range gq.order {
-		p(selector, group.ValidColumn)
+		p(selector)
 	}
 	if offset := gq.offset; offset != nil {
 		// limit is mandatory for offset clause. We start
@@ -769,7 +781,7 @@ func (ggb *GroupGroupBy) sqlQuery() *sql.Selector {
 	columns := make([]string, 0, len(ggb.fields)+len(ggb.fns))
 	columns = append(columns, ggb.fields...)
 	for _, fn := range ggb.fns {
-		columns = append(columns, fn(selector, group.ValidColumn))
+		columns = append(columns, fn(selector))
 	}
 	return selector.Select(columns...).GroupBy(ggb.fields...)
 }

@@ -49,10 +49,10 @@ const (
 	FieldConnected = "connected"
 	// FieldDisconnected holds the string denoting the disconnected field in the database.
 	FieldDisconnected = "disconnected"
-
+	// FieldMode holds the string denoting the mode field in the database.
+	FieldMode = "mode"
 	// EdgeAssets holds the string denoting the assets edge name in mutations.
 	EdgeAssets = "assets"
-
 	// Table holds the table name of the session in the database.
 	Table = "sessions"
 	// AssetsTable is the table the holds the assets relation/edge.
@@ -86,6 +86,7 @@ var Columns = []string{
 	FieldMessage,
 	FieldConnected,
 	FieldDisconnected,
+	FieldMode,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
