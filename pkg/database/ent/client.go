@@ -9,6 +9,7 @@ import (
 
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/migrate"
 
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/accesssecurity"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
@@ -29,6 +30,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// AccessSecurity is the client for interacting with the AccessSecurity builders.
+	AccessSecurity *AccessSecurityClient
 	// Asset is the client for interacting with the Asset builders.
 	Asset *AssetClient
 	// Command is the client for interacting with the Command builders.
@@ -60,6 +63,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.AccessSecurity = NewAccessSecurityClient(c.config)
 	c.Asset = NewAssetClient(c.config)
 	c.Command = NewCommandClient(c.config)
 	c.Credential = NewCredentialClient(c.config)
@@ -102,6 +106,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:            ctx,
 		config:         cfg,
+		AccessSecurity: NewAccessSecurityClient(cfg),
 		Asset:          NewAssetClient(cfg),
 		Command:        NewCommandClient(cfg),
 		Credential:     NewCredentialClient(cfg),
@@ -129,6 +134,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
 		config:         cfg,
+		AccessSecurity: NewAccessSecurityClient(cfg),
 		Asset:          NewAssetClient(cfg),
 		Command:        NewCommandClient(cfg),
 		Credential:     NewCredentialClient(cfg),
@@ -144,7 +150,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Asset.
+//		AccessSecurity.
 //		Query().
 //		Count(ctx)
 //
@@ -167,6 +173,7 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.AccessSecurity.Use(hooks...)
 	c.Asset.Use(hooks...)
 	c.Command.Use(hooks...)
 	c.Credential.Use(hooks...)
@@ -176,6 +183,112 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Session.Use(hooks...)
 	c.User.Use(hooks...)
 	c.Verification.Use(hooks...)
+}
+
+// AccessSecurityClient is a client for the AccessSecurity schema.
+type AccessSecurityClient struct {
+	config
+}
+
+// NewAccessSecurityClient returns a client for the AccessSecurity from the given config.
+func NewAccessSecurityClient(c config) *AccessSecurityClient {
+	return &AccessSecurityClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `accesssecurity.Hooks(f(g(h())))`.
+func (c *AccessSecurityClient) Use(hooks ...Hook) {
+	c.hooks.AccessSecurity = append(c.hooks.AccessSecurity, hooks...)
+}
+
+// Create returns a create builder for AccessSecurity.
+func (c *AccessSecurityClient) Create() *AccessSecurityCreate {
+	mutation := newAccessSecurityMutation(c.config, OpCreate)
+	return &AccessSecurityCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AccessSecurity entities.
+func (c *AccessSecurityClient) CreateBulk(builders ...*AccessSecurityCreate) *AccessSecurityCreateBulk {
+	return &AccessSecurityCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AccessSecurity.
+func (c *AccessSecurityClient) Update() *AccessSecurityUpdate {
+	mutation := newAccessSecurityMutation(c.config, OpUpdate)
+	return &AccessSecurityUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AccessSecurityClient) UpdateOne(as *AccessSecurity) *AccessSecurityUpdateOne {
+	mutation := newAccessSecurityMutation(c.config, OpUpdateOne, withAccessSecurity(as))
+	return &AccessSecurityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AccessSecurityClient) UpdateOneID(id string) *AccessSecurityUpdateOne {
+	mutation := newAccessSecurityMutation(c.config, OpUpdateOne, withAccessSecurityID(id))
+	return &AccessSecurityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AccessSecurity.
+func (c *AccessSecurityClient) Delete() *AccessSecurityDelete {
+	mutation := newAccessSecurityMutation(c.config, OpDelete)
+	return &AccessSecurityDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *AccessSecurityClient) DeleteOne(as *AccessSecurity) *AccessSecurityDeleteOne {
+	return c.DeleteOneID(as.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *AccessSecurityClient) DeleteOneID(id string) *AccessSecurityDeleteOne {
+	builder := c.Delete().Where(accesssecurity.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AccessSecurityDeleteOne{builder}
+}
+
+// Query returns a query builder for AccessSecurity.
+func (c *AccessSecurityClient) Query() *AccessSecurityQuery {
+	return &AccessSecurityQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a AccessSecurity entity by its id.
+func (c *AccessSecurityClient) Get(ctx context.Context, id string) (*AccessSecurity, error) {
+	return c.Query().Where(accesssecurity.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AccessSecurityClient) GetX(ctx context.Context, id string) *AccessSecurity {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAssets queries the assets edge of a AccessSecurity.
+func (c *AccessSecurityClient) QueryAssets(as *AccessSecurity) *AssetQuery {
+	query := &AssetQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := as.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesssecurity.Table, accesssecurity.FieldID, id),
+			sqlgraph.To(asset.Table, asset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, accesssecurity.AssetsTable, accesssecurity.AssetsColumn),
+		)
+		fromV = sqlgraph.Neighbors(as.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AccessSecurityClient) Hooks() []Hook {
+	return c.hooks.AccessSecurity
 }
 
 // AssetClient is a client for the Asset schema.

@@ -9,6 +9,23 @@ import (
 )
 
 var (
+	// AccessSecuritysColumns holds the columns for the "accessSecuritys" table.
+	AccessSecuritysColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "rule", Type: field.TypeString},
+		{Name: "ip", Type: field.TypeString},
+		{Name: "source", Type: field.TypeString},
+		{Name: "priority", Type: field.TypeInt64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// AccessSecuritysTable holds the schema information for the "accessSecuritys" table.
+	AccessSecuritysTable = &schema.Table{
+		Name:        "accessSecuritys",
+		Columns:     AccessSecuritysColumns,
+		PrimaryKey:  []*schema.Column{AccessSecuritysColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
 	// AssetsColumns holds the columns for the "assets" table.
 	AssetsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -27,6 +44,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "tags", Type: field.TypeString},
+		{Name: "access_security_assets", Type: field.TypeString, Nullable: true},
 		{Name: "session_assets", Type: field.TypeString, Nullable: true},
 		{Name: "user_assets", Type: field.TypeString, Nullable: true},
 	}
@@ -37,14 +55,20 @@ var (
 		PrimaryKey: []*schema.Column{AssetsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "assets_sessions_assets",
+				Symbol:     "assets_accessSecuritys_assets",
 				Columns:    []*schema.Column{AssetsColumns[16]},
+				RefColumns: []*schema.Column{AccessSecuritysColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "assets_sessions_assets",
+				Columns:    []*schema.Column{AssetsColumns[17]},
 				RefColumns: []*schema.Column{SessionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "assets_users_assets",
-				Columns:    []*schema.Column{AssetsColumns[17]},
+				Columns:    []*schema.Column{AssetsColumns[18]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -229,6 +253,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AccessSecuritysTable,
 		AssetsTable,
 		CommandsTable,
 		CredentialsTable,
@@ -243,8 +268,12 @@ var (
 )
 
 func init() {
-	AssetsTable.ForeignKeys[0].RefTable = SessionsTable
-	AssetsTable.ForeignKeys[1].RefTable = UsersTable
+	AccessSecuritysTable.Annotation = &entsql.Annotation{
+		Table: "accessSecuritys",
+	}
+	AssetsTable.ForeignKeys[0].RefTable = AccessSecuritysTable
+	AssetsTable.ForeignKeys[1].RefTable = SessionsTable
+	AssetsTable.ForeignKeys[2].RefTable = UsersTable
 	AssetsTable.Annotation = &entsql.Annotation{
 		Table: "assets",
 	}

@@ -49,9 +49,10 @@ type Asset struct {
 	Tags string `json:"tags,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AssetQuery when eager-loading is set.
-	Edges          AssetEdges `json:"edges"`
-	session_assets *string
-	user_assets    *string
+	Edges                  AssetEdges `json:"edges"`
+	access_security_assets *string
+	session_assets         *string
+	user_assets            *string
 }
 
 // AssetEdges holds the relations/edges for other nodes in the graph.
@@ -90,9 +91,11 @@ func (*Asset) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case asset.FieldCreatedAt, asset.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case asset.ForeignKeys[0]: // session_assets
+		case asset.ForeignKeys[0]: // access_security_assets
 			values[i] = new(sql.NullString)
-		case asset.ForeignKeys[1]: // user_assets
+		case asset.ForeignKeys[1]: // session_assets
+			values[i] = new(sql.NullString)
+		case asset.ForeignKeys[2]: // user_assets
 			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Asset", columns[i])
@@ -207,12 +210,19 @@ func (a *Asset) assignValues(columns []string, values []interface{}) error {
 			}
 		case asset.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field access_security_assets", values[i])
+			} else if value.Valid {
+				a.access_security_assets = new(string)
+				*a.access_security_assets = value.String
+			}
+		case asset.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field session_assets", values[i])
 			} else if value.Valid {
 				a.session_assets = new(string)
 				*a.session_assets = value.String
 			}
-		case asset.ForeignKeys[1]:
+		case asset.ForeignKeys[2]:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_assets", values[i])
 			} else if value.Valid {

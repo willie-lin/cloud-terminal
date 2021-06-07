@@ -5,6 +5,7 @@ package ent
 import (
 	"time"
 
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/accesssecurity"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
@@ -19,6 +20,18 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	accesssecurityFields := schema.AccessSecurity{}.Fields()
+	_ = accesssecurityFields
+	// accesssecurityDescCreatedAt is the schema descriptor for created_at field.
+	accesssecurityDescCreatedAt := accesssecurityFields[5].Descriptor()
+	// accesssecurity.DefaultCreatedAt holds the default value on creation for the created_at field.
+	accesssecurity.DefaultCreatedAt = accesssecurityDescCreatedAt.Default.(func() time.Time)
+	// accesssecurityDescUpdatedAt is the schema descriptor for updated_at field.
+	accesssecurityDescUpdatedAt := accesssecurityFields[6].Descriptor()
+	// accesssecurity.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	accesssecurity.DefaultUpdatedAt = accesssecurityDescUpdatedAt.Default.(func() time.Time)
+	// accesssecurity.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	accesssecurity.UpdateDefaultUpdatedAt = accesssecurityDescUpdatedAt.UpdateDefault.(func() time.Time)
 	assetFields := schema.Asset{}.Fields()
 	_ = assetFields
 	// assetDescCreatedAt is the schema descriptor for created_at field.

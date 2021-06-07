@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/accesssecurity"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
@@ -31,6 +32,7 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
+	TypeAccessSecurity = "AccessSecurity"
 	TypeAsset          = "Asset"
 	TypeCommand        = "Command"
 	TypeCredential     = "Credential"
@@ -41,6 +43,697 @@ const (
 	TypeUser           = "User"
 	TypeVerification   = "Verification"
 )
+
+// AccessSecurityMutation represents an operation that mutates the AccessSecurity nodes in the graph.
+type AccessSecurityMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *string
+	rule          *string
+	ip            *string
+	source        *string
+	priority      *int64
+	addpriority   *int64
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	assets        map[string]struct{}
+	removedassets map[string]struct{}
+	clearedassets bool
+	done          bool
+	oldValue      func(context.Context) (*AccessSecurity, error)
+	predicates    []predicate.AccessSecurity
+}
+
+var _ ent.Mutation = (*AccessSecurityMutation)(nil)
+
+// accesssecurityOption allows management of the mutation configuration using functional options.
+type accesssecurityOption func(*AccessSecurityMutation)
+
+// newAccessSecurityMutation creates new mutation for the AccessSecurity entity.
+func newAccessSecurityMutation(c config, op Op, opts ...accesssecurityOption) *AccessSecurityMutation {
+	m := &AccessSecurityMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeAccessSecurity,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withAccessSecurityID sets the ID field of the mutation.
+func withAccessSecurityID(id string) accesssecurityOption {
+	return func(m *AccessSecurityMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *AccessSecurity
+		)
+		m.oldValue = func(ctx context.Context) (*AccessSecurity, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().AccessSecurity.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withAccessSecurity sets the old AccessSecurity of the mutation.
+func withAccessSecurity(node *AccessSecurity) accesssecurityOption {
+	return func(m *AccessSecurityMutation) {
+		m.oldValue = func(context.Context) (*AccessSecurity, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m AccessSecurityMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m AccessSecurityMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of AccessSecurity entities.
+func (m *AccessSecurityMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID
+// is only available if it was provided to the builder.
+func (m *AccessSecurityMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetRule sets the "rule" field.
+func (m *AccessSecurityMutation) SetRule(s string) {
+	m.rule = &s
+}
+
+// Rule returns the value of the "rule" field in the mutation.
+func (m *AccessSecurityMutation) Rule() (r string, exists bool) {
+	v := m.rule
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRule returns the old "rule" field's value of the AccessSecurity entity.
+// If the AccessSecurity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessSecurityMutation) OldRule(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldRule is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldRule requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRule: %w", err)
+	}
+	return oldValue.Rule, nil
+}
+
+// ResetRule resets all changes to the "rule" field.
+func (m *AccessSecurityMutation) ResetRule() {
+	m.rule = nil
+}
+
+// SetIP sets the "ip" field.
+func (m *AccessSecurityMutation) SetIP(s string) {
+	m.ip = &s
+}
+
+// IP returns the value of the "ip" field in the mutation.
+func (m *AccessSecurityMutation) IP() (r string, exists bool) {
+	v := m.ip
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIP returns the old "ip" field's value of the AccessSecurity entity.
+// If the AccessSecurity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessSecurityMutation) OldIP(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldIP is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldIP requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIP: %w", err)
+	}
+	return oldValue.IP, nil
+}
+
+// ResetIP resets all changes to the "ip" field.
+func (m *AccessSecurityMutation) ResetIP() {
+	m.ip = nil
+}
+
+// SetSource sets the "source" field.
+func (m *AccessSecurityMutation) SetSource(s string) {
+	m.source = &s
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *AccessSecurityMutation) Source() (r string, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the AccessSecurity entity.
+// If the AccessSecurity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessSecurityMutation) OldSource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *AccessSecurityMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetPriority sets the "priority" field.
+func (m *AccessSecurityMutation) SetPriority(i int64) {
+	m.priority = &i
+	m.addpriority = nil
+}
+
+// Priority returns the value of the "priority" field in the mutation.
+func (m *AccessSecurityMutation) Priority() (r int64, exists bool) {
+	v := m.priority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriority returns the old "priority" field's value of the AccessSecurity entity.
+// If the AccessSecurity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessSecurityMutation) OldPriority(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldPriority is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldPriority requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriority: %w", err)
+	}
+	return oldValue.Priority, nil
+}
+
+// AddPriority adds i to the "priority" field.
+func (m *AccessSecurityMutation) AddPriority(i int64) {
+	if m.addpriority != nil {
+		*m.addpriority += i
+	} else {
+		m.addpriority = &i
+	}
+}
+
+// AddedPriority returns the value that was added to the "priority" field in this mutation.
+func (m *AccessSecurityMutation) AddedPriority() (r int64, exists bool) {
+	v := m.addpriority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPriority resets all changes to the "priority" field.
+func (m *AccessSecurityMutation) ResetPriority() {
+	m.priority = nil
+	m.addpriority = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *AccessSecurityMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *AccessSecurityMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the AccessSecurity entity.
+// If the AccessSecurity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessSecurityMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *AccessSecurityMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *AccessSecurityMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *AccessSecurityMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the AccessSecurity entity.
+// If the AccessSecurity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessSecurityMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *AccessSecurityMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// AddAssetIDs adds the "assets" edge to the Asset entity by ids.
+func (m *AccessSecurityMutation) AddAssetIDs(ids ...string) {
+	if m.assets == nil {
+		m.assets = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.assets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAssets clears the "assets" edge to the Asset entity.
+func (m *AccessSecurityMutation) ClearAssets() {
+	m.clearedassets = true
+}
+
+// AssetsCleared reports if the "assets" edge to the Asset entity was cleared.
+func (m *AccessSecurityMutation) AssetsCleared() bool {
+	return m.clearedassets
+}
+
+// RemoveAssetIDs removes the "assets" edge to the Asset entity by IDs.
+func (m *AccessSecurityMutation) RemoveAssetIDs(ids ...string) {
+	if m.removedassets == nil {
+		m.removedassets = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.removedassets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAssets returns the removed IDs of the "assets" edge to the Asset entity.
+func (m *AccessSecurityMutation) RemovedAssetsIDs() (ids []string) {
+	for id := range m.removedassets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AssetsIDs returns the "assets" edge IDs in the mutation.
+func (m *AccessSecurityMutation) AssetsIDs() (ids []string) {
+	for id := range m.assets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAssets resets all changes to the "assets" edge.
+func (m *AccessSecurityMutation) ResetAssets() {
+	m.assets = nil
+	m.clearedassets = false
+	m.removedassets = nil
+}
+
+// Op returns the operation name.
+func (m *AccessSecurityMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (AccessSecurity).
+func (m *AccessSecurityMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *AccessSecurityMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.rule != nil {
+		fields = append(fields, accesssecurity.FieldRule)
+	}
+	if m.ip != nil {
+		fields = append(fields, accesssecurity.FieldIP)
+	}
+	if m.source != nil {
+		fields = append(fields, accesssecurity.FieldSource)
+	}
+	if m.priority != nil {
+		fields = append(fields, accesssecurity.FieldPriority)
+	}
+	if m.created_at != nil {
+		fields = append(fields, accesssecurity.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, accesssecurity.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *AccessSecurityMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case accesssecurity.FieldRule:
+		return m.Rule()
+	case accesssecurity.FieldIP:
+		return m.IP()
+	case accesssecurity.FieldSource:
+		return m.Source()
+	case accesssecurity.FieldPriority:
+		return m.Priority()
+	case accesssecurity.FieldCreatedAt:
+		return m.CreatedAt()
+	case accesssecurity.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *AccessSecurityMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case accesssecurity.FieldRule:
+		return m.OldRule(ctx)
+	case accesssecurity.FieldIP:
+		return m.OldIP(ctx)
+	case accesssecurity.FieldSource:
+		return m.OldSource(ctx)
+	case accesssecurity.FieldPriority:
+		return m.OldPriority(ctx)
+	case accesssecurity.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case accesssecurity.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown AccessSecurity field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AccessSecurityMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case accesssecurity.FieldRule:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRule(v)
+		return nil
+	case accesssecurity.FieldIP:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIP(v)
+		return nil
+	case accesssecurity.FieldSource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case accesssecurity.FieldPriority:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriority(v)
+		return nil
+	case accesssecurity.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case accesssecurity.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AccessSecurity field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *AccessSecurityMutation) AddedFields() []string {
+	var fields []string
+	if m.addpriority != nil {
+		fields = append(fields, accesssecurity.FieldPriority)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *AccessSecurityMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case accesssecurity.FieldPriority:
+		return m.AddedPriority()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AccessSecurityMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case accesssecurity.FieldPriority:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPriority(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AccessSecurity numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *AccessSecurityMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *AccessSecurityMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *AccessSecurityMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown AccessSecurity nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *AccessSecurityMutation) ResetField(name string) error {
+	switch name {
+	case accesssecurity.FieldRule:
+		m.ResetRule()
+		return nil
+	case accesssecurity.FieldIP:
+		m.ResetIP()
+		return nil
+	case accesssecurity.FieldSource:
+		m.ResetSource()
+		return nil
+	case accesssecurity.FieldPriority:
+		m.ResetPriority()
+		return nil
+	case accesssecurity.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case accesssecurity.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown AccessSecurity field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *AccessSecurityMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.assets != nil {
+		edges = append(edges, accesssecurity.EdgeAssets)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *AccessSecurityMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case accesssecurity.EdgeAssets:
+		ids := make([]ent.Value, 0, len(m.assets))
+		for id := range m.assets {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *AccessSecurityMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedassets != nil {
+		edges = append(edges, accesssecurity.EdgeAssets)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *AccessSecurityMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case accesssecurity.EdgeAssets:
+		ids := make([]ent.Value, 0, len(m.removedassets))
+		for id := range m.removedassets {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *AccessSecurityMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedassets {
+		edges = append(edges, accesssecurity.EdgeAssets)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *AccessSecurityMutation) EdgeCleared(name string) bool {
+	switch name {
+	case accesssecurity.EdgeAssets:
+		return m.clearedassets
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *AccessSecurityMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown AccessSecurity unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *AccessSecurityMutation) ResetEdge(name string) error {
+	switch name {
+	case accesssecurity.EdgeAssets:
+		m.ResetAssets()
+		return nil
+	}
+	return fmt.Errorf("unknown AccessSecurity edge %s", name)
+}
 
 // AssetMutation represents an operation that mutates the Asset nodes in the graph.
 type AssetMutation struct {

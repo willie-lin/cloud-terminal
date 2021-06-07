@@ -9,6 +9,19 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent"
 )
 
+// The AccessSecurityFunc type is an adapter to allow the use of ordinary
+// function as AccessSecurity mutator.
+type AccessSecurityFunc func(context.Context, *ent.AccessSecurityMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AccessSecurityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.AccessSecurityMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccessSecurityMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The AssetFunc type is an adapter to allow the use of ordinary
 // function as Asset mutator.
 type AssetFunc func(context.Context, *ent.AssetMutation) (ent.Value, error)
