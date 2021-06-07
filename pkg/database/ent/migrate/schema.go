@@ -143,6 +143,23 @@ var (
 		PrimaryKey:  []*schema.Column{JobsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
+	// LoginlogsColumns holds the columns for the "loginlogs" table.
+	LoginlogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "client_ip", Type: field.TypeString},
+		{Name: "clent_uset_agent", Type: field.TypeString},
+		{Name: "login_time", Type: field.TypeTime},
+		{Name: "logout_time", Type: field.TypeTime},
+		{Name: "remember", Type: field.TypeBool},
+	}
+	// LoginlogsTable holds the schema information for the "loginlogs" table.
+	LoginlogsTable = &schema.Table{
+		Name:        "loginlogs",
+		Columns:     LoginlogsColumns,
+		PrimaryKey:  []*schema.Column{LoginlogsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
 	// PropertiesColumns holds the columns for the "properties" table.
 	PropertiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -280,6 +297,7 @@ var (
 		CredentialsTable,
 		GroupsTable,
 		JobsTable,
+		LoginlogsTable,
 		PropertiesTable,
 		ResourceSharersTable,
 		SessionsTable,
@@ -310,6 +328,9 @@ func init() {
 	}
 	JobsTable.Annotation = &entsql.Annotation{
 		Table: "jobs",
+	}
+	LoginlogsTable.Annotation = &entsql.Annotation{
+		Table: "loginlogs",
 	}
 	PropertiesTable.Annotation = &entsql.Annotation{
 		Table: "properties",

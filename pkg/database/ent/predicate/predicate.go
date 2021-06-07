@@ -24,6 +24,9 @@ type Group func(*sql.Selector)
 // Job is the predicate function for job builders.
 type Job func(*sql.Selector)
 
+// LoginLog is the predicate function for loginlog builders.
+type LoginLog func(*sql.Selector)
+
 // Property is the predicate function for property builders.
 type Property func(*sql.Selector)
 

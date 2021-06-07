@@ -87,6 +87,19 @@ func (f JobFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) 
 	return f(ctx, mv)
 }
 
+// The LoginLogFunc type is an adapter to allow the use of ordinary
+// function as LoginLog mutator.
+type LoginLogFunc func(context.Context, *ent.LoginLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LoginLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.LoginLogMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoginLogMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The PropertyFunc type is an adapter to allow the use of ordinary
 // function as Property mutator.
 type PropertyFunc func(context.Context, *ent.PropertyMutation) (ent.Value, error)

@@ -24,6 +24,8 @@ type Tx struct {
 	Group *GroupClient
 	// Job is the client for interacting with the Job builders.
 	Job *JobClient
+	// LoginLog is the client for interacting with the LoginLog builders.
+	LoginLog *LoginLogClient
 	// Property is the client for interacting with the Property builders.
 	Property *PropertyClient
 	// ResourceSharer is the client for interacting with the ResourceSharer builders.
@@ -175,6 +177,7 @@ func (tx *Tx) init() {
 	tx.Credential = NewCredentialClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.Job = NewJobClient(tx.config)
+	tx.LoginLog = NewLoginLogClient(tx.config)
 	tx.Property = NewPropertyClient(tx.config)
 	tx.ResourceSharer = NewResourceSharerClient(tx.config)
 	tx.Session = NewSessionClient(tx.config)

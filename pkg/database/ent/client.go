@@ -15,6 +15,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/job"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/loginlog"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/property"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/resourcesharer"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
@@ -43,6 +44,8 @@ type Client struct {
 	Group *GroupClient
 	// Job is the client for interacting with the Job builders.
 	Job *JobClient
+	// LoginLog is the client for interacting with the LoginLog builders.
+	LoginLog *LoginLogClient
 	// Property is the client for interacting with the Property builders.
 	Property *PropertyClient
 	// ResourceSharer is the client for interacting with the ResourceSharer builders.
@@ -72,6 +75,7 @@ func (c *Client) init() {
 	c.Credential = NewCredentialClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.Job = NewJobClient(c.config)
+	c.LoginLog = NewLoginLogClient(c.config)
 	c.Property = NewPropertyClient(c.config)
 	c.ResourceSharer = NewResourceSharerClient(c.config)
 	c.Session = NewSessionClient(c.config)
@@ -116,6 +120,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Credential:     NewCredentialClient(cfg),
 		Group:          NewGroupClient(cfg),
 		Job:            NewJobClient(cfg),
+		LoginLog:       NewLoginLogClient(cfg),
 		Property:       NewPropertyClient(cfg),
 		ResourceSharer: NewResourceSharerClient(cfg),
 		Session:        NewSessionClient(cfg),
@@ -145,6 +150,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Credential:     NewCredentialClient(cfg),
 		Group:          NewGroupClient(cfg),
 		Job:            NewJobClient(cfg),
+		LoginLog:       NewLoginLogClient(cfg),
 		Property:       NewPropertyClient(cfg),
 		ResourceSharer: NewResourceSharerClient(cfg),
 		Session:        NewSessionClient(cfg),
@@ -185,6 +191,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Credential.Use(hooks...)
 	c.Group.Use(hooks...)
 	c.Job.Use(hooks...)
+	c.LoginLog.Use(hooks...)
 	c.Property.Use(hooks...)
 	c.ResourceSharer.Use(hooks...)
 	c.Session.Use(hooks...)
@@ -778,6 +785,96 @@ func (c *JobClient) GetX(ctx context.Context, id string) *Job {
 // Hooks returns the client hooks.
 func (c *JobClient) Hooks() []Hook {
 	return c.hooks.Job
+}
+
+// LoginLogClient is a client for the LoginLog schema.
+type LoginLogClient struct {
+	config
+}
+
+// NewLoginLogClient returns a client for the LoginLog from the given config.
+func NewLoginLogClient(c config) *LoginLogClient {
+	return &LoginLogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `loginlog.Hooks(f(g(h())))`.
+func (c *LoginLogClient) Use(hooks ...Hook) {
+	c.hooks.LoginLog = append(c.hooks.LoginLog, hooks...)
+}
+
+// Create returns a create builder for LoginLog.
+func (c *LoginLogClient) Create() *LoginLogCreate {
+	mutation := newLoginLogMutation(c.config, OpCreate)
+	return &LoginLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LoginLog entities.
+func (c *LoginLogClient) CreateBulk(builders ...*LoginLogCreate) *LoginLogCreateBulk {
+	return &LoginLogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LoginLog.
+func (c *LoginLogClient) Update() *LoginLogUpdate {
+	mutation := newLoginLogMutation(c.config, OpUpdate)
+	return &LoginLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LoginLogClient) UpdateOne(ll *LoginLog) *LoginLogUpdateOne {
+	mutation := newLoginLogMutation(c.config, OpUpdateOne, withLoginLog(ll))
+	return &LoginLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LoginLogClient) UpdateOneID(id string) *LoginLogUpdateOne {
+	mutation := newLoginLogMutation(c.config, OpUpdateOne, withLoginLogID(id))
+	return &LoginLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LoginLog.
+func (c *LoginLogClient) Delete() *LoginLogDelete {
+	mutation := newLoginLogMutation(c.config, OpDelete)
+	return &LoginLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *LoginLogClient) DeleteOne(ll *LoginLog) *LoginLogDeleteOne {
+	return c.DeleteOneID(ll.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *LoginLogClient) DeleteOneID(id string) *LoginLogDeleteOne {
+	builder := c.Delete().Where(loginlog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LoginLogDeleteOne{builder}
+}
+
+// Query returns a query builder for LoginLog.
+func (c *LoginLogClient) Query() *LoginLogQuery {
+	return &LoginLogQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a LoginLog entity by its id.
+func (c *LoginLogClient) Get(ctx context.Context, id string) (*LoginLog, error) {
+	return c.Query().Where(loginlog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LoginLogClient) GetX(ctx context.Context, id string) *LoginLog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LoginLogClient) Hooks() []Hook {
+	return c.hooks.LoginLog
 }
 
 // PropertyClient is a client for the Property schema.

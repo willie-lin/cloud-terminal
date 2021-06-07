@@ -30,6 +30,7 @@ type hooks struct {
 	Credential     []ent.Hook
 	Group          []ent.Hook
 	Job            []ent.Hook
+	LoginLog       []ent.Hook
 	Property       []ent.Hook
 	ResourceSharer []ent.Hook
 	Session        []ent.Hook

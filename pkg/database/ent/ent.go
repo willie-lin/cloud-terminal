@@ -16,6 +16,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/job"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/loginlog"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/property"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/resourcesharer"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
@@ -47,6 +48,7 @@ func columnChecker(table string) func(string) error {
 		credential.Table:     credential.ValidColumn,
 		group.Table:          group.ValidColumn,
 		job.Table:            job.ValidColumn,
+		loginlog.Table:       loginlog.ValidColumn,
 		property.Table:       property.ValidColumn,
 		resourcesharer.Table: resourcesharer.ValidColumn,
 		session.Table:        session.ValidColumn,

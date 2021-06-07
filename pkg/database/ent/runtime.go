@@ -11,6 +11,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/job"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/loginlog"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
@@ -97,6 +98,18 @@ func init() {
 	job.DefaultUpdatedAt = jobDescUpdatedAt.Default.(func() time.Time)
 	// job.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	job.UpdateDefaultUpdatedAt = jobDescUpdatedAt.UpdateDefault.(func() time.Time)
+	loginlogFields := schema.LoginLog{}.Fields()
+	_ = loginlogFields
+	// loginlogDescLoginTime is the schema descriptor for login_time field.
+	loginlogDescLoginTime := loginlogFields[4].Descriptor()
+	// loginlog.DefaultLoginTime holds the default value on creation for the login_time field.
+	loginlog.DefaultLoginTime = loginlogDescLoginTime.Default.(func() time.Time)
+	// loginlogDescLogoutTime is the schema descriptor for logout_time field.
+	loginlogDescLogoutTime := loginlogFields[5].Descriptor()
+	// loginlog.DefaultLogoutTime holds the default value on creation for the logout_time field.
+	loginlog.DefaultLogoutTime = loginlogDescLogoutTime.Default.(func() time.Time)
+	// loginlog.UpdateDefaultLogoutTime holds the default value on update for the logout_time field.
+	loginlog.UpdateDefaultLogoutTime = loginlogDescLogoutTime.UpdateDefault.(func() time.Time)
 	sessionFields := schema.Session{}.Fields()
 	_ = sessionFields
 	// sessionDescConnected is the schema descriptor for connected field.
