@@ -122,6 +122,27 @@ var (
 		PrimaryKey:  []*schema.Column{GroupsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
+	// JobsColumns holds the columns for the "jobs" table.
+	JobsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "cronjobid", Type: field.TypeInt},
+		{Name: "name", Type: field.TypeString},
+		{Name: "func", Type: field.TypeString},
+		{Name: "cron", Type: field.TypeString},
+		{Name: "mode", Type: field.TypeString},
+		{Name: "resource_ids", Type: field.TypeString},
+		{Name: "status", Type: field.TypeString},
+		{Name: "metadata", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// JobsTable holds the schema information for the "jobs" table.
+	JobsTable = &schema.Table{
+		Name:        "jobs",
+		Columns:     JobsColumns,
+		PrimaryKey:  []*schema.Column{JobsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
 	// PropertiesColumns holds the columns for the "properties" table.
 	PropertiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -258,6 +279,7 @@ var (
 		CommandsTable,
 		CredentialsTable,
 		GroupsTable,
+		JobsTable,
 		PropertiesTable,
 		ResourceSharersTable,
 		SessionsTable,
@@ -285,6 +307,9 @@ func init() {
 	}
 	GroupsTable.Annotation = &entsql.Annotation{
 		Table: "groups",
+	}
+	JobsTable.Annotation = &entsql.Annotation{
+		Table: "jobs",
 	}
 	PropertiesTable.Annotation = &entsql.Annotation{
 		Table: "properties",

@@ -14,6 +14,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/job"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/property"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/resourcesharer"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
@@ -40,6 +41,8 @@ type Client struct {
 	Credential *CredentialClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// Job is the client for interacting with the Job builders.
+	Job *JobClient
 	// Property is the client for interacting with the Property builders.
 	Property *PropertyClient
 	// ResourceSharer is the client for interacting with the ResourceSharer builders.
@@ -68,6 +71,7 @@ func (c *Client) init() {
 	c.Command = NewCommandClient(c.config)
 	c.Credential = NewCredentialClient(c.config)
 	c.Group = NewGroupClient(c.config)
+	c.Job = NewJobClient(c.config)
 	c.Property = NewPropertyClient(c.config)
 	c.ResourceSharer = NewResourceSharerClient(c.config)
 	c.Session = NewSessionClient(c.config)
@@ -111,6 +115,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Command:        NewCommandClient(cfg),
 		Credential:     NewCredentialClient(cfg),
 		Group:          NewGroupClient(cfg),
+		Job:            NewJobClient(cfg),
 		Property:       NewPropertyClient(cfg),
 		ResourceSharer: NewResourceSharerClient(cfg),
 		Session:        NewSessionClient(cfg),
@@ -139,6 +144,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Command:        NewCommandClient(cfg),
 		Credential:     NewCredentialClient(cfg),
 		Group:          NewGroupClient(cfg),
+		Job:            NewJobClient(cfg),
 		Property:       NewPropertyClient(cfg),
 		ResourceSharer: NewResourceSharerClient(cfg),
 		Session:        NewSessionClient(cfg),
@@ -178,6 +184,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Command.Use(hooks...)
 	c.Credential.Use(hooks...)
 	c.Group.Use(hooks...)
+	c.Job.Use(hooks...)
 	c.Property.Use(hooks...)
 	c.ResourceSharer.Use(hooks...)
 	c.Session.Use(hooks...)
@@ -681,6 +688,96 @@ func (c *GroupClient) QueryUsers(gr *Group) *UserQuery {
 // Hooks returns the client hooks.
 func (c *GroupClient) Hooks() []Hook {
 	return c.hooks.Group
+}
+
+// JobClient is a client for the Job schema.
+type JobClient struct {
+	config
+}
+
+// NewJobClient returns a client for the Job from the given config.
+func NewJobClient(c config) *JobClient {
+	return &JobClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `job.Hooks(f(g(h())))`.
+func (c *JobClient) Use(hooks ...Hook) {
+	c.hooks.Job = append(c.hooks.Job, hooks...)
+}
+
+// Create returns a create builder for Job.
+func (c *JobClient) Create() *JobCreate {
+	mutation := newJobMutation(c.config, OpCreate)
+	return &JobCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Job entities.
+func (c *JobClient) CreateBulk(builders ...*JobCreate) *JobCreateBulk {
+	return &JobCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Job.
+func (c *JobClient) Update() *JobUpdate {
+	mutation := newJobMutation(c.config, OpUpdate)
+	return &JobUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JobClient) UpdateOne(j *Job) *JobUpdateOne {
+	mutation := newJobMutation(c.config, OpUpdateOne, withJob(j))
+	return &JobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JobClient) UpdateOneID(id string) *JobUpdateOne {
+	mutation := newJobMutation(c.config, OpUpdateOne, withJobID(id))
+	return &JobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Job.
+func (c *JobClient) Delete() *JobDelete {
+	mutation := newJobMutation(c.config, OpDelete)
+	return &JobDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *JobClient) DeleteOne(j *Job) *JobDeleteOne {
+	return c.DeleteOneID(j.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *JobClient) DeleteOneID(id string) *JobDeleteOne {
+	builder := c.Delete().Where(job.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JobDeleteOne{builder}
+}
+
+// Query returns a query builder for Job.
+func (c *JobClient) Query() *JobQuery {
+	return &JobQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Job entity by its id.
+func (c *JobClient) Get(ctx context.Context, id string) (*Job, error) {
+	return c.Query().Where(job.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JobClient) GetX(ctx context.Context, id string) *Job {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *JobClient) Hooks() []Hook {
+	return c.hooks.Job
 }
 
 // PropertyClient is a client for the Property schema.

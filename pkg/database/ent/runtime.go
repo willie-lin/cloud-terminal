@@ -10,6 +10,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/job"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
@@ -84,6 +85,18 @@ func init() {
 	group.DefaultUpdatedAt = groupDescUpdatedAt.Default.(func() time.Time)
 	// group.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	group.UpdateDefaultUpdatedAt = groupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	jobFields := schema.Job{}.Fields()
+	_ = jobFields
+	// jobDescCreatedAt is the schema descriptor for created_at field.
+	jobDescCreatedAt := jobFields[9].Descriptor()
+	// job.DefaultCreatedAt holds the default value on creation for the created_at field.
+	job.DefaultCreatedAt = jobDescCreatedAt.Default.(func() time.Time)
+	// jobDescUpdatedAt is the schema descriptor for updated_at field.
+	jobDescUpdatedAt := jobFields[10].Descriptor()
+	// job.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	job.DefaultUpdatedAt = jobDescUpdatedAt.Default.(func() time.Time)
+	// job.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	job.UpdateDefaultUpdatedAt = jobDescUpdatedAt.UpdateDefault.(func() time.Time)
 	sessionFields := schema.Session{}.Fields()
 	_ = sessionFields
 	// sessionDescConnected is the schema descriptor for connected field.

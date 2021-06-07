@@ -29,6 +29,7 @@ type hooks struct {
 	Command        []ent.Hook
 	Credential     []ent.Hook
 	Group          []ent.Hook
+	Job            []ent.Hook
 	Property       []ent.Hook
 	ResourceSharer []ent.Hook
 	Session        []ent.Hook
