@@ -32,6 +32,8 @@ type Tx struct {
 	ResourceSharer *ResourceSharerClient
 	// Session is the client for interacting with the Session builders.
 	Session *SessionClient
+	// Test is the client for interacting with the Test builders.
+	Test *TestClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// Verification is the client for interacting with the Verification builders.
@@ -181,6 +183,7 @@ func (tx *Tx) init() {
 	tx.Property = NewPropertyClient(tx.config)
 	tx.ResourceSharer = NewResourceSharerClient(tx.config)
 	tx.Session = NewSessionClient(tx.config)
+	tx.Test = NewTestClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.Verification = NewVerificationClient(tx.config)
 }

@@ -34,6 +34,7 @@ type hooks struct {
 	Property       []ent.Hook
 	ResourceSharer []ent.Hook
 	Session        []ent.Hook
+	Test           []ent.Hook
 	User           []ent.Hook
 	Verification   []ent.Hook
 }

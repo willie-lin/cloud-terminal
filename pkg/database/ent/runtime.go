@@ -14,6 +14,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/loginlog"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/test"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 )
@@ -122,6 +123,21 @@ func init() {
 	session.DefaultDisconnected = sessionDescDisconnected.Default.(func() time.Time)
 	// session.UpdateDefaultDisconnected holds the default value on update for the disconnected field.
 	session.UpdateDefaultDisconnected = sessionDescDisconnected.UpdateDefault.(func() time.Time)
+	testMixin := schema.Test{}.Mixin()
+	testMixinFields0 := testMixin[0].Fields()
+	_ = testMixinFields0
+	testFields := schema.Test{}.Fields()
+	_ = testFields
+	// testDescCreatedAt is the schema descriptor for created_at field.
+	testDescCreatedAt := testMixinFields0[0].Descriptor()
+	// test.DefaultCreatedAt holds the default value on creation for the created_at field.
+	test.DefaultCreatedAt = testDescCreatedAt.Default.(func() time.Time)
+	// testDescUpdatedAt is the schema descriptor for updated_at field.
+	testDescUpdatedAt := testMixinFields0[1].Descriptor()
+	// test.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	test.DefaultUpdatedAt = testDescUpdatedAt.Default.(func() time.Time)
+	// test.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	test.UpdateDefaultUpdatedAt = testDescUpdatedAt.UpdateDefault.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.

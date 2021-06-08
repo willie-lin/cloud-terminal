@@ -20,6 +20,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/property"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/resourcesharer"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/test"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 )
@@ -52,6 +53,7 @@ func columnChecker(table string) func(string) error {
 		property.Table:       property.ValidColumn,
 		resourcesharer.Table: resourcesharer.ValidColumn,
 		session.Table:        session.ValidColumn,
+		test.Table:           test.ValidColumn,
 		user.Table:           user.ValidColumn,
 		verification.Table:   verification.ValidColumn,
 	}

@@ -36,6 +36,9 @@ type ResourceSharer func(*sql.Selector)
 // Session is the predicate function for session builders.
 type Session func(*sql.Selector)
 
+// Test is the predicate function for test builders.
+type Test func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

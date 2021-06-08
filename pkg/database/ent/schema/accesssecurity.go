@@ -40,3 +40,10 @@ func (AccessSecurity) Edges() []ent.Edge {
 		edge.To("assets", Asset.Type).Required(),
 	}
 }
+
+//// Mixin xxxx
+//func (AccessSecurity) Mixin() []ent.Mixin {
+//	return []ent.Mixin{
+//		TimeMixin{},
+//	}
+//}

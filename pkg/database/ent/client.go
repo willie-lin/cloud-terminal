@@ -19,6 +19,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/property"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/resourcesharer"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/test"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/verification"
 
@@ -52,6 +53,8 @@ type Client struct {
 	ResourceSharer *ResourceSharerClient
 	// Session is the client for interacting with the Session builders.
 	Session *SessionClient
+	// Test is the client for interacting with the Test builders.
+	Test *TestClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// Verification is the client for interacting with the Verification builders.
@@ -79,6 +82,7 @@ func (c *Client) init() {
 	c.Property = NewPropertyClient(c.config)
 	c.ResourceSharer = NewResourceSharerClient(c.config)
 	c.Session = NewSessionClient(c.config)
+	c.Test = NewTestClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Verification = NewVerificationClient(c.config)
 }
@@ -124,6 +128,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Property:       NewPropertyClient(cfg),
 		ResourceSharer: NewResourceSharerClient(cfg),
 		Session:        NewSessionClient(cfg),
+		Test:           NewTestClient(cfg),
 		User:           NewUserClient(cfg),
 		Verification:   NewVerificationClient(cfg),
 	}, nil
@@ -154,6 +159,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Property:       NewPropertyClient(cfg),
 		ResourceSharer: NewResourceSharerClient(cfg),
 		Session:        NewSessionClient(cfg),
+		Test:           NewTestClient(cfg),
 		User:           NewUserClient(cfg),
 		Verification:   NewVerificationClient(cfg),
 	}, nil
@@ -195,6 +201,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Property.Use(hooks...)
 	c.ResourceSharer.Use(hooks...)
 	c.Session.Use(hooks...)
+	c.Test.Use(hooks...)
 	c.User.Use(hooks...)
 	c.Verification.Use(hooks...)
 }
@@ -1161,6 +1168,96 @@ func (c *SessionClient) QueryAssets(s *Session) *AssetQuery {
 // Hooks returns the client hooks.
 func (c *SessionClient) Hooks() []Hook {
 	return c.hooks.Session
+}
+
+// TestClient is a client for the Test schema.
+type TestClient struct {
+	config
+}
+
+// NewTestClient returns a client for the Test from the given config.
+func NewTestClient(c config) *TestClient {
+	return &TestClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `test.Hooks(f(g(h())))`.
+func (c *TestClient) Use(hooks ...Hook) {
+	c.hooks.Test = append(c.hooks.Test, hooks...)
+}
+
+// Create returns a create builder for Test.
+func (c *TestClient) Create() *TestCreate {
+	mutation := newTestMutation(c.config, OpCreate)
+	return &TestCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Test entities.
+func (c *TestClient) CreateBulk(builders ...*TestCreate) *TestCreateBulk {
+	return &TestCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Test.
+func (c *TestClient) Update() *TestUpdate {
+	mutation := newTestMutation(c.config, OpUpdate)
+	return &TestUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TestClient) UpdateOne(t *Test) *TestUpdateOne {
+	mutation := newTestMutation(c.config, OpUpdateOne, withTest(t))
+	return &TestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TestClient) UpdateOneID(id string) *TestUpdateOne {
+	mutation := newTestMutation(c.config, OpUpdateOne, withTestID(id))
+	return &TestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Test.
+func (c *TestClient) Delete() *TestDelete {
+	mutation := newTestMutation(c.config, OpDelete)
+	return &TestDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *TestClient) DeleteOne(t *Test) *TestDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *TestClient) DeleteOneID(id string) *TestDeleteOne {
+	builder := c.Delete().Where(test.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TestDeleteOne{builder}
+}
+
+// Query returns a query builder for Test.
+func (c *TestClient) Query() *TestQuery {
+	return &TestQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Test entity by its id.
+func (c *TestClient) Get(ctx context.Context, id string) (*Test, error) {
+	return c.Query().Where(test.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TestClient) GetX(ctx context.Context, id string) *Test {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TestClient) Hooks() []Hook {
+	return c.hooks.Test
 }
 
 // UserClient is a client for the User schema.
