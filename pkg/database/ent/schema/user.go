@@ -6,7 +6,6 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // User holds the schema definition for the User entity.
@@ -34,9 +33,9 @@ func (User) Fields() []ent.Field {
 		field.String("totpSecret"),
 		field.Bool("online"),
 		field.Bool("enable"),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now).
-			UpdateDefault(time.Now),
+		//field.Time("created_at").Default(time.Now),
+		//field.Time("updated_at").Default(time.Now).
+		//	UpdateDefault(time.Now),
 		field.String("type"),
 	}
 }
@@ -46,6 +45,13 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("groups", Group.Type).Ref("users"),
 		edge.To("assets", Asset.Type),
+	}
+}
+
+// Mixin User
+func (User) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
 	}
 }
 

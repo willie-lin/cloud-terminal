@@ -6,7 +6,6 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // Group holds the schema definition for the Group entity.
@@ -28,8 +27,8 @@ func (Group) Fields() []ent.Field {
 		//field.String("ID").MaxLen(30).NotEmpty().Unique().Immutable(),
 		field.String("id").Unique(),
 		field.String("name").Unique(),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
+		//field.Time("created_at").Default(time.Now),
+		//field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
 
@@ -37,5 +36,12 @@ func (Group) Fields() []ent.Field {
 func (Group) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("users", User.Type),
+	}
+}
+
+// Mixin xxxx
+func (Group) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
 	}
 }

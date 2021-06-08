@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/job"
@@ -32,10 +31,6 @@ type Job struct {
 	Status string `json:"status,omitempty"`
 	// Metadata holds the value of the "metadata" field.
 	Metadata string `json:"metadata,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -47,8 +42,6 @@ func (*Job) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case job.FieldID, job.FieldName, job.FieldFunc, job.FieldCron, job.FieldMode, job.FieldResourceIds, job.FieldStatus, job.FieldMetadata:
 			values[i] = new(sql.NullString)
-		case job.FieldCreatedAt, job.FieldUpdatedAt:
-			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Job", columns[i])
 		}
@@ -118,18 +111,6 @@ func (j *Job) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				j.Metadata = value.String
 			}
-		case job.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				j.CreatedAt = value.Time
-			}
-		case job.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				j.UpdatedAt = value.Time
-			}
 		}
 	}
 	return nil
@@ -174,10 +155,6 @@ func (j *Job) String() string {
 	builder.WriteString(j.Status)
 	builder.WriteString(", metadata=")
 	builder.WriteString(j.Metadata)
-	builder.WriteString(", created_at=")
-	builder.WriteString(j.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", updated_at=")
-	builder.WriteString(j.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -5,7 +5,6 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // Credential holds the schema definition for the Credential entity.
@@ -30,9 +29,9 @@ func (Credential) Fields() []ent.Field {
 		field.String("password"),
 		field.String("private_key"),
 		field.String("passphrase"),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now).
-			UpdateDefault(time.Now),
+		//field.Time("created_at").Default(time.Now),
+		//field.Time("updated_at").Default(time.Now).
+		//	UpdateDefault(time.Now),
 	}
 }
 

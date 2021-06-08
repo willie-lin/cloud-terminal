@@ -5,7 +5,6 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // Job holds the schema definition for the Job entity.
@@ -32,9 +31,9 @@ func (Job) Fields() []ent.Field {
 		field.String("resourceIds"),
 		field.String("status"),
 		field.String("metadata"),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now).
-			UpdateDefault(time.Now),
+		//field.Time("created_at").Default(time.Now),
+		//field.Time("updated_at").Default(time.Now).
+		//	UpdateDefault(time.Now),
 	}
 }
 

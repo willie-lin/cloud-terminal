@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -68,34 +67,6 @@ func (jc *JobCreate) SetMetadata(s string) *JobCreate {
 	return jc
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (jc *JobCreate) SetCreatedAt(t time.Time) *JobCreate {
-	jc.mutation.SetCreatedAt(t)
-	return jc
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (jc *JobCreate) SetNillableCreatedAt(t *time.Time) *JobCreate {
-	if t != nil {
-		jc.SetCreatedAt(*t)
-	}
-	return jc
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (jc *JobCreate) SetUpdatedAt(t time.Time) *JobCreate {
-	jc.mutation.SetUpdatedAt(t)
-	return jc
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (jc *JobCreate) SetNillableUpdatedAt(t *time.Time) *JobCreate {
-	if t != nil {
-		jc.SetUpdatedAt(*t)
-	}
-	return jc
-}
-
 // SetID sets the "id" field.
 func (jc *JobCreate) SetID(s string) *JobCreate {
 	jc.mutation.SetID(s)
@@ -113,7 +84,6 @@ func (jc *JobCreate) Save(ctx context.Context) (*Job, error) {
 		err  error
 		node *Job
 	)
-	jc.defaults()
 	if len(jc.hooks) == 0 {
 		if err = jc.check(); err != nil {
 			return nil, err
@@ -152,18 +122,6 @@ func (jc *JobCreate) SaveX(ctx context.Context) *Job {
 	return v
 }
 
-// defaults sets the default values of the builder before save.
-func (jc *JobCreate) defaults() {
-	if _, ok := jc.mutation.CreatedAt(); !ok {
-		v := job.DefaultCreatedAt()
-		jc.mutation.SetCreatedAt(v)
-	}
-	if _, ok := jc.mutation.UpdatedAt(); !ok {
-		v := job.DefaultUpdatedAt()
-		jc.mutation.SetUpdatedAt(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (jc *JobCreate) check() error {
 	if _, ok := jc.mutation.Cronjobid(); !ok {
@@ -189,12 +147,6 @@ func (jc *JobCreate) check() error {
 	}
 	if _, ok := jc.mutation.Metadata(); !ok {
 		return &ValidationError{Name: "metadata", err: errors.New("ent: missing required field \"metadata\"")}
-	}
-	if _, ok := jc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
-	}
-	if _, ok := jc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
 	}
 	return nil
 }
@@ -289,22 +241,6 @@ func (jc *JobCreate) createSpec() (*Job, *sqlgraph.CreateSpec) {
 		})
 		_node.Metadata = value
 	}
-	if value, ok := jc.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: job.FieldCreatedAt,
-		})
-		_node.CreatedAt = value
-	}
-	if value, ok := jc.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: job.FieldUpdatedAt,
-		})
-		_node.UpdatedAt = value
-	}
 	return _node, _spec
 }
 
@@ -322,7 +258,6 @@ func (jcb *JobCreateBulk) Save(ctx context.Context) ([]*Job, error) {
 	for i := range jcb.builders {
 		func(i int, root context.Context) {
 			builder := jcb.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*JobMutation)
 				if !ok {

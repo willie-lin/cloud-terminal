@@ -5,7 +5,6 @@ package ent
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -107,26 +106,6 @@ func (au *AssetUpdate) SetActive(b bool) *AssetUpdate {
 	return au
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (au *AssetUpdate) SetCreatedAt(t time.Time) *AssetUpdate {
-	au.mutation.SetCreatedAt(t)
-	return au
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (au *AssetUpdate) SetNillableCreatedAt(t *time.Time) *AssetUpdate {
-	if t != nil {
-		au.SetCreatedAt(*t)
-	}
-	return au
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (au *AssetUpdate) SetUpdatedAt(t time.Time) *AssetUpdate {
-	au.mutation.SetUpdatedAt(t)
-	return au
-}
-
 // SetTags sets the "tags" field.
 func (au *AssetUpdate) SetTags(s string) *AssetUpdate {
 	au.mutation.SetTags(s)
@@ -169,7 +148,6 @@ func (au *AssetUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
-	au.defaults()
 	if len(au.hooks) == 0 {
 		affected, err = au.sqlSave(ctx)
 	} else {
@@ -212,14 +190,6 @@ func (au *AssetUpdate) Exec(ctx context.Context) error {
 func (au *AssetUpdate) ExecX(ctx context.Context) {
 	if err := au.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (au *AssetUpdate) defaults() {
-	if _, ok := au.mutation.UpdatedAt(); !ok {
-		v := asset.UpdateDefaultUpdatedAt()
-		au.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -330,20 +300,6 @@ func (au *AssetUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeBool,
 			Value:  value,
 			Column: asset.FieldActive,
-		})
-	}
-	if value, ok := au.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: asset.FieldCreatedAt,
-		})
-	}
-	if value, ok := au.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: asset.FieldUpdatedAt,
 		})
 	}
 	if value, ok := au.mutation.Tags(); ok {
@@ -486,26 +442,6 @@ func (auo *AssetUpdateOne) SetActive(b bool) *AssetUpdateOne {
 	return auo
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (auo *AssetUpdateOne) SetCreatedAt(t time.Time) *AssetUpdateOne {
-	auo.mutation.SetCreatedAt(t)
-	return auo
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (auo *AssetUpdateOne) SetNillableCreatedAt(t *time.Time) *AssetUpdateOne {
-	if t != nil {
-		auo.SetCreatedAt(*t)
-	}
-	return auo
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (auo *AssetUpdateOne) SetUpdatedAt(t time.Time) *AssetUpdateOne {
-	auo.mutation.SetUpdatedAt(t)
-	return auo
-}
-
 // SetTags sets the "tags" field.
 func (auo *AssetUpdateOne) SetTags(s string) *AssetUpdateOne {
 	auo.mutation.SetTags(s)
@@ -555,7 +491,6 @@ func (auo *AssetUpdateOne) Save(ctx context.Context) (*Asset, error) {
 		err  error
 		node *Asset
 	)
-	auo.defaults()
 	if len(auo.hooks) == 0 {
 		node, err = auo.sqlSave(ctx)
 	} else {
@@ -598,14 +533,6 @@ func (auo *AssetUpdateOne) Exec(ctx context.Context) error {
 func (auo *AssetUpdateOne) ExecX(ctx context.Context) {
 	if err := auo.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (auo *AssetUpdateOne) defaults() {
-	if _, ok := auo.mutation.UpdatedAt(); !ok {
-		v := asset.UpdateDefaultUpdatedAt()
-		auo.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -733,20 +660,6 @@ func (auo *AssetUpdateOne) sqlSave(ctx context.Context) (_node *Asset, err error
 			Type:   field.TypeBool,
 			Value:  value,
 			Column: asset.FieldActive,
-		})
-	}
-	if value, ok := auo.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: asset.FieldCreatedAt,
-		})
-	}
-	if value, ok := auo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: asset.FieldUpdatedAt,
 		})
 	}
 	if value, ok := auo.mutation.Tags(); ok {

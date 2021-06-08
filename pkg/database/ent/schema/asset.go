@@ -6,7 +6,6 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // Asset holds the schema definition for the Asset entity.
@@ -37,9 +36,9 @@ func (Asset) Fields() []ent.Field {
 		field.String("passphrase"),
 		field.String("description"),
 		field.Bool("active"),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now).
-			UpdateDefault(time.Now),
+		//field.Time("created_at").Default(time.Now),
+		//field.Time("updated_at").Default(time.Now).
+		//	UpdateDefault(time.Now),
 		field.String("tags"),
 	}
 }

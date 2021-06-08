@@ -11,6 +11,10 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// FieldUsername holds the string denoting the username field in the database.
 	FieldUsername = "username"
 	// FieldPassword holds the string denoting the password field in the database.
@@ -25,10 +29,6 @@ const (
 	FieldOnline = "online"
 	// FieldEnable holds the string denoting the enable field in the database.
 	FieldEnable = "enable"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
-	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
-	FieldUpdatedAt = "updated_at"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
 	// EdgeGroups holds the string denoting the groups edge name in mutations.
@@ -54,6 +54,8 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 	FieldUsername,
 	FieldPassword,
 	FieldEmail,
@@ -61,8 +63,6 @@ var Columns = []string{
 	FieldTotpSecret,
 	FieldOnline,
 	FieldEnable,
-	FieldCreatedAt,
-	FieldUpdatedAt,
 	FieldType,
 }
 

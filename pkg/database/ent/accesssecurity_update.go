@@ -5,7 +5,6 @@ package ent
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -59,26 +58,6 @@ func (asu *AccessSecurityUpdate) AddPriority(i int64) *AccessSecurityUpdate {
 	return asu
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (asu *AccessSecurityUpdate) SetCreatedAt(t time.Time) *AccessSecurityUpdate {
-	asu.mutation.SetCreatedAt(t)
-	return asu
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (asu *AccessSecurityUpdate) SetNillableCreatedAt(t *time.Time) *AccessSecurityUpdate {
-	if t != nil {
-		asu.SetCreatedAt(*t)
-	}
-	return asu
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (asu *AccessSecurityUpdate) SetUpdatedAt(t time.Time) *AccessSecurityUpdate {
-	asu.mutation.SetUpdatedAt(t)
-	return asu
-}
-
 // AddAssetIDs adds the "assets" edge to the Asset entity by IDs.
 func (asu *AccessSecurityUpdate) AddAssetIDs(ids ...string) *AccessSecurityUpdate {
 	asu.mutation.AddAssetIDs(ids...)
@@ -126,7 +105,6 @@ func (asu *AccessSecurityUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
-	asu.defaults()
 	if len(asu.hooks) == 0 {
 		affected, err = asu.sqlSave(ctx)
 	} else {
@@ -169,14 +147,6 @@ func (asu *AccessSecurityUpdate) Exec(ctx context.Context) error {
 func (asu *AccessSecurityUpdate) ExecX(ctx context.Context) {
 	if err := asu.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (asu *AccessSecurityUpdate) defaults() {
-	if _, ok := asu.mutation.UpdatedAt(); !ok {
-		v := accesssecurity.UpdateDefaultUpdatedAt()
-		asu.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -231,20 +201,6 @@ func (asu *AccessSecurityUpdate) sqlSave(ctx context.Context) (n int, err error)
 			Type:   field.TypeInt64,
 			Value:  value,
 			Column: accesssecurity.FieldPriority,
-		})
-	}
-	if value, ok := asu.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: accesssecurity.FieldCreatedAt,
-		})
-	}
-	if value, ok := asu.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: accesssecurity.FieldUpdatedAt,
 		})
 	}
 	if asu.mutation.AssetsCleared() {
@@ -351,26 +307,6 @@ func (asuo *AccessSecurityUpdateOne) AddPriority(i int64) *AccessSecurityUpdateO
 	return asuo
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (asuo *AccessSecurityUpdateOne) SetCreatedAt(t time.Time) *AccessSecurityUpdateOne {
-	asuo.mutation.SetCreatedAt(t)
-	return asuo
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (asuo *AccessSecurityUpdateOne) SetNillableCreatedAt(t *time.Time) *AccessSecurityUpdateOne {
-	if t != nil {
-		asuo.SetCreatedAt(*t)
-	}
-	return asuo
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (asuo *AccessSecurityUpdateOne) SetUpdatedAt(t time.Time) *AccessSecurityUpdateOne {
-	asuo.mutation.SetUpdatedAt(t)
-	return asuo
-}
-
 // AddAssetIDs adds the "assets" edge to the Asset entity by IDs.
 func (asuo *AccessSecurityUpdateOne) AddAssetIDs(ids ...string) *AccessSecurityUpdateOne {
 	asuo.mutation.AddAssetIDs(ids...)
@@ -425,7 +361,6 @@ func (asuo *AccessSecurityUpdateOne) Save(ctx context.Context) (*AccessSecurity,
 		err  error
 		node *AccessSecurity
 	)
-	asuo.defaults()
 	if len(asuo.hooks) == 0 {
 		node, err = asuo.sqlSave(ctx)
 	} else {
@@ -468,14 +403,6 @@ func (asuo *AccessSecurityUpdateOne) Exec(ctx context.Context) error {
 func (asuo *AccessSecurityUpdateOne) ExecX(ctx context.Context) {
 	if err := asuo.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (asuo *AccessSecurityUpdateOne) defaults() {
-	if _, ok := asuo.mutation.UpdatedAt(); !ok {
-		v := accesssecurity.UpdateDefaultUpdatedAt()
-		asuo.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -547,20 +474,6 @@ func (asuo *AccessSecurityUpdateOne) sqlSave(ctx context.Context) (_node *Access
 			Type:   field.TypeInt64,
 			Value:  value,
 			Column: accesssecurity.FieldPriority,
-		})
-	}
-	if value, ok := asuo.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: accesssecurity.FieldCreatedAt,
-		})
-	}
-	if value, ok := asuo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: accesssecurity.FieldUpdatedAt,
 		})
 	}
 	if asuo.mutation.AssetsCleared() {

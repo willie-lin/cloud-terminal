@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/accesssecurity"
@@ -24,10 +23,6 @@ type AccessSecurity struct {
 	Source string `json:"source,omitempty"`
 	// Priority holds the value of the "priority" field.
 	Priority int64 `json:"priority,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccessSecurityQuery when eager-loading is set.
 	Edges AccessSecurityEdges `json:"edges"`
@@ -60,8 +55,6 @@ func (*AccessSecurity) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case accesssecurity.FieldID, accesssecurity.FieldRule, accesssecurity.FieldIP, accesssecurity.FieldSource:
 			values[i] = new(sql.NullString)
-		case accesssecurity.FieldCreatedAt, accesssecurity.FieldUpdatedAt:
-			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type AccessSecurity", columns[i])
 		}
@@ -107,18 +100,6 @@ func (as *AccessSecurity) assignValues(columns []string, values []interface{}) e
 			} else if value.Valid {
 				as.Priority = value.Int64
 			}
-		case accesssecurity.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				as.CreatedAt = value.Time
-			}
-		case accesssecurity.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				as.UpdatedAt = value.Time
-			}
 		}
 	}
 	return nil
@@ -160,10 +141,6 @@ func (as *AccessSecurity) String() string {
 	builder.WriteString(as.Source)
 	builder.WriteString(", priority=")
 	builder.WriteString(fmt.Sprintf("%v", as.Priority))
-	builder.WriteString(", created_at=")
-	builder.WriteString(as.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", updated_at=")
-	builder.WriteString(as.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

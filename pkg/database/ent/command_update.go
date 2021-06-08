@@ -5,7 +5,6 @@ package ent
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -39,26 +38,6 @@ func (cu *CommandUpdate) SetContent(s []string) *CommandUpdate {
 	return cu
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (cu *CommandUpdate) SetCreatedAt(t time.Time) *CommandUpdate {
-	cu.mutation.SetCreatedAt(t)
-	return cu
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cu *CommandUpdate) SetNillableCreatedAt(t *time.Time) *CommandUpdate {
-	if t != nil {
-		cu.SetCreatedAt(*t)
-	}
-	return cu
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (cu *CommandUpdate) SetUpdatedAt(t time.Time) *CommandUpdate {
-	cu.mutation.SetUpdatedAt(t)
-	return cu
-}
-
 // Mutation returns the CommandMutation object of the builder.
 func (cu *CommandUpdate) Mutation() *CommandMutation {
 	return cu.mutation
@@ -70,7 +49,6 @@ func (cu *CommandUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
-	cu.defaults()
 	if len(cu.hooks) == 0 {
 		if err = cu.check(); err != nil {
 			return 0, err
@@ -122,14 +100,6 @@ func (cu *CommandUpdate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (cu *CommandUpdate) defaults() {
-	if _, ok := cu.mutation.UpdatedAt(); !ok {
-		v := command.UpdateDefaultUpdatedAt()
-		cu.mutation.SetUpdatedAt(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (cu *CommandUpdate) check() error {
 	if v, ok := cu.mutation.Name(); ok {
@@ -172,20 +142,6 @@ func (cu *CommandUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: command.FieldContent,
 		})
 	}
-	if value, ok := cu.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: command.FieldCreatedAt,
-		})
-	}
-	if value, ok := cu.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: command.FieldUpdatedAt,
-		})
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{command.Label}
@@ -217,26 +173,6 @@ func (cuo *CommandUpdateOne) SetContent(s []string) *CommandUpdateOne {
 	return cuo
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (cuo *CommandUpdateOne) SetCreatedAt(t time.Time) *CommandUpdateOne {
-	cuo.mutation.SetCreatedAt(t)
-	return cuo
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cuo *CommandUpdateOne) SetNillableCreatedAt(t *time.Time) *CommandUpdateOne {
-	if t != nil {
-		cuo.SetCreatedAt(*t)
-	}
-	return cuo
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (cuo *CommandUpdateOne) SetUpdatedAt(t time.Time) *CommandUpdateOne {
-	cuo.mutation.SetUpdatedAt(t)
-	return cuo
-}
-
 // Mutation returns the CommandMutation object of the builder.
 func (cuo *CommandUpdateOne) Mutation() *CommandMutation {
 	return cuo.mutation
@@ -255,7 +191,6 @@ func (cuo *CommandUpdateOne) Save(ctx context.Context) (*Command, error) {
 		err  error
 		node *Command
 	)
-	cuo.defaults()
 	if len(cuo.hooks) == 0 {
 		if err = cuo.check(); err != nil {
 			return nil, err
@@ -304,14 +239,6 @@ func (cuo *CommandUpdateOne) Exec(ctx context.Context) error {
 func (cuo *CommandUpdateOne) ExecX(ctx context.Context) {
 	if err := cuo.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (cuo *CommandUpdateOne) defaults() {
-	if _, ok := cuo.mutation.UpdatedAt(); !ok {
-		v := command.UpdateDefaultUpdatedAt()
-		cuo.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -372,20 +299,6 @@ func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err e
 			Type:   field.TypeJSON,
 			Value:  value,
 			Column: command.FieldContent,
-		})
-	}
-	if value, ok := cuo.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: command.FieldCreatedAt,
-		})
-	}
-	if value, ok := cuo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: command.FieldUpdatedAt,
 		})
 	}
 	_node = &Command{config: cuo.config}

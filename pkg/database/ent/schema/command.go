@@ -5,7 +5,6 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // Command holds the schema definition for the Command entity.
@@ -26,9 +25,9 @@ func (Command) Fields() []ent.Field {
 		field.String("id").Unique(),
 		field.String("name").Unique().NotEmpty(),
 		field.Strings("content"),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now).
-			UpdateDefault(time.Now),
+		//field.Time("created_at").Default(time.Now),
+		//field.Time("updated_at").Default(time.Now).
+		//	UpdateDefault(time.Now),
 	}
 }
 

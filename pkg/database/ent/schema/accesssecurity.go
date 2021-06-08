@@ -6,7 +6,6 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // AccessSecurity holds the schema definition for the AccessSecurity entity.
@@ -29,8 +28,8 @@ func (AccessSecurity) Fields() []ent.Field {
 		field.String("ip"),
 		field.String("source"),
 		field.Int64("priority"),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
+		//field.Time("created_at").Default(time.Now),
+		//field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
 

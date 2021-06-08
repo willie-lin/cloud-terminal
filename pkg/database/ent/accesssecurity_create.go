@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -45,34 +44,6 @@ func (asc *AccessSecurityCreate) SetPriority(i int64) *AccessSecurityCreate {
 	return asc
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (asc *AccessSecurityCreate) SetCreatedAt(t time.Time) *AccessSecurityCreate {
-	asc.mutation.SetCreatedAt(t)
-	return asc
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (asc *AccessSecurityCreate) SetNillableCreatedAt(t *time.Time) *AccessSecurityCreate {
-	if t != nil {
-		asc.SetCreatedAt(*t)
-	}
-	return asc
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (asc *AccessSecurityCreate) SetUpdatedAt(t time.Time) *AccessSecurityCreate {
-	asc.mutation.SetUpdatedAt(t)
-	return asc
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (asc *AccessSecurityCreate) SetNillableUpdatedAt(t *time.Time) *AccessSecurityCreate {
-	if t != nil {
-		asc.SetUpdatedAt(*t)
-	}
-	return asc
-}
-
 // SetID sets the "id" field.
 func (asc *AccessSecurityCreate) SetID(s string) *AccessSecurityCreate {
 	asc.mutation.SetID(s)
@@ -105,7 +76,6 @@ func (asc *AccessSecurityCreate) Save(ctx context.Context) (*AccessSecurity, err
 		err  error
 		node *AccessSecurity
 	)
-	asc.defaults()
 	if len(asc.hooks) == 0 {
 		if err = asc.check(); err != nil {
 			return nil, err
@@ -144,18 +114,6 @@ func (asc *AccessSecurityCreate) SaveX(ctx context.Context) *AccessSecurity {
 	return v
 }
 
-// defaults sets the default values of the builder before save.
-func (asc *AccessSecurityCreate) defaults() {
-	if _, ok := asc.mutation.CreatedAt(); !ok {
-		v := accesssecurity.DefaultCreatedAt()
-		asc.mutation.SetCreatedAt(v)
-	}
-	if _, ok := asc.mutation.UpdatedAt(); !ok {
-		v := accesssecurity.DefaultUpdatedAt()
-		asc.mutation.SetUpdatedAt(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (asc *AccessSecurityCreate) check() error {
 	if _, ok := asc.mutation.Rule(); !ok {
@@ -169,12 +127,6 @@ func (asc *AccessSecurityCreate) check() error {
 	}
 	if _, ok := asc.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New("ent: missing required field \"priority\"")}
-	}
-	if _, ok := asc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
-	}
-	if _, ok := asc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
 	}
 	if len(asc.mutation.AssetsIDs()) == 0 {
 		return &ValidationError{Name: "assets", err: errors.New("ent: missing required edge \"assets\"")}
@@ -240,22 +192,6 @@ func (asc *AccessSecurityCreate) createSpec() (*AccessSecurity, *sqlgraph.Create
 		})
 		_node.Priority = value
 	}
-	if value, ok := asc.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: accesssecurity.FieldCreatedAt,
-		})
-		_node.CreatedAt = value
-	}
-	if value, ok := asc.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: accesssecurity.FieldUpdatedAt,
-		})
-		_node.UpdatedAt = value
-	}
 	if nodes := asc.mutation.AssetsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -292,7 +228,6 @@ func (ascb *AccessSecurityCreateBulk) Save(ctx context.Context) ([]*AccessSecuri
 	for i := range ascb.builders {
 		func(i int, root context.Context) {
 			builder := ascb.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*AccessSecurityMutation)
 				if !ok {

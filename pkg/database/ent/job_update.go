@@ -5,7 +5,6 @@ package ent
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -82,26 +81,6 @@ func (ju *JobUpdate) SetMetadata(s string) *JobUpdate {
 	return ju
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (ju *JobUpdate) SetCreatedAt(t time.Time) *JobUpdate {
-	ju.mutation.SetCreatedAt(t)
-	return ju
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ju *JobUpdate) SetNillableCreatedAt(t *time.Time) *JobUpdate {
-	if t != nil {
-		ju.SetCreatedAt(*t)
-	}
-	return ju
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (ju *JobUpdate) SetUpdatedAt(t time.Time) *JobUpdate {
-	ju.mutation.SetUpdatedAt(t)
-	return ju
-}
-
 // Mutation returns the JobMutation object of the builder.
 func (ju *JobUpdate) Mutation() *JobMutation {
 	return ju.mutation
@@ -113,7 +92,6 @@ func (ju *JobUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
-	ju.defaults()
 	if len(ju.hooks) == 0 {
 		affected, err = ju.sqlSave(ctx)
 	} else {
@@ -156,14 +134,6 @@ func (ju *JobUpdate) Exec(ctx context.Context) error {
 func (ju *JobUpdate) ExecX(ctx context.Context) {
 	if err := ju.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (ju *JobUpdate) defaults() {
-	if _, ok := ju.mutation.UpdatedAt(); !ok {
-		v := job.UpdateDefaultUpdatedAt()
-		ju.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -248,20 +218,6 @@ func (ju *JobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: job.FieldMetadata,
 		})
 	}
-	if value, ok := ju.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: job.FieldCreatedAt,
-		})
-	}
-	if value, ok := ju.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: job.FieldUpdatedAt,
-		})
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ju.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{job.Label}
@@ -336,26 +292,6 @@ func (juo *JobUpdateOne) SetMetadata(s string) *JobUpdateOne {
 	return juo
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (juo *JobUpdateOne) SetCreatedAt(t time.Time) *JobUpdateOne {
-	juo.mutation.SetCreatedAt(t)
-	return juo
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (juo *JobUpdateOne) SetNillableCreatedAt(t *time.Time) *JobUpdateOne {
-	if t != nil {
-		juo.SetCreatedAt(*t)
-	}
-	return juo
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (juo *JobUpdateOne) SetUpdatedAt(t time.Time) *JobUpdateOne {
-	juo.mutation.SetUpdatedAt(t)
-	return juo
-}
-
 // Mutation returns the JobMutation object of the builder.
 func (juo *JobUpdateOne) Mutation() *JobMutation {
 	return juo.mutation
@@ -374,7 +310,6 @@ func (juo *JobUpdateOne) Save(ctx context.Context) (*Job, error) {
 		err  error
 		node *Job
 	)
-	juo.defaults()
 	if len(juo.hooks) == 0 {
 		node, err = juo.sqlSave(ctx)
 	} else {
@@ -417,14 +352,6 @@ func (juo *JobUpdateOne) Exec(ctx context.Context) error {
 func (juo *JobUpdateOne) ExecX(ctx context.Context) {
 	if err := juo.Exec(ctx); err != nil {
 		panic(err)
-	}
-}
-
-// defaults sets the default values of the builder before save.
-func (juo *JobUpdateOne) defaults() {
-	if _, ok := juo.mutation.UpdatedAt(); !ok {
-		v := job.UpdateDefaultUpdatedAt()
-		juo.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -524,20 +451,6 @@ func (juo *JobUpdateOne) sqlSave(ctx context.Context) (_node *Job, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: job.FieldMetadata,
-		})
-	}
-	if value, ok := juo.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: job.FieldCreatedAt,
-		})
-	}
-	if value, ok := juo.mutation.UpdatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: job.FieldUpdatedAt,
 		})
 	}
 	_node = &Job{config: juo.config}

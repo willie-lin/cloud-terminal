@@ -16,8 +16,6 @@ var (
 		{Name: "ip", Type: field.TypeString},
 		{Name: "source", Type: field.TypeString},
 		{Name: "priority", Type: field.TypeInt64},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// AccessSecuritysTable holds the schema information for the "accessSecuritys" table.
 	AccessSecuritysTable = &schema.Table{
@@ -41,8 +39,6 @@ var (
 		{Name: "passphrase", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
 		{Name: "active", Type: field.TypeBool},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "tags", Type: field.TypeString},
 		{Name: "access_security_assets", Type: field.TypeString, Nullable: true},
 		{Name: "session_assets", Type: field.TypeString, Nullable: true},
@@ -56,19 +52,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "assets_accessSecuritys_assets",
-				Columns:    []*schema.Column{AssetsColumns[16]},
+				Columns:    []*schema.Column{AssetsColumns[14]},
 				RefColumns: []*schema.Column{AccessSecuritysColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "assets_sessions_assets",
-				Columns:    []*schema.Column{AssetsColumns[17]},
+				Columns:    []*schema.Column{AssetsColumns[15]},
 				RefColumns: []*schema.Column{SessionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "assets_users_assets",
-				Columns:    []*schema.Column{AssetsColumns[18]},
+				Columns:    []*schema.Column{AssetsColumns[16]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -79,8 +75,6 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "content", Type: field.TypeJSON},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// CommandsTable holds the schema information for the "commands" table.
 	CommandsTable = &schema.Table{
@@ -98,8 +92,6 @@ var (
 		{Name: "password", Type: field.TypeString},
 		{Name: "private_key", Type: field.TypeString},
 		{Name: "passphrase", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// CredentialsTable holds the schema information for the "credentials" table.
 	CredentialsTable = &schema.Table{
@@ -111,9 +103,9 @@ var (
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
 	}
 	// GroupsTable holds the schema information for the "groups" table.
 	GroupsTable = &schema.Table{
@@ -133,8 +125,6 @@ var (
 		{Name: "resource_ids", Type: field.TypeString},
 		{Name: "status", Type: field.TypeString},
 		{Name: "metadata", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// JobsTable holds the schema information for the "jobs" table.
 	JobsTable = &schema.Table{
@@ -238,6 +228,8 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString},
@@ -245,8 +237,6 @@ var (
 		{Name: "totp_secret", Type: field.TypeString},
 		{Name: "online", Type: field.TypeBool},
 		{Name: "enable", Type: field.TypeBool},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "type", Type: field.TypeString},
 		{Name: "verification_users", Type: field.TypeString, Nullable: true},
 	}

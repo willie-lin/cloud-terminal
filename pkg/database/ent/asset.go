@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
@@ -41,10 +40,6 @@ type Asset struct {
 	Description string `json:"description,omitempty"`
 	// Active holds the value of the "active" field.
 	Active bool `json:"active,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Tags holds the value of the "tags" field.
 	Tags string `json:"tags,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -89,8 +84,6 @@ func (*Asset) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case asset.FieldID, asset.FieldName, asset.FieldIP, asset.FieldProtocol, asset.FieldAccountType, asset.FieldUsername, asset.FieldPassword, asset.FieldCredentialID, asset.FieldPrivateKey, asset.FieldPassphrase, asset.FieldDescription, asset.FieldTags:
 			values[i] = new(sql.NullString)
-		case asset.FieldCreatedAt, asset.FieldUpdatedAt:
-			values[i] = new(sql.NullTime)
 		case asset.ForeignKeys[0]: // access_security_assets
 			values[i] = new(sql.NullString)
 		case asset.ForeignKeys[1]: // session_assets
@@ -190,18 +183,6 @@ func (a *Asset) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				a.Active = value.Bool
 			}
-		case asset.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				a.CreatedAt = value.Time
-			}
-		case asset.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				a.UpdatedAt = value.Time
-			}
 		case asset.FieldTags:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tags", values[i])
@@ -286,10 +267,6 @@ func (a *Asset) String() string {
 	builder.WriteString(a.Description)
 	builder.WriteString(", active=")
 	builder.WriteString(fmt.Sprintf("%v", a.Active))
-	builder.WriteString(", created_at=")
-	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", updated_at=")
-	builder.WriteString(a.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", tags=")
 	builder.WriteString(a.Tags)
 	builder.WriteByte(')')

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
@@ -21,10 +20,6 @@ type Command struct {
 	Name string `json:"name,omitempty"`
 	// Content holds the value of the "content" field.
 	Content []string `json:"content,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -36,8 +31,6 @@ func (*Command) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new([]byte)
 		case command.FieldID, command.FieldName:
 			values[i] = new(sql.NullString)
-		case command.FieldCreatedAt, command.FieldUpdatedAt:
-			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Command", columns[i])
 		}
@@ -74,18 +67,6 @@ func (c *Command) assignValues(columns []string, values []interface{}) error {
 					return fmt.Errorf("unmarshal field content: %w", err)
 				}
 			}
-		case command.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				c.CreatedAt = value.Time
-			}
-		case command.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				c.UpdatedAt = value.Time
-			}
 		}
 	}
 	return nil
@@ -118,10 +99,6 @@ func (c *Command) String() string {
 	builder.WriteString(c.Name)
 	builder.WriteString(", content=")
 	builder.WriteString(fmt.Sprintf("%v", c.Content))
-	builder.WriteString(", created_at=")
-	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", updated_at=")
-	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -28,29 +28,15 @@ func (gu *GroupUpdate) Where(ps ...predicate.Group) *GroupUpdate {
 	return gu
 }
 
-// SetName sets the "name" field.
-func (gu *GroupUpdate) SetName(s string) *GroupUpdate {
-	gu.mutation.SetName(s)
-	return gu
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (gu *GroupUpdate) SetCreatedAt(t time.Time) *GroupUpdate {
-	gu.mutation.SetCreatedAt(t)
-	return gu
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (gu *GroupUpdate) SetNillableCreatedAt(t *time.Time) *GroupUpdate {
-	if t != nil {
-		gu.SetCreatedAt(*t)
-	}
-	return gu
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (gu *GroupUpdate) SetUpdatedAt(t time.Time) *GroupUpdate {
 	gu.mutation.SetUpdatedAt(t)
+	return gu
+}
+
+// SetName sets the "name" field.
+func (gu *GroupUpdate) SetName(s string) *GroupUpdate {
+	gu.mutation.SetName(s)
 	return gu
 }
 
@@ -173,25 +159,18 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := gu.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: group.FieldName,
-		})
-	}
-	if value, ok := gu.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: group.FieldCreatedAt,
-		})
-	}
 	if value, ok := gu.mutation.UpdatedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
 			Column: group.FieldUpdatedAt,
+		})
+	}
+	if value, ok := gu.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: group.FieldName,
 		})
 	}
 	if gu.mutation.UsersCleared() {
@@ -267,29 +246,15 @@ type GroupUpdateOne struct {
 	mutation *GroupMutation
 }
 
-// SetName sets the "name" field.
-func (guo *GroupUpdateOne) SetName(s string) *GroupUpdateOne {
-	guo.mutation.SetName(s)
-	return guo
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (guo *GroupUpdateOne) SetCreatedAt(t time.Time) *GroupUpdateOne {
-	guo.mutation.SetCreatedAt(t)
-	return guo
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (guo *GroupUpdateOne) SetNillableCreatedAt(t *time.Time) *GroupUpdateOne {
-	if t != nil {
-		guo.SetCreatedAt(*t)
-	}
-	return guo
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (guo *GroupUpdateOne) SetUpdatedAt(t time.Time) *GroupUpdateOne {
 	guo.mutation.SetUpdatedAt(t)
+	return guo
+}
+
+// SetName sets the "name" field.
+func (guo *GroupUpdateOne) SetName(s string) *GroupUpdateOne {
+	guo.mutation.SetName(s)
 	return guo
 }
 
@@ -436,25 +401,18 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 			}
 		}
 	}
-	if value, ok := guo.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: group.FieldName,
-		})
-	}
-	if value, ok := guo.mutation.CreatedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: group.FieldCreatedAt,
-		})
-	}
 	if value, ok := guo.mutation.UpdatedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
 			Column: group.FieldUpdatedAt,
+		})
+	}
+	if value, ok := guo.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: group.FieldName,
 		})
 	}
 	if guo.mutation.UsersCleared() {

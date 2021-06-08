@@ -11,12 +11,12 @@ const (
 	Label = "group"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldName holds the string denoting the name field in the database.
-	FieldName = "name"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
 	// Table holds the table name of the group in the database.
@@ -31,9 +31,9 @@ const (
 // Columns holds all SQL columns for group fields.
 var Columns = []string{
 	FieldID,
-	FieldName,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldName,
 }
 
 var (

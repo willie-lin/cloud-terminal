@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -93,34 +92,6 @@ func (ac *AssetCreate) SetActive(b bool) *AssetCreate {
 	return ac
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (ac *AssetCreate) SetCreatedAt(t time.Time) *AssetCreate {
-	ac.mutation.SetCreatedAt(t)
-	return ac
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ac *AssetCreate) SetNillableCreatedAt(t *time.Time) *AssetCreate {
-	if t != nil {
-		ac.SetCreatedAt(*t)
-	}
-	return ac
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (ac *AssetCreate) SetUpdatedAt(t time.Time) *AssetCreate {
-	ac.mutation.SetUpdatedAt(t)
-	return ac
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ac *AssetCreate) SetNillableUpdatedAt(t *time.Time) *AssetCreate {
-	if t != nil {
-		ac.SetUpdatedAt(*t)
-	}
-	return ac
-}
-
 // SetTags sets the "tags" field.
 func (ac *AssetCreate) SetTags(s string) *AssetCreate {
 	ac.mutation.SetTags(s)
@@ -163,7 +134,6 @@ func (ac *AssetCreate) Save(ctx context.Context) (*Asset, error) {
 		err  error
 		node *Asset
 	)
-	ac.defaults()
 	if len(ac.hooks) == 0 {
 		if err = ac.check(); err != nil {
 			return nil, err
@@ -200,18 +170,6 @@ func (ac *AssetCreate) SaveX(ctx context.Context) *Asset {
 		panic(err)
 	}
 	return v
-}
-
-// defaults sets the default values of the builder before save.
-func (ac *AssetCreate) defaults() {
-	if _, ok := ac.mutation.CreatedAt(); !ok {
-		v := asset.DefaultCreatedAt()
-		ac.mutation.SetCreatedAt(v)
-	}
-	if _, ok := ac.mutation.UpdatedAt(); !ok {
-		v := asset.DefaultUpdatedAt()
-		ac.mutation.SetUpdatedAt(v)
-	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -251,12 +209,6 @@ func (ac *AssetCreate) check() error {
 	}
 	if _, ok := ac.mutation.Active(); !ok {
 		return &ValidationError{Name: "active", err: errors.New("ent: missing required field \"active\"")}
-	}
-	if _, ok := ac.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
-	}
-	if _, ok := ac.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
 	}
 	if _, ok := ac.mutation.Tags(); !ok {
 		return &ValidationError{Name: "tags", err: errors.New("ent: missing required field \"tags\"")}
@@ -386,22 +338,6 @@ func (ac *AssetCreate) createSpec() (*Asset, *sqlgraph.CreateSpec) {
 		})
 		_node.Active = value
 	}
-	if value, ok := ac.mutation.CreatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: asset.FieldCreatedAt,
-		})
-		_node.CreatedAt = value
-	}
-	if value, ok := ac.mutation.UpdatedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: asset.FieldUpdatedAt,
-		})
-		_node.UpdatedAt = value
-	}
 	if value, ok := ac.mutation.Tags(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -447,7 +383,6 @@ func (acb *AssetCreateBulk) Save(ctx context.Context) ([]*Asset, error) {
 	for i := range acb.builders {
 		func(i int, root context.Context) {
 			builder := acb.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*AssetMutation)
 				if !ok {
