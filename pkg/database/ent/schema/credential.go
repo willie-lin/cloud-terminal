@@ -39,3 +39,10 @@ func (Credential) Fields() []ent.Field {
 func (Credential) Edges() []ent.Edge {
 	return nil
 }
+
+// Mixin xxxx
+func (Credential) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

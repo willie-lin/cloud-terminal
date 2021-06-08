@@ -291,12 +291,12 @@ func (aq *AssetQuery) WithSessions(opts ...func(*SessionQuery)) *AssetQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Asset.Query().
-//		GroupBy(asset.FieldName).
+//		GroupBy(asset.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -318,11 +318,11 @@ func (aq *AssetQuery) GroupBy(field string, fields ...string) *AssetGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Asset.Query().
-//		Select(asset.FieldName).
+//		Select(asset.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (aq *AssetQuery) Select(field string, fields ...string) *AssetSelect {

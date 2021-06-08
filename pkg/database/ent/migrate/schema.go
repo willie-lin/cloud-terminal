@@ -12,6 +12,8 @@ var (
 	// AccessSecuritysColumns holds the columns for the "accessSecuritys" table.
 	AccessSecuritysColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "rule", Type: field.TypeString},
 		{Name: "ip", Type: field.TypeString},
 		{Name: "source", Type: field.TypeString},
@@ -27,6 +29,8 @@ var (
 	// AssetsColumns holds the columns for the "assets" table.
 	AssetsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "ip", Type: field.TypeString},
 		{Name: "protocol", Type: field.TypeString},
@@ -52,19 +56,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "assets_accessSecuritys_assets",
-				Columns:    []*schema.Column{AssetsColumns[14]},
+				Columns:    []*schema.Column{AssetsColumns[16]},
 				RefColumns: []*schema.Column{AccessSecuritysColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "assets_sessions_assets",
-				Columns:    []*schema.Column{AssetsColumns[15]},
+				Columns:    []*schema.Column{AssetsColumns[17]},
 				RefColumns: []*schema.Column{SessionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "assets_users_assets",
-				Columns:    []*schema.Column{AssetsColumns[16]},
+				Columns:    []*schema.Column{AssetsColumns[18]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -73,6 +77,8 @@ var (
 	// CommandsColumns holds the columns for the "commands" table.
 	CommandsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "content", Type: field.TypeJSON},
 	}
@@ -86,6 +92,8 @@ var (
 	// CredentialsColumns holds the columns for the "credentials" table.
 	CredentialsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeString},
 		{Name: "username", Type: field.TypeString},
@@ -117,6 +125,8 @@ var (
 	// JobsColumns holds the columns for the "jobs" table.
 	JobsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "cronjobid", Type: field.TypeInt},
 		{Name: "name", Type: field.TypeString},
 		{Name: "func", Type: field.TypeString},
@@ -136,6 +146,8 @@ var (
 	// LoginlogsColumns holds the columns for the "loginlogs" table.
 	LoginlogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "user_id", Type: field.TypeString},
 		{Name: "client_ip", Type: field.TypeString},
 		{Name: "clent_uset_agent", Type: field.TypeString},
@@ -153,6 +165,8 @@ var (
 	// PropertiesColumns holds the columns for the "properties" table.
 	PropertiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "value", Type: field.TypeString},
 	}
@@ -166,6 +180,8 @@ var (
 	// ResourceSharersColumns holds the columns for the "resourceSharers" table.
 	ResourceSharersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "resource_id", Type: field.TypeString},
 		{Name: "resource_type", Type: field.TypeString},
 		{Name: "user_id", Type: field.TypeString},
@@ -181,6 +197,8 @@ var (
 	// SessionsColumns holds the columns for the "sessions" table.
 	SessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "protocol", Type: field.TypeString},
 		{Name: "ip", Type: field.TypeString},
 		{Name: "port", Type: field.TypeInt},
@@ -257,6 +275,8 @@ var (
 	// VerificationsColumns holds the columns for the "verifications" table.
 	VerificationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "client_ip", Type: field.TypeString},
 		{Name: "client_user_agent", Type: field.TypeString},
 		{Name: "login_time", Type: field.TypeTime},

@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -24,6 +25,12 @@ type AssetUpdate struct {
 // Where adds a new predicate for the AssetUpdate builder.
 func (au *AssetUpdate) Where(ps ...predicate.Asset) *AssetUpdate {
 	au.mutation.predicates = append(au.mutation.predicates, ps...)
+	return au
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (au *AssetUpdate) SetUpdatedAt(t time.Time) *AssetUpdate {
+	au.mutation.SetUpdatedAt(t)
 	return au
 }
 
@@ -148,6 +155,7 @@ func (au *AssetUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	au.defaults()
 	if len(au.hooks) == 0 {
 		affected, err = au.sqlSave(ctx)
 	} else {
@@ -193,6 +201,14 @@ func (au *AssetUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (au *AssetUpdate) defaults() {
+	if _, ok := au.mutation.UpdatedAt(); !ok {
+		v := asset.UpdateDefaultUpdatedAt()
+		au.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (au *AssetUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -210,6 +226,13 @@ func (au *AssetUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := au.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: asset.FieldUpdatedAt,
+		})
 	}
 	if value, ok := au.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -363,6 +386,12 @@ type AssetUpdateOne struct {
 	mutation *AssetMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (auo *AssetUpdateOne) SetUpdatedAt(t time.Time) *AssetUpdateOne {
+	auo.mutation.SetUpdatedAt(t)
+	return auo
+}
+
 // SetName sets the "name" field.
 func (auo *AssetUpdateOne) SetName(s string) *AssetUpdateOne {
 	auo.mutation.SetName(s)
@@ -491,6 +520,7 @@ func (auo *AssetUpdateOne) Save(ctx context.Context) (*Asset, error) {
 		err  error
 		node *Asset
 	)
+	auo.defaults()
 	if len(auo.hooks) == 0 {
 		node, err = auo.sqlSave(ctx)
 	} else {
@@ -536,6 +566,14 @@ func (auo *AssetUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (auo *AssetUpdateOne) defaults() {
+	if _, ok := auo.mutation.UpdatedAt(); !ok {
+		v := asset.UpdateDefaultUpdatedAt()
+		auo.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (auo *AssetUpdateOne) sqlSave(ctx context.Context) (_node *Asset, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -570,6 +608,13 @@ func (auo *AssetUpdateOne) sqlSave(ctx context.Context) (_node *Asset, err error
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := auo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: asset.FieldUpdatedAt,
+		})
 	}
 	if value, ok := auo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

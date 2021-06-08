@@ -21,6 +21,34 @@ type SessionCreate struct {
 	hooks    []Hook
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (sc *SessionCreate) SetCreatedAt(t time.Time) *SessionCreate {
+	sc.mutation.SetCreatedAt(t)
+	return sc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (sc *SessionCreate) SetNillableCreatedAt(t *time.Time) *SessionCreate {
+	if t != nil {
+		sc.SetCreatedAt(*t)
+	}
+	return sc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (sc *SessionCreate) SetUpdatedAt(t time.Time) *SessionCreate {
+	sc.mutation.SetUpdatedAt(t)
+	return sc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (sc *SessionCreate) SetNillableUpdatedAt(t *time.Time) *SessionCreate {
+	if t != nil {
+		sc.SetUpdatedAt(*t)
+	}
+	return sc
+}
+
 // SetProtocol sets the "protocol" field.
 func (sc *SessionCreate) SetProtocol(s string) *SessionCreate {
 	sc.mutation.SetProtocol(s)
@@ -230,6 +258,14 @@ func (sc *SessionCreate) SaveX(ctx context.Context) *Session {
 
 // defaults sets the default values of the builder before save.
 func (sc *SessionCreate) defaults() {
+	if _, ok := sc.mutation.CreatedAt(); !ok {
+		v := session.DefaultCreatedAt()
+		sc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := sc.mutation.UpdatedAt(); !ok {
+		v := session.DefaultUpdatedAt()
+		sc.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := sc.mutation.Connected(); !ok {
 		v := session.DefaultConnected()
 		sc.mutation.SetConnected(v)
@@ -242,6 +278,12 @@ func (sc *SessionCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (sc *SessionCreate) check() error {
+	if _, ok := sc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+	}
+	if _, ok := sc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
 	if _, ok := sc.mutation.Protocol(); !ok {
 		return &ValidationError{Name: "protocol", err: errors.New("ent: missing required field \"protocol\"")}
 	}
@@ -330,6 +372,22 @@ func (sc *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 	if id, ok := sc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
+	}
+	if value, ok := sc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: session.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := sc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: session.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
 	}
 	if value, ok := sc.mutation.Protocol(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

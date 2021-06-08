@@ -37,3 +37,10 @@ func (LoginLog) Fields() []ent.Field {
 func (LoginLog) Edges() []ent.Edge {
 	return nil
 }
+
+// Mixin xxxx
+func (LoginLog) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -17,6 +18,34 @@ type ResourceSharerCreate struct {
 	config
 	mutation *ResourceSharerMutation
 	hooks    []Hook
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (rsc *ResourceSharerCreate) SetCreatedAt(t time.Time) *ResourceSharerCreate {
+	rsc.mutation.SetCreatedAt(t)
+	return rsc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (rsc *ResourceSharerCreate) SetNillableCreatedAt(t *time.Time) *ResourceSharerCreate {
+	if t != nil {
+		rsc.SetCreatedAt(*t)
+	}
+	return rsc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (rsc *ResourceSharerCreate) SetUpdatedAt(t time.Time) *ResourceSharerCreate {
+	rsc.mutation.SetUpdatedAt(t)
+	return rsc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (rsc *ResourceSharerCreate) SetNillableUpdatedAt(t *time.Time) *ResourceSharerCreate {
+	if t != nil {
+		rsc.SetUpdatedAt(*t)
+	}
+	return rsc
 }
 
 // SetResourceID sets the "resource_id" field.
@@ -60,6 +89,7 @@ func (rsc *ResourceSharerCreate) Save(ctx context.Context) (*ResourceSharer, err
 		err  error
 		node *ResourceSharer
 	)
+	rsc.defaults()
 	if len(rsc.hooks) == 0 {
 		if err = rsc.check(); err != nil {
 			return nil, err
@@ -98,8 +128,26 @@ func (rsc *ResourceSharerCreate) SaveX(ctx context.Context) *ResourceSharer {
 	return v
 }
 
+// defaults sets the default values of the builder before save.
+func (rsc *ResourceSharerCreate) defaults() {
+	if _, ok := rsc.mutation.CreatedAt(); !ok {
+		v := resourcesharer.DefaultCreatedAt()
+		rsc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := rsc.mutation.UpdatedAt(); !ok {
+		v := resourcesharer.DefaultUpdatedAt()
+		rsc.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (rsc *ResourceSharerCreate) check() error {
+	if _, ok := rsc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+	}
+	if _, ok := rsc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
 	if _, ok := rsc.mutation.ResourceID(); !ok {
 		return &ValidationError{Name: "resource_id", err: errors.New("ent: missing required field \"resource_id\"")}
 	}
@@ -140,6 +188,22 @@ func (rsc *ResourceSharerCreate) createSpec() (*ResourceSharer, *sqlgraph.Create
 	if id, ok := rsc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
+	}
+	if value, ok := rsc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: resourcesharer.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := rsc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: resourcesharer.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
 	}
 	if value, ok := rsc.mutation.ResourceID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -190,6 +254,7 @@ func (rscb *ResourceSharerCreateBulk) Save(ctx context.Context) ([]*ResourceShar
 	for i := range rscb.builders {
 		func(i int, root context.Context) {
 			builder := rscb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ResourceSharerMutation)
 				if !ok {

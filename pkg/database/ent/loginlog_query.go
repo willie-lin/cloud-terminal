@@ -253,12 +253,12 @@ func (llq *LoginLogQuery) Clone() *LoginLogQuery {
 // Example:
 //
 //	var v []struct {
-//		UserID string `json:"user_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.LoginLog.Query().
-//		GroupBy(loginlog.FieldUserID).
+//		GroupBy(loginlog.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -280,11 +280,11 @@ func (llq *LoginLogQuery) GroupBy(field string, fields ...string) *LoginLogGroup
 // Example:
 //
 //	var v []struct {
-//		UserID string `json:"user_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.LoginLog.Query().
-//		Select(loginlog.FieldUserID).
+//		Select(loginlog.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (llq *LoginLogQuery) Select(field string, fields ...string) *LoginLogSelect {

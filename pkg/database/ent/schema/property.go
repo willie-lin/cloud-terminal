@@ -31,3 +31,10 @@ func (Property) Fields() []ent.Field {
 func (Property) Edges() []ent.Edge {
 	return nil
 }
+
+// Mixin xxxx
+func (Property) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

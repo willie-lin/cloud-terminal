@@ -53,3 +53,10 @@ func (Asset) Edges() []ent.Edge {
 		//	edge.From("users", User.Type).Ref("users"),
 	}
 }
+
+// Mixin xxxx
+func (Asset) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

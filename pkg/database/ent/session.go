@@ -16,6 +16,10 @@ type Session struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Protocol holds the value of the "protocol" field.
 	Protocol string `json:"protocol,omitempty"`
 	// IP holds the value of the "ip" field.
@@ -88,7 +92,7 @@ func (*Session) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case session.FieldID, session.FieldProtocol, session.FieldIP, session.FieldConnectionID, session.FieldAssetID, session.FieldUsername, session.FieldPassword, session.FieldCreator, session.FieldClientIP, session.FieldStatus, session.FieldRecording, session.FieldPrivateKey, session.FieldPassphrase, session.FieldMessage, session.FieldMode:
 			values[i] = new(sql.NullString)
-		case session.FieldConnected, session.FieldDisconnected:
+		case session.FieldCreatedAt, session.FieldUpdatedAt, session.FieldConnected, session.FieldDisconnected:
 			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Session", columns[i])
@@ -110,6 +114,18 @@ func (s *Session) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				s.ID = value.String
+			}
+		case session.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				s.CreatedAt = value.Time
+			}
+		case session.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				s.UpdatedAt = value.Time
 			}
 		case session.FieldProtocol:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -264,6 +280,10 @@ func (s *Session) String() string {
 	var builder strings.Builder
 	builder.WriteString("Session(")
 	builder.WriteString(fmt.Sprintf("id=%v", s.ID))
+	builder.WriteString(", created_at=")
+	builder.WriteString(s.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(s.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", protocol=")
 	builder.WriteString(s.Protocol)
 	builder.WriteString(", ip=")

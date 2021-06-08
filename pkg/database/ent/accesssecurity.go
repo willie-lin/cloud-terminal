@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/accesssecurity"
@@ -15,6 +16,10 @@ type AccessSecurity struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Rule holds the value of the "rule" field.
 	Rule string `json:"rule,omitempty"`
 	// IP holds the value of the "ip" field.
@@ -55,6 +60,8 @@ func (*AccessSecurity) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case accesssecurity.FieldID, accesssecurity.FieldRule, accesssecurity.FieldIP, accesssecurity.FieldSource:
 			values[i] = new(sql.NullString)
+		case accesssecurity.FieldCreatedAt, accesssecurity.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type AccessSecurity", columns[i])
 		}
@@ -75,6 +82,18 @@ func (as *AccessSecurity) assignValues(columns []string, values []interface{}) e
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				as.ID = value.String
+			}
+		case accesssecurity.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				as.CreatedAt = value.Time
+			}
+		case accesssecurity.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				as.UpdatedAt = value.Time
 			}
 		case accesssecurity.FieldRule:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -133,6 +152,10 @@ func (as *AccessSecurity) String() string {
 	var builder strings.Builder
 	builder.WriteString("AccessSecurity(")
 	builder.WriteString(fmt.Sprintf("id=%v", as.ID))
+	builder.WriteString(", created_at=")
+	builder.WriteString(as.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(as.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", rule=")
 	builder.WriteString(as.Rule)
 	builder.WriteString(", ip=")

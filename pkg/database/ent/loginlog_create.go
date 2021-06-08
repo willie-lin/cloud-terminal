@@ -20,6 +20,34 @@ type LoginLogCreate struct {
 	hooks    []Hook
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (llc *LoginLogCreate) SetCreatedAt(t time.Time) *LoginLogCreate {
+	llc.mutation.SetCreatedAt(t)
+	return llc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (llc *LoginLogCreate) SetNillableCreatedAt(t *time.Time) *LoginLogCreate {
+	if t != nil {
+		llc.SetCreatedAt(*t)
+	}
+	return llc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (llc *LoginLogCreate) SetUpdatedAt(t time.Time) *LoginLogCreate {
+	llc.mutation.SetUpdatedAt(t)
+	return llc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (llc *LoginLogCreate) SetNillableUpdatedAt(t *time.Time) *LoginLogCreate {
+	if t != nil {
+		llc.SetUpdatedAt(*t)
+	}
+	return llc
+}
+
 // SetUserID sets the "user_id" field.
 func (llc *LoginLogCreate) SetUserID(s string) *LoginLogCreate {
 	llc.mutation.SetUserID(s)
@@ -130,6 +158,14 @@ func (llc *LoginLogCreate) SaveX(ctx context.Context) *LoginLog {
 
 // defaults sets the default values of the builder before save.
 func (llc *LoginLogCreate) defaults() {
+	if _, ok := llc.mutation.CreatedAt(); !ok {
+		v := loginlog.DefaultCreatedAt()
+		llc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := llc.mutation.UpdatedAt(); !ok {
+		v := loginlog.DefaultUpdatedAt()
+		llc.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := llc.mutation.LoginTime(); !ok {
 		v := loginlog.DefaultLoginTime()
 		llc.mutation.SetLoginTime(v)
@@ -142,6 +178,12 @@ func (llc *LoginLogCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (llc *LoginLogCreate) check() error {
+	if _, ok := llc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+	}
+	if _, ok := llc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
 	if _, ok := llc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New("ent: missing required field \"user_id\"")}
 	}
@@ -188,6 +230,22 @@ func (llc *LoginLogCreate) createSpec() (*LoginLog, *sqlgraph.CreateSpec) {
 	if id, ok := llc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
+	}
+	if value, ok := llc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: loginlog.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := llc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: loginlog.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
 	}
 	if value, ok := llc.mutation.UserID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

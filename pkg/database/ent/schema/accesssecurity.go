@@ -40,9 +40,9 @@ func (AccessSecurity) Edges() []ent.Edge {
 	}
 }
 
-//// Mixin xxxx
-//func (AccessSecurity) Mixin() []ent.Mixin {
-//	return []ent.Mixin{
-//		TimeMixin{},
-//	}
-//}
+// Mixin xxxx
+func (AccessSecurity) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -23,6 +24,12 @@ type JobUpdate struct {
 // Where adds a new predicate for the JobUpdate builder.
 func (ju *JobUpdate) Where(ps ...predicate.Job) *JobUpdate {
 	ju.mutation.predicates = append(ju.mutation.predicates, ps...)
+	return ju
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (ju *JobUpdate) SetUpdatedAt(t time.Time) *JobUpdate {
+	ju.mutation.SetUpdatedAt(t)
 	return ju
 }
 
@@ -92,6 +99,7 @@ func (ju *JobUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	ju.defaults()
 	if len(ju.hooks) == 0 {
 		affected, err = ju.sqlSave(ctx)
 	} else {
@@ -137,6 +145,14 @@ func (ju *JobUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (ju *JobUpdate) defaults() {
+	if _, ok := ju.mutation.UpdatedAt(); !ok {
+		v := job.UpdateDefaultUpdatedAt()
+		ju.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (ju *JobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -154,6 +170,13 @@ func (ju *JobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := ju.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: job.FieldUpdatedAt,
+		})
 	}
 	if value, ok := ju.mutation.Cronjobid(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -237,6 +260,12 @@ type JobUpdateOne struct {
 	mutation *JobMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (juo *JobUpdateOne) SetUpdatedAt(t time.Time) *JobUpdateOne {
+	juo.mutation.SetUpdatedAt(t)
+	return juo
+}
+
 // SetCronjobid sets the "cronjobid" field.
 func (juo *JobUpdateOne) SetCronjobid(i int) *JobUpdateOne {
 	juo.mutation.ResetCronjobid()
@@ -310,6 +339,7 @@ func (juo *JobUpdateOne) Save(ctx context.Context) (*Job, error) {
 		err  error
 		node *Job
 	)
+	juo.defaults()
 	if len(juo.hooks) == 0 {
 		node, err = juo.sqlSave(ctx)
 	} else {
@@ -355,6 +385,14 @@ func (juo *JobUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (juo *JobUpdateOne) defaults() {
+	if _, ok := juo.mutation.UpdatedAt(); !ok {
+		v := job.UpdateDefaultUpdatedAt()
+		juo.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (juo *JobUpdateOne) sqlSave(ctx context.Context) (_node *Job, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -389,6 +427,13 @@ func (juo *JobUpdateOne) sqlSave(ctx context.Context) (_node *Job, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := juo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: job.FieldUpdatedAt,
+		})
 	}
 	if value, ok := juo.mutation.Cronjobid(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

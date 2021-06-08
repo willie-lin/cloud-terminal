@@ -28,6 +28,12 @@ func (su *SessionUpdate) Where(ps ...predicate.Session) *SessionUpdate {
 	return su
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (su *SessionUpdate) SetUpdatedAt(t time.Time) *SessionUpdate {
+	su.mutation.SetUpdatedAt(t)
+	return su
+}
+
 // SetProtocol sets the "protocol" field.
 func (su *SessionUpdate) SetProtocol(s string) *SessionUpdate {
 	su.mutation.SetProtocol(s)
@@ -279,6 +285,10 @@ func (su *SessionUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (su *SessionUpdate) defaults() {
+	if _, ok := su.mutation.UpdatedAt(); !ok {
+		v := session.UpdateDefaultUpdatedAt()
+		su.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := su.mutation.Disconnected(); !ok {
 		v := session.UpdateDefaultDisconnected()
 		su.mutation.SetDisconnected(v)
@@ -302,6 +312,13 @@ func (su *SessionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := su.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: session.FieldUpdatedAt,
+		})
 	}
 	if value, ok := su.mutation.Protocol(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -542,6 +559,12 @@ type SessionUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *SessionMutation
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (suo *SessionUpdateOne) SetUpdatedAt(t time.Time) *SessionUpdateOne {
+	suo.mutation.SetUpdatedAt(t)
+	return suo
 }
 
 // SetProtocol sets the "protocol" field.
@@ -802,6 +825,10 @@ func (suo *SessionUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (suo *SessionUpdateOne) defaults() {
+	if _, ok := suo.mutation.UpdatedAt(); !ok {
+		v := session.UpdateDefaultUpdatedAt()
+		suo.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := suo.mutation.Disconnected(); !ok {
 		v := session.UpdateDefaultDisconnected()
 		suo.mutation.SetDisconnected(v)
@@ -842,6 +869,13 @@ func (suo *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := suo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: session.FieldUpdatedAt,
+		})
 	}
 	if value, ok := suo.mutation.Protocol(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

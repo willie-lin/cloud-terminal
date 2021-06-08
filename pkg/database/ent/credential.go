@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
@@ -15,6 +16,10 @@ type Credential struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Type holds the value of the "type" field.
@@ -36,6 +41,8 @@ func (*Credential) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case credential.FieldID, credential.FieldName, credential.FieldType, credential.FieldUsername, credential.FieldPassword, credential.FieldPrivateKey, credential.FieldPassphrase:
 			values[i] = new(sql.NullString)
+		case credential.FieldCreatedAt, credential.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Credential", columns[i])
 		}
@@ -56,6 +63,18 @@ func (c *Credential) assignValues(columns []string, values []interface{}) error 
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				c.ID = value.String
+			}
+		case credential.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				c.CreatedAt = value.Time
+			}
+		case credential.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				c.UpdatedAt = value.Time
 			}
 		case credential.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -121,6 +140,10 @@ func (c *Credential) String() string {
 	var builder strings.Builder
 	builder.WriteString("Credential(")
 	builder.WriteString(fmt.Sprintf("id=%v", c.ID))
+	builder.WriteString(", created_at=")
+	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(c.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", name=")
 	builder.WriteString(c.Name)
 	builder.WriteString(", type=")

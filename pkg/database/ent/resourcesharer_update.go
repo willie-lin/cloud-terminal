@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -23,6 +24,12 @@ type ResourceSharerUpdate struct {
 // Where adds a new predicate for the ResourceSharerUpdate builder.
 func (rsu *ResourceSharerUpdate) Where(ps ...predicate.ResourceSharer) *ResourceSharerUpdate {
 	rsu.mutation.predicates = append(rsu.mutation.predicates, ps...)
+	return rsu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (rsu *ResourceSharerUpdate) SetUpdatedAt(t time.Time) *ResourceSharerUpdate {
+	rsu.mutation.SetUpdatedAt(t)
 	return rsu
 }
 
@@ -61,6 +68,7 @@ func (rsu *ResourceSharerUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	rsu.defaults()
 	if len(rsu.hooks) == 0 {
 		affected, err = rsu.sqlSave(ctx)
 	} else {
@@ -106,6 +114,14 @@ func (rsu *ResourceSharerUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (rsu *ResourceSharerUpdate) defaults() {
+	if _, ok := rsu.mutation.UpdatedAt(); !ok {
+		v := resourcesharer.UpdateDefaultUpdatedAt()
+		rsu.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (rsu *ResourceSharerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -123,6 +139,13 @@ func (rsu *ResourceSharerUpdate) sqlSave(ctx context.Context) (n int, err error)
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := rsu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: resourcesharer.FieldUpdatedAt,
+		})
 	}
 	if value, ok := rsu.mutation.ResourceID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -171,6 +194,12 @@ type ResourceSharerUpdateOne struct {
 	mutation *ResourceSharerMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (rsuo *ResourceSharerUpdateOne) SetUpdatedAt(t time.Time) *ResourceSharerUpdateOne {
+	rsuo.mutation.SetUpdatedAt(t)
+	return rsuo
+}
+
 // SetResourceID sets the "resource_id" field.
 func (rsuo *ResourceSharerUpdateOne) SetResourceID(s string) *ResourceSharerUpdateOne {
 	rsuo.mutation.SetResourceID(s)
@@ -213,6 +242,7 @@ func (rsuo *ResourceSharerUpdateOne) Save(ctx context.Context) (*ResourceSharer,
 		err  error
 		node *ResourceSharer
 	)
+	rsuo.defaults()
 	if len(rsuo.hooks) == 0 {
 		node, err = rsuo.sqlSave(ctx)
 	} else {
@@ -258,6 +288,14 @@ func (rsuo *ResourceSharerUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (rsuo *ResourceSharerUpdateOne) defaults() {
+	if _, ok := rsuo.mutation.UpdatedAt(); !ok {
+		v := resourcesharer.UpdateDefaultUpdatedAt()
+		rsuo.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (rsuo *ResourceSharerUpdateOne) sqlSave(ctx context.Context) (_node *ResourceSharer, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -292,6 +330,13 @@ func (rsuo *ResourceSharerUpdateOne) sqlSave(ctx context.Context) (_node *Resour
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := rsuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: resourcesharer.FieldUpdatedAt,
+		})
 	}
 	if value, ok := rsuo.mutation.ResourceID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

@@ -253,12 +253,12 @@ func (cq *CredentialQuery) Clone() *CredentialQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Credential.Query().
-//		GroupBy(credential.FieldName).
+//		GroupBy(credential.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -280,11 +280,11 @@ func (cq *CredentialQuery) GroupBy(field string, fields ...string) *CredentialGr
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Credential.Query().
-//		Select(credential.FieldName).
+//		Select(credential.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (cq *CredentialQuery) Select(field string, fields ...string) *CredentialSelect {

@@ -41,3 +41,10 @@ func (Job) Fields() []ent.Field {
 func (Job) Edges() []ent.Edge {
 	return nil
 }
+
+// Mixin xxxx
+func (Job) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

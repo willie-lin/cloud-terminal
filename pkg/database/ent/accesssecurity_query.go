@@ -291,12 +291,12 @@ func (asq *AccessSecurityQuery) WithAssets(opts ...func(*AssetQuery)) *AccessSec
 // Example:
 //
 //	var v []struct {
-//		Rule string `json:"rule,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.AccessSecurity.Query().
-//		GroupBy(accesssecurity.FieldRule).
+//		GroupBy(accesssecurity.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -318,11 +318,11 @@ func (asq *AccessSecurityQuery) GroupBy(field string, fields ...string) *AccessS
 // Example:
 //
 //	var v []struct {
-//		Rule string `json:"rule,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.AccessSecurity.Query().
-//		Select(accesssecurity.FieldRule).
+//		Select(accesssecurity.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (asq *AccessSecurityQuery) Select(field string, fields ...string) *AccessSecuritySelect {

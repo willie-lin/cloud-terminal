@@ -5,9 +5,15 @@ package ent
 import (
 	"time"
 
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/accesssecurity"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/command"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/credential"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/group"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/job"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/loginlog"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/property"
+	"github.com/willie-lin/cloud-terminal/pkg/database/ent/resourcesharer"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/test"
@@ -19,12 +25,70 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	accesssecurityMixin := schema.AccessSecurity{}.Mixin()
+	accesssecurityMixinFields0 := accesssecurityMixin[0].Fields()
+	_ = accesssecurityMixinFields0
+	accesssecurityFields := schema.AccessSecurity{}.Fields()
+	_ = accesssecurityFields
+	// accesssecurityDescCreatedAt is the schema descriptor for created_at field.
+	accesssecurityDescCreatedAt := accesssecurityMixinFields0[0].Descriptor()
+	// accesssecurity.DefaultCreatedAt holds the default value on creation for the created_at field.
+	accesssecurity.DefaultCreatedAt = accesssecurityDescCreatedAt.Default.(func() time.Time)
+	// accesssecurityDescUpdatedAt is the schema descriptor for updated_at field.
+	accesssecurityDescUpdatedAt := accesssecurityMixinFields0[1].Descriptor()
+	// accesssecurity.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	accesssecurity.DefaultUpdatedAt = accesssecurityDescUpdatedAt.Default.(func() time.Time)
+	// accesssecurity.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	accesssecurity.UpdateDefaultUpdatedAt = accesssecurityDescUpdatedAt.UpdateDefault.(func() time.Time)
+	assetMixin := schema.Asset{}.Mixin()
+	assetMixinFields0 := assetMixin[0].Fields()
+	_ = assetMixinFields0
+	assetFields := schema.Asset{}.Fields()
+	_ = assetFields
+	// assetDescCreatedAt is the schema descriptor for created_at field.
+	assetDescCreatedAt := assetMixinFields0[0].Descriptor()
+	// asset.DefaultCreatedAt holds the default value on creation for the created_at field.
+	asset.DefaultCreatedAt = assetDescCreatedAt.Default.(func() time.Time)
+	// assetDescUpdatedAt is the schema descriptor for updated_at field.
+	assetDescUpdatedAt := assetMixinFields0[1].Descriptor()
+	// asset.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	asset.DefaultUpdatedAt = assetDescUpdatedAt.Default.(func() time.Time)
+	// asset.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	asset.UpdateDefaultUpdatedAt = assetDescUpdatedAt.UpdateDefault.(func() time.Time)
+	commandMixin := schema.Command{}.Mixin()
+	commandMixinFields0 := commandMixin[0].Fields()
+	_ = commandMixinFields0
 	commandFields := schema.Command{}.Fields()
 	_ = commandFields
+	// commandDescCreatedAt is the schema descriptor for created_at field.
+	commandDescCreatedAt := commandMixinFields0[0].Descriptor()
+	// command.DefaultCreatedAt holds the default value on creation for the created_at field.
+	command.DefaultCreatedAt = commandDescCreatedAt.Default.(func() time.Time)
+	// commandDescUpdatedAt is the schema descriptor for updated_at field.
+	commandDescUpdatedAt := commandMixinFields0[1].Descriptor()
+	// command.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	command.DefaultUpdatedAt = commandDescUpdatedAt.Default.(func() time.Time)
+	// command.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	command.UpdateDefaultUpdatedAt = commandDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// commandDescName is the schema descriptor for name field.
 	commandDescName := commandFields[1].Descriptor()
 	// command.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	command.NameValidator = commandDescName.Validators[0].(func(string) error)
+	credentialMixin := schema.Credential{}.Mixin()
+	credentialMixinFields0 := credentialMixin[0].Fields()
+	_ = credentialMixinFields0
+	credentialFields := schema.Credential{}.Fields()
+	_ = credentialFields
+	// credentialDescCreatedAt is the schema descriptor for created_at field.
+	credentialDescCreatedAt := credentialMixinFields0[0].Descriptor()
+	// credential.DefaultCreatedAt holds the default value on creation for the created_at field.
+	credential.DefaultCreatedAt = credentialDescCreatedAt.Default.(func() time.Time)
+	// credentialDescUpdatedAt is the schema descriptor for updated_at field.
+	credentialDescUpdatedAt := credentialMixinFields0[1].Descriptor()
+	// credential.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	credential.DefaultUpdatedAt = credentialDescUpdatedAt.Default.(func() time.Time)
+	// credential.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	credential.UpdateDefaultUpdatedAt = credentialDescUpdatedAt.UpdateDefault.(func() time.Time)
 	groupMixin := schema.Group{}.Mixin()
 	groupMixinFields0 := groupMixin[0].Fields()
 	_ = groupMixinFields0
@@ -40,8 +104,36 @@ func init() {
 	group.DefaultUpdatedAt = groupDescUpdatedAt.Default.(func() time.Time)
 	// group.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	group.UpdateDefaultUpdatedAt = groupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	jobMixin := schema.Job{}.Mixin()
+	jobMixinFields0 := jobMixin[0].Fields()
+	_ = jobMixinFields0
+	jobFields := schema.Job{}.Fields()
+	_ = jobFields
+	// jobDescCreatedAt is the schema descriptor for created_at field.
+	jobDescCreatedAt := jobMixinFields0[0].Descriptor()
+	// job.DefaultCreatedAt holds the default value on creation for the created_at field.
+	job.DefaultCreatedAt = jobDescCreatedAt.Default.(func() time.Time)
+	// jobDescUpdatedAt is the schema descriptor for updated_at field.
+	jobDescUpdatedAt := jobMixinFields0[1].Descriptor()
+	// job.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	job.DefaultUpdatedAt = jobDescUpdatedAt.Default.(func() time.Time)
+	// job.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	job.UpdateDefaultUpdatedAt = jobDescUpdatedAt.UpdateDefault.(func() time.Time)
+	loginlogMixin := schema.LoginLog{}.Mixin()
+	loginlogMixinFields0 := loginlogMixin[0].Fields()
+	_ = loginlogMixinFields0
 	loginlogFields := schema.LoginLog{}.Fields()
 	_ = loginlogFields
+	// loginlogDescCreatedAt is the schema descriptor for created_at field.
+	loginlogDescCreatedAt := loginlogMixinFields0[0].Descriptor()
+	// loginlog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	loginlog.DefaultCreatedAt = loginlogDescCreatedAt.Default.(func() time.Time)
+	// loginlogDescUpdatedAt is the schema descriptor for updated_at field.
+	loginlogDescUpdatedAt := loginlogMixinFields0[1].Descriptor()
+	// loginlog.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	loginlog.DefaultUpdatedAt = loginlogDescUpdatedAt.Default.(func() time.Time)
+	// loginlog.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	loginlog.UpdateDefaultUpdatedAt = loginlogDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// loginlogDescLoginTime is the schema descriptor for login_time field.
 	loginlogDescLoginTime := loginlogFields[4].Descriptor()
 	// loginlog.DefaultLoginTime holds the default value on creation for the login_time field.
@@ -52,8 +144,51 @@ func init() {
 	loginlog.DefaultLogoutTime = loginlogDescLogoutTime.Default.(func() time.Time)
 	// loginlog.UpdateDefaultLogoutTime holds the default value on update for the logout_time field.
 	loginlog.UpdateDefaultLogoutTime = loginlogDescLogoutTime.UpdateDefault.(func() time.Time)
+	propertyMixin := schema.Property{}.Mixin()
+	propertyMixinFields0 := propertyMixin[0].Fields()
+	_ = propertyMixinFields0
+	propertyFields := schema.Property{}.Fields()
+	_ = propertyFields
+	// propertyDescCreatedAt is the schema descriptor for created_at field.
+	propertyDescCreatedAt := propertyMixinFields0[0].Descriptor()
+	// property.DefaultCreatedAt holds the default value on creation for the created_at field.
+	property.DefaultCreatedAt = propertyDescCreatedAt.Default.(func() time.Time)
+	// propertyDescUpdatedAt is the schema descriptor for updated_at field.
+	propertyDescUpdatedAt := propertyMixinFields0[1].Descriptor()
+	// property.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	property.DefaultUpdatedAt = propertyDescUpdatedAt.Default.(func() time.Time)
+	// property.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	property.UpdateDefaultUpdatedAt = propertyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	resourcesharerMixin := schema.ResourceSharer{}.Mixin()
+	resourcesharerMixinFields0 := resourcesharerMixin[0].Fields()
+	_ = resourcesharerMixinFields0
+	resourcesharerFields := schema.ResourceSharer{}.Fields()
+	_ = resourcesharerFields
+	// resourcesharerDescCreatedAt is the schema descriptor for created_at field.
+	resourcesharerDescCreatedAt := resourcesharerMixinFields0[0].Descriptor()
+	// resourcesharer.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resourcesharer.DefaultCreatedAt = resourcesharerDescCreatedAt.Default.(func() time.Time)
+	// resourcesharerDescUpdatedAt is the schema descriptor for updated_at field.
+	resourcesharerDescUpdatedAt := resourcesharerMixinFields0[1].Descriptor()
+	// resourcesharer.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resourcesharer.DefaultUpdatedAt = resourcesharerDescUpdatedAt.Default.(func() time.Time)
+	// resourcesharer.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resourcesharer.UpdateDefaultUpdatedAt = resourcesharerDescUpdatedAt.UpdateDefault.(func() time.Time)
+	sessionMixin := schema.Session{}.Mixin()
+	sessionMixinFields0 := sessionMixin[0].Fields()
+	_ = sessionMixinFields0
 	sessionFields := schema.Session{}.Fields()
 	_ = sessionFields
+	// sessionDescCreatedAt is the schema descriptor for created_at field.
+	sessionDescCreatedAt := sessionMixinFields0[0].Descriptor()
+	// session.DefaultCreatedAt holds the default value on creation for the created_at field.
+	session.DefaultCreatedAt = sessionDescCreatedAt.Default.(func() time.Time)
+	// sessionDescUpdatedAt is the schema descriptor for updated_at field.
+	sessionDescUpdatedAt := sessionMixinFields0[1].Descriptor()
+	// session.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	session.DefaultUpdatedAt = sessionDescUpdatedAt.Default.(func() time.Time)
+	// session.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	session.UpdateDefaultUpdatedAt = sessionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// sessionDescConnected is the schema descriptor for connected field.
 	sessionDescConnected := sessionFields[18].Descriptor()
 	// session.DefaultConnected holds the default value on creation for the connected field.
@@ -94,8 +229,21 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	verificationMixin := schema.Verification{}.Mixin()
+	verificationMixinFields0 := verificationMixin[0].Fields()
+	_ = verificationMixinFields0
 	verificationFields := schema.Verification{}.Fields()
 	_ = verificationFields
+	// verificationDescCreatedAt is the schema descriptor for created_at field.
+	verificationDescCreatedAt := verificationMixinFields0[0].Descriptor()
+	// verification.DefaultCreatedAt holds the default value on creation for the created_at field.
+	verification.DefaultCreatedAt = verificationDescCreatedAt.Default.(func() time.Time)
+	// verificationDescUpdatedAt is the schema descriptor for updated_at field.
+	verificationDescUpdatedAt := verificationMixinFields0[1].Descriptor()
+	// verification.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	verification.DefaultUpdatedAt = verificationDescUpdatedAt.Default.(func() time.Time)
+	// verification.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	verification.UpdateDefaultUpdatedAt = verificationDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// verificationDescLoginTime is the schema descriptor for login_time field.
 	verificationDescLoginTime := verificationFields[3].Descriptor()
 	// verification.DefaultLoginTime holds the default value on creation for the login_time field.

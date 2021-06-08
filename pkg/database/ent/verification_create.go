@@ -21,6 +21,34 @@ type VerificationCreate struct {
 	hooks    []Hook
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (vc *VerificationCreate) SetCreatedAt(t time.Time) *VerificationCreate {
+	vc.mutation.SetCreatedAt(t)
+	return vc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (vc *VerificationCreate) SetNillableCreatedAt(t *time.Time) *VerificationCreate {
+	if t != nil {
+		vc.SetCreatedAt(*t)
+	}
+	return vc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (vc *VerificationCreate) SetUpdatedAt(t time.Time) *VerificationCreate {
+	vc.mutation.SetUpdatedAt(t)
+	return vc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (vc *VerificationCreate) SetNillableUpdatedAt(t *time.Time) *VerificationCreate {
+	if t != nil {
+		vc.SetUpdatedAt(*t)
+	}
+	return vc
+}
+
 // SetClientIP sets the "client_ip" field.
 func (vc *VerificationCreate) SetClientIP(s string) *VerificationCreate {
 	vc.mutation.SetClientIP(s)
@@ -140,6 +168,14 @@ func (vc *VerificationCreate) SaveX(ctx context.Context) *Verification {
 
 // defaults sets the default values of the builder before save.
 func (vc *VerificationCreate) defaults() {
+	if _, ok := vc.mutation.CreatedAt(); !ok {
+		v := verification.DefaultCreatedAt()
+		vc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := vc.mutation.UpdatedAt(); !ok {
+		v := verification.DefaultUpdatedAt()
+		vc.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := vc.mutation.LoginTime(); !ok {
 		v := verification.DefaultLoginTime()
 		vc.mutation.SetLoginTime(v)
@@ -152,6 +188,12 @@ func (vc *VerificationCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (vc *VerificationCreate) check() error {
+	if _, ok := vc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+	}
+	if _, ok := vc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
 	if _, ok := vc.mutation.ClientIP(); !ok {
 		return &ValidationError{Name: "client_ip", err: errors.New("ent: missing required field \"client_ip\"")}
 	}
@@ -195,6 +237,22 @@ func (vc *VerificationCreate) createSpec() (*Verification, *sqlgraph.CreateSpec)
 	if id, ok := vc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
+	}
+	if value, ok := vc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := vc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
 	}
 	if value, ok := vc.mutation.ClientIP(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

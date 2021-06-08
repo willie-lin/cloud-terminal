@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -23,6 +24,12 @@ type CredentialUpdate struct {
 // Where adds a new predicate for the CredentialUpdate builder.
 func (cu *CredentialUpdate) Where(ps ...predicate.Credential) *CredentialUpdate {
 	cu.mutation.predicates = append(cu.mutation.predicates, ps...)
+	return cu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cu *CredentialUpdate) SetUpdatedAt(t time.Time) *CredentialUpdate {
+	cu.mutation.SetUpdatedAt(t)
 	return cu
 }
 
@@ -73,6 +80,7 @@ func (cu *CredentialUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	cu.defaults()
 	if len(cu.hooks) == 0 {
 		affected, err = cu.sqlSave(ctx)
 	} else {
@@ -118,6 +126,14 @@ func (cu *CredentialUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cu *CredentialUpdate) defaults() {
+	if _, ok := cu.mutation.UpdatedAt(); !ok {
+		v := credential.UpdateDefaultUpdatedAt()
+		cu.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (cu *CredentialUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -135,6 +151,13 @@ func (cu *CredentialUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := cu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: credential.FieldUpdatedAt,
+		})
 	}
 	if value, ok := cu.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -197,6 +220,12 @@ type CredentialUpdateOne struct {
 	mutation *CredentialMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (cuo *CredentialUpdateOne) SetUpdatedAt(t time.Time) *CredentialUpdateOne {
+	cuo.mutation.SetUpdatedAt(t)
+	return cuo
+}
+
 // SetName sets the "name" field.
 func (cuo *CredentialUpdateOne) SetName(s string) *CredentialUpdateOne {
 	cuo.mutation.SetName(s)
@@ -251,6 +280,7 @@ func (cuo *CredentialUpdateOne) Save(ctx context.Context) (*Credential, error) {
 		err  error
 		node *Credential
 	)
+	cuo.defaults()
 	if len(cuo.hooks) == 0 {
 		node, err = cuo.sqlSave(ctx)
 	} else {
@@ -296,6 +326,14 @@ func (cuo *CredentialUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cuo *CredentialUpdateOne) defaults() {
+	if _, ok := cuo.mutation.UpdatedAt(); !ok {
+		v := credential.UpdateDefaultUpdatedAt()
+		cuo.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (cuo *CredentialUpdateOne) sqlSave(ctx context.Context) (_node *Credential, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -330,6 +368,13 @@ func (cuo *CredentialUpdateOne) sqlSave(ctx context.Context) (_node *Credential,
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := cuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: credential.FieldUpdatedAt,
+		})
 	}
 	if value, ok := cuo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

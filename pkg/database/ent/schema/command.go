@@ -35,3 +35,10 @@ func (Command) Fields() []ent.Field {
 func (Command) Edges() []ent.Edge {
 	return nil
 }
+
+// Mixin xxxx
+func (Command) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

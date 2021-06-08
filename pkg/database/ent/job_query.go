@@ -253,12 +253,12 @@ func (jq *JobQuery) Clone() *JobQuery {
 // Example:
 //
 //	var v []struct {
-//		Cronjobid int `json:"cronjobid,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Job.Query().
-//		GroupBy(job.FieldCronjobid).
+//		GroupBy(job.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -280,11 +280,11 @@ func (jq *JobQuery) GroupBy(field string, fields ...string) *JobGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Cronjobid int `json:"cronjobid,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Job.Query().
-//		Select(job.FieldCronjobid).
+//		Select(job.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (jq *JobQuery) Select(field string, fields ...string) *JobSelect {

@@ -16,6 +16,10 @@ type LoginLog struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID string `json:"user_id,omitempty"`
 	// ClientIP holds the value of the "client_ip" field.
@@ -39,7 +43,7 @@ func (*LoginLog) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullBool)
 		case loginlog.FieldID, loginlog.FieldUserID, loginlog.FieldClientIP, loginlog.FieldClentUsetAgent:
 			values[i] = new(sql.NullString)
-		case loginlog.FieldLoginTime, loginlog.FieldLogoutTime:
+		case loginlog.FieldCreatedAt, loginlog.FieldUpdatedAt, loginlog.FieldLoginTime, loginlog.FieldLogoutTime:
 			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type LoginLog", columns[i])
@@ -61,6 +65,18 @@ func (ll *LoginLog) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				ll.ID = value.String
+			}
+		case loginlog.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				ll.CreatedAt = value.Time
+			}
+		case loginlog.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				ll.UpdatedAt = value.Time
 			}
 		case loginlog.FieldUserID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -126,6 +142,10 @@ func (ll *LoginLog) String() string {
 	var builder strings.Builder
 	builder.WriteString("LoginLog(")
 	builder.WriteString(fmt.Sprintf("id=%v", ll.ID))
+	builder.WriteString(", created_at=")
+	builder.WriteString(ll.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(ll.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", user_id=")
 	builder.WriteString(ll.UserID)
 	builder.WriteString(", client_ip=")

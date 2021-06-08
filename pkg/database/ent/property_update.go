@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -23,6 +24,12 @@ type PropertyUpdate struct {
 // Where adds a new predicate for the PropertyUpdate builder.
 func (pu *PropertyUpdate) Where(ps ...predicate.Property) *PropertyUpdate {
 	pu.mutation.predicates = append(pu.mutation.predicates, ps...)
+	return pu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (pu *PropertyUpdate) SetUpdatedAt(t time.Time) *PropertyUpdate {
+	pu.mutation.SetUpdatedAt(t)
 	return pu
 }
 
@@ -49,6 +56,7 @@ func (pu *PropertyUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	pu.defaults()
 	if len(pu.hooks) == 0 {
 		affected, err = pu.sqlSave(ctx)
 	} else {
@@ -94,6 +102,14 @@ func (pu *PropertyUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (pu *PropertyUpdate) defaults() {
+	if _, ok := pu.mutation.UpdatedAt(); !ok {
+		v := property.UpdateDefaultUpdatedAt()
+		pu.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (pu *PropertyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -111,6 +127,13 @@ func (pu *PropertyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := pu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: property.FieldUpdatedAt,
+		})
 	}
 	if value, ok := pu.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -145,6 +168,12 @@ type PropertyUpdateOne struct {
 	mutation *PropertyMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (puo *PropertyUpdateOne) SetUpdatedAt(t time.Time) *PropertyUpdateOne {
+	puo.mutation.SetUpdatedAt(t)
+	return puo
+}
+
 // SetName sets the "name" field.
 func (puo *PropertyUpdateOne) SetName(s string) *PropertyUpdateOne {
 	puo.mutation.SetName(s)
@@ -175,6 +204,7 @@ func (puo *PropertyUpdateOne) Save(ctx context.Context) (*Property, error) {
 		err  error
 		node *Property
 	)
+	puo.defaults()
 	if len(puo.hooks) == 0 {
 		node, err = puo.sqlSave(ctx)
 	} else {
@@ -220,6 +250,14 @@ func (puo *PropertyUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (puo *PropertyUpdateOne) defaults() {
+	if _, ok := puo.mutation.UpdatedAt(); !ok {
+		v := property.UpdateDefaultUpdatedAt()
+		puo.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (puo *PropertyUpdateOne) sqlSave(ctx context.Context) (_node *Property, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -254,6 +292,13 @@ func (puo *PropertyUpdateOne) sqlSave(ctx context.Context) (_node *Property, err
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := puo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: property.FieldUpdatedAt,
+		})
 	}
 	if value, ok := puo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

@@ -291,12 +291,12 @@ func (sq *SessionQuery) WithAssets(opts ...func(*AssetQuery)) *SessionQuery {
 // Example:
 //
 //	var v []struct {
-//		Protocol string `json:"protocol,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Session.Query().
-//		GroupBy(session.FieldProtocol).
+//		GroupBy(session.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -318,11 +318,11 @@ func (sq *SessionQuery) GroupBy(field string, fields ...string) *SessionGroupBy 
 // Example:
 //
 //	var v []struct {
-//		Protocol string `json:"protocol,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Session.Query().
-//		Select(session.FieldProtocol).
+//		Select(session.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (sq *SessionQuery) Select(field string, fields ...string) *SessionSelect {

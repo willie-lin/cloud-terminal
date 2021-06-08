@@ -55,3 +55,10 @@ func (Session) Edges() []ent.Edge {
 		edge.To("assets", Asset.Type),
 	}
 }
+
+// Mixin xxxx
+func (Session) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

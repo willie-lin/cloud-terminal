@@ -40,3 +40,10 @@ func (Verification) Edges() []ent.Edge {
 		edge.To("users", User.Type),
 	}
 }
+
+// Mixin xxxx
+func (Verification) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

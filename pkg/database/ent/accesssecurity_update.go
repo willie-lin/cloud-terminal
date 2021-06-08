@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -24,6 +25,12 @@ type AccessSecurityUpdate struct {
 // Where adds a new predicate for the AccessSecurityUpdate builder.
 func (asu *AccessSecurityUpdate) Where(ps ...predicate.AccessSecurity) *AccessSecurityUpdate {
 	asu.mutation.predicates = append(asu.mutation.predicates, ps...)
+	return asu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (asu *AccessSecurityUpdate) SetUpdatedAt(t time.Time) *AccessSecurityUpdate {
+	asu.mutation.SetUpdatedAt(t)
 	return asu
 }
 
@@ -105,6 +112,7 @@ func (asu *AccessSecurityUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	asu.defaults()
 	if len(asu.hooks) == 0 {
 		affected, err = asu.sqlSave(ctx)
 	} else {
@@ -150,6 +158,14 @@ func (asu *AccessSecurityUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (asu *AccessSecurityUpdate) defaults() {
+	if _, ok := asu.mutation.UpdatedAt(); !ok {
+		v := accesssecurity.UpdateDefaultUpdatedAt()
+		asu.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (asu *AccessSecurityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -167,6 +183,13 @@ func (asu *AccessSecurityUpdate) sqlSave(ctx context.Context) (n int, err error)
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := asu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: accesssecurity.FieldUpdatedAt,
+		})
 	}
 	if value, ok := asu.mutation.Rule(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -276,6 +299,12 @@ type AccessSecurityUpdateOne struct {
 	mutation *AccessSecurityMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (asuo *AccessSecurityUpdateOne) SetUpdatedAt(t time.Time) *AccessSecurityUpdateOne {
+	asuo.mutation.SetUpdatedAt(t)
+	return asuo
+}
+
 // SetRule sets the "rule" field.
 func (asuo *AccessSecurityUpdateOne) SetRule(s string) *AccessSecurityUpdateOne {
 	asuo.mutation.SetRule(s)
@@ -361,6 +390,7 @@ func (asuo *AccessSecurityUpdateOne) Save(ctx context.Context) (*AccessSecurity,
 		err  error
 		node *AccessSecurity
 	)
+	asuo.defaults()
 	if len(asuo.hooks) == 0 {
 		node, err = asuo.sqlSave(ctx)
 	} else {
@@ -406,6 +436,14 @@ func (asuo *AccessSecurityUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (asuo *AccessSecurityUpdateOne) defaults() {
+	if _, ok := asuo.mutation.UpdatedAt(); !ok {
+		v := accesssecurity.UpdateDefaultUpdatedAt()
+		asuo.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (asuo *AccessSecurityUpdateOne) sqlSave(ctx context.Context) (_node *AccessSecurity, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -440,6 +478,13 @@ func (asuo *AccessSecurityUpdateOne) sqlSave(ctx context.Context) (_node *Access
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := asuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: accesssecurity.FieldUpdatedAt,
+		})
 	}
 	if value, ok := asuo.mutation.Rule(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

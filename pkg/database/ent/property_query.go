@@ -253,12 +253,12 @@ func (pq *PropertyQuery) Clone() *PropertyQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Property.Query().
-//		GroupBy(property.FieldName).
+//		GroupBy(property.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -280,11 +280,11 @@ func (pq *PropertyQuery) GroupBy(field string, fields ...string) *PropertyGroupB
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Property.Query().
-//		Select(property.FieldName).
+//		Select(property.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (pq *PropertyQuery) Select(field string, fields ...string) *PropertySelect {

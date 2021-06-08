@@ -27,6 +27,12 @@ func (llu *LoginLogUpdate) Where(ps ...predicate.LoginLog) *LoginLogUpdate {
 	return llu
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (llu *LoginLogUpdate) SetUpdatedAt(t time.Time) *LoginLogUpdate {
+	llu.mutation.SetUpdatedAt(t)
+	return llu
+}
+
 // SetUserID sets the "user_id" field.
 func (llu *LoginLogUpdate) SetUserID(s string) *LoginLogUpdate {
 	llu.mutation.SetUserID(s)
@@ -130,6 +136,10 @@ func (llu *LoginLogUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (llu *LoginLogUpdate) defaults() {
+	if _, ok := llu.mutation.UpdatedAt(); !ok {
+		v := loginlog.UpdateDefaultUpdatedAt()
+		llu.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := llu.mutation.LogoutTime(); !ok {
 		v := loginlog.UpdateDefaultLogoutTime()
 		llu.mutation.SetLogoutTime(v)
@@ -153,6 +163,13 @@ func (llu *LoginLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := llu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: loginlog.FieldUpdatedAt,
+		})
 	}
 	if value, ok := llu.mutation.UserID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -213,6 +230,12 @@ type LoginLogUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *LoginLogMutation
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (lluo *LoginLogUpdateOne) SetUpdatedAt(t time.Time) *LoginLogUpdateOne {
+	lluo.mutation.SetUpdatedAt(t)
+	return lluo
 }
 
 // SetUserID sets the "user_id" field.
@@ -325,6 +348,10 @@ func (lluo *LoginLogUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (lluo *LoginLogUpdateOne) defaults() {
+	if _, ok := lluo.mutation.UpdatedAt(); !ok {
+		v := loginlog.UpdateDefaultUpdatedAt()
+		lluo.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := lluo.mutation.LogoutTime(); !ok {
 		v := loginlog.UpdateDefaultLogoutTime()
 		lluo.mutation.SetLogoutTime(v)
@@ -365,6 +392,13 @@ func (lluo *LoginLogUpdateOne) sqlSave(ctx context.Context) (_node *LoginLog, er
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := lluo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: loginlog.FieldUpdatedAt,
+		})
 	}
 	if value, ok := lluo.mutation.UserID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

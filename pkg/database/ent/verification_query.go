@@ -291,12 +291,12 @@ func (vq *VerificationQuery) WithUsers(opts ...func(*UserQuery)) *VerificationQu
 // Example:
 //
 //	var v []struct {
-//		ClientIP string `json:"client_ip,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Verification.Query().
-//		GroupBy(verification.FieldClientIP).
+//		GroupBy(verification.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -318,11 +318,11 @@ func (vq *VerificationQuery) GroupBy(field string, fields ...string) *Verificati
 // Example:
 //
 //	var v []struct {
-//		ClientIP string `json:"client_ip,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Verification.Query().
-//		Select(verification.FieldClientIP).
+//		Select(verification.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (vq *VerificationQuery) Select(field string, fields ...string) *VerificationSelect {

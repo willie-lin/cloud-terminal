@@ -34,3 +34,10 @@ func (ResourceSharer) Fields() []ent.Field {
 func (ResourceSharer) Edges() []ent.Edge {
 	return nil
 }
+
+// Mixin xxxx
+func (ResourceSharer) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}

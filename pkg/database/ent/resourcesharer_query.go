@@ -253,12 +253,12 @@ func (rsq *ResourceSharerQuery) Clone() *ResourceSharerQuery {
 // Example:
 //
 //	var v []struct {
-//		ResourceID string `json:"resource_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.ResourceSharer.Query().
-//		GroupBy(resourcesharer.FieldResourceID).
+//		GroupBy(resourcesharer.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -280,11 +280,11 @@ func (rsq *ResourceSharerQuery) GroupBy(field string, fields ...string) *Resourc
 // Example:
 //
 //	var v []struct {
-//		ResourceID string `json:"resource_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.ResourceSharer.Query().
-//		Select(resourcesharer.FieldResourceID).
+//		Select(resourcesharer.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (rsq *ResourceSharerQuery) Select(field string, fields ...string) *ResourceSharerSelect {

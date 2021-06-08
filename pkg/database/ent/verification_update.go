@@ -28,6 +28,12 @@ func (vu *VerificationUpdate) Where(ps ...predicate.Verification) *VerificationU
 	return vu
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (vu *VerificationUpdate) SetUpdatedAt(t time.Time) *VerificationUpdate {
+	vu.mutation.SetUpdatedAt(t)
+	return vu
+}
+
 // SetClientIP sets the "client_ip" field.
 func (vu *VerificationUpdate) SetClientIP(s string) *VerificationUpdate {
 	vu.mutation.SetClientIP(s)
@@ -161,6 +167,10 @@ func (vu *VerificationUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (vu *VerificationUpdate) defaults() {
+	if _, ok := vu.mutation.UpdatedAt(); !ok {
+		v := verification.UpdateDefaultUpdatedAt()
+		vu.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := vu.mutation.LogoutTime(); !ok {
 		v := verification.UpdateDefaultLogoutTime()
 		vu.mutation.SetLogoutTime(v)
@@ -184,6 +194,13 @@ func (vu *VerificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := vu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldUpdatedAt,
+		})
 	}
 	if value, ok := vu.mutation.ClientIP(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -291,6 +308,12 @@ type VerificationUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *VerificationMutation
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (vuo *VerificationUpdateOne) SetUpdatedAt(t time.Time) *VerificationUpdateOne {
+	vuo.mutation.SetUpdatedAt(t)
+	return vuo
 }
 
 // SetClientIP sets the "client_ip" field.
@@ -433,6 +456,10 @@ func (vuo *VerificationUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (vuo *VerificationUpdateOne) defaults() {
+	if _, ok := vuo.mutation.UpdatedAt(); !ok {
+		v := verification.UpdateDefaultUpdatedAt()
+		vuo.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := vuo.mutation.LogoutTime(); !ok {
 		v := verification.UpdateDefaultLogoutTime()
 		vuo.mutation.SetLogoutTime(v)
@@ -473,6 +500,13 @@ func (vuo *VerificationUpdateOne) sqlSave(ctx context.Context) (_node *Verificat
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := vuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: verification.FieldUpdatedAt,
+		})
 	}
 	if value, ok := vuo.mutation.ClientIP(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

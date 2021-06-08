@@ -253,12 +253,12 @@ func (cq *CommandQuery) Clone() *CommandQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Command.Query().
-//		GroupBy(command.FieldName).
+//		GroupBy(command.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -280,11 +280,11 @@ func (cq *CommandQuery) GroupBy(field string, fields ...string) *CommandGroupBy 
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Command.Query().
-//		Select(command.FieldName).
+//		Select(command.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
 func (cq *CommandQuery) Select(field string, fields ...string) *CommandSelect {

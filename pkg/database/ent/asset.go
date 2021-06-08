@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/asset"
@@ -16,6 +17,10 @@ type Asset struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// IP holds the value of the "ip" field.
@@ -84,6 +89,8 @@ func (*Asset) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case asset.FieldID, asset.FieldName, asset.FieldIP, asset.FieldProtocol, asset.FieldAccountType, asset.FieldUsername, asset.FieldPassword, asset.FieldCredentialID, asset.FieldPrivateKey, asset.FieldPassphrase, asset.FieldDescription, asset.FieldTags:
 			values[i] = new(sql.NullString)
+		case asset.FieldCreatedAt, asset.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		case asset.ForeignKeys[0]: // access_security_assets
 			values[i] = new(sql.NullString)
 		case asset.ForeignKeys[1]: // session_assets
@@ -110,6 +117,18 @@ func (a *Asset) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				a.ID = value.String
+			}
+		case asset.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				a.CreatedAt = value.Time
+			}
+		case asset.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				a.UpdatedAt = value.Time
 			}
 		case asset.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -243,6 +262,10 @@ func (a *Asset) String() string {
 	var builder strings.Builder
 	builder.WriteString("Asset(")
 	builder.WriteString(fmt.Sprintf("id=%v", a.ID))
+	builder.WriteString(", created_at=")
+	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(a.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", name=")
 	builder.WriteString(a.Name)
 	builder.WriteString(", ip=")

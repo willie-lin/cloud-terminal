@@ -16,6 +16,10 @@ type Verification struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// ClientIP holds the value of the "client_ip" field.
 	ClientIP string `json:"client_ip,omitempty"`
 	// ClientUserAgent holds the value of the "clientUserAgent" field.
@@ -58,7 +62,7 @@ func (*Verification) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullBool)
 		case verification.FieldID, verification.FieldClientIP, verification.FieldClientUserAgent:
 			values[i] = new(sql.NullString)
-		case verification.FieldLoginTime, verification.FieldLogoutTime:
+		case verification.FieldCreatedAt, verification.FieldUpdatedAt, verification.FieldLoginTime, verification.FieldLogoutTime:
 			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Verification", columns[i])
@@ -80,6 +84,18 @@ func (v *Verification) assignValues(columns []string, values []interface{}) erro
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				v.ID = value.String
+			}
+		case verification.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				v.CreatedAt = value.Time
+			}
+		case verification.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				v.UpdatedAt = value.Time
 			}
 		case verification.FieldClientIP:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -144,6 +160,10 @@ func (v *Verification) String() string {
 	var builder strings.Builder
 	builder.WriteString("Verification(")
 	builder.WriteString(fmt.Sprintf("id=%v", v.ID))
+	builder.WriteString(", created_at=")
+	builder.WriteString(v.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(v.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", client_ip=")
 	builder.WriteString(v.ClientIP)
 	builder.WriteString(", clientUserAgent=")

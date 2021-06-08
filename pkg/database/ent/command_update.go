@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -23,6 +24,12 @@ type CommandUpdate struct {
 // Where adds a new predicate for the CommandUpdate builder.
 func (cu *CommandUpdate) Where(ps ...predicate.Command) *CommandUpdate {
 	cu.mutation.predicates = append(cu.mutation.predicates, ps...)
+	return cu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cu *CommandUpdate) SetUpdatedAt(t time.Time) *CommandUpdate {
+	cu.mutation.SetUpdatedAt(t)
 	return cu
 }
 
@@ -49,6 +56,7 @@ func (cu *CommandUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	cu.defaults()
 	if len(cu.hooks) == 0 {
 		if err = cu.check(); err != nil {
 			return 0, err
@@ -100,6 +108,14 @@ func (cu *CommandUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cu *CommandUpdate) defaults() {
+	if _, ok := cu.mutation.UpdatedAt(); !ok {
+		v := command.UpdateDefaultUpdatedAt()
+		cu.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cu *CommandUpdate) check() error {
 	if v, ok := cu.mutation.Name(); ok {
@@ -127,6 +143,13 @@ func (cu *CommandUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := cu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: command.FieldUpdatedAt,
+		})
 	}
 	if value, ok := cu.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
@@ -161,6 +184,12 @@ type CommandUpdateOne struct {
 	mutation *CommandMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (cuo *CommandUpdateOne) SetUpdatedAt(t time.Time) *CommandUpdateOne {
+	cuo.mutation.SetUpdatedAt(t)
+	return cuo
+}
+
 // SetName sets the "name" field.
 func (cuo *CommandUpdateOne) SetName(s string) *CommandUpdateOne {
 	cuo.mutation.SetName(s)
@@ -191,6 +220,7 @@ func (cuo *CommandUpdateOne) Save(ctx context.Context) (*Command, error) {
 		err  error
 		node *Command
 	)
+	cuo.defaults()
 	if len(cuo.hooks) == 0 {
 		if err = cuo.check(); err != nil {
 			return nil, err
@@ -242,6 +272,14 @@ func (cuo *CommandUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cuo *CommandUpdateOne) defaults() {
+	if _, ok := cuo.mutation.UpdatedAt(); !ok {
+		v := command.UpdateDefaultUpdatedAt()
+		cuo.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cuo *CommandUpdateOne) check() error {
 	if v, ok := cuo.mutation.Name(); ok {
@@ -286,6 +324,13 @@ func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := cuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: command.FieldUpdatedAt,
+		})
 	}
 	if value, ok := cuo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{

@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/pkg/database/ent/job"
@@ -15,6 +16,10 @@ type Job struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Cronjobid holds the value of the "cronjobid" field.
 	Cronjobid int `json:"cronjobid,omitempty"`
 	// Name holds the value of the "name" field.
@@ -42,6 +47,8 @@ func (*Job) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case job.FieldID, job.FieldName, job.FieldFunc, job.FieldCron, job.FieldMode, job.FieldResourceIds, job.FieldStatus, job.FieldMetadata:
 			values[i] = new(sql.NullString)
+		case job.FieldCreatedAt, job.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Job", columns[i])
 		}
@@ -62,6 +69,18 @@ func (j *Job) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				j.ID = value.String
+			}
+		case job.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				j.CreatedAt = value.Time
+			}
+		case job.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				j.UpdatedAt = value.Time
 			}
 		case job.FieldCronjobid:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -139,6 +158,10 @@ func (j *Job) String() string {
 	var builder strings.Builder
 	builder.WriteString("Job(")
 	builder.WriteString(fmt.Sprintf("id=%v", j.ID))
+	builder.WriteString(", created_at=")
+	builder.WriteString(j.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(j.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", cronjobid=")
 	builder.WriteString(fmt.Sprintf("%v", j.Cronjobid))
 	builder.WriteString(", name=")
