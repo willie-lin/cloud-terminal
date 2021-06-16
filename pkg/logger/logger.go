@@ -3,6 +3,11 @@ package logger
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/genproto/googleapis/type/date"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -154,7 +159,64 @@ func Fatalln(args ...interface{}) {
 	stdOut.Fatalln(args...)
 }
 
-// WithError creates
+//
+//// WithError creates
+//func WithError(err error) *logrus.Entry {
+//	return stdOut.WithField(logrus.ErrorKey, err)
+//}
+
+// WithError creates an entry from the standard logger and adds an error to it, using the value defined in ErrorKey as key.
 func WithError(err error) *logrus.Entry {
 	return stdOut.WithField(logrus.ErrorKey, err)
+}
+
+// WithField creates an entry from the standard logger and adds a field to
+// it. If you want multiple fields, use `WithFields`.
+//
+// Note that it doesn't log until you call Debug, Print, Info, Warn, Fatal
+// or Panic on the Entry it returns.
+
+func WithField(key string, value interface{}) *logrus.Entry {
+	return stdOut.WithField(key, value)
+}
+
+type Logrus struct {
+	*logrus.Logger
+}
+
+// GetEchoLogger
+
+func NewLogger() logrus {
+	logFilePath := ""
+	if dir, err := os.Getwd(); err == nil {
+		logFilePath = dir + "/logs/"
+	}
+	if err := os.MkdirAll(logFilePath, 0755); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	// 生成日志文件
+	logFileName := string(time.Date) + "cloud-terminal.log"
+	fileName := path.Join(logFilePath, logFileName)
+	if _, err := os.Stat(fileName); err != nil {
+		if _, err := os.Create(fileName); err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
+	//  实例化
+	logger := logrus.New()
+	// 输出
+	logger.SetOutput(io.MultiWriter(&lumberjack.Logger{
+		Filename:   fileName,
+		MaxSize:    200,
+		MaxBackups: 3,
+		MaxAge:     7,
+		Compress:   true,
+	}, os.Stdout))
+	logger.SetReportCaller(true)
+	// 设置日志级别
+	if config.GlobalCfg.Debug {
+
+	}
 }
