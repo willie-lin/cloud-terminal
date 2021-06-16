@@ -7,13 +7,14 @@ import (
 
 type GenerateOpts ctotp.GenerateOpts
 
-// 生成新的to
+// 生成新的totp
 func NewTOPO(opt GenerateOpts) (*cotp.Key, error) {
 
 	return ctotp.Generate(ctotp.GenerateOpts(opt))
 
 }
 
+// 验证totp
 func Validate(code string, secret string) bool {
 	if secret == "" {
 		return true
