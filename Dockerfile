@@ -1,11 +1,12 @@
-FROM golang:1.15 as build
+FROM golang:1.16 as build
 
 MAINTAINER Linjiezui "linjiezui@gmail.com"
 
 # 容器环境变量添加，会覆盖默认的变量值
 ENV GO111MODULE=on
-#ENV GOPROXY=https://goproxy.io,direct
-ENV GOPROXY=https://goproxy.cn,direct
+
+ENV GOPROXY=https://goproxy.io,direct
+#ENV GOPROXY=https://goproxy.cn,direct
 
 # 设置工作区
 WORKDIR /go/release

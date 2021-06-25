@@ -30,8 +30,9 @@ import (
 //}
 
 var (
-	driver  = "mysql"
-	baseUrl = "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true"
+	driver = "mysql"
+	//baseUrl = "root:root1234@tcp(127.0.0.1:3306)/terminal?charset=utf8&parseTime=true"
+	baseUrl = "root:root1234@tcp(0.0.0.0:3306)/terminal?charset=utf8&parseTime=true"
 )
 
 func Client() (*ent.Client, error) {
