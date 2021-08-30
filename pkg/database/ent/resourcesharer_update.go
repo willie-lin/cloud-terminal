@@ -21,9 +21,9 @@ type ResourceSharerUpdate struct {
 	mutation *ResourceSharerMutation
 }
 
-// Where adds a new predicate for the ResourceSharerUpdate builder.
+// Where appends a list predicates to the ResourceSharerUpdate builder.
 func (rsu *ResourceSharerUpdate) Where(ps ...predicate.ResourceSharer) *ResourceSharerUpdate {
-	rsu.mutation.predicates = append(rsu.mutation.predicates, ps...)
+	rsu.mutation.Where(ps...)
 	return rsu
 }
 
@@ -83,6 +83,9 @@ func (rsu *ResourceSharerUpdate) Save(ctx context.Context) (int, error) {
 			return affected, err
 		})
 		for i := len(rsu.hooks) - 1; i >= 0; i-- {
+			if rsu.hooks[i] == nil {
+				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = rsu.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, rsu.mutation); err != nil {
@@ -178,8 +181,8 @@ func (rsu *ResourceSharerUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if n, err = sqlgraph.UpdateNodes(ctx, rsu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{resourcesharer.Label}
-		} else if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		} else if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return 0, err
 	}
@@ -257,6 +260,9 @@ func (rsuo *ResourceSharerUpdateOne) Save(ctx context.Context) (*ResourceSharer,
 			return node, err
 		})
 		for i := len(rsuo.hooks) - 1; i >= 0; i-- {
+			if rsuo.hooks[i] == nil {
+				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = rsuo.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, rsuo.mutation); err != nil {
@@ -372,8 +378,8 @@ func (rsuo *ResourceSharerUpdateOne) sqlSave(ctx context.Context) (_node *Resour
 	if err = sqlgraph.UpdateNode(ctx, rsuo.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{resourcesharer.Label}
-		} else if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		} else if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return nil, err
 	}

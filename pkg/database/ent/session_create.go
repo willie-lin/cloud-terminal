@@ -233,11 +233,17 @@ func (sc *SessionCreate) Save(ctx context.Context) (*Session, error) {
 				return nil, err
 			}
 			sc.mutation = mutation
-			node, err = sc.sqlSave(ctx)
+			if node, err = sc.sqlSave(ctx); err != nil {
+				return nil, err
+			}
+			mutation.id = &node.ID
 			mutation.done = true
 			return node, err
 		})
 		for i := len(sc.hooks) - 1; i >= 0; i-- {
+			if sc.hooks[i] == nil {
+				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = sc.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, sc.mutation); err != nil {
@@ -254,6 +260,19 @@ func (sc *SessionCreate) SaveX(ctx context.Context) *Session {
 		panic(err)
 	}
 	return v
+}
+
+// Exec executes the query.
+func (sc *SessionCreate) Exec(ctx context.Context) error {
+	_, err := sc.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (sc *SessionCreate) ExecX(ctx context.Context) {
+	if err := sc.Exec(ctx); err != nil {
+		panic(err)
+	}
 }
 
 // defaults sets the default values of the builder before save.
@@ -279,70 +298,70 @@ func (sc *SessionCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (sc *SessionCreate) check() error {
 	if _, ok := sc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
 	}
 	if _, ok := sc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
 	}
 	if _, ok := sc.mutation.Protocol(); !ok {
-		return &ValidationError{Name: "protocol", err: errors.New("ent: missing required field \"protocol\"")}
+		return &ValidationError{Name: "protocol", err: errors.New(`ent: missing required field "protocol"`)}
 	}
 	if _, ok := sc.mutation.IP(); !ok {
-		return &ValidationError{Name: "ip", err: errors.New("ent: missing required field \"ip\"")}
+		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "ip"`)}
 	}
 	if _, ok := sc.mutation.Port(); !ok {
-		return &ValidationError{Name: "port", err: errors.New("ent: missing required field \"port\"")}
+		return &ValidationError{Name: "port", err: errors.New(`ent: missing required field "port"`)}
 	}
 	if _, ok := sc.mutation.ConnectionID(); !ok {
-		return &ValidationError{Name: "connection_id", err: errors.New("ent: missing required field \"connection_id\"")}
+		return &ValidationError{Name: "connection_id", err: errors.New(`ent: missing required field "connection_id"`)}
 	}
 	if _, ok := sc.mutation.AssetID(); !ok {
-		return &ValidationError{Name: "asset_id", err: errors.New("ent: missing required field \"asset_id\"")}
+		return &ValidationError{Name: "asset_id", err: errors.New(`ent: missing required field "asset_id"`)}
 	}
 	if _, ok := sc.mutation.Username(); !ok {
-		return &ValidationError{Name: "username", err: errors.New("ent: missing required field \"username\"")}
+		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "username"`)}
 	}
 	if _, ok := sc.mutation.Password(); !ok {
-		return &ValidationError{Name: "password", err: errors.New("ent: missing required field \"password\"")}
+		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "password"`)}
 	}
 	if _, ok := sc.mutation.Creator(); !ok {
-		return &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
+		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required field "creator"`)}
 	}
 	if _, ok := sc.mutation.ClientIP(); !ok {
-		return &ValidationError{Name: "client_ip", err: errors.New("ent: missing required field \"client_ip\"")}
+		return &ValidationError{Name: "client_ip", err: errors.New(`ent: missing required field "client_ip"`)}
 	}
 	if _, ok := sc.mutation.Width(); !ok {
-		return &ValidationError{Name: "width", err: errors.New("ent: missing required field \"width\"")}
+		return &ValidationError{Name: "width", err: errors.New(`ent: missing required field "width"`)}
 	}
 	if _, ok := sc.mutation.Height(); !ok {
-		return &ValidationError{Name: "height", err: errors.New("ent: missing required field \"height\"")}
+		return &ValidationError{Name: "height", err: errors.New(`ent: missing required field "height"`)}
 	}
 	if _, ok := sc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New("ent: missing required field \"status\"")}
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
 	}
 	if _, ok := sc.mutation.Recording(); !ok {
-		return &ValidationError{Name: "recording", err: errors.New("ent: missing required field \"recording\"")}
+		return &ValidationError{Name: "recording", err: errors.New(`ent: missing required field "recording"`)}
 	}
 	if _, ok := sc.mutation.PrivateKey(); !ok {
-		return &ValidationError{Name: "private_key", err: errors.New("ent: missing required field \"private_key\"")}
+		return &ValidationError{Name: "private_key", err: errors.New(`ent: missing required field "private_key"`)}
 	}
 	if _, ok := sc.mutation.Passphrase(); !ok {
-		return &ValidationError{Name: "passphrase", err: errors.New("ent: missing required field \"passphrase\"")}
+		return &ValidationError{Name: "passphrase", err: errors.New(`ent: missing required field "passphrase"`)}
 	}
 	if _, ok := sc.mutation.Code(); !ok {
-		return &ValidationError{Name: "code", err: errors.New("ent: missing required field \"code\"")}
+		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "code"`)}
 	}
 	if _, ok := sc.mutation.Message(); !ok {
-		return &ValidationError{Name: "message", err: errors.New("ent: missing required field \"message\"")}
+		return &ValidationError{Name: "message", err: errors.New(`ent: missing required field "message"`)}
 	}
 	if _, ok := sc.mutation.Connected(); !ok {
-		return &ValidationError{Name: "connected", err: errors.New("ent: missing required field \"connected\"")}
+		return &ValidationError{Name: "connected", err: errors.New(`ent: missing required field "connected"`)}
 	}
 	if _, ok := sc.mutation.Disconnected(); !ok {
-		return &ValidationError{Name: "disconnected", err: errors.New("ent: missing required field \"disconnected\"")}
+		return &ValidationError{Name: "disconnected", err: errors.New(`ent: missing required field "disconnected"`)}
 	}
 	if _, ok := sc.mutation.Mode(); !ok {
-		return &ValidationError{Name: "mode", err: errors.New("ent: missing required field \"mode\"")}
+		return &ValidationError{Name: "mode", err: errors.New(`ent: missing required field "mode"`)}
 	}
 	return nil
 }
@@ -350,10 +369,13 @@ func (sc *SessionCreate) check() error {
 func (sc *SessionCreate) sqlSave(ctx context.Context) (*Session, error) {
 	_node, _spec := sc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, sc.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return nil, err
+	}
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(string)
 	}
 	return _node, nil
 }
@@ -600,17 +622,19 @@ func (scb *SessionCreateBulk) Save(ctx context.Context) ([]*Session, error) {
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, scb.builders[i+1].mutation)
 				} else {
+					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, scb.driver, &sqlgraph.BatchCreateSpec{Nodes: specs}); err != nil {
-						if cerr, ok := isSQLConstraintError(err); ok {
-							err = cerr
+					if err = sqlgraph.BatchCreate(ctx, scb.driver, spec); err != nil {
+						if sqlgraph.IsConstraintError(err) {
+							err = &ConstraintError{err.Error(), err}
 						}
 					}
 				}
-				mutation.done = true
 				if err != nil {
 					return nil, err
 				}
+				mutation.id = &nodes[i].ID
+				mutation.done = true
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {
@@ -634,4 +658,17 @@ func (scb *SessionCreateBulk) SaveX(ctx context.Context) []*Session {
 		panic(err)
 	}
 	return v
+}
+
+// Exec executes the query.
+func (scb *SessionCreateBulk) Exec(ctx context.Context) error {
+	_, err := scb.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (scb *SessionCreateBulk) ExecX(ctx context.Context) {
+	if err := scb.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

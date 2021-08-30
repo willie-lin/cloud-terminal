@@ -143,11 +143,17 @@ func (vc *VerificationCreate) Save(ctx context.Context) (*Verification, error) {
 				return nil, err
 			}
 			vc.mutation = mutation
-			node, err = vc.sqlSave(ctx)
+			if node, err = vc.sqlSave(ctx); err != nil {
+				return nil, err
+			}
+			mutation.id = &node.ID
 			mutation.done = true
 			return node, err
 		})
 		for i := len(vc.hooks) - 1; i >= 0; i-- {
+			if vc.hooks[i] == nil {
+				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = vc.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, vc.mutation); err != nil {
@@ -164,6 +170,19 @@ func (vc *VerificationCreate) SaveX(ctx context.Context) *Verification {
 		panic(err)
 	}
 	return v
+}
+
+// Exec executes the query.
+func (vc *VerificationCreate) Exec(ctx context.Context) error {
+	_, err := vc.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (vc *VerificationCreate) ExecX(ctx context.Context) {
+	if err := vc.Exec(ctx); err != nil {
+		panic(err)
+	}
 }
 
 // defaults sets the default values of the builder before save.
@@ -189,25 +208,25 @@ func (vc *VerificationCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (vc *VerificationCreate) check() error {
 	if _, ok := vc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
 	}
 	if _, ok := vc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
 	}
 	if _, ok := vc.mutation.ClientIP(); !ok {
-		return &ValidationError{Name: "client_ip", err: errors.New("ent: missing required field \"client_ip\"")}
+		return &ValidationError{Name: "client_ip", err: errors.New(`ent: missing required field "client_ip"`)}
 	}
 	if _, ok := vc.mutation.ClientUserAgent(); !ok {
-		return &ValidationError{Name: "clientUserAgent", err: errors.New("ent: missing required field \"clientUserAgent\"")}
+		return &ValidationError{Name: "clientUserAgent", err: errors.New(`ent: missing required field "clientUserAgent"`)}
 	}
 	if _, ok := vc.mutation.LoginTime(); !ok {
-		return &ValidationError{Name: "login_time", err: errors.New("ent: missing required field \"login_time\"")}
+		return &ValidationError{Name: "login_time", err: errors.New(`ent: missing required field "login_time"`)}
 	}
 	if _, ok := vc.mutation.LogoutTime(); !ok {
-		return &ValidationError{Name: "logout_time", err: errors.New("ent: missing required field \"logout_time\"")}
+		return &ValidationError{Name: "logout_time", err: errors.New(`ent: missing required field "logout_time"`)}
 	}
 	if _, ok := vc.mutation.Remember(); !ok {
-		return &ValidationError{Name: "remember", err: errors.New("ent: missing required field \"remember\"")}
+		return &ValidationError{Name: "remember", err: errors.New(`ent: missing required field "remember"`)}
 	}
 	return nil
 }
@@ -215,10 +234,13 @@ func (vc *VerificationCreate) check() error {
 func (vc *VerificationCreate) sqlSave(ctx context.Context) (*Verification, error) {
 	_node, _spec := vc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, vc.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return nil, err
+	}
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(string)
 	}
 	return _node, nil
 }
@@ -345,17 +367,19 @@ func (vcb *VerificationCreateBulk) Save(ctx context.Context) ([]*Verification, e
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, vcb.builders[i+1].mutation)
 				} else {
+					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, vcb.driver, &sqlgraph.BatchCreateSpec{Nodes: specs}); err != nil {
-						if cerr, ok := isSQLConstraintError(err); ok {
-							err = cerr
+					if err = sqlgraph.BatchCreate(ctx, vcb.driver, spec); err != nil {
+						if sqlgraph.IsConstraintError(err) {
+							err = &ConstraintError{err.Error(), err}
 						}
 					}
 				}
-				mutation.done = true
 				if err != nil {
 					return nil, err
 				}
+				mutation.id = &nodes[i].ID
+				mutation.done = true
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {
@@ -379,4 +403,17 @@ func (vcb *VerificationCreateBulk) SaveX(ctx context.Context) []*Verification {
 		panic(err)
 	}
 	return v
+}
+
+// Exec executes the query.
+func (vcb *VerificationCreateBulk) Exec(ctx context.Context) error {
+	_, err := vcb.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (vcb *VerificationCreateBulk) ExecX(ctx context.Context) {
+	if err := vcb.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

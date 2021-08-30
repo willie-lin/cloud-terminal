@@ -20,9 +20,9 @@ type AccessSecurityDelete struct {
 	mutation *AccessSecurityMutation
 }
 
-// Where adds a new predicate to the AccessSecurityDelete builder.
+// Where appends a list predicates to the AccessSecurityDelete builder.
 func (asd *AccessSecurityDelete) Where(ps ...predicate.AccessSecurity) *AccessSecurityDelete {
-	asd.mutation.predicates = append(asd.mutation.predicates, ps...)
+	asd.mutation.Where(ps...)
 	return asd
 }
 
@@ -46,6 +46,9 @@ func (asd *AccessSecurityDelete) Exec(ctx context.Context) (int, error) {
 			return affected, err
 		})
 		for i := len(asd.hooks) - 1; i >= 0; i-- {
+			if asd.hooks[i] == nil {
+				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = asd.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, asd.mutation); err != nil {

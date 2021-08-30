@@ -20,9 +20,9 @@ type VerificationDelete struct {
 	mutation *VerificationMutation
 }
 
-// Where adds a new predicate to the VerificationDelete builder.
+// Where appends a list predicates to the VerificationDelete builder.
 func (vd *VerificationDelete) Where(ps ...predicate.Verification) *VerificationDelete {
-	vd.mutation.predicates = append(vd.mutation.predicates, ps...)
+	vd.mutation.Where(ps...)
 	return vd
 }
 
@@ -46,6 +46,9 @@ func (vd *VerificationDelete) Exec(ctx context.Context) (int, error) {
 			return affected, err
 		})
 		for i := len(vd.hooks) - 1; i >= 0; i-- {
+			if vd.hooks[i] == nil {
+				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = vd.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, vd.mutation); err != nil {

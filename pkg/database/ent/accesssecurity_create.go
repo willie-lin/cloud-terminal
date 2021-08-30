@@ -121,11 +121,17 @@ func (asc *AccessSecurityCreate) Save(ctx context.Context) (*AccessSecurity, err
 				return nil, err
 			}
 			asc.mutation = mutation
-			node, err = asc.sqlSave(ctx)
+			if node, err = asc.sqlSave(ctx); err != nil {
+				return nil, err
+			}
+			mutation.id = &node.ID
 			mutation.done = true
 			return node, err
 		})
 		for i := len(asc.hooks) - 1; i >= 0; i-- {
+			if asc.hooks[i] == nil {
+				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = asc.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, asc.mutation); err != nil {
@@ -144,6 +150,19 @@ func (asc *AccessSecurityCreate) SaveX(ctx context.Context) *AccessSecurity {
 	return v
 }
 
+// Exec executes the query.
+func (asc *AccessSecurityCreate) Exec(ctx context.Context) error {
+	_, err := asc.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (asc *AccessSecurityCreate) ExecX(ctx context.Context) {
+	if err := asc.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // defaults sets the default values of the builder before save.
 func (asc *AccessSecurityCreate) defaults() {
 	if _, ok := asc.mutation.CreatedAt(); !ok {
@@ -159,22 +178,22 @@ func (asc *AccessSecurityCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (asc *AccessSecurityCreate) check() error {
 	if _, ok := asc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
 	}
 	if _, ok := asc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
 	}
 	if _, ok := asc.mutation.Rule(); !ok {
-		return &ValidationError{Name: "rule", err: errors.New("ent: missing required field \"rule\"")}
+		return &ValidationError{Name: "rule", err: errors.New(`ent: missing required field "rule"`)}
 	}
 	if _, ok := asc.mutation.IP(); !ok {
-		return &ValidationError{Name: "ip", err: errors.New("ent: missing required field \"ip\"")}
+		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "ip"`)}
 	}
 	if _, ok := asc.mutation.Source(); !ok {
-		return &ValidationError{Name: "source", err: errors.New("ent: missing required field \"source\"")}
+		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "source"`)}
 	}
 	if _, ok := asc.mutation.Priority(); !ok {
-		return &ValidationError{Name: "priority", err: errors.New("ent: missing required field \"priority\"")}
+		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "priority"`)}
 	}
 	if len(asc.mutation.AssetsIDs()) == 0 {
 		return &ValidationError{Name: "assets", err: errors.New("ent: missing required edge \"assets\"")}
@@ -185,10 +204,13 @@ func (asc *AccessSecurityCreate) check() error {
 func (asc *AccessSecurityCreate) sqlSave(ctx context.Context) (*AccessSecurity, error) {
 	_node, _spec := asc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, asc.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return nil, err
+	}
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(string)
 	}
 	return _node, nil
 }
@@ -307,17 +329,19 @@ func (ascb *AccessSecurityCreateBulk) Save(ctx context.Context) ([]*AccessSecuri
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, ascb.builders[i+1].mutation)
 				} else {
+					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ascb.driver, &sqlgraph.BatchCreateSpec{Nodes: specs}); err != nil {
-						if cerr, ok := isSQLConstraintError(err); ok {
-							err = cerr
+					if err = sqlgraph.BatchCreate(ctx, ascb.driver, spec); err != nil {
+						if sqlgraph.IsConstraintError(err) {
+							err = &ConstraintError{err.Error(), err}
 						}
 					}
 				}
-				mutation.done = true
 				if err != nil {
 					return nil, err
 				}
+				mutation.id = &nodes[i].ID
+				mutation.done = true
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {
@@ -341,4 +365,17 @@ func (ascb *AccessSecurityCreateBulk) SaveX(ctx context.Context) []*AccessSecuri
 		panic(err)
 	}
 	return v
+}
+
+// Exec executes the query.
+func (ascb *AccessSecurityCreateBulk) Exec(ctx context.Context) error {
+	_, err := ascb.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (ascb *AccessSecurityCreateBulk) ExecX(ctx context.Context) {
+	if err := ascb.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

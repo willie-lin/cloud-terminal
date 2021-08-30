@@ -325,8 +325,8 @@ func (asq *AccessSecurityQuery) GroupBy(field string, fields ...string) *AccessS
 //		Select(accesssecurity.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
-func (asq *AccessSecurityQuery) Select(field string, fields ...string) *AccessSecuritySelect {
-	asq.fields = append([]string{field}, fields...)
+func (asq *AccessSecurityQuery) Select(fields ...string) *AccessSecuritySelect {
+	asq.fields = append(asq.fields, fields...)
 	return &AccessSecuritySelect{AccessSecurityQuery: asq}
 }
 
@@ -470,10 +470,14 @@ func (asq *AccessSecurityQuery) querySpec() *sqlgraph.QuerySpec {
 func (asq *AccessSecurityQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(asq.driver.Dialect())
 	t1 := builder.Table(accesssecurity.Table)
-	selector := builder.Select(t1.Columns(accesssecurity.Columns...)...).From(t1)
+	columns := asq.fields
+	if len(columns) == 0 {
+		columns = accesssecurity.Columns
+	}
+	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if asq.sql != nil {
 		selector = asq.sql
-		selector.Select(selector.Columns(accesssecurity.Columns...)...)
+		selector.Select(selector.Columns(columns...)...)
 	}
 	for _, p := range asq.predicates {
 		p(selector)
@@ -741,13 +745,24 @@ func (asgb *AccessSecurityGroupBy) sqlScan(ctx context.Context, v interface{}) e
 }
 
 func (asgb *AccessSecurityGroupBy) sqlQuery() *sql.Selector {
-	selector := asgb.sql
-	columns := make([]string, 0, len(asgb.fields)+len(asgb.fns))
-	columns = append(columns, asgb.fields...)
+	selector := asgb.sql.Select()
+	aggregation := make([]string, 0, len(asgb.fns))
 	for _, fn := range asgb.fns {
-		columns = append(columns, fn(selector))
+		aggregation = append(aggregation, fn(selector))
 	}
-	return selector.Select(columns...).GroupBy(asgb.fields...)
+	// If no columns were selected in a custom aggregation function, the default
+	// selection is the fields used for "group-by", and the aggregation functions.
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(asgb.fields)+len(asgb.fns))
+		for _, f := range asgb.fields {
+			columns = append(columns, selector.C(f))
+		}
+		for _, c := range aggregation {
+			columns = append(columns, c)
+		}
+		selector.Select(columns...)
+	}
+	return selector.GroupBy(selector.Columns(asgb.fields...)...)
 }
 
 // AccessSecuritySelect is the builder for selecting fields of AccessSecurity entities.
@@ -963,16 +978,10 @@ func (ass *AccessSecuritySelect) BoolX(ctx context.Context) bool {
 
 func (ass *AccessSecuritySelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
-	query, args := ass.sqlQuery().Query()
+	query, args := ass.sql.Query()
 	if err := ass.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-func (ass *AccessSecuritySelect) sqlQuery() sql.Querier {
-	selector := ass.sql
-	selector.Select(selector.Columns(ass.fields...)...)
-	return selector
 }

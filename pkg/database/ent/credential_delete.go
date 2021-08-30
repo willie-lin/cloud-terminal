@@ -20,9 +20,9 @@ type CredentialDelete struct {
 	mutation *CredentialMutation
 }
 
-// Where adds a new predicate to the CredentialDelete builder.
+// Where appends a list predicates to the CredentialDelete builder.
 func (cd *CredentialDelete) Where(ps ...predicate.Credential) *CredentialDelete {
-	cd.mutation.predicates = append(cd.mutation.predicates, ps...)
+	cd.mutation.Where(ps...)
 	return cd
 }
 
@@ -46,6 +46,9 @@ func (cd *CredentialDelete) Exec(ctx context.Context) (int, error) {
 			return affected, err
 		})
 		for i := len(cd.hooks) - 1; i >= 0; i-- {
+			if cd.hooks[i] == nil {
+				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = cd.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, cd.mutation); err != nil {

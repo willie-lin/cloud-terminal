@@ -22,9 +22,9 @@ type VerificationUpdate struct {
 	mutation *VerificationMutation
 }
 
-// Where adds a new predicate for the VerificationUpdate builder.
+// Where appends a list predicates to the VerificationUpdate builder.
 func (vu *VerificationUpdate) Where(ps ...predicate.Verification) *VerificationUpdate {
-	vu.mutation.predicates = append(vu.mutation.predicates, ps...)
+	vu.mutation.Where(ps...)
 	return vu
 }
 
@@ -134,6 +134,9 @@ func (vu *VerificationUpdate) Save(ctx context.Context) (int, error) {
 			return affected, err
 		})
 		for i := len(vu.hooks) - 1; i >= 0; i-- {
+			if vu.hooks[i] == nil {
+				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = vu.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, vu.mutation); err != nil {
@@ -294,8 +297,8 @@ func (vu *VerificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if n, err = sqlgraph.UpdateNodes(ctx, vu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{verification.Label}
-		} else if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		} else if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return 0, err
 	}
@@ -423,6 +426,9 @@ func (vuo *VerificationUpdateOne) Save(ctx context.Context) (*Verification, erro
 			return node, err
 		})
 		for i := len(vuo.hooks) - 1; i >= 0; i-- {
+			if vuo.hooks[i] == nil {
+				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = vuo.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, vuo.mutation); err != nil {
@@ -603,8 +609,8 @@ func (vuo *VerificationUpdateOne) sqlSave(ctx context.Context) (_node *Verificat
 	if err = sqlgraph.UpdateNode(ctx, vuo.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{verification.Label}
-		} else if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		} else if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return nil, err
 	}

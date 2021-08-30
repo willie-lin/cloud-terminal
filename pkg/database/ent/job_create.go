@@ -129,11 +129,17 @@ func (jc *JobCreate) Save(ctx context.Context) (*Job, error) {
 				return nil, err
 			}
 			jc.mutation = mutation
-			node, err = jc.sqlSave(ctx)
+			if node, err = jc.sqlSave(ctx); err != nil {
+				return nil, err
+			}
+			mutation.id = &node.ID
 			mutation.done = true
 			return node, err
 		})
 		for i := len(jc.hooks) - 1; i >= 0; i-- {
+			if jc.hooks[i] == nil {
+				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = jc.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, jc.mutation); err != nil {
@@ -152,6 +158,19 @@ func (jc *JobCreate) SaveX(ctx context.Context) *Job {
 	return v
 }
 
+// Exec executes the query.
+func (jc *JobCreate) Exec(ctx context.Context) error {
+	_, err := jc.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (jc *JobCreate) ExecX(ctx context.Context) {
+	if err := jc.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // defaults sets the default values of the builder before save.
 func (jc *JobCreate) defaults() {
 	if _, ok := jc.mutation.CreatedAt(); !ok {
@@ -167,34 +186,34 @@ func (jc *JobCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (jc *JobCreate) check() error {
 	if _, ok := jc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
 	}
 	if _, ok := jc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
 	}
 	if _, ok := jc.mutation.Cronjobid(); !ok {
-		return &ValidationError{Name: "cronjobid", err: errors.New("ent: missing required field \"cronjobid\"")}
+		return &ValidationError{Name: "cronjobid", err: errors.New(`ent: missing required field "cronjobid"`)}
 	}
 	if _, ok := jc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
 	}
 	if _, ok := jc.mutation.Func(); !ok {
-		return &ValidationError{Name: "func", err: errors.New("ent: missing required field \"func\"")}
+		return &ValidationError{Name: "func", err: errors.New(`ent: missing required field "func"`)}
 	}
 	if _, ok := jc.mutation.Cron(); !ok {
-		return &ValidationError{Name: "cron", err: errors.New("ent: missing required field \"cron\"")}
+		return &ValidationError{Name: "cron", err: errors.New(`ent: missing required field "cron"`)}
 	}
 	if _, ok := jc.mutation.Mode(); !ok {
-		return &ValidationError{Name: "mode", err: errors.New("ent: missing required field \"mode\"")}
+		return &ValidationError{Name: "mode", err: errors.New(`ent: missing required field "mode"`)}
 	}
 	if _, ok := jc.mutation.ResourceIds(); !ok {
-		return &ValidationError{Name: "resourceIds", err: errors.New("ent: missing required field \"resourceIds\"")}
+		return &ValidationError{Name: "resourceIds", err: errors.New(`ent: missing required field "resourceIds"`)}
 	}
 	if _, ok := jc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New("ent: missing required field \"status\"")}
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
 	}
 	if _, ok := jc.mutation.Metadata(); !ok {
-		return &ValidationError{Name: "metadata", err: errors.New("ent: missing required field \"metadata\"")}
+		return &ValidationError{Name: "metadata", err: errors.New(`ent: missing required field "metadata"`)}
 	}
 	return nil
 }
@@ -202,10 +221,13 @@ func (jc *JobCreate) check() error {
 func (jc *JobCreate) sqlSave(ctx context.Context) (*Job, error) {
 	_node, _spec := jc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, jc.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return nil, err
+	}
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(string)
 	}
 	return _node, nil
 }
@@ -337,17 +359,19 @@ func (jcb *JobCreateBulk) Save(ctx context.Context) ([]*Job, error) {
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, jcb.builders[i+1].mutation)
 				} else {
+					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, jcb.driver, &sqlgraph.BatchCreateSpec{Nodes: specs}); err != nil {
-						if cerr, ok := isSQLConstraintError(err); ok {
-							err = cerr
+					if err = sqlgraph.BatchCreate(ctx, jcb.driver, spec); err != nil {
+						if sqlgraph.IsConstraintError(err) {
+							err = &ConstraintError{err.Error(), err}
 						}
 					}
 				}
-				mutation.done = true
 				if err != nil {
 					return nil, err
 				}
+				mutation.id = &nodes[i].ID
+				mutation.done = true
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {
@@ -371,4 +395,17 @@ func (jcb *JobCreateBulk) SaveX(ctx context.Context) []*Job {
 		panic(err)
 	}
 	return v
+}
+
+// Exec executes the query.
+func (jcb *JobCreateBulk) Exec(ctx context.Context) error {
+	_, err := jcb.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (jcb *JobCreateBulk) ExecX(ctx context.Context) {
+	if err := jcb.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

@@ -287,8 +287,8 @@ func (rsq *ResourceSharerQuery) GroupBy(field string, fields ...string) *Resourc
 //		Select(resourcesharer.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
-func (rsq *ResourceSharerQuery) Select(field string, fields ...string) *ResourceSharerSelect {
-	rsq.fields = append([]string{field}, fields...)
+func (rsq *ResourceSharerQuery) Select(fields ...string) *ResourceSharerSelect {
+	rsq.fields = append(rsq.fields, fields...)
 	return &ResourceSharerSelect{ResourceSharerQuery: rsq}
 }
 
@@ -398,10 +398,14 @@ func (rsq *ResourceSharerQuery) querySpec() *sqlgraph.QuerySpec {
 func (rsq *ResourceSharerQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(rsq.driver.Dialect())
 	t1 := builder.Table(resourcesharer.Table)
-	selector := builder.Select(t1.Columns(resourcesharer.Columns...)...).From(t1)
+	columns := rsq.fields
+	if len(columns) == 0 {
+		columns = resourcesharer.Columns
+	}
+	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if rsq.sql != nil {
 		selector = rsq.sql
-		selector.Select(selector.Columns(resourcesharer.Columns...)...)
+		selector.Select(selector.Columns(columns...)...)
 	}
 	for _, p := range rsq.predicates {
 		p(selector)
@@ -669,13 +673,24 @@ func (rsgb *ResourceSharerGroupBy) sqlScan(ctx context.Context, v interface{}) e
 }
 
 func (rsgb *ResourceSharerGroupBy) sqlQuery() *sql.Selector {
-	selector := rsgb.sql
-	columns := make([]string, 0, len(rsgb.fields)+len(rsgb.fns))
-	columns = append(columns, rsgb.fields...)
+	selector := rsgb.sql.Select()
+	aggregation := make([]string, 0, len(rsgb.fns))
 	for _, fn := range rsgb.fns {
-		columns = append(columns, fn(selector))
+		aggregation = append(aggregation, fn(selector))
 	}
-	return selector.Select(columns...).GroupBy(rsgb.fields...)
+	// If no columns were selected in a custom aggregation function, the default
+	// selection is the fields used for "group-by", and the aggregation functions.
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(rsgb.fields)+len(rsgb.fns))
+		for _, f := range rsgb.fields {
+			columns = append(columns, selector.C(f))
+		}
+		for _, c := range aggregation {
+			columns = append(columns, c)
+		}
+		selector.Select(columns...)
+	}
+	return selector.GroupBy(selector.Columns(rsgb.fields...)...)
 }
 
 // ResourceSharerSelect is the builder for selecting fields of ResourceSharer entities.
@@ -891,16 +906,10 @@ func (rss *ResourceSharerSelect) BoolX(ctx context.Context) bool {
 
 func (rss *ResourceSharerSelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
-	query, args := rss.sqlQuery().Query()
+	query, args := rss.sql.Query()
 	if err := rss.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-func (rss *ResourceSharerSelect) sqlQuery() sql.Querier {
-	selector := rss.sql
-	selector.Select(selector.Columns(rss.fields...)...)
-	return selector
 }

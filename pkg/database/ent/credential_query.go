@@ -287,8 +287,8 @@ func (cq *CredentialQuery) GroupBy(field string, fields ...string) *CredentialGr
 //		Select(credential.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
-func (cq *CredentialQuery) Select(field string, fields ...string) *CredentialSelect {
-	cq.fields = append([]string{field}, fields...)
+func (cq *CredentialQuery) Select(fields ...string) *CredentialSelect {
+	cq.fields = append(cq.fields, fields...)
 	return &CredentialSelect{CredentialQuery: cq}
 }
 
@@ -398,10 +398,14 @@ func (cq *CredentialQuery) querySpec() *sqlgraph.QuerySpec {
 func (cq *CredentialQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(cq.driver.Dialect())
 	t1 := builder.Table(credential.Table)
-	selector := builder.Select(t1.Columns(credential.Columns...)...).From(t1)
+	columns := cq.fields
+	if len(columns) == 0 {
+		columns = credential.Columns
+	}
+	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if cq.sql != nil {
 		selector = cq.sql
-		selector.Select(selector.Columns(credential.Columns...)...)
+		selector.Select(selector.Columns(columns...)...)
 	}
 	for _, p := range cq.predicates {
 		p(selector)
@@ -669,13 +673,24 @@ func (cgb *CredentialGroupBy) sqlScan(ctx context.Context, v interface{}) error 
 }
 
 func (cgb *CredentialGroupBy) sqlQuery() *sql.Selector {
-	selector := cgb.sql
-	columns := make([]string, 0, len(cgb.fields)+len(cgb.fns))
-	columns = append(columns, cgb.fields...)
+	selector := cgb.sql.Select()
+	aggregation := make([]string, 0, len(cgb.fns))
 	for _, fn := range cgb.fns {
-		columns = append(columns, fn(selector))
+		aggregation = append(aggregation, fn(selector))
 	}
-	return selector.Select(columns...).GroupBy(cgb.fields...)
+	// If no columns were selected in a custom aggregation function, the default
+	// selection is the fields used for "group-by", and the aggregation functions.
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(cgb.fields)+len(cgb.fns))
+		for _, f := range cgb.fields {
+			columns = append(columns, selector.C(f))
+		}
+		for _, c := range aggregation {
+			columns = append(columns, c)
+		}
+		selector.Select(columns...)
+	}
+	return selector.GroupBy(selector.Columns(cgb.fields...)...)
 }
 
 // CredentialSelect is the builder for selecting fields of Credential entities.
@@ -891,16 +906,10 @@ func (cs *CredentialSelect) BoolX(ctx context.Context) bool {
 
 func (cs *CredentialSelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
-	query, args := cs.sqlQuery().Query()
+	query, args := cs.sql.Query()
 	if err := cs.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-func (cs *CredentialSelect) sqlQuery() sql.Querier {
-	selector := cs.sql
-	selector.Select(selector.Columns(cs.fields...)...)
-	return selector
 }

@@ -325,8 +325,8 @@ func (vq *VerificationQuery) GroupBy(field string, fields ...string) *Verificati
 //		Select(verification.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
-func (vq *VerificationQuery) Select(field string, fields ...string) *VerificationSelect {
-	vq.fields = append([]string{field}, fields...)
+func (vq *VerificationQuery) Select(fields ...string) *VerificationSelect {
+	vq.fields = append(vq.fields, fields...)
 	return &VerificationSelect{VerificationQuery: vq}
 }
 
@@ -470,10 +470,14 @@ func (vq *VerificationQuery) querySpec() *sqlgraph.QuerySpec {
 func (vq *VerificationQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(vq.driver.Dialect())
 	t1 := builder.Table(verification.Table)
-	selector := builder.Select(t1.Columns(verification.Columns...)...).From(t1)
+	columns := vq.fields
+	if len(columns) == 0 {
+		columns = verification.Columns
+	}
+	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if vq.sql != nil {
 		selector = vq.sql
-		selector.Select(selector.Columns(verification.Columns...)...)
+		selector.Select(selector.Columns(columns...)...)
 	}
 	for _, p := range vq.predicates {
 		p(selector)
@@ -741,13 +745,24 @@ func (vgb *VerificationGroupBy) sqlScan(ctx context.Context, v interface{}) erro
 }
 
 func (vgb *VerificationGroupBy) sqlQuery() *sql.Selector {
-	selector := vgb.sql
-	columns := make([]string, 0, len(vgb.fields)+len(vgb.fns))
-	columns = append(columns, vgb.fields...)
+	selector := vgb.sql.Select()
+	aggregation := make([]string, 0, len(vgb.fns))
 	for _, fn := range vgb.fns {
-		columns = append(columns, fn(selector))
+		aggregation = append(aggregation, fn(selector))
 	}
-	return selector.Select(columns...).GroupBy(vgb.fields...)
+	// If no columns were selected in a custom aggregation function, the default
+	// selection is the fields used for "group-by", and the aggregation functions.
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(vgb.fields)+len(vgb.fns))
+		for _, f := range vgb.fields {
+			columns = append(columns, selector.C(f))
+		}
+		for _, c := range aggregation {
+			columns = append(columns, c)
+		}
+		selector.Select(columns...)
+	}
+	return selector.GroupBy(selector.Columns(vgb.fields...)...)
 }
 
 // VerificationSelect is the builder for selecting fields of Verification entities.
@@ -963,16 +978,10 @@ func (vs *VerificationSelect) BoolX(ctx context.Context) bool {
 
 func (vs *VerificationSelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
-	query, args := vs.sqlQuery().Query()
+	query, args := vs.sql.Query()
 	if err := vs.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-func (vs *VerificationSelect) sqlQuery() sql.Querier {
-	selector := vs.sql
-	selector.Select(selector.Columns(vs.fields...)...)
-	return selector
 }

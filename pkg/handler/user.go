@@ -58,10 +58,12 @@ func GetAllUser(client *ent.Client) echo.HandlerFunc {
 		log, _ := zap.NewDevelopment()
 		users, err := client.User.Query().All(context.Background())
 		if err != nil {
-			log.Fatal("GetAll User Error: ", zap.Error(err))
-			return err
+			if ent.IsNotFound(err) {
+				log.Fatal("GetAll User Error: ", zap.Error(err))
+				return c.String(http.StatusBadRequest, "Get: "+err.Error())
+			}
+			return c.String(http.StatusNotFound, "Not Found")
 		}
-
 		return c.JSON(http.StatusOK, users)
 	}
 }

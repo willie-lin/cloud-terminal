@@ -59,7 +59,7 @@ const (
 	EdgeAssets = "assets"
 	// Table holds the table name of the session in the database.
 	Table = "sessions"
-	// AssetsTable is the table the holds the assets relation/edge.
+	// AssetsTable is the table that holds the assets relation/edge.
 	AssetsTable = "assets"
 	// AssetsInverseTable is the table name for the Asset entity.
 	// It exists in this package in order to avoid circular dependency with the "asset" package.

@@ -20,9 +20,9 @@ type JobDelete struct {
 	mutation *JobMutation
 }
 
-// Where adds a new predicate to the JobDelete builder.
+// Where appends a list predicates to the JobDelete builder.
 func (jd *JobDelete) Where(ps ...predicate.Job) *JobDelete {
-	jd.mutation.predicates = append(jd.mutation.predicates, ps...)
+	jd.mutation.Where(ps...)
 	return jd
 }
 
@@ -46,6 +46,9 @@ func (jd *JobDelete) Exec(ctx context.Context) (int, error) {
 			return affected, err
 		})
 		for i := len(jd.hooks) - 1; i >= 0; i-- {
+			if jd.hooks[i] == nil {
+				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = jd.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, jd.mutation); err != nil {

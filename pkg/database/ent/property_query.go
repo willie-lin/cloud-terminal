@@ -287,8 +287,8 @@ func (pq *PropertyQuery) GroupBy(field string, fields ...string) *PropertyGroupB
 //		Select(property.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
-func (pq *PropertyQuery) Select(field string, fields ...string) *PropertySelect {
-	pq.fields = append([]string{field}, fields...)
+func (pq *PropertyQuery) Select(fields ...string) *PropertySelect {
+	pq.fields = append(pq.fields, fields...)
 	return &PropertySelect{PropertyQuery: pq}
 }
 
@@ -398,10 +398,14 @@ func (pq *PropertyQuery) querySpec() *sqlgraph.QuerySpec {
 func (pq *PropertyQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(pq.driver.Dialect())
 	t1 := builder.Table(property.Table)
-	selector := builder.Select(t1.Columns(property.Columns...)...).From(t1)
+	columns := pq.fields
+	if len(columns) == 0 {
+		columns = property.Columns
+	}
+	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if pq.sql != nil {
 		selector = pq.sql
-		selector.Select(selector.Columns(property.Columns...)...)
+		selector.Select(selector.Columns(columns...)...)
 	}
 	for _, p := range pq.predicates {
 		p(selector)
@@ -669,13 +673,24 @@ func (pgb *PropertyGroupBy) sqlScan(ctx context.Context, v interface{}) error {
 }
 
 func (pgb *PropertyGroupBy) sqlQuery() *sql.Selector {
-	selector := pgb.sql
-	columns := make([]string, 0, len(pgb.fields)+len(pgb.fns))
-	columns = append(columns, pgb.fields...)
+	selector := pgb.sql.Select()
+	aggregation := make([]string, 0, len(pgb.fns))
 	for _, fn := range pgb.fns {
-		columns = append(columns, fn(selector))
+		aggregation = append(aggregation, fn(selector))
 	}
-	return selector.Select(columns...).GroupBy(pgb.fields...)
+	// If no columns were selected in a custom aggregation function, the default
+	// selection is the fields used for "group-by", and the aggregation functions.
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(pgb.fields)+len(pgb.fns))
+		for _, f := range pgb.fields {
+			columns = append(columns, selector.C(f))
+		}
+		for _, c := range aggregation {
+			columns = append(columns, c)
+		}
+		selector.Select(columns...)
+	}
+	return selector.GroupBy(selector.Columns(pgb.fields...)...)
 }
 
 // PropertySelect is the builder for selecting fields of Property entities.
@@ -891,16 +906,10 @@ func (ps *PropertySelect) BoolX(ctx context.Context) bool {
 
 func (ps *PropertySelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
-	query, args := ps.sqlQuery().Query()
+	query, args := ps.sql.Query()
 	if err := ps.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-func (ps *PropertySelect) sqlQuery() sql.Querier {
-	selector := ps.sql
-	selector.Select(selector.Columns(ps.fields...)...)
-	return selector
 }

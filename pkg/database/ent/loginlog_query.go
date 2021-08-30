@@ -287,8 +287,8 @@ func (llq *LoginLogQuery) GroupBy(field string, fields ...string) *LoginLogGroup
 //		Select(loginlog.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
-func (llq *LoginLogQuery) Select(field string, fields ...string) *LoginLogSelect {
-	llq.fields = append([]string{field}, fields...)
+func (llq *LoginLogQuery) Select(fields ...string) *LoginLogSelect {
+	llq.fields = append(llq.fields, fields...)
 	return &LoginLogSelect{LoginLogQuery: llq}
 }
 
@@ -398,10 +398,14 @@ func (llq *LoginLogQuery) querySpec() *sqlgraph.QuerySpec {
 func (llq *LoginLogQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(llq.driver.Dialect())
 	t1 := builder.Table(loginlog.Table)
-	selector := builder.Select(t1.Columns(loginlog.Columns...)...).From(t1)
+	columns := llq.fields
+	if len(columns) == 0 {
+		columns = loginlog.Columns
+	}
+	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if llq.sql != nil {
 		selector = llq.sql
-		selector.Select(selector.Columns(loginlog.Columns...)...)
+		selector.Select(selector.Columns(columns...)...)
 	}
 	for _, p := range llq.predicates {
 		p(selector)
@@ -669,13 +673,24 @@ func (llgb *LoginLogGroupBy) sqlScan(ctx context.Context, v interface{}) error {
 }
 
 func (llgb *LoginLogGroupBy) sqlQuery() *sql.Selector {
-	selector := llgb.sql
-	columns := make([]string, 0, len(llgb.fields)+len(llgb.fns))
-	columns = append(columns, llgb.fields...)
+	selector := llgb.sql.Select()
+	aggregation := make([]string, 0, len(llgb.fns))
 	for _, fn := range llgb.fns {
-		columns = append(columns, fn(selector))
+		aggregation = append(aggregation, fn(selector))
 	}
-	return selector.Select(columns...).GroupBy(llgb.fields...)
+	// If no columns were selected in a custom aggregation function, the default
+	// selection is the fields used for "group-by", and the aggregation functions.
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(llgb.fields)+len(llgb.fns))
+		for _, f := range llgb.fields {
+			columns = append(columns, selector.C(f))
+		}
+		for _, c := range aggregation {
+			columns = append(columns, c)
+		}
+		selector.Select(columns...)
+	}
+	return selector.GroupBy(selector.Columns(llgb.fields...)...)
 }
 
 // LoginLogSelect is the builder for selecting fields of LoginLog entities.
@@ -891,16 +906,10 @@ func (lls *LoginLogSelect) BoolX(ctx context.Context) bool {
 
 func (lls *LoginLogSelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
-	query, args := lls.sqlQuery().Query()
+	query, args := lls.sql.Query()
 	if err := lls.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-func (lls *LoginLogSelect) sqlQuery() sql.Querier {
-	selector := lls.sql
-	selector.Select(selector.Columns(lls.fields...)...)
-	return selector
 }

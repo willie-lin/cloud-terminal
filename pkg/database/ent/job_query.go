@@ -287,8 +287,8 @@ func (jq *JobQuery) GroupBy(field string, fields ...string) *JobGroupBy {
 //		Select(job.FieldCreatedAt).
 //		Scan(ctx, &v)
 //
-func (jq *JobQuery) Select(field string, fields ...string) *JobSelect {
-	jq.fields = append([]string{field}, fields...)
+func (jq *JobQuery) Select(fields ...string) *JobSelect {
+	jq.fields = append(jq.fields, fields...)
 	return &JobSelect{JobQuery: jq}
 }
 
@@ -398,10 +398,14 @@ func (jq *JobQuery) querySpec() *sqlgraph.QuerySpec {
 func (jq *JobQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(jq.driver.Dialect())
 	t1 := builder.Table(job.Table)
-	selector := builder.Select(t1.Columns(job.Columns...)...).From(t1)
+	columns := jq.fields
+	if len(columns) == 0 {
+		columns = job.Columns
+	}
+	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if jq.sql != nil {
 		selector = jq.sql
-		selector.Select(selector.Columns(job.Columns...)...)
+		selector.Select(selector.Columns(columns...)...)
 	}
 	for _, p := range jq.predicates {
 		p(selector)
@@ -669,13 +673,24 @@ func (jgb *JobGroupBy) sqlScan(ctx context.Context, v interface{}) error {
 }
 
 func (jgb *JobGroupBy) sqlQuery() *sql.Selector {
-	selector := jgb.sql
-	columns := make([]string, 0, len(jgb.fields)+len(jgb.fns))
-	columns = append(columns, jgb.fields...)
+	selector := jgb.sql.Select()
+	aggregation := make([]string, 0, len(jgb.fns))
 	for _, fn := range jgb.fns {
-		columns = append(columns, fn(selector))
+		aggregation = append(aggregation, fn(selector))
 	}
-	return selector.Select(columns...).GroupBy(jgb.fields...)
+	// If no columns were selected in a custom aggregation function, the default
+	// selection is the fields used for "group-by", and the aggregation functions.
+	if len(selector.SelectedColumns()) == 0 {
+		columns := make([]string, 0, len(jgb.fields)+len(jgb.fns))
+		for _, f := range jgb.fields {
+			columns = append(columns, selector.C(f))
+		}
+		for _, c := range aggregation {
+			columns = append(columns, c)
+		}
+		selector.Select(columns...)
+	}
+	return selector.GroupBy(selector.Columns(jgb.fields...)...)
 }
 
 // JobSelect is the builder for selecting fields of Job entities.
@@ -891,16 +906,10 @@ func (js *JobSelect) BoolX(ctx context.Context) bool {
 
 func (js *JobSelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
-	query, args := js.sqlQuery().Query()
+	query, args := js.sql.Query()
 	if err := js.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-func (js *JobSelect) sqlQuery() sql.Querier {
-	selector := js.sql
-	selector.Select(selector.Columns(js.fields...)...)
-	return selector
 }

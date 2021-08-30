@@ -21,10 +21,9 @@ var (
 	}
 	// AccessSecuritysTable holds the schema information for the "accessSecuritys" table.
 	AccessSecuritysTable = &schema.Table{
-		Name:        "accessSecuritys",
-		Columns:     AccessSecuritysColumns,
-		PrimaryKey:  []*schema.Column{AccessSecuritysColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "accessSecuritys",
+		Columns:    AccessSecuritysColumns,
+		PrimaryKey: []*schema.Column{AccessSecuritysColumns[0]},
 	}
 	// AssetsColumns holds the columns for the "assets" table.
 	AssetsColumns = []*schema.Column{
@@ -84,10 +83,9 @@ var (
 	}
 	// CommandsTable holds the schema information for the "commands" table.
 	CommandsTable = &schema.Table{
-		Name:        "commands",
-		Columns:     CommandsColumns,
-		PrimaryKey:  []*schema.Column{CommandsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "commands",
+		Columns:    CommandsColumns,
+		PrimaryKey: []*schema.Column{CommandsColumns[0]},
 	}
 	// CredentialsColumns holds the columns for the "credentials" table.
 	CredentialsColumns = []*schema.Column{
@@ -103,10 +101,9 @@ var (
 	}
 	// CredentialsTable holds the schema information for the "credentials" table.
 	CredentialsTable = &schema.Table{
-		Name:        "credentials",
-		Columns:     CredentialsColumns,
-		PrimaryKey:  []*schema.Column{CredentialsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "credentials",
+		Columns:    CredentialsColumns,
+		PrimaryKey: []*schema.Column{CredentialsColumns[0]},
 	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
@@ -117,10 +114,9 @@ var (
 	}
 	// GroupsTable holds the schema information for the "groups" table.
 	GroupsTable = &schema.Table{
-		Name:        "groups",
-		Columns:     GroupsColumns,
-		PrimaryKey:  []*schema.Column{GroupsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "groups",
+		Columns:    GroupsColumns,
+		PrimaryKey: []*schema.Column{GroupsColumns[0]},
 	}
 	// JobsColumns holds the columns for the "jobs" table.
 	JobsColumns = []*schema.Column{
@@ -138,10 +134,9 @@ var (
 	}
 	// JobsTable holds the schema information for the "jobs" table.
 	JobsTable = &schema.Table{
-		Name:        "jobs",
-		Columns:     JobsColumns,
-		PrimaryKey:  []*schema.Column{JobsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "jobs",
+		Columns:    JobsColumns,
+		PrimaryKey: []*schema.Column{JobsColumns[0]},
 	}
 	// LoginlogsColumns holds the columns for the "loginlogs" table.
 	LoginlogsColumns = []*schema.Column{
@@ -157,10 +152,9 @@ var (
 	}
 	// LoginlogsTable holds the schema information for the "loginlogs" table.
 	LoginlogsTable = &schema.Table{
-		Name:        "loginlogs",
-		Columns:     LoginlogsColumns,
-		PrimaryKey:  []*schema.Column{LoginlogsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "loginlogs",
+		Columns:    LoginlogsColumns,
+		PrimaryKey: []*schema.Column{LoginlogsColumns[0]},
 	}
 	// PropertiesColumns holds the columns for the "properties" table.
 	PropertiesColumns = []*schema.Column{
@@ -172,10 +166,9 @@ var (
 	}
 	// PropertiesTable holds the schema information for the "properties" table.
 	PropertiesTable = &schema.Table{
-		Name:        "properties",
-		Columns:     PropertiesColumns,
-		PrimaryKey:  []*schema.Column{PropertiesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "properties",
+		Columns:    PropertiesColumns,
+		PrimaryKey: []*schema.Column{PropertiesColumns[0]},
 	}
 	// ResourceSharersColumns holds the columns for the "resourceSharers" table.
 	ResourceSharersColumns = []*schema.Column{
@@ -189,10 +182,9 @@ var (
 	}
 	// ResourceSharersTable holds the schema information for the "resourceSharers" table.
 	ResourceSharersTable = &schema.Table{
-		Name:        "resourceSharers",
-		Columns:     ResourceSharersColumns,
-		PrimaryKey:  []*schema.Column{ResourceSharersColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "resourceSharers",
+		Columns:    ResourceSharersColumns,
+		PrimaryKey: []*schema.Column{ResourceSharersColumns[0]},
 	}
 	// SessionsColumns holds the columns for the "sessions" table.
 	SessionsColumns = []*schema.Column{
@@ -222,10 +214,9 @@ var (
 	}
 	// SessionsTable holds the schema information for the "sessions" table.
 	SessionsTable = &schema.Table{
-		Name:        "sessions",
-		Columns:     SessionsColumns,
-		PrimaryKey:  []*schema.Column{SessionsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "sessions",
+		Columns:    SessionsColumns,
+		PrimaryKey: []*schema.Column{SessionsColumns[0]},
 	}
 	// TestsColumns holds the columns for the "tests" table.
 	TestsColumns = []*schema.Column{
@@ -238,10 +229,9 @@ var (
 	}
 	// TestsTable holds the schema information for the "tests" table.
 	TestsTable = &schema.Table{
-		Name:        "tests",
-		Columns:     TestsColumns,
-		PrimaryKey:  []*schema.Column{TestsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "tests",
+		Columns:    TestsColumns,
+		PrimaryKey: []*schema.Column{TestsColumns[0]},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -285,10 +275,9 @@ var (
 	}
 	// VerificationsTable holds the schema information for the "verifications" table.
 	VerificationsTable = &schema.Table{
-		Name:        "verifications",
-		Columns:     VerificationsColumns,
-		PrimaryKey:  []*schema.Column{VerificationsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{},
+		Name:       "verifications",
+		Columns:    VerificationsColumns,
+		PrimaryKey: []*schema.Column{VerificationsColumns[0]},
 	}
 	// GroupUsersColumns holds the columns for the "group_users" table.
 	GroupUsersColumns = []*schema.Column{

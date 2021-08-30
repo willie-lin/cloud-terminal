@@ -20,9 +20,9 @@ type LoginLogDelete struct {
 	mutation *LoginLogMutation
 }
 
-// Where adds a new predicate to the LoginLogDelete builder.
+// Where appends a list predicates to the LoginLogDelete builder.
 func (lld *LoginLogDelete) Where(ps ...predicate.LoginLog) *LoginLogDelete {
-	lld.mutation.predicates = append(lld.mutation.predicates, ps...)
+	lld.mutation.Where(ps...)
 	return lld
 }
 
@@ -46,6 +46,9 @@ func (lld *LoginLogDelete) Exec(ctx context.Context) (int, error) {
 			return affected, err
 		})
 		for i := len(lld.hooks) - 1; i >= 0; i-- {
+			if lld.hooks[i] == nil {
+				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = lld.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, lld.mutation); err != nil {

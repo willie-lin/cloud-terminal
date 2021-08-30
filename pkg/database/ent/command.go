@@ -78,7 +78,6 @@ func (c *Command) assignValues(columns []string, values []interface{}) error {
 				c.Name = value.String
 			}
 		case command.FieldContent:
-
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field content", values[i])
 			} else if value != nil && len(*value) > 0 {

@@ -20,9 +20,9 @@ type AssetDelete struct {
 	mutation *AssetMutation
 }
 
-// Where adds a new predicate to the AssetDelete builder.
+// Where appends a list predicates to the AssetDelete builder.
 func (ad *AssetDelete) Where(ps ...predicate.Asset) *AssetDelete {
-	ad.mutation.predicates = append(ad.mutation.predicates, ps...)
+	ad.mutation.Where(ps...)
 	return ad
 }
 
@@ -46,6 +46,9 @@ func (ad *AssetDelete) Exec(ctx context.Context) (int, error) {
 			return affected, err
 		})
 		for i := len(ad.hooks) - 1; i >= 0; i-- {
+			if ad.hooks[i] == nil {
+				return 0, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = ad.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, ad.mutation); err != nil {

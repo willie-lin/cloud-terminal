@@ -148,8 +148,8 @@ func (m *AccessSecurityMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *AccessSecurityMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -419,6 +419,7 @@ func (m *AccessSecurityMutation) RemoveAssetIDs(ids ...string) {
 		m.removedassets = make(map[string]struct{})
 	}
 	for i := range ids {
+		delete(m.assets, ids[i])
 		m.removedassets[ids[i]] = struct{}{}
 	}
 }
@@ -444,6 +445,11 @@ func (m *AccessSecurityMutation) ResetAssets() {
 	m.assets = nil
 	m.clearedassets = false
 	m.removedassets = nil
+}
+
+// Where appends a list predicates to the AccessSecurityMutation builder.
+func (m *AccessSecurityMutation) Where(ps ...predicate.AccessSecurity) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -847,8 +853,8 @@ func (m *AssetMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *AssetMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -1455,6 +1461,11 @@ func (m *AssetMutation) ResetSessions() {
 	m.clearedsessions = false
 }
 
+// Where appends a list predicates to the AssetMutation builder.
+func (m *AssetMutation) Where(ps ...predicate.Asset) {
+	m.predicates = append(m.predicates, ps...)
+}
+
 // Op returns the operation name.
 func (m *AssetMutation) Op() Op {
 	return m.op
@@ -1987,8 +1998,8 @@ func (m *CommandMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *CommandMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -2138,6 +2149,11 @@ func (m *CommandMutation) OldContent(ctx context.Context) (v []string, err error
 // ResetContent resets all changes to the "content" field.
 func (m *CommandMutation) ResetContent() {
 	m.content = nil
+}
+
+// Where appends a list predicates to the CommandMutation builder.
+func (m *CommandMutation) Where(ps ...predicate.Command) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -2446,8 +2462,8 @@ func (m *CredentialMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *CredentialMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -2741,6 +2757,11 @@ func (m *CredentialMutation) OldPassphrase(ctx context.Context) (v string, err e
 // ResetPassphrase resets all changes to the "passphrase" field.
 func (m *CredentialMutation) ResetPassphrase() {
 	m.passphrase = nil
+}
+
+// Where appends a list predicates to the CredentialMutation builder.
+func (m *CredentialMutation) Where(ps ...predicate.Credential) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -3115,8 +3136,8 @@ func (m *GroupMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *GroupMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -3258,6 +3279,7 @@ func (m *GroupMutation) RemoveUserIDs(ids ...string) {
 		m.removedusers = make(map[string]struct{})
 	}
 	for i := range ids {
+		delete(m.users, ids[i])
 		m.removedusers[ids[i]] = struct{}{}
 	}
 }
@@ -3283,6 +3305,11 @@ func (m *GroupMutation) ResetUsers() {
 	m.users = nil
 	m.clearedusers = false
 	m.removedusers = nil
+}
+
+// Where appends a list predicates to the GroupMutation builder.
+func (m *GroupMutation) Where(ps ...predicate.Group) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -3613,8 +3640,8 @@ func (m *JobMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *JobMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -4000,6 +4027,11 @@ func (m *JobMutation) OldMetadata(ctx context.Context) (v string, err error) {
 // ResetMetadata resets all changes to the "metadata" field.
 func (m *JobMutation) ResetMetadata() {
 	m.metadata = nil
+}
+
+// Where appends a list predicates to the JobMutation builder.
+func (m *JobMutation) Where(ps ...predicate.Job) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -4425,8 +4457,8 @@ func (m *LoginLogMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *LoginLogMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -4720,6 +4752,11 @@ func (m *LoginLogMutation) OldRemember(ctx context.Context) (v bool, err error) 
 // ResetRemember resets all changes to the "remember" field.
 func (m *LoginLogMutation) ResetRemember() {
 	m.remember = nil
+}
+
+// Where appends a list predicates to the LoginLogMutation builder.
+func (m *LoginLogMutation) Where(ps ...predicate.LoginLog) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -5086,8 +5123,8 @@ func (m PropertyMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *PropertyMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
@@ -5237,6 +5274,11 @@ func (m *PropertyMutation) OldValue(ctx context.Context) (v string, err error) {
 // ResetValue resets all changes to the "value" field.
 func (m *PropertyMutation) ResetValue() {
 	m.value = nil
+}
+
+// Where appends a list predicates to the PropertyMutation builder.
+func (m *PropertyMutation) Where(ps ...predicate.Property) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -5543,8 +5585,8 @@ func (m *ResourceSharerMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *ResourceSharerMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -5766,6 +5808,11 @@ func (m *ResourceSharerMutation) OldUserGroupID(ctx context.Context) (v string, 
 // ResetUserGroupID resets all changes to the "userGroup_id" field.
 func (m *ResourceSharerMutation) ResetUserGroupID() {
 	m.userGroup_id = nil
+}
+
+// Where appends a list predicates to the ResourceSharerMutation builder.
+func (m *ResourceSharerMutation) Where(ps ...predicate.ResourceSharer) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -6129,8 +6176,8 @@ func (m *SessionMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *SessionMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -7036,6 +7083,7 @@ func (m *SessionMutation) RemoveAssetIDs(ids ...string) {
 		m.removedassets = make(map[string]struct{})
 	}
 	for i := range ids {
+		delete(m.assets, ids[i])
 		m.removedassets[ids[i]] = struct{}{}
 	}
 }
@@ -7061,6 +7109,11 @@ func (m *SessionMutation) ResetAssets() {
 	m.assets = nil
 	m.clearedassets = false
 	m.removedassets = nil
+}
+
+// Where appends a list predicates to the SessionMutation builder.
+func (m *SessionMutation) Where(ps ...predicate.Session) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -7759,8 +7812,8 @@ func (m *TestMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *TestMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -7946,6 +7999,11 @@ func (m *TestMutation) OldEmail(ctx context.Context) (v string, err error) {
 // ResetEmail resets all changes to the "email" field.
 func (m *TestMutation) ResetEmail() {
 	m.email = nil
+}
+
+// Where appends a list predicates to the TestMutation builder.
+func (m *TestMutation) Where(ps ...predicate.Test) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -8279,8 +8337,8 @@ func (m *UserMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *UserMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -8674,6 +8732,7 @@ func (m *UserMutation) RemoveGroupIDs(ids ...string) {
 		m.removedgroups = make(map[string]struct{})
 	}
 	for i := range ids {
+		delete(m.groups, ids[i])
 		m.removedgroups[ids[i]] = struct{}{}
 	}
 }
@@ -8727,6 +8786,7 @@ func (m *UserMutation) RemoveAssetIDs(ids ...string) {
 		m.removedassets = make(map[string]struct{})
 	}
 	for i := range ids {
+		delete(m.assets, ids[i])
 		m.removedassets[ids[i]] = struct{}{}
 	}
 }
@@ -8752,6 +8812,11 @@ func (m *UserMutation) ResetAssets() {
 	m.assets = nil
 	m.clearedassets = false
 	m.removedassets = nil
+}
+
+// Where appends a list predicates to the UserMutation builder.
+func (m *UserMutation) Where(ps ...predicate.User) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
@@ -9226,8 +9291,8 @@ func (m *VerificationMutation) SetID(id string) {
 	m.id = &id
 }
 
-// ID returns the ID value in the mutation. Note that the ID
-// is only available if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
 func (m *VerificationMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
@@ -9513,6 +9578,7 @@ func (m *VerificationMutation) RemoveUserIDs(ids ...string) {
 		m.removedusers = make(map[string]struct{})
 	}
 	for i := range ids {
+		delete(m.users, ids[i])
 		m.removedusers[ids[i]] = struct{}{}
 	}
 }
@@ -9538,6 +9604,11 @@ func (m *VerificationMutation) ResetUsers() {
 	m.users = nil
 	m.clearedusers = false
 	m.removedusers = nil
+}
+
+// Where appends a list predicates to the VerificationMutation builder.
+func (m *VerificationMutation) Where(ps ...predicate.Verification) {
+	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.

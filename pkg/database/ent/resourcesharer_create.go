@@ -105,11 +105,17 @@ func (rsc *ResourceSharerCreate) Save(ctx context.Context) (*ResourceSharer, err
 				return nil, err
 			}
 			rsc.mutation = mutation
-			node, err = rsc.sqlSave(ctx)
+			if node, err = rsc.sqlSave(ctx); err != nil {
+				return nil, err
+			}
+			mutation.id = &node.ID
 			mutation.done = true
 			return node, err
 		})
 		for i := len(rsc.hooks) - 1; i >= 0; i-- {
+			if rsc.hooks[i] == nil {
+				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
+			}
 			mut = rsc.hooks[i](mut)
 		}
 		if _, err := mut.Mutate(ctx, rsc.mutation); err != nil {
@@ -128,6 +134,19 @@ func (rsc *ResourceSharerCreate) SaveX(ctx context.Context) *ResourceSharer {
 	return v
 }
 
+// Exec executes the query.
+func (rsc *ResourceSharerCreate) Exec(ctx context.Context) error {
+	_, err := rsc.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (rsc *ResourceSharerCreate) ExecX(ctx context.Context) {
+	if err := rsc.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // defaults sets the default values of the builder before save.
 func (rsc *ResourceSharerCreate) defaults() {
 	if _, ok := rsc.mutation.CreatedAt(); !ok {
@@ -143,22 +162,22 @@ func (rsc *ResourceSharerCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (rsc *ResourceSharerCreate) check() error {
 	if _, ok := rsc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
 	}
 	if _, ok := rsc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
 	}
 	if _, ok := rsc.mutation.ResourceID(); !ok {
-		return &ValidationError{Name: "resource_id", err: errors.New("ent: missing required field \"resource_id\"")}
+		return &ValidationError{Name: "resource_id", err: errors.New(`ent: missing required field "resource_id"`)}
 	}
 	if _, ok := rsc.mutation.ResourceType(); !ok {
-		return &ValidationError{Name: "resource_type", err: errors.New("ent: missing required field \"resource_type\"")}
+		return &ValidationError{Name: "resource_type", err: errors.New(`ent: missing required field "resource_type"`)}
 	}
 	if _, ok := rsc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user_id", err: errors.New("ent: missing required field \"user_id\"")}
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "user_id"`)}
 	}
 	if _, ok := rsc.mutation.UserGroupID(); !ok {
-		return &ValidationError{Name: "userGroup_id", err: errors.New("ent: missing required field \"userGroup_id\"")}
+		return &ValidationError{Name: "userGroup_id", err: errors.New(`ent: missing required field "userGroup_id"`)}
 	}
 	return nil
 }
@@ -166,10 +185,13 @@ func (rsc *ResourceSharerCreate) check() error {
 func (rsc *ResourceSharerCreate) sqlSave(ctx context.Context) (*ResourceSharer, error) {
 	_node, _spec := rsc.createSpec()
 	if err := sqlgraph.CreateNode(ctx, rsc.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
-			err = cerr
+		if sqlgraph.IsConstraintError(err) {
+			err = &ConstraintError{err.Error(), err}
 		}
 		return nil, err
+	}
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(string)
 	}
 	return _node, nil
 }
@@ -269,17 +291,19 @@ func (rscb *ResourceSharerCreateBulk) Save(ctx context.Context) ([]*ResourceShar
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, rscb.builders[i+1].mutation)
 				} else {
+					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, rscb.driver, &sqlgraph.BatchCreateSpec{Nodes: specs}); err != nil {
-						if cerr, ok := isSQLConstraintError(err); ok {
-							err = cerr
+					if err = sqlgraph.BatchCreate(ctx, rscb.driver, spec); err != nil {
+						if sqlgraph.IsConstraintError(err) {
+							err = &ConstraintError{err.Error(), err}
 						}
 					}
 				}
-				mutation.done = true
 				if err != nil {
 					return nil, err
 				}
+				mutation.id = &nodes[i].ID
+				mutation.done = true
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {
@@ -303,4 +327,17 @@ func (rscb *ResourceSharerCreateBulk) SaveX(ctx context.Context) []*ResourceShar
 		panic(err)
 	}
 	return v
+}
+
+// Exec executes the query.
+func (rscb *ResourceSharerCreateBulk) Exec(ctx context.Context) error {
+	_, err := rscb.Save(ctx)
+	return err
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (rscb *ResourceSharerCreateBulk) ExecX(ctx context.Context) {
+	if err := rscb.Exec(ctx); err != nil {
+		panic(err)
+	}
 }
