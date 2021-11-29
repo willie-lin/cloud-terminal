@@ -11,7 +11,6 @@ require (
 	github.com/goccy/go-json v0.7.1
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/hedwigz/entviz v0.0.0-20210825110428-f45327981bd1 // indirect
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/lib/pq v1.10.2
 	github.com/mattn/go-sqlite3 v1.14.8
