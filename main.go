@@ -54,6 +54,7 @@ func main() {
 	//client, err := database.Client()
 	//client, err := database.Client()
 	client, err := config.NewClient()
+	fmt.Println(client)
 	if err != nil {
 		log.Fatal("opening ent client", zap.Error(err))
 		return
