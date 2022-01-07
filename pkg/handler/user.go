@@ -113,7 +113,7 @@ func FindUserByUsername(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// 根据ID查找
+// FindUserById 根据ID查找
 func FindUserById(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		//client, err := database.Client()
