@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -315,7 +316,7 @@ func (rsuo *ResourceSharerUpdateOne) sqlSave(ctx context.Context) (_node *Resour
 	}
 	id, ok := rsuo.mutation.ID()
 	if !ok {
-		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing ResourceSharer.ID for update")}
+		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ResourceSharer.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
 	if fields := rsuo.fields; len(fields) > 0 {

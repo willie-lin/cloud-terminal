@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -377,7 +378,7 @@ func (lluo *LoginLogUpdateOne) sqlSave(ctx context.Context) (_node *LoginLog, er
 	}
 	id, ok := lluo.mutation.ID()
 	if !ok {
-		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing LoginLog.ID for update")}
+		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "LoginLog.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
 	if fields := lluo.fields; len(fields) > 0 {

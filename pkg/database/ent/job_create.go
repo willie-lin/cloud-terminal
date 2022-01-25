@@ -186,34 +186,34 @@ func (jc *JobCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (jc *JobCreate) check() error {
 	if _, ok := jc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Job.created_at"`)}
 	}
 	if _, ok := jc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Job.updated_at"`)}
 	}
 	if _, ok := jc.mutation.Cronjobid(); !ok {
-		return &ValidationError{Name: "cronjobid", err: errors.New(`ent: missing required field "cronjobid"`)}
+		return &ValidationError{Name: "cronjobid", err: errors.New(`ent: missing required field "Job.cronjobid"`)}
 	}
 	if _, ok := jc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Job.name"`)}
 	}
 	if _, ok := jc.mutation.Func(); !ok {
-		return &ValidationError{Name: "func", err: errors.New(`ent: missing required field "func"`)}
+		return &ValidationError{Name: "func", err: errors.New(`ent: missing required field "Job.func"`)}
 	}
 	if _, ok := jc.mutation.Cron(); !ok {
-		return &ValidationError{Name: "cron", err: errors.New(`ent: missing required field "cron"`)}
+		return &ValidationError{Name: "cron", err: errors.New(`ent: missing required field "Job.cron"`)}
 	}
 	if _, ok := jc.mutation.Mode(); !ok {
-		return &ValidationError{Name: "mode", err: errors.New(`ent: missing required field "mode"`)}
+		return &ValidationError{Name: "mode", err: errors.New(`ent: missing required field "Job.mode"`)}
 	}
 	if _, ok := jc.mutation.ResourceIds(); !ok {
-		return &ValidationError{Name: "resourceIds", err: errors.New(`ent: missing required field "resourceIds"`)}
+		return &ValidationError{Name: "resourceIds", err: errors.New(`ent: missing required field "Job.resourceIds"`)}
 	}
 	if _, ok := jc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Job.status"`)}
 	}
 	if _, ok := jc.mutation.Metadata(); !ok {
-		return &ValidationError{Name: "metadata", err: errors.New(`ent: missing required field "metadata"`)}
+		return &ValidationError{Name: "metadata", err: errors.New(`ent: missing required field "Job.metadata"`)}
 	}
 	return nil
 }
@@ -227,7 +227,11 @@ func (jc *JobCreate) sqlSave(ctx context.Context) (*Job, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Job.ID type: %T", _spec.ID.Value)
+		}
 	}
 	return _node, nil
 }

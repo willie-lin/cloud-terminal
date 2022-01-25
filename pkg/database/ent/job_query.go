@@ -336,6 +336,10 @@ func (jq *JobQuery) sqlAll(ctx context.Context) ([]*Job, error) {
 
 func (jq *JobQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := jq.querySpec()
+	_spec.Node.Columns = jq.fields
+	if len(jq.fields) > 0 {
+		_spec.Unique = jq.unique != nil && *jq.unique
+	}
 	return sqlgraph.CountNodes(ctx, jq.driver, _spec)
 }
 
@@ -406,6 +410,9 @@ func (jq *JobQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if jq.sql != nil {
 		selector = jq.sql
 		selector.Select(selector.Columns(columns...)...)
+	}
+	if jq.unique != nil && *jq.unique {
+		selector.Distinct()
 	}
 	for _, p := range jq.predicates {
 		p(selector)
@@ -685,9 +692,7 @@ func (jgb *JobGroupBy) sqlQuery() *sql.Selector {
 		for _, f := range jgb.fields {
 			columns = append(columns, selector.C(f))
 		}
-		for _, c := range aggregation {
-			columns = append(columns, c)
-		}
+		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
 	return selector.GroupBy(selector.Columns(jgb.fields...)...)

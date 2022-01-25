@@ -408,6 +408,10 @@ func (vq *VerificationQuery) sqlAll(ctx context.Context) ([]*Verification, error
 
 func (vq *VerificationQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := vq.querySpec()
+	_spec.Node.Columns = vq.fields
+	if len(vq.fields) > 0 {
+		_spec.Unique = vq.unique != nil && *vq.unique
+	}
 	return sqlgraph.CountNodes(ctx, vq.driver, _spec)
 }
 
@@ -478,6 +482,9 @@ func (vq *VerificationQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if vq.sql != nil {
 		selector = vq.sql
 		selector.Select(selector.Columns(columns...)...)
+	}
+	if vq.unique != nil && *vq.unique {
+		selector.Distinct()
 	}
 	for _, p := range vq.predicates {
 		p(selector)
@@ -757,9 +764,7 @@ func (vgb *VerificationGroupBy) sqlQuery() *sql.Selector {
 		for _, f := range vgb.fields {
 			columns = append(columns, selector.C(f))
 		}
-		for _, c := range aggregation {
-			columns = append(columns, c)
-		}
+		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
 	return selector.GroupBy(selector.Columns(vgb.fields...)...)

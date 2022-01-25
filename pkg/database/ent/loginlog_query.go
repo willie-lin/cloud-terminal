@@ -336,6 +336,10 @@ func (llq *LoginLogQuery) sqlAll(ctx context.Context) ([]*LoginLog, error) {
 
 func (llq *LoginLogQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := llq.querySpec()
+	_spec.Node.Columns = llq.fields
+	if len(llq.fields) > 0 {
+		_spec.Unique = llq.unique != nil && *llq.unique
+	}
 	return sqlgraph.CountNodes(ctx, llq.driver, _spec)
 }
 
@@ -406,6 +410,9 @@ func (llq *LoginLogQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if llq.sql != nil {
 		selector = llq.sql
 		selector.Select(selector.Columns(columns...)...)
+	}
+	if llq.unique != nil && *llq.unique {
+		selector.Distinct()
 	}
 	for _, p := range llq.predicates {
 		p(selector)
@@ -685,9 +692,7 @@ func (llgb *LoginLogGroupBy) sqlQuery() *sql.Selector {
 		for _, f := range llgb.fields {
 			columns = append(columns, selector.C(f))
 		}
-		for _, c := range aggregation {
-			columns = append(columns, c)
-		}
+		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
 	return selector.GroupBy(selector.Columns(llgb.fields...)...)

@@ -174,28 +174,28 @@ func (cc *CredentialCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (cc *CredentialCreate) check() error {
 	if _, ok := cc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Credential.created_at"`)}
 	}
 	if _, ok := cc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Credential.updated_at"`)}
 	}
 	if _, ok := cc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Credential.name"`)}
 	}
 	if _, ok := cc.mutation.GetType(); !ok {
-		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "type"`)}
+		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Credential.type"`)}
 	}
 	if _, ok := cc.mutation.Username(); !ok {
-		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "username"`)}
+		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "Credential.username"`)}
 	}
 	if _, ok := cc.mutation.Password(); !ok {
-		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "password"`)}
+		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "Credential.password"`)}
 	}
 	if _, ok := cc.mutation.PrivateKey(); !ok {
-		return &ValidationError{Name: "private_key", err: errors.New(`ent: missing required field "private_key"`)}
+		return &ValidationError{Name: "private_key", err: errors.New(`ent: missing required field "Credential.private_key"`)}
 	}
 	if _, ok := cc.mutation.Passphrase(); !ok {
-		return &ValidationError{Name: "passphrase", err: errors.New(`ent: missing required field "passphrase"`)}
+		return &ValidationError{Name: "passphrase", err: errors.New(`ent: missing required field "Credential.passphrase"`)}
 	}
 	return nil
 }
@@ -209,7 +209,11 @@ func (cc *CredentialCreate) sqlSave(ctx context.Context) (*Credential, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Credential.ID type: %T", _spec.ID.Value)
+		}
 	}
 	return _node, nil
 }

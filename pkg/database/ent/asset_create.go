@@ -236,49 +236,49 @@ func (ac *AssetCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (ac *AssetCreate) check() error {
 	if _, ok := ac.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Asset.created_at"`)}
 	}
 	if _, ok := ac.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Asset.updated_at"`)}
 	}
 	if _, ok := ac.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Asset.name"`)}
 	}
 	if _, ok := ac.mutation.IP(); !ok {
-		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "ip"`)}
+		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "Asset.ip"`)}
 	}
 	if _, ok := ac.mutation.Protocol(); !ok {
-		return &ValidationError{Name: "protocol", err: errors.New(`ent: missing required field "protocol"`)}
+		return &ValidationError{Name: "protocol", err: errors.New(`ent: missing required field "Asset.protocol"`)}
 	}
 	if _, ok := ac.mutation.Port(); !ok {
-		return &ValidationError{Name: "port", err: errors.New(`ent: missing required field "port"`)}
+		return &ValidationError{Name: "port", err: errors.New(`ent: missing required field "Asset.port"`)}
 	}
 	if _, ok := ac.mutation.AccountType(); !ok {
-		return &ValidationError{Name: "account_type", err: errors.New(`ent: missing required field "account_type"`)}
+		return &ValidationError{Name: "account_type", err: errors.New(`ent: missing required field "Asset.account_type"`)}
 	}
 	if _, ok := ac.mutation.Username(); !ok {
-		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "username"`)}
+		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "Asset.username"`)}
 	}
 	if _, ok := ac.mutation.Password(); !ok {
-		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "password"`)}
+		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "Asset.password"`)}
 	}
 	if _, ok := ac.mutation.CredentialID(); !ok {
-		return &ValidationError{Name: "credential_id", err: errors.New(`ent: missing required field "credential_id"`)}
+		return &ValidationError{Name: "credential_id", err: errors.New(`ent: missing required field "Asset.credential_id"`)}
 	}
 	if _, ok := ac.mutation.PrivateKey(); !ok {
-		return &ValidationError{Name: "private_key", err: errors.New(`ent: missing required field "private_key"`)}
+		return &ValidationError{Name: "private_key", err: errors.New(`ent: missing required field "Asset.private_key"`)}
 	}
 	if _, ok := ac.mutation.Passphrase(); !ok {
-		return &ValidationError{Name: "passphrase", err: errors.New(`ent: missing required field "passphrase"`)}
+		return &ValidationError{Name: "passphrase", err: errors.New(`ent: missing required field "Asset.passphrase"`)}
 	}
 	if _, ok := ac.mutation.Description(); !ok {
-		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "description"`)}
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Asset.description"`)}
 	}
 	if _, ok := ac.mutation.Active(); !ok {
-		return &ValidationError{Name: "active", err: errors.New(`ent: missing required field "active"`)}
+		return &ValidationError{Name: "active", err: errors.New(`ent: missing required field "Asset.active"`)}
 	}
 	if _, ok := ac.mutation.Tags(); !ok {
-		return &ValidationError{Name: "tags", err: errors.New(`ent: missing required field "tags"`)}
+		return &ValidationError{Name: "tags", err: errors.New(`ent: missing required field "Asset.tags"`)}
 	}
 	return nil
 }
@@ -292,7 +292,11 @@ func (ac *AssetCreate) sqlSave(ctx context.Context) (*Asset, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Asset.ID type: %T", _spec.ID.Value)
+		}
 	}
 	return _node, nil
 }

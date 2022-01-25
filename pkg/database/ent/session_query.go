@@ -408,6 +408,10 @@ func (sq *SessionQuery) sqlAll(ctx context.Context) ([]*Session, error) {
 
 func (sq *SessionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := sq.querySpec()
+	_spec.Node.Columns = sq.fields
+	if len(sq.fields) > 0 {
+		_spec.Unique = sq.unique != nil && *sq.unique
+	}
 	return sqlgraph.CountNodes(ctx, sq.driver, _spec)
 }
 
@@ -478,6 +482,9 @@ func (sq *SessionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if sq.sql != nil {
 		selector = sq.sql
 		selector.Select(selector.Columns(columns...)...)
+	}
+	if sq.unique != nil && *sq.unique {
+		selector.Distinct()
 	}
 	for _, p := range sq.predicates {
 		p(selector)
@@ -757,9 +764,7 @@ func (sgb *SessionGroupBy) sqlQuery() *sql.Selector {
 		for _, f := range sgb.fields {
 			columns = append(columns, selector.C(f))
 		}
-		for _, c := range aggregation {
-			columns = append(columns, c)
-		}
+		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
 	return selector.GroupBy(selector.Columns(sgb.fields...)...)

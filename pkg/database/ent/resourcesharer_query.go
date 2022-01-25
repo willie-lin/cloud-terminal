@@ -336,6 +336,10 @@ func (rsq *ResourceSharerQuery) sqlAll(ctx context.Context) ([]*ResourceSharer, 
 
 func (rsq *ResourceSharerQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := rsq.querySpec()
+	_spec.Node.Columns = rsq.fields
+	if len(rsq.fields) > 0 {
+		_spec.Unique = rsq.unique != nil && *rsq.unique
+	}
 	return sqlgraph.CountNodes(ctx, rsq.driver, _spec)
 }
 
@@ -406,6 +410,9 @@ func (rsq *ResourceSharerQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if rsq.sql != nil {
 		selector = rsq.sql
 		selector.Select(selector.Columns(columns...)...)
+	}
+	if rsq.unique != nil && *rsq.unique {
+		selector.Distinct()
 	}
 	for _, p := range rsq.predicates {
 		p(selector)
@@ -685,9 +692,7 @@ func (rsgb *ResourceSharerGroupBy) sqlQuery() *sql.Selector {
 		for _, f := range rsgb.fields {
 			columns = append(columns, selector.C(f))
 		}
-		for _, c := range aggregation {
-			columns = append(columns, c)
-		}
+		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
 	return selector.GroupBy(selector.Columns(rsgb.fields...)...)

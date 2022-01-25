@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -485,7 +486,7 @@ func (vuo *VerificationUpdateOne) sqlSave(ctx context.Context) (_node *Verificat
 	}
 	id, ok := vuo.mutation.ID()
 	if !ok {
-		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Verification.ID for update")}
+		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Verification.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
 	if fields := vuo.fields; len(fields) > 0 {

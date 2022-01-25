@@ -198,28 +198,28 @@ func (llc *LoginLogCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (llc *LoginLogCreate) check() error {
 	if _, ok := llc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "LoginLog.created_at"`)}
 	}
 	if _, ok := llc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "LoginLog.updated_at"`)}
 	}
 	if _, ok := llc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "user_id"`)}
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "LoginLog.user_id"`)}
 	}
 	if _, ok := llc.mutation.ClientIP(); !ok {
-		return &ValidationError{Name: "client_ip", err: errors.New(`ent: missing required field "client_ip"`)}
+		return &ValidationError{Name: "client_ip", err: errors.New(`ent: missing required field "LoginLog.client_ip"`)}
 	}
 	if _, ok := llc.mutation.ClentUsetAgent(); !ok {
-		return &ValidationError{Name: "clent_uset_agent", err: errors.New(`ent: missing required field "clent_uset_agent"`)}
+		return &ValidationError{Name: "clent_uset_agent", err: errors.New(`ent: missing required field "LoginLog.clent_uset_agent"`)}
 	}
 	if _, ok := llc.mutation.LoginTime(); !ok {
-		return &ValidationError{Name: "login_time", err: errors.New(`ent: missing required field "login_time"`)}
+		return &ValidationError{Name: "login_time", err: errors.New(`ent: missing required field "LoginLog.login_time"`)}
 	}
 	if _, ok := llc.mutation.LogoutTime(); !ok {
-		return &ValidationError{Name: "logout_time", err: errors.New(`ent: missing required field "logout_time"`)}
+		return &ValidationError{Name: "logout_time", err: errors.New(`ent: missing required field "LoginLog.logout_time"`)}
 	}
 	if _, ok := llc.mutation.Remember(); !ok {
-		return &ValidationError{Name: "remember", err: errors.New(`ent: missing required field "remember"`)}
+		return &ValidationError{Name: "remember", err: errors.New(`ent: missing required field "LoginLog.remember"`)}
 	}
 	return nil
 }
@@ -233,7 +233,11 @@ func (llc *LoginLogCreate) sqlSave(ctx context.Context) (*LoginLog, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected LoginLog.ID type: %T", _spec.ID.Value)
+		}
 	}
 	return _node, nil
 }

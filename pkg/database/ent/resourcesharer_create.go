@@ -162,22 +162,22 @@ func (rsc *ResourceSharerCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (rsc *ResourceSharerCreate) check() error {
 	if _, ok := rsc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ResourceSharer.created_at"`)}
 	}
 	if _, ok := rsc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ResourceSharer.updated_at"`)}
 	}
 	if _, ok := rsc.mutation.ResourceID(); !ok {
-		return &ValidationError{Name: "resource_id", err: errors.New(`ent: missing required field "resource_id"`)}
+		return &ValidationError{Name: "resource_id", err: errors.New(`ent: missing required field "ResourceSharer.resource_id"`)}
 	}
 	if _, ok := rsc.mutation.ResourceType(); !ok {
-		return &ValidationError{Name: "resource_type", err: errors.New(`ent: missing required field "resource_type"`)}
+		return &ValidationError{Name: "resource_type", err: errors.New(`ent: missing required field "ResourceSharer.resource_type"`)}
 	}
 	if _, ok := rsc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "user_id"`)}
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "ResourceSharer.user_id"`)}
 	}
 	if _, ok := rsc.mutation.UserGroupID(); !ok {
-		return &ValidationError{Name: "userGroup_id", err: errors.New(`ent: missing required field "userGroup_id"`)}
+		return &ValidationError{Name: "userGroup_id", err: errors.New(`ent: missing required field "ResourceSharer.userGroup_id"`)}
 	}
 	return nil
 }
@@ -191,7 +191,11 @@ func (rsc *ResourceSharerCreate) sqlSave(ctx context.Context) (*ResourceSharer, 
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected ResourceSharer.ID type: %T", _spec.ID.Value)
+		}
 	}
 	return _node, nil
 }

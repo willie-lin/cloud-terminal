@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -123,7 +124,7 @@ func (cu *CommandUpdate) defaults() {
 func (cu *CommandUpdate) check() error {
 	if v, ok := cu.mutation.Name(); ok {
 		if err := command.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Command.name": %w`, err)}
 		}
 	}
 	return nil
@@ -290,7 +291,7 @@ func (cuo *CommandUpdateOne) defaults() {
 func (cuo *CommandUpdateOne) check() error {
 	if v, ok := cuo.mutation.Name(); ok {
 		if err := command.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Command.name": %w`, err)}
 		}
 	}
 	return nil
@@ -309,7 +310,7 @@ func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err e
 	}
 	id, ok := cuo.mutation.ID()
 	if !ok {
-		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Command.ID for update")}
+		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Command.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
 	if fields := cuo.fields; len(fields) > 0 {

@@ -298,70 +298,70 @@ func (sc *SessionCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (sc *SessionCreate) check() error {
 	if _, ok := sc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Session.created_at"`)}
 	}
 	if _, ok := sc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Session.updated_at"`)}
 	}
 	if _, ok := sc.mutation.Protocol(); !ok {
-		return &ValidationError{Name: "protocol", err: errors.New(`ent: missing required field "protocol"`)}
+		return &ValidationError{Name: "protocol", err: errors.New(`ent: missing required field "Session.protocol"`)}
 	}
 	if _, ok := sc.mutation.IP(); !ok {
-		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "ip"`)}
+		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "Session.ip"`)}
 	}
 	if _, ok := sc.mutation.Port(); !ok {
-		return &ValidationError{Name: "port", err: errors.New(`ent: missing required field "port"`)}
+		return &ValidationError{Name: "port", err: errors.New(`ent: missing required field "Session.port"`)}
 	}
 	if _, ok := sc.mutation.ConnectionID(); !ok {
-		return &ValidationError{Name: "connection_id", err: errors.New(`ent: missing required field "connection_id"`)}
+		return &ValidationError{Name: "connection_id", err: errors.New(`ent: missing required field "Session.connection_id"`)}
 	}
 	if _, ok := sc.mutation.AssetID(); !ok {
-		return &ValidationError{Name: "asset_id", err: errors.New(`ent: missing required field "asset_id"`)}
+		return &ValidationError{Name: "asset_id", err: errors.New(`ent: missing required field "Session.asset_id"`)}
 	}
 	if _, ok := sc.mutation.Username(); !ok {
-		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "username"`)}
+		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "Session.username"`)}
 	}
 	if _, ok := sc.mutation.Password(); !ok {
-		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "password"`)}
+		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "Session.password"`)}
 	}
 	if _, ok := sc.mutation.Creator(); !ok {
-		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required field "creator"`)}
+		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required field "Session.creator"`)}
 	}
 	if _, ok := sc.mutation.ClientIP(); !ok {
-		return &ValidationError{Name: "client_ip", err: errors.New(`ent: missing required field "client_ip"`)}
+		return &ValidationError{Name: "client_ip", err: errors.New(`ent: missing required field "Session.client_ip"`)}
 	}
 	if _, ok := sc.mutation.Width(); !ok {
-		return &ValidationError{Name: "width", err: errors.New(`ent: missing required field "width"`)}
+		return &ValidationError{Name: "width", err: errors.New(`ent: missing required field "Session.width"`)}
 	}
 	if _, ok := sc.mutation.Height(); !ok {
-		return &ValidationError{Name: "height", err: errors.New(`ent: missing required field "height"`)}
+		return &ValidationError{Name: "height", err: errors.New(`ent: missing required field "Session.height"`)}
 	}
 	if _, ok := sc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Session.status"`)}
 	}
 	if _, ok := sc.mutation.Recording(); !ok {
-		return &ValidationError{Name: "recording", err: errors.New(`ent: missing required field "recording"`)}
+		return &ValidationError{Name: "recording", err: errors.New(`ent: missing required field "Session.recording"`)}
 	}
 	if _, ok := sc.mutation.PrivateKey(); !ok {
-		return &ValidationError{Name: "private_key", err: errors.New(`ent: missing required field "private_key"`)}
+		return &ValidationError{Name: "private_key", err: errors.New(`ent: missing required field "Session.private_key"`)}
 	}
 	if _, ok := sc.mutation.Passphrase(); !ok {
-		return &ValidationError{Name: "passphrase", err: errors.New(`ent: missing required field "passphrase"`)}
+		return &ValidationError{Name: "passphrase", err: errors.New(`ent: missing required field "Session.passphrase"`)}
 	}
 	if _, ok := sc.mutation.Code(); !ok {
-		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "code"`)}
+		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "Session.code"`)}
 	}
 	if _, ok := sc.mutation.Message(); !ok {
-		return &ValidationError{Name: "message", err: errors.New(`ent: missing required field "message"`)}
+		return &ValidationError{Name: "message", err: errors.New(`ent: missing required field "Session.message"`)}
 	}
 	if _, ok := sc.mutation.Connected(); !ok {
-		return &ValidationError{Name: "connected", err: errors.New(`ent: missing required field "connected"`)}
+		return &ValidationError{Name: "connected", err: errors.New(`ent: missing required field "Session.connected"`)}
 	}
 	if _, ok := sc.mutation.Disconnected(); !ok {
-		return &ValidationError{Name: "disconnected", err: errors.New(`ent: missing required field "disconnected"`)}
+		return &ValidationError{Name: "disconnected", err: errors.New(`ent: missing required field "Session.disconnected"`)}
 	}
 	if _, ok := sc.mutation.Mode(); !ok {
-		return &ValidationError{Name: "mode", err: errors.New(`ent: missing required field "mode"`)}
+		return &ValidationError{Name: "mode", err: errors.New(`ent: missing required field "Session.mode"`)}
 	}
 	return nil
 }
@@ -375,7 +375,11 @@ func (sc *SessionCreate) sqlSave(ctx context.Context) (*Session, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Session.ID type: %T", _spec.ID.Value)
+		}
 	}
 	return _node, nil
 }

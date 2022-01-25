@@ -408,6 +408,10 @@ func (asq *AccessSecurityQuery) sqlAll(ctx context.Context) ([]*AccessSecurity, 
 
 func (asq *AccessSecurityQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := asq.querySpec()
+	_spec.Node.Columns = asq.fields
+	if len(asq.fields) > 0 {
+		_spec.Unique = asq.unique != nil && *asq.unique
+	}
 	return sqlgraph.CountNodes(ctx, asq.driver, _spec)
 }
 
@@ -478,6 +482,9 @@ func (asq *AccessSecurityQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if asq.sql != nil {
 		selector = asq.sql
 		selector.Select(selector.Columns(columns...)...)
+	}
+	if asq.unique != nil && *asq.unique {
+		selector.Distinct()
 	}
 	for _, p := range asq.predicates {
 		p(selector)
@@ -757,9 +764,7 @@ func (asgb *AccessSecurityGroupBy) sqlQuery() *sql.Selector {
 		for _, f := range asgb.fields {
 			columns = append(columns, selector.C(f))
 		}
-		for _, c := range aggregation {
-			columns = append(columns, c)
-		}
+		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
 	return selector.GroupBy(selector.Columns(asgb.fields...)...)

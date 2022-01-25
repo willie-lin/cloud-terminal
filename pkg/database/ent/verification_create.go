@@ -208,25 +208,25 @@ func (vc *VerificationCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (vc *VerificationCreate) check() error {
 	if _, ok := vc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Verification.created_at"`)}
 	}
 	if _, ok := vc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Verification.updated_at"`)}
 	}
 	if _, ok := vc.mutation.ClientIP(); !ok {
-		return &ValidationError{Name: "client_ip", err: errors.New(`ent: missing required field "client_ip"`)}
+		return &ValidationError{Name: "client_ip", err: errors.New(`ent: missing required field "Verification.client_ip"`)}
 	}
 	if _, ok := vc.mutation.ClientUserAgent(); !ok {
-		return &ValidationError{Name: "clientUserAgent", err: errors.New(`ent: missing required field "clientUserAgent"`)}
+		return &ValidationError{Name: "clientUserAgent", err: errors.New(`ent: missing required field "Verification.clientUserAgent"`)}
 	}
 	if _, ok := vc.mutation.LoginTime(); !ok {
-		return &ValidationError{Name: "login_time", err: errors.New(`ent: missing required field "login_time"`)}
+		return &ValidationError{Name: "login_time", err: errors.New(`ent: missing required field "Verification.login_time"`)}
 	}
 	if _, ok := vc.mutation.LogoutTime(); !ok {
-		return &ValidationError{Name: "logout_time", err: errors.New(`ent: missing required field "logout_time"`)}
+		return &ValidationError{Name: "logout_time", err: errors.New(`ent: missing required field "Verification.logout_time"`)}
 	}
 	if _, ok := vc.mutation.Remember(); !ok {
-		return &ValidationError{Name: "remember", err: errors.New(`ent: missing required field "remember"`)}
+		return &ValidationError{Name: "remember", err: errors.New(`ent: missing required field "Verification.remember"`)}
 	}
 	return nil
 }
@@ -240,7 +240,11 @@ func (vc *VerificationCreate) sqlSave(ctx context.Context) (*Verification, error
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Verification.ID type: %T", _spec.ID.Value)
+		}
 	}
 	return _node, nil
 }

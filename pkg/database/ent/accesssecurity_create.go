@@ -178,25 +178,25 @@ func (asc *AccessSecurityCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (asc *AccessSecurityCreate) check() error {
 	if _, ok := asc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "AccessSecurity.created_at"`)}
 	}
 	if _, ok := asc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "AccessSecurity.updated_at"`)}
 	}
 	if _, ok := asc.mutation.Rule(); !ok {
-		return &ValidationError{Name: "rule", err: errors.New(`ent: missing required field "rule"`)}
+		return &ValidationError{Name: "rule", err: errors.New(`ent: missing required field "AccessSecurity.rule"`)}
 	}
 	if _, ok := asc.mutation.IP(); !ok {
-		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "ip"`)}
+		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "AccessSecurity.ip"`)}
 	}
 	if _, ok := asc.mutation.Source(); !ok {
-		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "source"`)}
+		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "AccessSecurity.source"`)}
 	}
 	if _, ok := asc.mutation.Priority(); !ok {
-		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "priority"`)}
+		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "AccessSecurity.priority"`)}
 	}
 	if len(asc.mutation.AssetsIDs()) == 0 {
-		return &ValidationError{Name: "assets", err: errors.New("ent: missing required edge \"assets\"")}
+		return &ValidationError{Name: "assets", err: errors.New(`ent: missing required edge "AccessSecurity.assets"`)}
 	}
 	return nil
 }
@@ -210,7 +210,11 @@ func (asc *AccessSecurityCreate) sqlSave(ctx context.Context) (*AccessSecurity, 
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected AccessSecurity.ID type: %T", _spec.ID.Value)
+		}
 	}
 	return _node, nil
 }
