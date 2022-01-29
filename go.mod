@@ -3,6 +3,7 @@ module github.com/willie-lin/cloud-terminal
 go 1.16
 
 require (
+	entgo.io/contrib v0.2.0 // indirect
 	entgo.io/ent v0.10.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bykof/gostradamus v1.0.4
