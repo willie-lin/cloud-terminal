@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/schema"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -71,7 +72,7 @@ func Client() (*ent.Client, error) {
 
 func AutoMigration(client *ent.Client, ctx context.Context) {
 	log, _ := zap.NewDevelopment()
-	if err := client.Schema.Create(ctx); err != nil {
+	if err := client.Schema.Create(ctx,  schema.WithAtlas(true)); err != nil {
 		log.Fatal("failed creating schema resources: %v", zap.Error(err))
 	}
 }
