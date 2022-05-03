@@ -3,14 +3,14 @@ module github.com/willie-lin/cloud-terminal
 go 1.18
 
 require (
-	entgo.io/ent v0.10.0
+	entgo.io/ent v0.10.2-0.20220502113020-4ac82f5bb3f0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bykof/gostradamus v1.0.4
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goccy/go-json v0.7.1
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/labstack/echo/v4 v4.7.0
-	github.com/lib/pq v1.10.4
+	github.com/lib/pq v1.10.5
 	github.com/mattn/go-sqlite3 v1.14.10
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.3.2-0.20220120225051-c3fac7d636dd // indirect
+	ariga.io/atlas v0.3.8-0.20220502090649-c495296ad28c // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
@@ -68,7 +68,7 @@ require (
 	go.uber.org/multierr v1.7.0 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	golang.org/x/tools v0.1.9-0.20211216111533-8d383106f7e7 // indirect
