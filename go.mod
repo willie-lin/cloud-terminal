@@ -9,7 +9,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goccy/go-json v0.7.1
 	github.com/gofrs/uuid v4.0.0+incompatible
-	github.com/labstack/echo/v4 v4.7.0
+	github.com/labstack/echo/v4 v4.7.2
 	github.com/lib/pq v1.10.5
 	github.com/mattn/go-sqlite3 v1.14.10
 	github.com/natefinch/lumberjack v2.0.0+incompatible
@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.3.8-0.20220502090649-c495296ad28c // indirect
+	ariga.io/atlas v0.4.1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
