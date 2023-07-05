@@ -2,7 +2,7 @@ package guacd
 
 import (
 	"bufio"
-	"entgo.io/ent"
+
 	"errors"
 	"fmt"
 	"net"
