@@ -9,10 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/swaggo/echo-swagger"
+	"github.com/willie-lin/cloud-terminal/app/config"
+	"github.com/willie-lin/cloud-terminal/app/handler"
 	_ "github.com/willie-lin/cloud-terminal/docs"
-	"github.com/willie-lin/cloud-terminal/pkg/api"
-	"github.com/willie-lin/cloud-terminal/pkg/config"
-	"github.com/willie-lin/cloud-terminal/pkg/handler"
 	"go.uber.org/zap"
 )
 
@@ -81,41 +80,41 @@ func main() {
 	//v1 := e.Group("/api/v1")
 	//v1.Use()
 	e.GET("/", handler.Hello(client))
-	e.GET("/users", handler.GetAllUser(client))
-	e.GET("/user/uname", handler.FindUserByUsername(client))
-	e.GET("/user/uid", handler.FindUserById(client))
-	e.POST("/user", handler.CreateUser(client))
-	e.POST("/api/login", api.Login(client))
-	e.PUT("/user", handler.UpdateUser(client))
-	e.PUT("/user/uid", handler.UpdateUserById(client))
-	e.PUT("/test", handler.TestBindJson(client))
-
-	e.DELETE("/user", handler.DeleteUser(client))
-	e.DELETE("/user/uid", handler.DeleteUserById(client))
-	// UserGroup
-	e.GET("/groups", handler.GetAllGroups(client))
-	e.GET("/group/name", handler.FindGroupByName(client))
-	e.POST("/group", handler.CreateGroup(client))
-	e.DELETE("/group/uid", handler.DeleteGroupById(client))
-	e.DELETE("/group/name", handler.DeleteGroup(client))
-	e.DELETE("/user/uid", handler.DeleteUserById(client))
-	e.DELETE("/user/uid", handler.DeleteUserById(client))
-
-	e.POST("/user2group", handler.AddUserToGroup(client))
-	e.PUT("/user4group", handler.DeleteUserFromGroup(client))
-
-	e.POST("/group2user", handler.AddGroupToUser(client))
-	e.PUT("/group4user", handler.DeleteUserFromGroup(client))
-
-	e.GET("/group/group8user", handler.FindGroupWithUser(client))
-	e.GET("/group/user_group_name", handler.FindUserByGroupName(client))
-	e.GET("/group/group_user_username", handler.FindGroupByUsername(client))
-
-	e.GET("/group/user_with_group", handler.GetAllUsersWithGroups(client))
-	e.GET("/group/group_with_user", handler.GetAllGroupsWithUsers(client))
+	//e.GET("/users", handler.GetAllUser(client))
+	//e.GET("/user/uname", handler.FindUserByUsername(client))
+	//e.GET("/user/uid", handler.FindUserById(client))
+	//e.POST("/user", handler.CreateUser(client))
+	//e.POST("/api/login", api.Login(client))
+	//e.PUT("/user", handler.UpdateUser(client))
+	//e.PUT("/user/uid", handler.UpdateUserById(client))
+	//e.PUT("/test", handler.TestBindJson(client))
+	//
+	//e.DELETE("/user", handler.DeleteUser(client))
+	//e.DELETE("/user/uid", handler.DeleteUserById(client))
+	//// UserGroup
+	//e.GET("/groups", handler.GetAllGroups(client))
+	//e.GET("/group/name", handler.FindGroupByName(client))
+	//e.POST("/group", handler.CreateGroup(client))
+	//e.DELETE("/group/uid", handler.DeleteGroupById(client))
+	//e.DELETE("/group/name", handler.DeleteGroup(client))
+	//e.DELETE("/user/uid", handler.DeleteUserById(client))
+	//e.DELETE("/user/uid", handler.DeleteUserById(client))
+	//
+	//e.POST("/user2group", handler.AddUserToGroup(client))
+	//e.PUT("/user4group", handler.DeleteUserFromGroup(client))
+	//
+	//e.POST("/group2user", handler.AddGroupToUser(client))
+	//e.PUT("/group4user", handler.DeleteUserFromGroup(client))
+	//
+	//e.GET("/group/group8user", handler.FindGroupWithUser(client))
+	//e.GET("/group/user_group_name", handler.FindUserByGroupName(client))
+	//e.GET("/group/group_user_username", handler.FindGroupByUsername(client))
+	//
+	//e.GET("/group/user_with_group", handler.GetAllUsersWithGroups(client))
+	//e.GET("/group/group_with_user", handler.GetAllGroupsWithUsers(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	e.Logger.Fatal(e.Start(":2021"))
+	e.Logger.Fatal(e.Start(":2023"))
 
 }
