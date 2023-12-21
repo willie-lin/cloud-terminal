@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
@@ -214,6 +213,8 @@ func (u *User) String() string {
 	builder.WriteByte(')')
 	return builder.String()
 }
+
+
 
 // Users is a parsable slice of User.
 type Users []*User
