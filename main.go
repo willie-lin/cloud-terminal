@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
+	"github.com/willie-lin/cloud-terminal/app/logger"
 	"go.elastic.co/apm/module/apmechov4"
 
 	"github.com/labstack/echo/v4"
@@ -37,17 +40,18 @@ func main() {
 	//log, _ := zap.NewProduction()
 	//log := zap.NewProductionEncoderConfig()
 	e := echo.New()
-	//e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
-	//c := jaegertracing.New(e, nil)
-	//defer c.Close()
+	e.IPExtractor = echo.ExtractIPDirect()
+	e.IPExtractor = echo.ExtractIPFromXFFHeader()
+
 	e.Use(apmechov4.Middleware())
-	//e.Use(logger.ZapLogger(log))
+	e.Use(logger.ZapLogger(log))
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 
-	//e.Use(middleware.Gzip())
+	e.Use(middleware.Gzip())
 
 	// 连接 数据库
 	//client, err := database.Client()

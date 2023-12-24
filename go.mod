@@ -13,12 +13,15 @@ require (
 	github.com/goccy/go-json v0.7.1
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/gorilla/sessions v1.2.1
+	github.com/labstack/echo-contrib v0.15.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/labstack/gommon v0.4.2
 	github.com/lib/pq v1.10.5
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
@@ -46,7 +49,9 @@ require (
 	github.com/go-openapi/spec v0.20.2 // indirect
 	github.com/go-openapi/swag v0.19.13 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/gorilla/context v1.1.1 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -55,8 +60,8 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/procfs v0.0.3 // indirect
+	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/santhosh-tekuri/jsonschema v1.2.4 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14 // indirect
@@ -66,7 +71,7 @@ require (
 	go.elastic.co/apm v1.11.0 // indirect
 	go.elastic.co/apm/module/apmhttp v1.11.0 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
