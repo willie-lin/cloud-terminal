@@ -84,6 +84,7 @@ func main() {
 	//v1 := e.Group("/api/v1")
 	//v1.Use()
 	e.GET("/", handler.Hello(client))
+	e.GET("/ip", handler.RealIP())
 	e.GET("/generate", handler.Enable2FA(client))
 	e.POST("/validate", handler.Validate2FA(client))
 	//e.GET("/users", handler.GetAllUser(client))

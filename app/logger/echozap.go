@@ -2,11 +2,10 @@ package logger
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"time"
 )
 
 // ZapLogger is a middleware and zap to provide an "access log" like logging for each request.
@@ -14,7 +13,6 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			start := time.Now()
-
 			err := next(c)
 			if err != nil {
 				log = log.With(zap.Error(err))
