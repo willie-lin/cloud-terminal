@@ -13,6 +13,6 @@ func Hello(client *ent.Client) echo.HandlerFunc {
 			"Echo": "hello, welcome to cloud-terminal!!!",
 		})
 
-		//return c.JSON(http.StatusOK, "hello, welcome to cloud-terminal!!!")
+		return c.JSON(http.StatusOK, "hello, welcome to cloud-terminal!!!")
 	}
 }

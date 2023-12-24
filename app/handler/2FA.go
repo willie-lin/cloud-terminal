@@ -2,39 +2,53 @@ package handler
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/pquerna/otp/totp"
+	"github.com/skip2/go-qrcode"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"net/http"
 )
 
-// Handler
-func enable2FA(client *ent.Client) echo.HandlerFunc {
+func Enable2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		//id := c.Param("id")
-		//
-		//// Get the user from the database
-		//u, err := client.User.Get(c.Request().Context(), id)
-		//if err != nil {
-		//	return echo.NewHTTPError(http.StatusNotFound, "User not found")
-		//}
-		//
-		//// Generate a new TOTP Key
-		//totpKey, err := totp.Generate(totp.GenerateOpts{
-		//	Issuer:      "MyApp",
-		//	AccountName: u.Email, // Use the user's email as the AccountName
+		key, err := totp.Generate(totp.GenerateOpts{
+			Issuer:      "Cloud-Terminal",
+			AccountName: "123@123.com",
+		})
+		if err != nil {
+			return err
+		}
+		//return c.JSON(http.StatusOK, map[string]string{
+		//	"url": key.URL(),
 		//})
-		//if err != nil {
-		//	return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate TOTP key")
-		//}
-		//
-		//// Update the user with the new TOTP Secret
-		//_, err = client.User.UpdateOneID(id).
-		//	SetTotpSecret(totpKey.Secret()).
-		//	Save(c.Request().Context())
-		//if err != nil {
-		//	return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update user")
-		//}
-		//
-		//// Return the TOTP Key URL to display as a QR Code
-		//return c.JSON(http.StatusOK, map[string]string{"url": totpKey.URL()})
-		return nil
+		url := key.URL()
+		var png []byte
+		png, err = qrcode.Encode(url, qrcode.Medium, 256)
+		if err != nil {
+			return err
+		}
+		return c.Blob(http.StatusOK, "image/png", png)
+	}
+}
+
+func Validate2FA(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		var body struct {
+			Secret   string `json:"secret"`
+			Passcode string `json:"passcode"`
+		}
+		if err := c.Bind(&body); err != nil {
+			return err
+		}
+		valid := totp.Validate(body.Passcode, body.Secret)
+		if valid {
+			return c.JSON(http.StatusOK, map[string]string{
+				"status": "valid",
+			})
+		} else {
+			return c.JSON(http.StatusOK, map[string]string{
+				"status": "invalid",
+			})
+		}
 	}
 }
