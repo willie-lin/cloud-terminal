@@ -37,7 +37,7 @@ COPY --from=build /go/release/cloud-terminal /
 ENV HOST=0.0.0.0
 
 # Expose default port
-EXPOSE 2021 3306
+EXPOSE 2023 3306
 # 启动服务
 CMD ["./cloud-terminal"]
 #ENTRYPOINT ["./app"]

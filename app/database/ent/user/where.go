@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 )
@@ -93,6 +94,11 @@ func TotpSecret(v string) predicate.User {
 // Online applies equality check predicate on the "online" field. It's identical to OnlineEQ.
 func Online(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldOnline, v))
+}
+
+// EnableType applies equality check predicate on the "enable_type" field. It's identical to EnableTypeEQ.
+func EnableType(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldEnableType, v))
 }
 
 // LastLoginTime applies equality check predicate on the "last_login_time" field. It's identical to LastLoginTimeEQ.
@@ -516,43 +522,13 @@ func OnlineNEQ(v bool) predicate.User {
 }
 
 // EnableTypeEQ applies the EQ predicate on the "enable_type" field.
-func EnableTypeEQ(v EnableType) predicate.User {
+func EnableTypeEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldEnableType, v))
 }
 
 // EnableTypeNEQ applies the NEQ predicate on the "enable_type" field.
-func EnableTypeNEQ(v EnableType) predicate.User {
+func EnableTypeNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldEnableType, v))
-}
-
-// EnableTypeIn applies the In predicate on the "enable_type" field.
-func EnableTypeIn(vs ...EnableType) predicate.User {
-	return predicate.User(sql.FieldIn(FieldEnableType, vs...))
-}
-
-// EnableTypeNotIn applies the NotIn predicate on the "enable_type" field.
-func EnableTypeNotIn(vs ...EnableType) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldEnableType, vs...))
-}
-
-// UserTypeEQ applies the EQ predicate on the "user_type" field.
-func UserTypeEQ(v UserType) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldUserType, v))
-}
-
-// UserTypeNEQ applies the NEQ predicate on the "user_type" field.
-func UserTypeNEQ(v UserType) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldUserType, v))
-}
-
-// UserTypeIn applies the In predicate on the "user_type" field.
-func UserTypeIn(vs ...UserType) predicate.User {
-	return predicate.User(sql.FieldIn(FieldUserType, vs...))
-}
-
-// UserTypeNotIn applies the NotIn predicate on the "user_type" field.
-func UserTypeNotIn(vs ...UserType) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldUserType, vs...))
 }
 
 // LastLoginTimeEQ applies the EQ predicate on the "last_login_time" field.
@@ -593,6 +569,29 @@ func LastLoginTimeLT(v time.Time) predicate.User {
 // LastLoginTimeLTE applies the LTE predicate on the "last_login_time" field.
 func LastLoginTimeLTE(v time.Time) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldLastLoginTime, v))
+}
+
+// HasRoles applies the HasEdge predicate on the "roles" edge.
+func HasRoles() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRolesWith applies the HasEdge predicate on the "roles" edge with a given conditions (other predicates).
+func HasRolesWith(preds ...predicate.Role) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newRolesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

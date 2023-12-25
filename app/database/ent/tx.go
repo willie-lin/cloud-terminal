@@ -16,6 +16,10 @@ type Tx struct {
 	Asset *AssetClient
 	// AssetGroup is the client for interacting with the AssetGroup builders.
 	AssetGroup *AssetGroupClient
+	// Permission is the client for interacting with the Permission builders.
+	Permission *PermissionClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserGroup is the client for interacting with the UserGroup builders.
@@ -153,6 +157,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Asset = NewAssetClient(tx.config)
 	tx.AssetGroup = NewAssetGroupClient(tx.config)
+	tx.Permission = NewPermissionClient(tx.config)
+	tx.Role = NewRoleClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserGroup = NewUserGroupClient(tx.config)
 }

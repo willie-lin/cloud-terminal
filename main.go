@@ -6,6 +6,7 @@ import (
 	"github.com/bykof/gostradamus"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/logger"
 	"go.elastic.co/apm/module/apmechov4"
 
@@ -36,16 +37,18 @@ const versionFile = "/app/VERSION"
 func main() {
 
 	//utils.InitLogger()
-	log, _ := zap.NewDevelopment()
+	//log, _ := zap.NewDevelopment()
 	//log, _ := zap.NewProduction()
 	//log := zap.NewProductionEncoderConfig()
 	e := echo.New()
+	// 设置日志
+	zapLogger, _ := zap.NewProduction()
+	e.Use(logger.ZapLogger(zapLogger))
+
 	e.IPExtractor = echo.ExtractIPDirect()
 	e.IPExtractor = echo.ExtractIPFromXFFHeader()
 
 	e.Use(apmechov4.Middleware())
-	e.Use(logger.ZapLogger(log))
-
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
@@ -85,13 +88,14 @@ func main() {
 	//v1.Use()
 	e.GET("/", handler.Hello(client))
 	e.GET("/ip", handler.RealIP())
-	e.GET("/generate", handler.Enable2FA(client))
-	e.POST("/validate", handler.Validate2FA(client))
+	e.GET("/generate2fa", handler.Enable2FA(client))
+	e.POST("/validate2fa", handler.Validate2FA(client))
 	//e.GET("/users", handler.GetAllUser(client))
 	//e.GET("/user/uname", handler.FindUserByUsername(client))
-	//e.GET("/user/uid", handler.FindUserById(client))
-	//e.POST("/user", handler.CreateUser(client))
+
+	e.POST("/user", handler.CreateUser(client))
 	//e.POST("/api/login", api.Login(client))
+	//e.GET("/user/uid", handler.FindUserById(client))
 	//e.PUT("/user", handler.UpdateUser(client))
 	//e.PUT("/user/uid", handler.UpdateUserById(client))
 	//e.PUT("/test", handler.TestBindJson(client))

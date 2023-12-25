@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -94,29 +95,15 @@ func (uc *UserCreate) SetNillableOnline(b *bool) *UserCreate {
 }
 
 // SetEnableType sets the "enable_type" field.
-func (uc *UserCreate) SetEnableType(ut user.EnableType) *UserCreate {
-	uc.mutation.SetEnableType(ut)
+func (uc *UserCreate) SetEnableType(b bool) *UserCreate {
+	uc.mutation.SetEnableType(b)
 	return uc
 }
 
 // SetNillableEnableType sets the "enable_type" field if the given value is not nil.
-func (uc *UserCreate) SetNillableEnableType(ut *user.EnableType) *UserCreate {
-	if ut != nil {
-		uc.SetEnableType(*ut)
-	}
-	return uc
-}
-
-// SetUserType sets the "user_type" field.
-func (uc *UserCreate) SetUserType(ut user.UserType) *UserCreate {
-	uc.mutation.SetUserType(ut)
-	return uc
-}
-
-// SetNillableUserType sets the "user_type" field if the given value is not nil.
-func (uc *UserCreate) SetNillableUserType(ut *user.UserType) *UserCreate {
-	if ut != nil {
-		uc.SetUserType(*ut)
+func (uc *UserCreate) SetNillableEnableType(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetEnableType(*b)
 	}
 	return uc
 }
@@ -147,6 +134,21 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 		uc.SetID(*u)
 	}
 	return uc
+}
+
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (uc *UserCreate) AddRoleIDs(ids ...int) *UserCreate {
+	uc.mutation.AddRoleIDs(ids...)
+	return uc
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (uc *UserCreate) AddRoles(r ...*Role) *UserCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uc.AddRoleIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -200,10 +202,6 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultEnableType
 		uc.mutation.SetEnableType(v)
 	}
-	if _, ok := uc.mutation.UserType(); !ok {
-		v := user.DefaultUserType
-		uc.mutation.SetUserType(v)
-	}
 	if _, ok := uc.mutation.LastLoginTime(); !ok {
 		v := user.DefaultLastLoginTime()
 		uc.mutation.SetLastLoginTime(v)
@@ -225,36 +223,48 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Username(); !ok {
 		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "User.username"`)}
 	}
+	if v, ok := uc.mutation.Username(); ok {
+		if err := user.UsernameValidator(v); err != nil {
+			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.Password(); !ok {
 		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
+	}
+	if v, ok := uc.mutation.Password(); ok {
+		if err := user.PasswordValidator(v); err != nil {
+			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "User.password": %w`, err)}
+		}
 	}
 	if _, ok := uc.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
 	}
+	if v, ok := uc.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.Nickname(); !ok {
 		return &ValidationError{Name: "nickname", err: errors.New(`ent: missing required field "User.nickname"`)}
 	}
+	if v, ok := uc.mutation.Nickname(); ok {
+		if err := user.NicknameValidator(v); err != nil {
+			return &ValidationError{Name: "nickname", err: fmt.Errorf(`ent: validator failed for field "User.nickname": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.TotpSecret(); !ok {
 		return &ValidationError{Name: "totp_secret", err: errors.New(`ent: missing required field "User.totp_secret"`)}
+	}
+	if v, ok := uc.mutation.TotpSecret(); ok {
+		if err := user.TotpSecretValidator(v); err != nil {
+			return &ValidationError{Name: "totp_secret", err: fmt.Errorf(`ent: validator failed for field "User.totp_secret": %w`, err)}
+		}
 	}
 	if _, ok := uc.mutation.Online(); !ok {
 		return &ValidationError{Name: "online", err: errors.New(`ent: missing required field "User.online"`)}
 	}
 	if _, ok := uc.mutation.EnableType(); !ok {
 		return &ValidationError{Name: "enable_type", err: errors.New(`ent: missing required field "User.enable_type"`)}
-	}
-	if v, ok := uc.mutation.EnableType(); ok {
-		if err := user.EnableTypeValidator(v); err != nil {
-			return &ValidationError{Name: "enable_type", err: fmt.Errorf(`ent: validator failed for field "User.enable_type": %w`, err)}
-		}
-	}
-	if _, ok := uc.mutation.UserType(); !ok {
-		return &ValidationError{Name: "user_type", err: errors.New(`ent: missing required field "User.user_type"`)}
-	}
-	if v, ok := uc.mutation.UserType(); ok {
-		if err := user.UserTypeValidator(v); err != nil {
-			return &ValidationError{Name: "user_type", err: fmt.Errorf(`ent: validator failed for field "User.user_type": %w`, err)}
-		}
 	}
 	if _, ok := uc.mutation.LastLoginTime(); !ok {
 		return &ValidationError{Name: "last_login_time", err: errors.New(`ent: missing required field "User.last_login_time"`)}
@@ -327,16 +337,28 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.Online = value
 	}
 	if value, ok := uc.mutation.EnableType(); ok {
-		_spec.SetField(user.FieldEnableType, field.TypeEnum, value)
+		_spec.SetField(user.FieldEnableType, field.TypeBool, value)
 		_node.EnableType = value
-	}
-	if value, ok := uc.mutation.UserType(); ok {
-		_spec.SetField(user.FieldUserType, field.TypeEnum, value)
-		_node.UserType = value
 	}
 	if value, ok := uc.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
 		_node.LastLoginTime = value
+	}
+	if nodes := uc.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.RolesTable,
+			Columns: user.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

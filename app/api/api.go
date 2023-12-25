@@ -8,6 +8,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"net/http"
+	"time"
 )
 
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
@@ -55,6 +56,16 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		// 使用你的方法来验证密码和哈希值是否匹配
 		if err := utils.CompareHashAndPassword([]byte(user.Password), []byte(u.Password)); err != nil {
 			return c.JSON(http.StatusUnauthorized, "Invalid password")
+		}
+
+		// 更新 last_login_time 字段
+		user, err = client.User.
+			UpdateOneID(user.ID).
+			SetLastLoginTime(time.Now()).
+			Save(context.Background())
+		if err != nil {
+			log.Printf("Error updating last login time: %v", err)
+			return c.JSON(http.StatusInternalServerError, "Error updating last login time")
 		}
 
 		// 生成JWT

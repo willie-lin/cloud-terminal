@@ -20,8 +20,8 @@ services:
       - db
     image: 0809/cloud-terminal:v1.6
     ports:
-      - "2021:2021"
-    restart: always
+      - "2023:2023"
+    restart: unless-stopped
     environment:
       cloud-terminal_DB_HOST: db:3306
 volumes:

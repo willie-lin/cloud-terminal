@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
@@ -34,12 +35,31 @@ type User struct {
 	// Online holds the value of the "online" field.
 	Online bool `json:"online,omitempty"`
 	// EnableType holds the value of the "enable_type" field.
-	EnableType user.EnableType `json:"enable_type,omitempty"`
-	// UserType holds the value of the "user_type" field.
-	UserType user.UserType `json:"user_type,omitempty"`
+	EnableType bool `json:"enable_type,omitempty"`
 	// LastLoginTime holds the value of the "last_login_time" field.
 	LastLoginTime time.Time `json:"last_login_time,omitempty"`
-	selectValues  sql.SelectValues
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges        UserEdges `json:"edges"`
+	selectValues sql.SelectValues
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// Roles holds the value of the roles edge.
+	Roles []*Role `json:"roles,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// RolesOrErr returns the Roles value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) RolesOrErr() ([]*Role, error) {
+	if e.loadedTypes[0] {
+		return e.Roles, nil
+	}
+	return nil, &NotLoadedError{edge: "roles"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -47,9 +67,9 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldOnline:
+		case user.FieldOnline, user.FieldEnableType:
 			values[i] = new(sql.NullBool)
-		case user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldNickname, user.FieldTotpSecret, user.FieldEnableType, user.FieldUserType:
+		case user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldNickname, user.FieldTotpSecret:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLastLoginTime:
 			values[i] = new(sql.NullTime)
@@ -125,16 +145,10 @@ func (u *User) assignValues(columns []string, values []any) error {
 				u.Online = value.Bool
 			}
 		case user.FieldEnableType:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field enable_type", values[i])
 			} else if value.Valid {
-				u.EnableType = user.EnableType(value.String)
-			}
-		case user.FieldUserType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field user_type", values[i])
-			} else if value.Valid {
-				u.UserType = user.UserType(value.String)
+				u.EnableType = value.Bool
 			}
 		case user.FieldLastLoginTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -153,6 +167,11 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
+}
+
+// QueryRoles queries the "roles" edge of the User entity.
+func (u *User) QueryRoles() *RoleQuery {
+	return NewUserClient(u.config).QueryRoles(u)
 }
 
 // Update returns a builder for updating this User.
@@ -205,16 +224,11 @@ func (u *User) String() string {
 	builder.WriteString("enable_type=")
 	builder.WriteString(fmt.Sprintf("%v", u.EnableType))
 	builder.WriteString(", ")
-	builder.WriteString("user_type=")
-	builder.WriteString(fmt.Sprintf("%v", u.UserType))
-	builder.WriteString(", ")
 	builder.WriteString("last_login_time=")
 	builder.WriteString(u.LastLoginTime.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }
-
-
 
 // Users is a parsable slice of User.
 type Users []*User

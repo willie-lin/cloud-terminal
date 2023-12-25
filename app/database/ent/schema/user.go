@@ -4,8 +4,10 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"regexp"
 	"time"
 )
 
@@ -31,22 +33,24 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
-		field.String("username").Unique(),
-		field.String("password"),
-		field.String("email").Unique(),
-		field.String("nickname"),
-		field.String("totp_secret"),
+		field.String("username").NotEmpty().MinLen(6).MaxLen(30).Unique(),
+		field.String("password").NotEmpty().MinLen(8).MaxLen(120),
+		field.String("email").
+			NotEmpty().
+			Match(regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,4}$`)).
+			Unique(),
+		field.String("nickname").NotEmpty().MinLen(2).MaxLen(20),
+		field.String("totp_secret").NotEmpty(),
 		field.Bool("online").Default(false),
-		field.Enum("enable_type").Values("Enabled", "Disabled").Default("Enabled"),
-		field.Enum("user_type").Values("Admin", "Auditor", "SuperUser", "User").Default("User"),
+		field.Bool("enable_type").Default(true),
 		field.Time("last_login_time").Default(time.Now),
 	}
 }
 
 // Edges of the User.
-//func (User) Edges() []ent.Edge {
-//	return []ent.Edge{
-//		edge.To("groups", UserGroups.Type),
-//		edge.To("assets", Assets.Type),
-//	}
-//}
+func (User) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.To("roles", Role.Type),
+		// Your existing edges...
+	}
+}
