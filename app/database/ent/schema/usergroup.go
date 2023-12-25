@@ -3,6 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // UserGroup holds the schema definition for the UserGroup entity.
@@ -13,7 +14,7 @@ type UserGroup struct {
 // Fields of the UserGroup.
 func (UserGroup) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("id").Unique(),
+		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("group_name"),
 		// 其他用户组信息字段
 	}

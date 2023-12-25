@@ -35,12 +35,9 @@ func (User) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("username").NotEmpty().MinLen(6).MaxLen(30).Unique(),
 		field.String("password").NotEmpty().MinLen(8).MaxLen(120),
-		field.String("email").
-			NotEmpty().
-			Match(regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,4}$`)).
-			Unique(),
+		field.String("email").NotEmpty().Match(regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,4}$`)).Unique(),
 		field.String("nickname").NotEmpty().MinLen(2).MaxLen(20),
-		field.String("totp_secret").NotEmpty(),
+		field.String("totp_secret"),
 		field.Bool("online").Default(false),
 		field.Bool("enable_type").Default(true),
 		field.Time("last_login_time").Default(time.Now),

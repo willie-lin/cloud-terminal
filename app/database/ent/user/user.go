@@ -92,8 +92,6 @@ var (
 	EmailValidator func(string) error
 	// NicknameValidator is a validator for the "nickname" field. It is called by the builders before save.
 	NicknameValidator func(string) error
-	// TotpSecretValidator is a validator for the "totp_secret" field. It is called by the builders before save.
-	TotpSecretValidator func(string) error
 	// DefaultOnline holds the default value on creation for the "online" field.
 	DefaultOnline bool
 	// DefaultEnableType holds the default value on creation for the "enable_type" field.

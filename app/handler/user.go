@@ -36,7 +36,6 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetNickname(u.Nickname).
 			SetTotpSecret(u.TotpSecret).
 			SetEnableType(u.EnableType).
-			SetLastLoginTime(u.LastLoginTime).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).
 			Save(context.Background())

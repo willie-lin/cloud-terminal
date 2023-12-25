@@ -246,11 +246,6 @@ func (uu *UserUpdate) check() error {
 			return &ValidationError{Name: "nickname", err: fmt.Errorf(`ent: validator failed for field "User.nickname": %w`, err)}
 		}
 	}
-	if v, ok := uu.mutation.TotpSecret(); ok {
-		if err := user.TotpSecretValidator(v); err != nil {
-			return &ValidationError{Name: "totp_secret", err: fmt.Errorf(`ent: validator failed for field "User.totp_secret": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -586,11 +581,6 @@ func (uuo *UserUpdateOne) check() error {
 	if v, ok := uuo.mutation.Nickname(); ok {
 		if err := user.NicknameValidator(v); err != nil {
 			return &ValidationError{Name: "nickname", err: fmt.Errorf(`ent: validator failed for field "User.nickname": %w`, err)}
-		}
-	}
-	if v, ok := uuo.mutation.TotpSecret(); ok {
-		if err := user.TotpSecretValidator(v); err != nil {
-			return &ValidationError{Name: "totp_secret", err: fmt.Errorf(`ent: validator failed for field "User.totp_secret": %w`, err)}
 		}
 	}
 	return nil

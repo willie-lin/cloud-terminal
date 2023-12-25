@@ -255,11 +255,6 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.TotpSecret(); !ok {
 		return &ValidationError{Name: "totp_secret", err: errors.New(`ent: missing required field "User.totp_secret"`)}
 	}
-	if v, ok := uc.mutation.TotpSecret(); ok {
-		if err := user.TotpSecretValidator(v); err != nil {
-			return &ValidationError{Name: "totp_secret", err: fmt.Errorf(`ent: validator failed for field "User.totp_secret": %w`, err)}
-		}
-	}
 	if _, ok := uc.mutation.Online(); !ok {
 		return &ValidationError{Name: "online", err: errors.New(`ent: missing required field "User.online"`)}
 	}

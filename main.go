@@ -90,7 +90,7 @@ func main() {
 	e.GET("/ip", handler.RealIP())
 	e.GET("/generate2fa", handler.Enable2FA(client))
 	e.POST("/validate2fa", handler.Validate2FA(client))
-	//e.GET("/users", handler.GetAllUser(client))
+	e.GET("/users", handler.GetAllUsers(client))
 	//e.GET("/user/uname", handler.FindUserByUsername(client))
 
 	e.POST("/user", handler.CreateUser(client))

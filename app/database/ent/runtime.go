@@ -124,10 +124,6 @@ func init() {
 			return nil
 		}
 	}()
-	// userDescTotpSecret is the schema descriptor for totp_secret field.
-	userDescTotpSecret := userFields[5].Descriptor()
-	// user.TotpSecretValidator is a validator for the "totp_secret" field. It is called by the builders before save.
-	user.TotpSecretValidator = userDescTotpSecret.Validators[0].(func(string) error)
 	// userDescOnline is the schema descriptor for online field.
 	userDescOnline := userFields[6].Descriptor()
 	// user.DefaultOnline holds the default value on creation for the online field.
