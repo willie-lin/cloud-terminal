@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/gommon/log"
+	"github.com/willie-lin/cloud-terminal/app/api"
 	"github.com/willie-lin/cloud-terminal/app/logger"
 	"go.elastic.co/apm/module/apmechov4"
 
@@ -53,6 +54,11 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
+	// CORS middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+	}))
 
 	e.Use(middleware.Gzip())
 
@@ -94,6 +100,8 @@ func main() {
 	//e.GET("/user/uname", handler.FindUserByUsername(client))
 
 	e.POST("/user", handler.CreateUser(client))
+	e.POST("/api/login", api.LoginUser(client))
+	e.POST("/api/register", api.RegisterUser(client))
 	//e.POST("/api/login", api.Login(client))
 	//e.GET("/user/uid", handler.FindUserById(client))
 	//e.PUT("/user", handler.UpdateUser(client))
