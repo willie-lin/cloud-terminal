@@ -31,6 +31,9 @@ function LoginForm({ onLogin }) {
         try {
             const data = await login(email, password); // 使用 login 函数
             console.log(data);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            // 将 token 存储到 localStorage 中
             onLogin(email);
         } catch (error) {
             // setLoginError(error.message);
