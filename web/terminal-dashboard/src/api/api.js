@@ -28,7 +28,7 @@ export const register = async (email, password) => {
 export const checkEmail = async (email) => {
     try {
         const response = await api.post('/api/check-email', { email });
-        return response.data === 'Email already registered';
+        return response.data.exists;
     } catch (error) {
         console.error(error);
     }

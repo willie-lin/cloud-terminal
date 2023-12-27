@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
@@ -15,28 +14,45 @@ import (
 )
 
 // CheckEmail 检查邮箱是否已经存在
+//func CheckEmail(client *ent.Client) echo.HandlerFunc {
+//	return func(c echo.Context) error {
+//		u := new(ent.User)
+//		if err := c.Bind(u); err != nil {
+//			log.Printf("Error binding user: %v", err)
+//			return c.JSON(http.StatusBadRequest, err.Error())
+//		}
+//
+//		fmt.Println(u.Email)
+//
+//		// 检查邮箱是否已经存在
+//		exists, err := client.User.Query().Where(user.EmailEQ(u.Email)).Exist(c.Request().Context())
+//		fmt.Println(exists)
+//		if err != nil {
+//			log.Printf("Error checking email: %v", err)
+//			return c.JSON(http.StatusInternalServerError, err.Error())
+//		}
+//		if exists == true {
+//			return c.JSON(http.StatusBadRequest, "Email already registered")
+//		}
+//		return c.JSON(http.StatusOK, "Email not registered")
+//	}
+//}
+
 func CheckEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, err.Error())
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-
-		fmt.Println(u.Email)
 
 		// 检查邮箱是否已经存在
 		exists, err := client.User.Query().Where(user.EmailEQ(u.Email)).Exist(context.Background())
-		fmt.Println(exists)
 		if err != nil {
 			log.Printf("Error checking email: %v", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		if exists {
-			return c.JSON(http.StatusBadRequest, "Email already registered")
-		}
-
-		return c.JSON(http.StatusOK, "Email not registered")
+		return c.JSON(http.StatusOK, map[string]bool{"exists": exists})
 	}
 }
 
