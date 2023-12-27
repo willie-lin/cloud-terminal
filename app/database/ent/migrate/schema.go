@@ -37,7 +37,7 @@ var (
 	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "name", Type: field.TypeString, Unique: true},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
@@ -48,7 +48,7 @@ var (
 	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "name", Type: field.TypeString, Unique: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
@@ -65,9 +65,9 @@ var (
 		{Name: "username", Type: field.TypeString, Unique: true, Size: 30},
 		{Name: "password", Type: field.TypeString, Size: 120},
 		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "nickname", Type: field.TypeString, Size: 20},
-		{Name: "totp_secret", Type: field.TypeString},
-		{Name: "online", Type: field.TypeBool, Default: false},
+		{Name: "nickname", Type: field.TypeString, Unique: true, Nullable: true, Size: 30},
+		{Name: "totp_secret", Type: field.TypeString, Nullable: true},
+		{Name: "online", Type: field.TypeBool, Default: true},
 		{Name: "enable_type", Type: field.TypeBool, Default: true},
 		{Name: "last_login_time", Type: field.TypeTime},
 	}
@@ -79,7 +79,7 @@ var (
 	}
 	// UserGroupsColumns holds the columns for the "user_groups" table.
 	UserGroupsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "group_name", Type: field.TypeString},
 	}
 	// UserGroupsTable holds the schema information for the "user_groups" table.
@@ -90,8 +90,8 @@ var (
 	}
 	// RolePermissionsColumns holds the columns for the "role_permissions" table.
 	RolePermissionsColumns = []*schema.Column{
-		{Name: "role_id", Type: field.TypeInt},
-		{Name: "permission_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeUUID},
+		{Name: "permission_id", Type: field.TypeUUID},
 	}
 	// RolePermissionsTable holds the schema information for the "role_permissions" table.
 	RolePermissionsTable = &schema.Table{
@@ -116,7 +116,7 @@ var (
 	// UserRolesColumns holds the columns for the "user_roles" table.
 	UserRolesColumns = []*schema.Column{
 		{Name: "user_id", Type: field.TypeUUID},
-		{Name: "role_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeUUID},
 	}
 	// UserRolesTable holds the schema information for the "user_roles" table.
 	UserRolesTable = &schema.Table{

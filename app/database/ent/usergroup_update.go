@@ -74,7 +74,7 @@ func (ugu *UserGroupUpdate) ExecX(ctx context.Context) {
 }
 
 func (ugu *UserGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(usergroup.Table, usergroup.Columns, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(usergroup.Table, usergroup.Columns, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeUUID))
 	if ps := ugu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -165,7 +165,7 @@ func (uguo *UserGroupUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (uguo *UserGroupUpdateOne) sqlSave(ctx context.Context) (_node *UserGroup, err error) {
-	_spec := sqlgraph.NewUpdateSpec(usergroup.Table, usergroup.Columns, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(usergroup.Table, usergroup.Columns, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeUUID))
 	id, ok := uguo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "UserGroup.id" for update`)}

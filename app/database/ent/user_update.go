@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
@@ -91,6 +92,12 @@ func (uu *UserUpdate) SetNillableNickname(s *string) *UserUpdate {
 	return uu
 }
 
+// ClearNickname clears the value of the "nickname" field.
+func (uu *UserUpdate) ClearNickname() *UserUpdate {
+	uu.mutation.ClearNickname()
+	return uu
+}
+
 // SetTotpSecret sets the "totp_secret" field.
 func (uu *UserUpdate) SetTotpSecret(s string) *UserUpdate {
 	uu.mutation.SetTotpSecret(s)
@@ -102,6 +109,12 @@ func (uu *UserUpdate) SetNillableTotpSecret(s *string) *UserUpdate {
 	if s != nil {
 		uu.SetTotpSecret(*s)
 	}
+	return uu
+}
+
+// ClearTotpSecret clears the value of the "totp_secret" field.
+func (uu *UserUpdate) ClearTotpSecret() *UserUpdate {
+	uu.mutation.ClearTotpSecret()
 	return uu
 }
 
@@ -148,14 +161,14 @@ func (uu *UserUpdate) SetNillableLastLoginTime(t *time.Time) *UserUpdate {
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (uu *UserUpdate) AddRoleIDs(ids ...int) *UserUpdate {
+func (uu *UserUpdate) AddRoleIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.AddRoleIDs(ids...)
 	return uu
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
 func (uu *UserUpdate) AddRoles(r ...*Role) *UserUpdate {
-	ids := make([]int, len(r))
+	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
@@ -174,14 +187,14 @@ func (uu *UserUpdate) ClearRoles() *UserUpdate {
 }
 
 // RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (uu *UserUpdate) RemoveRoleIDs(ids ...int) *UserUpdate {
+func (uu *UserUpdate) RemoveRoleIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.RemoveRoleIDs(ids...)
 	return uu
 }
 
 // RemoveRoles removes "roles" edges to Role entities.
 func (uu *UserUpdate) RemoveRoles(r ...*Role) *UserUpdate {
-	ids := make([]int, len(r))
+	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
@@ -276,8 +289,14 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Nickname(); ok {
 		_spec.SetField(user.FieldNickname, field.TypeString, value)
 	}
+	if uu.mutation.NicknameCleared() {
+		_spec.ClearField(user.FieldNickname, field.TypeString)
+	}
 	if value, ok := uu.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
+	}
+	if uu.mutation.TotpSecretCleared() {
+		_spec.ClearField(user.FieldTotpSecret, field.TypeString)
 	}
 	if value, ok := uu.mutation.Online(); ok {
 		_spec.SetField(user.FieldOnline, field.TypeBool, value)
@@ -296,7 +315,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -309,7 +328,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -325,7 +344,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -415,6 +434,12 @@ func (uuo *UserUpdateOne) SetNillableNickname(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// ClearNickname clears the value of the "nickname" field.
+func (uuo *UserUpdateOne) ClearNickname() *UserUpdateOne {
+	uuo.mutation.ClearNickname()
+	return uuo
+}
+
 // SetTotpSecret sets the "totp_secret" field.
 func (uuo *UserUpdateOne) SetTotpSecret(s string) *UserUpdateOne {
 	uuo.mutation.SetTotpSecret(s)
@@ -426,6 +451,12 @@ func (uuo *UserUpdateOne) SetNillableTotpSecret(s *string) *UserUpdateOne {
 	if s != nil {
 		uuo.SetTotpSecret(*s)
 	}
+	return uuo
+}
+
+// ClearTotpSecret clears the value of the "totp_secret" field.
+func (uuo *UserUpdateOne) ClearTotpSecret() *UserUpdateOne {
+	uuo.mutation.ClearTotpSecret()
 	return uuo
 }
 
@@ -472,14 +503,14 @@ func (uuo *UserUpdateOne) SetNillableLastLoginTime(t *time.Time) *UserUpdateOne 
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (uuo *UserUpdateOne) AddRoleIDs(ids ...int) *UserUpdateOne {
+func (uuo *UserUpdateOne) AddRoleIDs(ids ...uuid.UUID) *UserUpdateOne {
 	uuo.mutation.AddRoleIDs(ids...)
 	return uuo
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
 func (uuo *UserUpdateOne) AddRoles(r ...*Role) *UserUpdateOne {
-	ids := make([]int, len(r))
+	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
@@ -498,14 +529,14 @@ func (uuo *UserUpdateOne) ClearRoles() *UserUpdateOne {
 }
 
 // RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (uuo *UserUpdateOne) RemoveRoleIDs(ids ...int) *UserUpdateOne {
+func (uuo *UserUpdateOne) RemoveRoleIDs(ids ...uuid.UUID) *UserUpdateOne {
 	uuo.mutation.RemoveRoleIDs(ids...)
 	return uuo
 }
 
 // RemoveRoles removes "roles" edges to Role entities.
 func (uuo *UserUpdateOne) RemoveRoles(r ...*Role) *UserUpdateOne {
-	ids := make([]int, len(r))
+	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
@@ -630,8 +661,14 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Nickname(); ok {
 		_spec.SetField(user.FieldNickname, field.TypeString, value)
 	}
+	if uuo.mutation.NicknameCleared() {
+		_spec.ClearField(user.FieldNickname, field.TypeString)
+	}
 	if value, ok := uuo.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
+	}
+	if uuo.mutation.TotpSecretCleared() {
+		_spec.ClearField(user.FieldTotpSecret, field.TypeString)
 	}
 	if value, ok := uuo.mutation.Online(); ok {
 		_spec.SetField(user.FieldOnline, field.TypeBool, value)
@@ -650,7 +687,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -663,7 +700,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -679,7 +716,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

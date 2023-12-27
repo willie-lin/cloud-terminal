@@ -74,9 +74,25 @@ func (uc *UserCreate) SetNickname(s string) *UserCreate {
 	return uc
 }
 
+// SetNillableNickname sets the "nickname" field if the given value is not nil.
+func (uc *UserCreate) SetNillableNickname(s *string) *UserCreate {
+	if s != nil {
+		uc.SetNickname(*s)
+	}
+	return uc
+}
+
 // SetTotpSecret sets the "totp_secret" field.
 func (uc *UserCreate) SetTotpSecret(s string) *UserCreate {
 	uc.mutation.SetTotpSecret(s)
+	return uc
+}
+
+// SetNillableTotpSecret sets the "totp_secret" field if the given value is not nil.
+func (uc *UserCreate) SetNillableTotpSecret(s *string) *UserCreate {
+	if s != nil {
+		uc.SetTotpSecret(*s)
+	}
 	return uc
 }
 
@@ -137,14 +153,14 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (uc *UserCreate) AddRoleIDs(ids ...int) *UserCreate {
+func (uc *UserCreate) AddRoleIDs(ids ...uuid.UUID) *UserCreate {
 	uc.mutation.AddRoleIDs(ids...)
 	return uc
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
 func (uc *UserCreate) AddRoles(r ...*Role) *UserCreate {
-	ids := make([]int, len(r))
+	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
@@ -244,16 +260,10 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.Nickname(); !ok {
-		return &ValidationError{Name: "nickname", err: errors.New(`ent: missing required field "User.nickname"`)}
-	}
 	if v, ok := uc.mutation.Nickname(); ok {
 		if err := user.NicknameValidator(v); err != nil {
 			return &ValidationError{Name: "nickname", err: fmt.Errorf(`ent: validator failed for field "User.nickname": %w`, err)}
 		}
-	}
-	if _, ok := uc.mutation.TotpSecret(); !ok {
-		return &ValidationError{Name: "totp_secret", err: errors.New(`ent: missing required field "User.totp_secret"`)}
 	}
 	if _, ok := uc.mutation.Online(); !ok {
 		return &ValidationError{Name: "online", err: errors.New(`ent: missing required field "User.online"`)}
@@ -347,7 +357,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

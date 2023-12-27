@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/usergroup"
 )
 
@@ -26,8 +27,16 @@ func (ugc *UserGroupCreate) SetGroupName(s string) *UserGroupCreate {
 }
 
 // SetID sets the "id" field.
-func (ugc *UserGroupCreate) SetID(i int) *UserGroupCreate {
-	ugc.mutation.SetID(i)
+func (ugc *UserGroupCreate) SetID(u uuid.UUID) *UserGroupCreate {
+	ugc.mutation.SetID(u)
+	return ugc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (ugc *UserGroupCreate) SetNillableID(u *uuid.UUID) *UserGroupCreate {
+	if u != nil {
+		ugc.SetID(*u)
+	}
 	return ugc
 }
 
@@ -38,6 +47,7 @@ func (ugc *UserGroupCreate) Mutation() *UserGroupMutation {
 
 // Save creates the UserGroup in the database.
 func (ugc *UserGroupCreate) Save(ctx context.Context) (*UserGroup, error) {
+	ugc.defaults()
 	return withHooks(ctx, ugc.sqlSave, ugc.mutation, ugc.hooks)
 }
 
@@ -63,6 +73,14 @@ func (ugc *UserGroupCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (ugc *UserGroupCreate) defaults() {
+	if _, ok := ugc.mutation.ID(); !ok {
+		v := usergroup.DefaultID()
+		ugc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (ugc *UserGroupCreate) check() error {
 	if _, ok := ugc.mutation.GroupName(); !ok {
@@ -82,9 +100,12 @@ func (ugc *UserGroupCreate) sqlSave(ctx context.Context) (*UserGroup, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != _node.ID {
-		id := _spec.ID.Value.(int64)
-		_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
 	}
 	ugc.mutation.id = &_node.ID
 	ugc.mutation.done = true
@@ -94,11 +115,11 @@ func (ugc *UserGroupCreate) sqlSave(ctx context.Context) (*UserGroup, error) {
 func (ugc *UserGroupCreate) createSpec() (*UserGroup, *sqlgraph.CreateSpec) {
 	var (
 		_node = &UserGroup{config: ugc.config}
-		_spec = sqlgraph.NewCreateSpec(usergroup.Table, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(usergroup.Table, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeUUID))
 	)
 	if id, ok := ugc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
 	}
 	if value, ok := ugc.mutation.GroupName(); ok {
 		_spec.SetField(usergroup.FieldGroupName, field.TypeString, value)
@@ -125,6 +146,7 @@ func (ugcb *UserGroupCreateBulk) Save(ctx context.Context) ([]*UserGroup, error)
 	for i := range ugcb.builders {
 		func(i int, root context.Context) {
 			builder := ugcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*UserGroupMutation)
 				if !ok {
@@ -151,10 +173,6 @@ func (ugcb *UserGroupCreateBulk) Save(ctx context.Context) ([]*UserGroup, error)
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

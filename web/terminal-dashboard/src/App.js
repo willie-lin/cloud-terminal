@@ -13,7 +13,7 @@ const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     return (
         <Router>
-            <Navigation />
+            <Navigation isLoggedIn={isLoggedIn} />
             <Routes>
                 {/*<Route path="/login" element={<Login />} />*/}
                 {/*<Route path="/register" element={<Register />} />*/}

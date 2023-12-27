@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/usergroup"
 )
@@ -81,8 +82,8 @@ func (ugq *UserGroupQuery) FirstX(ctx context.Context) *UserGroup {
 
 // FirstID returns the first UserGroup ID from the query.
 // Returns a *NotFoundError when no UserGroup ID was found.
-func (ugq *UserGroupQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (ugq *UserGroupQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = ugq.Limit(1).IDs(setContextOp(ctx, ugq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -94,7 +95,7 @@ func (ugq *UserGroupQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (ugq *UserGroupQuery) FirstIDX(ctx context.Context) int {
+func (ugq *UserGroupQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := ugq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -132,8 +133,8 @@ func (ugq *UserGroupQuery) OnlyX(ctx context.Context) *UserGroup {
 // OnlyID is like Only, but returns the only UserGroup ID in the query.
 // Returns a *NotSingularError when more than one UserGroup ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (ugq *UserGroupQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (ugq *UserGroupQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = ugq.Limit(2).IDs(setContextOp(ctx, ugq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -149,7 +150,7 @@ func (ugq *UserGroupQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (ugq *UserGroupQuery) OnlyIDX(ctx context.Context) int {
+func (ugq *UserGroupQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := ugq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -177,7 +178,7 @@ func (ugq *UserGroupQuery) AllX(ctx context.Context) []*UserGroup {
 }
 
 // IDs executes the query and returns a list of UserGroup IDs.
-func (ugq *UserGroupQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (ugq *UserGroupQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if ugq.ctx.Unique == nil && ugq.path != nil {
 		ugq.Unique(true)
 	}
@@ -189,7 +190,7 @@ func (ugq *UserGroupQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (ugq *UserGroupQuery) IDsX(ctx context.Context) []int {
+func (ugq *UserGroupQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := ugq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -364,7 +365,7 @@ func (ugq *UserGroupQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (ugq *UserGroupQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(usergroup.Table, usergroup.Columns, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(usergroup.Table, usergroup.Columns, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeUUID))
 	_spec.From = ugq.sql
 	if unique := ugq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

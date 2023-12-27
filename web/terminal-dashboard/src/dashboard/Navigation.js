@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Navigation = () => {
+const Navigation = ({ isLoggedIn }) => {
     return (
         <div className="bg-white">
             <header className="absolute inset-x-0 top-0 z-50">
@@ -21,11 +21,18 @@ const Navigation = () => {
                         <Link to="/company" className="text-sm font-semibold leading-6 text-gray-900">Company</Link>
                     </div>
                     <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+                        {isLoggedIn ? (
+                            <Link to="/logout"
+                                  className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Logout</Link>
+                        ) : (
+                            <>
                         <Link to="/login"
                               className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Log
                             in</Link>
                         <Link to="/register"
                               className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 ml-4 px-4 py-2 rounded">Register</Link>
+                            </>
+                            )}
                     </div>
                 </nav>
             </header>

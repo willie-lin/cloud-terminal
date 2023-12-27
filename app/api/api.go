@@ -2,17 +2,61 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
+	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 )
 
+// CheckEmail 检查邮箱是否已经存在
+func CheckEmail(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		u := new(ent.User)
+		if err := c.Bind(u); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+
+		fmt.Println(u.Email)
+
+		// 检查邮箱是否已经存在
+		exists, err := client.User.Query().Where(user.EmailEQ(u.Email)).Exist(context.Background())
+		fmt.Println(exists)
+		if err != nil {
+			log.Printf("Error checking email: %v", err)
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+		if exists {
+			return c.JSON(http.StatusBadRequest, "Email already registered")
+		}
+
+		return c.JSON(http.StatusOK, "Email not registered")
+	}
+}
+
+func generateUsername() string {
+	var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	var digits = []rune("0123456789")
+
+	var b strings.Builder
+	for i := 0; i < 6; i++ {
+		b.WriteRune(letters[rand.Intn(len(letters))])
+	}
+	for i := 0; i < 10; i++ {
+		b.WriteRune(digits[rand.Intn(len(digits))])
+	}
+	return b.String()
+}
+
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		username := generateUsername()
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
@@ -26,7 +70,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 
-		user, err := client.User.Create().SetEmail(u.Email).SetPassword(string(hashedPassword)).Save(context.Background())
+		user, err := client.User.Create().SetEmail(u.Email).SetUsername(username).SetPassword(string(hashedPassword)).Save(context.Background())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
 			return c.JSON(http.StatusInternalServerError, err.Error())

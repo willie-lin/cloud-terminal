@@ -7,8 +7,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/asset"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/usergroup"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -34,6 +37,18 @@ func init() {
 	assetDescID := assetFields[0].Descriptor()
 	// asset.DefaultID holds the default value on creation for the id field.
 	asset.DefaultID = assetDescID.Default.(func() uuid.UUID)
+	permissionFields := schema.Permission{}.Fields()
+	_ = permissionFields
+	// permissionDescID is the schema descriptor for id field.
+	permissionDescID := permissionFields[0].Descriptor()
+	// permission.DefaultID holds the default value on creation for the id field.
+	permission.DefaultID = permissionDescID.Default.(func() uuid.UUID)
+	roleFields := schema.Role{}.Fields()
+	_ = roleFields
+	// roleDescID is the schema descriptor for id field.
+	roleDescID := roleFields[0].Descriptor()
+	// role.DefaultID holds the default value on creation for the id field.
+	role.DefaultID = roleDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0
@@ -113,7 +128,6 @@ func init() {
 		fns := [...]func(string) error{
 			validators[0].(func(string) error),
 			validators[1].(func(string) error),
-			validators[2].(func(string) error),
 		}
 		return func(nickname string) error {
 			for _, fn := range fns {
@@ -140,4 +154,10 @@ func init() {
 	userDescID := userFields[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
 	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	usergroupFields := schema.UserGroup{}.Fields()
+	_ = usergroupFields
+	// usergroupDescID is the schema descriptor for id field.
+	usergroupDescID := usergroupFields[0].Descriptor()
+	// usergroup.DefaultID holds the default value on creation for the id field.
+	usergroup.DefaultID = usergroupDescID.Default.(func() uuid.UUID)
 }

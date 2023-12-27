@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
@@ -106,8 +107,8 @@ func (pq *PermissionQuery) FirstX(ctx context.Context) *Permission {
 
 // FirstID returns the first Permission ID from the query.
 // Returns a *NotFoundError when no Permission ID was found.
-func (pq *PermissionQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (pq *PermissionQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = pq.Limit(1).IDs(setContextOp(ctx, pq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -119,7 +120,7 @@ func (pq *PermissionQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (pq *PermissionQuery) FirstIDX(ctx context.Context) int {
+func (pq *PermissionQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := pq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -157,8 +158,8 @@ func (pq *PermissionQuery) OnlyX(ctx context.Context) *Permission {
 // OnlyID is like Only, but returns the only Permission ID in the query.
 // Returns a *NotSingularError when more than one Permission ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (pq *PermissionQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (pq *PermissionQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = pq.Limit(2).IDs(setContextOp(ctx, pq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -174,7 +175,7 @@ func (pq *PermissionQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (pq *PermissionQuery) OnlyIDX(ctx context.Context) int {
+func (pq *PermissionQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := pq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -202,7 +203,7 @@ func (pq *PermissionQuery) AllX(ctx context.Context) []*Permission {
 }
 
 // IDs executes the query and returns a list of Permission IDs.
-func (pq *PermissionQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (pq *PermissionQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if pq.ctx.Unique == nil && pq.path != nil {
 		pq.Unique(true)
 	}
@@ -214,7 +215,7 @@ func (pq *PermissionQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (pq *PermissionQuery) IDsX(ctx context.Context) []int {
+func (pq *PermissionQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := pq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -404,8 +405,8 @@ func (pq *PermissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*P
 
 func (pq *PermissionQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*Permission, init func(*Permission), assign func(*Permission, *Role)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Permission)
-	nids := make(map[int]map[*Permission]struct{})
+	byID := make(map[uuid.UUID]*Permission)
+	nids := make(map[uuid.UUID]map[*Permission]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -434,11 +435,11 @@ func (pq *PermissionQuery) loadRoles(ctx context.Context, query *RoleQuery, node
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
+				return append([]any{new(uuid.UUID)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
 				if nids[inValue] == nil {
 					nids[inValue] = map[*Permission]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])
@@ -474,7 +475,7 @@ func (pq *PermissionQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (pq *PermissionQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(permission.Table, permission.Columns, sqlgraph.NewFieldSpec(permission.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(permission.Table, permission.Columns, sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID))
 	_spec.From = pq.sql
 	if unique := pq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
