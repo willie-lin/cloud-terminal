@@ -106,16 +106,17 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		user, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, "User not found")
+			return c.JSON(http.StatusNotFound, "User-not-found")
 		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error querying user")
+			return c.JSON(http.StatusInternalServerError, "Error-querying-user")
 		}
 
 		// 使用你的方法来验证密码和哈希值是否匹配
 		if err := utils.CompareHashAndPassword([]byte(user.Password), []byte(u.Password)); err != nil {
-			return c.JSON(http.StatusUnauthorized, "Invalid password")
+			//return c.JSON(http.StatusForbidden, map[string]string{"error": "Invalid-password"})
+			return c.JSON(http.StatusForbidden, "Invalid-password")
 		}
 
 		// 更新 last_login_time 字段

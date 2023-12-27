@@ -6,6 +6,7 @@ function LoginForm({ onLogin }) {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
+    const [loginError, setLoginError] = useState(''); // 保存登录错误消息
 
     const handleEmailChange = async (e) => {
         const email = e.target.value;
@@ -18,7 +19,6 @@ function LoginForm({ onLogin }) {
             console.error(error);
         }
     };
-
     const getInputClass = () => {
         if (email.length === 0) {
             return "border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md";
@@ -26,8 +26,6 @@ function LoginForm({ onLogin }) {
         // return emailError ? "border-green-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-green-500 focus:ring-1 rounded-md" : "border-red-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-red-500 focus:ring-1 rounded-md";
         return emailError ? "border-red-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-red-500 focus:ring-1 rounded-md" : "border-green-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-green-500 focus:ring-1 rounded-md";
     };
-
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -35,10 +33,11 @@ function LoginForm({ onLogin }) {
             console.log(data);
             onLogin(email);
         } catch (error) {
+            // setLoginError(error.message);
             console.error(error);
+            setLoginError('用户名或密码错误');
         }
     };
-
     return (
         <form onSubmit={handleSubmit}>
             <div className="relative flex min-h-screen text-gray-800 antialiased flex-col justify-center overflow-hidden bg-gray-50 py-6 sm:py-12">
@@ -56,6 +55,7 @@ function LoginForm({ onLogin }) {
                             <label className="block mt-3 font-semibold mb-2">Password</label>
                             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                                    className="border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md"/>
+                            {loginError && <div className="text-red-500">{loginError}</div>}
                             <div className="flex justify-between items-baseline">
                                 <button type="submit"
                                     // className="mt-4 bg-purple-600 text-white py-2 px-6 rounded-md hover:bg-purple-700">Login
