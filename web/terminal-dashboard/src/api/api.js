@@ -51,3 +51,26 @@ export const checkEmail = async (email) => {
         console.error(error);
     }
 };
+
+// /api/users getAllUsers
+
+export const getAllUsers = async () => {
+    try {
+        const response = await api.get('/api/users', {});
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+
+
+//getUserByEmail
+export const getUserByEmail = async (email) => {
+    try {
+        const response = await api.post('/api/user/email', { email });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};

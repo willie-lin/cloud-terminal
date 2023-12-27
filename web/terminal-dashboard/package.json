@@ -37,6 +37,8 @@
     ]
   },
   "devDependencies": {
+    "@heroicons/react": "^2.1.1",
+    "@material-tailwind/react": "^2.1.8",
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.2",
     "postcss-import": "^15.1.0",

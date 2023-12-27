@@ -102,8 +102,8 @@ func main() {
 	e.POST("/api/login", api.LoginUser(client))
 	e.POST("/api/register", api.RegisterUser(client))
 
-	e.GET("/users", handler.GetAllUsers(client))
-	//e.GET("/user/uname", handler.FindUserByUsername(client))
+	e.GET("/api/users", handler.GetAllUsers(client))
+	e.POST("/api/user/email", handler.GetUserByEmail(client))
 
 	e.POST("/user", handler.CreateUser(client))
 
