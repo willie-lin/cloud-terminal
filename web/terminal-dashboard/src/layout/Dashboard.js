@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
+import React, {createContext, useContext, useState} from 'react';
 import Sidebar from "./Sidebar";
 import {Outlet} from "react-router-dom";
 import TopNavbar from "./TopNavbar";
@@ -32,19 +32,20 @@ function Dashboard({ isLoggedIn, onLogout, email }) {
     }
 
     return (
-        <UserProvider>
-        <div className="flex min-h-screen bg-blue-gray-50">
-            <div className="w-64 bg-white shadow-lg fixed h-full">
-                <Sidebar onLogout={onLogout}/>
+        <div>
+            <div className="w-64 bg-white shadow-lg fixed h-full z-10">
+                <Sidebar onLogout={onLogout} email={email}/>
             </div>
-            <div className="flex flex-col flex-grow ml-64">
-                <TopNavbar/>
-                <div className="flex-grow p-8">
-                    <Outlet />
+            <div className="flex flex-col flex-grow ml-64" style={{maxWidth: 'calc(100% - 64px)'}}>
+                <div className="fixed top-0 right-0 left-64 z-10">
+                    <TopNavbar/>
+                </div>
+                <div className="flex-grow p-4 mt-12">
+                    <Outlet/>
                 </div>
             </div>
         </div>
-        </UserProvider>
+        // </UserProvider>
     );
 }
 
