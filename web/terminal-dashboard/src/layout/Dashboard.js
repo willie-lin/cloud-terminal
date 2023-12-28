@@ -1,6 +1,7 @@
 import React from 'react';
 import Sidebar from "./Sidebar";
-import HomePage from "./HomePage";
+import {Outlet} from "react-router-dom";
+import TopNavbar from "./TopNavbar";
 
 // Dashboard组件
 function Dashboard({ isLoggedIn, onLogout, email }) {
@@ -10,12 +11,15 @@ function Dashboard({ isLoggedIn, onLogout, email }) {
             <div className="w-64 bg-white shadow-lg fixed h-full">
                 <Sidebar onLogout={onLogout}/>
             </div>
-            <div className="flex-grow p-8 ml-64">
-                <HomePage email={email}/>
+            <div className="flex flex-col flex-grow ml-64">
+                <TopNavbar/>
+                <div className="flex-grow p-8">
+                    <Outlet/>
+                </div>
             </div>
         </div>
     );
-};
+}
 
 
 export default Dashboard;

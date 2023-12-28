@@ -38,6 +38,10 @@ type User struct {
 	EnableType bool `json:"enable_type,omitempty"`
 	// LastLoginTime holds the value of the "last_login_time" field.
 	LastLoginTime time.Time `json:"last_login_time,omitempty"`
+	// Avatar holds the value of the "avatar" field.
+	Avatar string `json:"avatar,omitempty"`
+	// Bio holds the value of the "bio" field.
+	Bio string `json:"bio,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -69,7 +73,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldOnline, user.FieldEnableType:
 			values[i] = new(sql.NullBool)
-		case user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldNickname, user.FieldTotpSecret:
+		case user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldNickname, user.FieldTotpSecret, user.FieldAvatar, user.FieldBio:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLastLoginTime:
 			values[i] = new(sql.NullTime)
@@ -156,6 +160,18 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.LastLoginTime = value.Time
 			}
+		case user.FieldAvatar:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field avatar", values[i])
+			} else if value.Valid {
+				u.Avatar = value.String
+			}
+		case user.FieldBio:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field bio", values[i])
+			} else if value.Valid {
+				u.Bio = value.String
+			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
 		}
@@ -226,6 +242,12 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("last_login_time=")
 	builder.WriteString(u.LastLoginTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("avatar=")
+	builder.WriteString(u.Avatar)
+	builder.WriteString(", ")
+	builder.WriteString("bio=")
+	builder.WriteString(u.Bio)
 	builder.WriteByte(')')
 	return builder.String()
 }

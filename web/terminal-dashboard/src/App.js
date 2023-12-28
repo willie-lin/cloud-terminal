@@ -5,6 +5,8 @@ import Navigation from "./layout/Navigation";
 import Login from "./dashboard/pages/Login";
 import Register from "./dashboard/pages/Register";
 import Dashboard from "./layout/Dashboard";
+import UserInfo from "./dashboard/components/user/UserInfo";
+import HomePage from "./layout/HomePage";
 
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
@@ -22,19 +24,31 @@ const App = () => {
         localStorage.removeItem('token');
     };
     return (
+        // <Router>
+        //     {!isLoggedIn && <Navigation />}
+        //     <Routes>
+        //         <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
+        //         <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
+        //
+        //         <Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>
+        //             <Route path="/dashboard" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />} />
+        //             <Route path="/userinfo" element={isLoggedIn ? <UserInfo email={email}/> :  <Navigate to="/login" />} />
+        //             <Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+        //         </Route>
+        //
+        //     </Routes>
+        // </Router>
+
         <Router>
-            {/*<Navigation isLoggedIn={isLoggedIn}/>*/}
             {!isLoggedIn && <Navigation />}
             <Routes>
                 <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
                 <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
-
-
-                {/*<Route path="/dashboard" element={isLoggedIn ? <><BreadCrumbNavigation /> <Dashboard onLogout={onLogout} email={email} /></> : <Navigate to="/login" />} />*/}
-                <Route path="/dashboard" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />} />
-                {/*<Route path="/" element={<Navigate to={isLoggedIn ? "/dashboard" : "/login"} />} />*/}
-                <Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-
+                <Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>
+                    <Route path="dashboard" element={<HomePage email={email}/>}/>
+                    <Route path="userinfo" element={<UserInfo email={email}/>}/>
+                    <Route path="/" element={<Navigate to="dashboard" />} />
+                </Route>
             </Routes>
         </Router>
     );

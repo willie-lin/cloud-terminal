@@ -1,6 +1,5 @@
 import {
     Card,
-    Typography,
     List,
     ListItem,
     ListItemPrefix,
@@ -27,11 +26,6 @@ function Sidebar({ onLogout }) {
                     <img className="h-8 w-auto"
                          src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt=""/>
                 </Link>
-            </div>
-            <div className="mb-4 p-4">
-                <Typography variant="h5" color="blue-gray">
-                    Sidebar
-                </Typography>
             </div>
             <div className="relative">
                 <img className="w-10 h-10 rounded"
@@ -65,7 +59,7 @@ function Sidebar({ onLogout }) {
                     <ListItemPrefix>
                         <UserCircleIcon className="h-5 w-5"/>
                     </ListItemPrefix>
-                    Profile
+                    <Link to="/userinfo">Profile</Link>
                 </ListItem>
                 <ListItem>
                     <ListItemPrefix>
@@ -78,7 +72,6 @@ function Sidebar({ onLogout }) {
                         <PowerIcon className="h-5 w-5"/>
                     </ListItemPrefix>
                     <Link to="/login" onClick={onLogout} >Logout</Link>
-                          {/*// className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Logout*/}
                 </ListItem>
             </List>
         </Card>

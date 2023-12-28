@@ -41,6 +41,8 @@ func (User) Fields() []ent.Field {
 		field.Bool("online").Default(true),
 		field.Bool("enable_type").Default(true),
 		field.Time("last_login_time").Default(time.Now),
+		field.String("avatar").Optional(), // 新增的头像字段
+		field.String("bio").Optional(),
 	}
 }
 
