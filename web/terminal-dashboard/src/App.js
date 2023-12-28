@@ -24,21 +24,7 @@ const App = () => {
         localStorage.removeItem('token');
     };
     return (
-        // <Router>
-        //     {!isLoggedIn && <Navigation />}
-        //     <Routes>
-        //         <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
-        //         <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
-        //
-        //         <Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>
-        //             <Route path="/dashboard" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />} />
-        //             <Route path="/userinfo" element={isLoggedIn ? <UserInfo email={email}/> :  <Navigate to="/login" />} />
-        //             <Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-        //         </Route>
-        //
-        //     </Routes>
-        // </Router>
-
+        // 路由组件
         <Router>
             {!isLoggedIn && <Navigation />}
             <Routes>

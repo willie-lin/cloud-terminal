@@ -19,19 +19,12 @@ function BreadCrumbNavigation() {
                 const last = index === pathname.length - 1;
                 const to = `/${pathname.slice(0, index + 1).join('/')}`;
                 return last ? (
-                        // <a href="#" className="opacity-60" key={to}>
-                        //     {value}
-                        // </a>
                     <a href={to} className="opacity-60" key={to}>{value}</a>
 
             ) : (
-                    // <a href="#" className="opacity-60" key={to} onClick={() => navigate(to)}>
-                    //     {value}
-                    // </a>
                     <a href={to} className="opacity-60" key={to} onClick={() => navigate(to)}>
                         {value}
                     </a>
-
                 );
             })}
         </Breadcrumbs>

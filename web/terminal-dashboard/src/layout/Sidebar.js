@@ -38,7 +38,7 @@ function Sidebar({ onLogout }) {
                     <ListItemPrefix>
                         <PresentationChartBarIcon className="h-5 w-5"/>
                     </ListItemPrefix>
-                    Dashboard
+                    <Link to="/dashboard">Dashboard</Link>
                 </ListItem>
                 <ListItem>
                     <ListItemPrefix>
