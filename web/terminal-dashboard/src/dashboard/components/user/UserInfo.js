@@ -48,11 +48,6 @@ function UserInfo({ email, onUpdate }) {
         onUpdate(newInfo);
         setIsEditing(false);
     };
-
-
-
-
-
     return (
         <Card className="w-full max-w-2xl p-4 bg-white rounded shadow-md">
         <div className="flex-grow w-full max-w-2xl p-4 bg-white rounded shadow-md">

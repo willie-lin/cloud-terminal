@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
+import React, {createContext, useContext, useState} from 'react';
 import Sidebar from "./Sidebar";
 import {Outlet} from "react-router-dom";
 import TopNavbar from "./TopNavbar";
@@ -35,7 +35,7 @@ function Dashboard({ isLoggedIn, onLogout, email }) {
         <UserProvider>
         <div className="flex min-h-screen bg-blue-gray-50">
             <div className="w-64 bg-white shadow-lg fixed h-full">
-                <Sidebar onLogout={onLogout}/>
+                <Sidebar onLogout={onLogout} email={email}/>
             </div>
             <div className="flex flex-col flex-grow ml-64">
                 <TopNavbar/>
