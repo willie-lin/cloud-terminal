@@ -1,6 +1,6 @@
 // 用户信息组件
 import {useEffect, useState} from "react";
-import {getUserByEmail} from "../../api/api";
+import {getUserByEmail} from "../../../api/api";
 
 function UserInfo({ email }) {
     const [currentTime, setCurrentTime] = useState(new Date());

@@ -1,6 +1,6 @@
 // RegisterForm.js
 import React, { useState } from 'react';
-import {checkEmail, register} from "../../api/api";
+import {checkEmail, register} from "../../../api/api";
 
 function RegisterForm({ onRegister }) {
     const [email, setEmail] = useState('');

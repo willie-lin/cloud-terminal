@@ -1,5 +1,5 @@
-import UserInfo from "../dashboard/components/UserInfo";
-import UserList from "../dashboard/components/UserList";
+import UserInfo from "../dashboard/components/user/UserInfo";
+import UserList from "../dashboard/components/user/UserList";
 import TopNavbar from "./TopNavbar";
 
 function HomePage({ email }) {

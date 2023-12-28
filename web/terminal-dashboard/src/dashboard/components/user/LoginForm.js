@@ -1,6 +1,6 @@
 // LoginForm.js
 import React, { useState } from 'react';
-import {checkEmail, login} from "../../api/api";
+import {checkEmail, login} from "../../../api/api";
 
 function LoginForm({ onLogin }) {
     const [email, setEmail] = React.useState('');
