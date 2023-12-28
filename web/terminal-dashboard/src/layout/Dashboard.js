@@ -1,10 +1,9 @@
 import React from 'react';
 import Sidebar from "./Sidebar";
 import HomePage from "./HomePage";
-import BreadCrumbNavigation from "./BreadCrumbNavigation";
 
 // Dashboard组件
-const Dashboard = ({ isLoggedIn, onLogout, email }) => {
+function Dashboard({ isLoggedIn, onLogout, email }) {
 
     return (
         <div className="flex min-h-screen bg-blue-gray-50">
