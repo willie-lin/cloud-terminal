@@ -72,13 +72,13 @@ function Sidebar({ onLogout }) {
                         <Cog6ToothIcon className="h-5 w-5"/>
                     </ListItemPrefix>
                     Settings
-                </ListItem>>
+                </ListItem>
                 <ListItem className="hover:bg-blue-gray-100 transition-colors duration-200">
                     <ListItemPrefix>
                         <PowerIcon className="h-5 w-5"/>
                     </ListItemPrefix>
-                    <Link to="/login" onClick={onLogout}
-                          className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Logout</Link>
+                    <Link to="/login" onClick={onLogout} >Logout</Link>
+                          {/*// className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Logout*/}
                 </ListItem>
             </List>
         </Card>

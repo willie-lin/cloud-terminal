@@ -23,7 +23,8 @@ const App = () => {
     };
     return (
         <Router>
-            <Navigation isLoggedIn={isLoggedIn}/>
+            {/*<Navigation isLoggedIn={isLoggedIn}/>*/}
+            {!isLoggedIn && <Navigation />}
             <Routes>
                 <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
                 <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
