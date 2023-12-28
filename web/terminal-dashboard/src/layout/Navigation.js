@@ -23,12 +23,12 @@ const Navigation = ({ isLoggedIn, onLogout }) => {
                     <div className="hidden lg:flex lg:flex-1 lg:justify-end">
                         {isLoggedIn ? (
                             <>
-                                <div className="relative">
-                                    <img className="w-10 h-10 rounded"
-                                         src="../../../assets/soft-ui-flowbite/images/people/profile-picture-5.jpg" alt=""/>
-                                    <span
-                                        className="absolute bottom-0 left-8 transform translate-y-1/4 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
-                                </div>
+                                {/*<div className="relative">*/}
+                                {/*    <img className="w-10 h-10 rounded"*/}
+                                {/*         src="../../../assets/soft-ui-flowbite/images/people/profile-picture-5.jpg" alt=""/>*/}
+                                {/*    <span*/}
+                                {/*        className="absolute bottom-0 left-8 transform translate-y-1/4 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>*/}
+                                {/*</div>*/}
                                 {/*<Link to="/login" onClick={onLogout}*/}
                                 {/*      className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Logout</Link>*/}
                             </>

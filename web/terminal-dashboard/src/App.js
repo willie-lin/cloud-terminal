@@ -23,21 +23,8 @@ const App = () => {
     };
     return (
         <Router>
-            {/*<Dashboard />*/}
             <Navigation isLoggedIn={isLoggedIn}/>
             <Routes>
-                {/*/!* 保存用户的电子邮件 *!/*/}
-                {/*<Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login onLogin={onLogin} />} />*/}
-                {/*/!* 保存用户的电子邮件 *!/*/}
-                {/*<Route path="/register" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Register onRegister={onLogin} />} />*/}
-
-                {/*<Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />*/}
-                {/*<Route path="/" element={isLoggedIn ? <Sidebar onLogout={onLogout} /> : <Navigate to="/login" />} />*/}
-                {/*/!* 传递电子邮件作为一个属性 *!/*/}
-                {/*<Route path="/dashboard" element={isLoggedIn ? <Dashboard email={email} /> : <Navigate to="/login" />} />*/}
-
-
-
                 <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
                 <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />} />
