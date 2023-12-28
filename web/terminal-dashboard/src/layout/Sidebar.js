@@ -1,37 +1,98 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
+//
+// function Sidebar({ isLoggedIn, onLogout }) {
+//     return (
+//         <div className="sidebar">
+//             <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+//                 {isLoggedIn && (
+//                     <div>
+//                         <div className="relative">
+//                             <img className="w-10 h-10 rounded"
+//                                  src="../../../assets/soft-ui-flowbite/images/people/profile-picture-5.jpg" alt=""/>
+//                             <span
+//                                 className="absolute bottom-0 left-8 transform translate-y-1/4 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
+//                         </div>
+//                         <Link to="/login" onClick={onLogout}
+//                               className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Logout</Link>
+//                     </div>
+//                 )}
+//             </div>
+//         </div>
+//     );
+// };
+//
+// export default Sidebar;
 
-const Sidebar = ({ isLoggedIn, onLogout }) => {
+
+import {
+    Card,
+    Typography,
+    List,
+    ListItem,
+    ListItemPrefix,
+    ListItemSuffix,
+    Chip,
+} from "@material-tailwind/react";
+import {
+    PresentationChartBarIcon,
+    ShoppingBagIcon,
+    UserCircleIcon,
+    Cog6ToothIcon,
+    InboxIcon,
+    PowerIcon,
+} from "@heroicons/react/24/solid";
+
+function Sidebar() {
     return (
-        <aside className="w-64 bg-white shadow-md">
-            <div className="p-6">
-                <Link to="/" className="-m-1.5 p-1.5">
-                    <span className="sr-only">Your Company</span>
-                    <img className="h-8 w-auto"
-                         src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt=""/>
-                </Link>
-                <div className="mt-8">
-                    <Link to="/product" className="text-sm font-semibold leading-6 text-gray-900 block py-1">Product</Link>
-                    <Link to="/features" className="text-sm font-semibold leading-6 text-gray-900 block py-1">Features</Link>
-                    <Link to="/marketplace" className="text-sm font-semibold leading-6 text-gray-900 block py-1">Marketplace</Link>
-                    <Link to="/company" className="text-sm font-semibold leading-6 text-gray-900 block py-1">Company</Link>
-                </div>
-                <div className="mt-8">
-                    {isLoggedIn ? (
-                        <Link to="/login" onClick={onLogout}
-                              className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded block">Logout</Link>
-                    ) : (
-                        <>
-                            <Link to="/login"
-                                  className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded block">Log in</Link>
-                            <Link to="/register"
-                                  className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 ml-4 px-4 py-2 rounded block mt-2">Register</Link>
-                        </>
-                    )}
-                </div>
+        <Card className="h-[calc(100vh-2rem)] w-full max-w-[20rem] p-4 shadow-xl shadow-blue-gray-900/5">
+            <div className="mb-2 p-4">
+                <Typography variant="h5" color="blue-gray">
+                    Sidebar
+                </Typography>
             </div>
-        </aside>
+            <List>
+                <ListItem>
+                    <ListItemPrefix>
+                        <PresentationChartBarIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    Dashboard
+                </ListItem>
+                <ListItem>
+                    <ListItemPrefix>
+                        <ShoppingBagIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    E-Commerce
+                </ListItem>
+                <ListItem>
+                    <ListItemPrefix>
+                        <InboxIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    Inbox
+                    <ListItemSuffix>
+                        <Chip value="14" size="sm" variant="ghost" color="blue-gray" className="rounded-full" />
+                    </ListItemSuffix>
+                </ListItem>
+                <ListItem>
+                    <ListItemPrefix>
+                        <UserCircleIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    Profile
+                </ListItem>
+                <ListItem>
+                    <ListItemPrefix>
+                        <Cog6ToothIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    Settings
+                </ListItem>
+                <ListItem>
+                    <ListItemPrefix>
+                        <PowerIcon className="h-5 w-5" />
+                    </ListItemPrefix>
+                    Log Out
+                </ListItem>
+            </List>
+        </Card>
     );
-};
+}
 
 export default Sidebar;

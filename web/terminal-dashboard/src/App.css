@@ -36,3 +36,32 @@
     transform: rotate(360deg);
   }
 }
+
+.dashboard{
+  display: flex;
+}
+
+.sidebar {
+  /* 其他样式 */
+  width: 250px;
+}
+
+.homepage  {
+  flex: 5;
+}
+
+.sidebar {
+  /* 其他样式 */
+  width: 250px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 0;
+  }
+  .sidebar.open {
+    width: 250px;
+  }
+}
+
+
