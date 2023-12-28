@@ -31,13 +31,6 @@ function Dashboard({ isLoggedIn, onLogout, email }) {
         return useContext(UserContext);
     }
 
-    // // 在UserInfo组件中使用useUser
-    // function UserInfo() {
-    //     const { userInfo, onUpdate } = useUser();
-    //
-    //     // ...
-    // }
-
     return (
         <UserProvider>
         <div className="flex min-h-screen bg-blue-gray-50">

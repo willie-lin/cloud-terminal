@@ -62,16 +62,16 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "avatar", Type: field.TypeString, Nullable: true},
+		{Name: "nickname", Type: field.TypeString, Unique: true, Nullable: true, Size: 30},
+		{Name: "bio", Type: field.TypeString, Nullable: true},
 		{Name: "username", Type: field.TypeString, Unique: true, Size: 30},
 		{Name: "password", Type: field.TypeString, Size: 120},
 		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "nickname", Type: field.TypeString, Unique: true, Nullable: true, Size: 30},
 		{Name: "totp_secret", Type: field.TypeString, Nullable: true},
 		{Name: "online", Type: field.TypeBool, Default: true},
 		{Name: "enable_type", Type: field.TypeBool, Default: true},
 		{Name: "last_login_time", Type: field.TypeTime},
-		{Name: "avatar", Type: field.TypeString, Nullable: true},
-		{Name: "bio", Type: field.TypeString, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{

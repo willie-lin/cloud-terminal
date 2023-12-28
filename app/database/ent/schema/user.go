@@ -33,16 +33,16 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
+		field.String("avatar").Optional(), // 新增的头像字段
+		field.String("nickname").MinLen(2).MaxLen(30).Unique().Optional(),
+		field.String("bio").Optional(),
 		field.String("username").NotEmpty().MinLen(6).MaxLen(30).Unique(),
 		field.String("password").NotEmpty().MinLen(8).MaxLen(120),
 		field.String("email").NotEmpty().Match(regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,4}$`)).Unique(),
-		field.String("nickname").MinLen(2).MaxLen(30).Unique().Optional(),
 		field.String("totp_secret").Optional(),
 		field.Bool("online").Default(true),
 		field.Bool("enable_type").Default(true),
 		field.Time("last_login_time").Default(time.Now),
-		field.String("avatar").Optional(), // 新增的头像字段
-		field.String("bio").Optional(),
 	}
 }
 

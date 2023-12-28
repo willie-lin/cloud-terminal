@@ -19,14 +19,18 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldAvatar holds the string denoting the avatar field in the database.
+	FieldAvatar = "avatar"
+	// FieldNickname holds the string denoting the nickname field in the database.
+	FieldNickname = "nickname"
+	// FieldBio holds the string denoting the bio field in the database.
+	FieldBio = "bio"
 	// FieldUsername holds the string denoting the username field in the database.
 	FieldUsername = "username"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
-	// FieldNickname holds the string denoting the nickname field in the database.
-	FieldNickname = "nickname"
 	// FieldTotpSecret holds the string denoting the totp_secret field in the database.
 	FieldTotpSecret = "totp_secret"
 	// FieldOnline holds the string denoting the online field in the database.
@@ -35,10 +39,6 @@ const (
 	FieldEnableType = "enable_type"
 	// FieldLastLoginTime holds the string denoting the last_login_time field in the database.
 	FieldLastLoginTime = "last_login_time"
-	// FieldAvatar holds the string denoting the avatar field in the database.
-	FieldAvatar = "avatar"
-	// FieldBio holds the string denoting the bio field in the database.
-	FieldBio = "bio"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
 	EdgeRoles = "roles"
 	// Table holds the table name of the user in the database.
@@ -55,16 +55,16 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldAvatar,
+	FieldNickname,
+	FieldBio,
 	FieldUsername,
 	FieldPassword,
 	FieldEmail,
-	FieldNickname,
 	FieldTotpSecret,
 	FieldOnline,
 	FieldEnableType,
 	FieldLastLoginTime,
-	FieldAvatar,
-	FieldBio,
 }
 
 var (
@@ -90,14 +90,14 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// NicknameValidator is a validator for the "nickname" field. It is called by the builders before save.
+	NicknameValidator func(string) error
 	// UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	UsernameValidator func(string) error
 	// PasswordValidator is a validator for the "password" field. It is called by the builders before save.
 	PasswordValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
-	// NicknameValidator is a validator for the "nickname" field. It is called by the builders before save.
-	NicknameValidator func(string) error
 	// DefaultOnline holds the default value on creation for the "online" field.
 	DefaultOnline bool
 	// DefaultEnableType holds the default value on creation for the "enable_type" field.
@@ -126,6 +126,21 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
+// ByAvatar orders the results by the avatar field.
+func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAvatar, opts...).ToFunc()
+}
+
+// ByNickname orders the results by the nickname field.
+func ByNickname(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNickname, opts...).ToFunc()
+}
+
+// ByBio orders the results by the bio field.
+func ByBio(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBio, opts...).ToFunc()
+}
+
 // ByUsername orders the results by the username field.
 func ByUsername(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUsername, opts...).ToFunc()
@@ -139,11 +154,6 @@ func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 // ByEmail orders the results by the email field.
 func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
-}
-
-// ByNickname orders the results by the nickname field.
-func ByNickname(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldNickname, opts...).ToFunc()
 }
 
 // ByTotpSecret orders the results by the totp_secret field.
@@ -164,16 +174,6 @@ func ByEnableType(opts ...sql.OrderTermOption) OrderOption {
 // ByLastLoginTime orders the results by the last_login_time field.
 func ByLastLoginTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastLoginTime, opts...).ToFunc()
-}
-
-// ByAvatar orders the results by the avatar field.
-func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAvatar, opts...).ToFunc()
-}
-
-// ByBio orders the results by the bio field.
-func ByBio(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBio, opts...).ToFunc()
 }
 
 // ByRolesCount orders the results by roles count.

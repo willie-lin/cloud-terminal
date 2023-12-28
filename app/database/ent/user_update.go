@@ -36,6 +36,66 @@ func (uu *UserUpdate) SetUpdatedAt(t time.Time) *UserUpdate {
 	return uu
 }
 
+// SetAvatar sets the "avatar" field.
+func (uu *UserUpdate) SetAvatar(s string) *UserUpdate {
+	uu.mutation.SetAvatar(s)
+	return uu
+}
+
+// SetNillableAvatar sets the "avatar" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableAvatar(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetAvatar(*s)
+	}
+	return uu
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (uu *UserUpdate) ClearAvatar() *UserUpdate {
+	uu.mutation.ClearAvatar()
+	return uu
+}
+
+// SetNickname sets the "nickname" field.
+func (uu *UserUpdate) SetNickname(s string) *UserUpdate {
+	uu.mutation.SetNickname(s)
+	return uu
+}
+
+// SetNillableNickname sets the "nickname" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableNickname(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetNickname(*s)
+	}
+	return uu
+}
+
+// ClearNickname clears the value of the "nickname" field.
+func (uu *UserUpdate) ClearNickname() *UserUpdate {
+	uu.mutation.ClearNickname()
+	return uu
+}
+
+// SetBio sets the "bio" field.
+func (uu *UserUpdate) SetBio(s string) *UserUpdate {
+	uu.mutation.SetBio(s)
+	return uu
+}
+
+// SetNillableBio sets the "bio" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableBio(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetBio(*s)
+	}
+	return uu
+}
+
+// ClearBio clears the value of the "bio" field.
+func (uu *UserUpdate) ClearBio() *UserUpdate {
+	uu.mutation.ClearBio()
+	return uu
+}
+
 // SetUsername sets the "username" field.
 func (uu *UserUpdate) SetUsername(s string) *UserUpdate {
 	uu.mutation.SetUsername(s)
@@ -75,26 +135,6 @@ func (uu *UserUpdate) SetNillableEmail(s *string) *UserUpdate {
 	if s != nil {
 		uu.SetEmail(*s)
 	}
-	return uu
-}
-
-// SetNickname sets the "nickname" field.
-func (uu *UserUpdate) SetNickname(s string) *UserUpdate {
-	uu.mutation.SetNickname(s)
-	return uu
-}
-
-// SetNillableNickname sets the "nickname" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableNickname(s *string) *UserUpdate {
-	if s != nil {
-		uu.SetNickname(*s)
-	}
-	return uu
-}
-
-// ClearNickname clears the value of the "nickname" field.
-func (uu *UserUpdate) ClearNickname() *UserUpdate {
-	uu.mutation.ClearNickname()
 	return uu
 }
 
@@ -157,46 +197,6 @@ func (uu *UserUpdate) SetNillableLastLoginTime(t *time.Time) *UserUpdate {
 	if t != nil {
 		uu.SetLastLoginTime(*t)
 	}
-	return uu
-}
-
-// SetAvatar sets the "avatar" field.
-func (uu *UserUpdate) SetAvatar(s string) *UserUpdate {
-	uu.mutation.SetAvatar(s)
-	return uu
-}
-
-// SetNillableAvatar sets the "avatar" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableAvatar(s *string) *UserUpdate {
-	if s != nil {
-		uu.SetAvatar(*s)
-	}
-	return uu
-}
-
-// ClearAvatar clears the value of the "avatar" field.
-func (uu *UserUpdate) ClearAvatar() *UserUpdate {
-	uu.mutation.ClearAvatar()
-	return uu
-}
-
-// SetBio sets the "bio" field.
-func (uu *UserUpdate) SetBio(s string) *UserUpdate {
-	uu.mutation.SetBio(s)
-	return uu
-}
-
-// SetNillableBio sets the "bio" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableBio(s *string) *UserUpdate {
-	if s != nil {
-		uu.SetBio(*s)
-	}
-	return uu
-}
-
-// ClearBio clears the value of the "bio" field.
-func (uu *UserUpdate) ClearBio() *UserUpdate {
-	uu.mutation.ClearBio()
 	return uu
 }
 
@@ -279,6 +279,11 @@ func (uu *UserUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uu *UserUpdate) check() error {
+	if v, ok := uu.mutation.Nickname(); ok {
+		if err := user.NicknameValidator(v); err != nil {
+			return &ValidationError{Name: "nickname", err: fmt.Errorf(`ent: validator failed for field "User.nickname": %w`, err)}
+		}
+	}
 	if v, ok := uu.mutation.Username(); ok {
 		if err := user.UsernameValidator(v); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
@@ -292,11 +297,6 @@ func (uu *UserUpdate) check() error {
 	if v, ok := uu.mutation.Email(); ok {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
-		}
-	}
-	if v, ok := uu.mutation.Nickname(); ok {
-		if err := user.NicknameValidator(v); err != nil {
-			return &ValidationError{Name: "nickname", err: fmt.Errorf(`ent: validator failed for field "User.nickname": %w`, err)}
 		}
 	}
 	return nil
@@ -317,6 +317,24 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := uu.mutation.Avatar(); ok {
+		_spec.SetField(user.FieldAvatar, field.TypeString, value)
+	}
+	if uu.mutation.AvatarCleared() {
+		_spec.ClearField(user.FieldAvatar, field.TypeString)
+	}
+	if value, ok := uu.mutation.Nickname(); ok {
+		_spec.SetField(user.FieldNickname, field.TypeString, value)
+	}
+	if uu.mutation.NicknameCleared() {
+		_spec.ClearField(user.FieldNickname, field.TypeString)
+	}
+	if value, ok := uu.mutation.Bio(); ok {
+		_spec.SetField(user.FieldBio, field.TypeString, value)
+	}
+	if uu.mutation.BioCleared() {
+		_spec.ClearField(user.FieldBio, field.TypeString)
+	}
 	if value, ok := uu.mutation.Username(); ok {
 		_spec.SetField(user.FieldUsername, field.TypeString, value)
 	}
@@ -325,12 +343,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
-	}
-	if value, ok := uu.mutation.Nickname(); ok {
-		_spec.SetField(user.FieldNickname, field.TypeString, value)
-	}
-	if uu.mutation.NicknameCleared() {
-		_spec.ClearField(user.FieldNickname, field.TypeString)
 	}
 	if value, ok := uu.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
@@ -346,18 +358,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
-	}
-	if value, ok := uu.mutation.Avatar(); ok {
-		_spec.SetField(user.FieldAvatar, field.TypeString, value)
-	}
-	if uu.mutation.AvatarCleared() {
-		_spec.ClearField(user.FieldAvatar, field.TypeString)
-	}
-	if value, ok := uu.mutation.Bio(); ok {
-		_spec.SetField(user.FieldBio, field.TypeString, value)
-	}
-	if uu.mutation.BioCleared() {
-		_spec.ClearField(user.FieldBio, field.TypeString)
 	}
 	if uu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -430,6 +430,66 @@ func (uuo *UserUpdateOne) SetUpdatedAt(t time.Time) *UserUpdateOne {
 	return uuo
 }
 
+// SetAvatar sets the "avatar" field.
+func (uuo *UserUpdateOne) SetAvatar(s string) *UserUpdateOne {
+	uuo.mutation.SetAvatar(s)
+	return uuo
+}
+
+// SetNillableAvatar sets the "avatar" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableAvatar(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetAvatar(*s)
+	}
+	return uuo
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (uuo *UserUpdateOne) ClearAvatar() *UserUpdateOne {
+	uuo.mutation.ClearAvatar()
+	return uuo
+}
+
+// SetNickname sets the "nickname" field.
+func (uuo *UserUpdateOne) SetNickname(s string) *UserUpdateOne {
+	uuo.mutation.SetNickname(s)
+	return uuo
+}
+
+// SetNillableNickname sets the "nickname" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableNickname(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetNickname(*s)
+	}
+	return uuo
+}
+
+// ClearNickname clears the value of the "nickname" field.
+func (uuo *UserUpdateOne) ClearNickname() *UserUpdateOne {
+	uuo.mutation.ClearNickname()
+	return uuo
+}
+
+// SetBio sets the "bio" field.
+func (uuo *UserUpdateOne) SetBio(s string) *UserUpdateOne {
+	uuo.mutation.SetBio(s)
+	return uuo
+}
+
+// SetNillableBio sets the "bio" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableBio(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetBio(*s)
+	}
+	return uuo
+}
+
+// ClearBio clears the value of the "bio" field.
+func (uuo *UserUpdateOne) ClearBio() *UserUpdateOne {
+	uuo.mutation.ClearBio()
+	return uuo
+}
+
 // SetUsername sets the "username" field.
 func (uuo *UserUpdateOne) SetUsername(s string) *UserUpdateOne {
 	uuo.mutation.SetUsername(s)
@@ -469,26 +529,6 @@ func (uuo *UserUpdateOne) SetNillableEmail(s *string) *UserUpdateOne {
 	if s != nil {
 		uuo.SetEmail(*s)
 	}
-	return uuo
-}
-
-// SetNickname sets the "nickname" field.
-func (uuo *UserUpdateOne) SetNickname(s string) *UserUpdateOne {
-	uuo.mutation.SetNickname(s)
-	return uuo
-}
-
-// SetNillableNickname sets the "nickname" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableNickname(s *string) *UserUpdateOne {
-	if s != nil {
-		uuo.SetNickname(*s)
-	}
-	return uuo
-}
-
-// ClearNickname clears the value of the "nickname" field.
-func (uuo *UserUpdateOne) ClearNickname() *UserUpdateOne {
-	uuo.mutation.ClearNickname()
 	return uuo
 }
 
@@ -551,46 +591,6 @@ func (uuo *UserUpdateOne) SetNillableLastLoginTime(t *time.Time) *UserUpdateOne 
 	if t != nil {
 		uuo.SetLastLoginTime(*t)
 	}
-	return uuo
-}
-
-// SetAvatar sets the "avatar" field.
-func (uuo *UserUpdateOne) SetAvatar(s string) *UserUpdateOne {
-	uuo.mutation.SetAvatar(s)
-	return uuo
-}
-
-// SetNillableAvatar sets the "avatar" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableAvatar(s *string) *UserUpdateOne {
-	if s != nil {
-		uuo.SetAvatar(*s)
-	}
-	return uuo
-}
-
-// ClearAvatar clears the value of the "avatar" field.
-func (uuo *UserUpdateOne) ClearAvatar() *UserUpdateOne {
-	uuo.mutation.ClearAvatar()
-	return uuo
-}
-
-// SetBio sets the "bio" field.
-func (uuo *UserUpdateOne) SetBio(s string) *UserUpdateOne {
-	uuo.mutation.SetBio(s)
-	return uuo
-}
-
-// SetNillableBio sets the "bio" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableBio(s *string) *UserUpdateOne {
-	if s != nil {
-		uuo.SetBio(*s)
-	}
-	return uuo
-}
-
-// ClearBio clears the value of the "bio" field.
-func (uuo *UserUpdateOne) ClearBio() *UserUpdateOne {
-	uuo.mutation.ClearBio()
 	return uuo
 }
 
@@ -686,6 +686,11 @@ func (uuo *UserUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uuo *UserUpdateOne) check() error {
+	if v, ok := uuo.mutation.Nickname(); ok {
+		if err := user.NicknameValidator(v); err != nil {
+			return &ValidationError{Name: "nickname", err: fmt.Errorf(`ent: validator failed for field "User.nickname": %w`, err)}
+		}
+	}
 	if v, ok := uuo.mutation.Username(); ok {
 		if err := user.UsernameValidator(v); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
@@ -699,11 +704,6 @@ func (uuo *UserUpdateOne) check() error {
 	if v, ok := uuo.mutation.Email(); ok {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
-		}
-	}
-	if v, ok := uuo.mutation.Nickname(); ok {
-		if err := user.NicknameValidator(v); err != nil {
-			return &ValidationError{Name: "nickname", err: fmt.Errorf(`ent: validator failed for field "User.nickname": %w`, err)}
 		}
 	}
 	return nil
@@ -741,6 +741,24 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := uuo.mutation.Avatar(); ok {
+		_spec.SetField(user.FieldAvatar, field.TypeString, value)
+	}
+	if uuo.mutation.AvatarCleared() {
+		_spec.ClearField(user.FieldAvatar, field.TypeString)
+	}
+	if value, ok := uuo.mutation.Nickname(); ok {
+		_spec.SetField(user.FieldNickname, field.TypeString, value)
+	}
+	if uuo.mutation.NicknameCleared() {
+		_spec.ClearField(user.FieldNickname, field.TypeString)
+	}
+	if value, ok := uuo.mutation.Bio(); ok {
+		_spec.SetField(user.FieldBio, field.TypeString, value)
+	}
+	if uuo.mutation.BioCleared() {
+		_spec.ClearField(user.FieldBio, field.TypeString)
+	}
 	if value, ok := uuo.mutation.Username(); ok {
 		_spec.SetField(user.FieldUsername, field.TypeString, value)
 	}
@@ -749,12 +767,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
-	}
-	if value, ok := uuo.mutation.Nickname(); ok {
-		_spec.SetField(user.FieldNickname, field.TypeString, value)
-	}
-	if uuo.mutation.NicknameCleared() {
-		_spec.ClearField(user.FieldNickname, field.TypeString)
 	}
 	if value, ok := uuo.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
@@ -770,18 +782,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
-	}
-	if value, ok := uuo.mutation.Avatar(); ok {
-		_spec.SetField(user.FieldAvatar, field.TypeString, value)
-	}
-	if uuo.mutation.AvatarCleared() {
-		_spec.ClearField(user.FieldAvatar, field.TypeString)
-	}
-	if value, ok := uuo.mutation.Bio(); ok {
-		_spec.SetField(user.FieldBio, field.TypeString, value)
-	}
-	if uuo.mutation.BioCleared() {
-		_spec.ClearField(user.FieldBio, field.TypeString)
 	}
 	if uuo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
