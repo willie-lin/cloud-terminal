@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Navigation = ({ isLoggedIn, onLogout, userAvatar }) => {
+const Navigation = ({ isLoggedIn, onLogout }) => {
     return (
         <div className="bg-white">
             <header className="absolute inset-x-0 top-0 z-50">
@@ -29,8 +29,8 @@ const Navigation = ({ isLoggedIn, onLogout, userAvatar }) => {
                                     <span
                                         className="absolute bottom-0 left-8 transform translate-y-1/4 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
                                 </div>
-                                <Link to="/login" onClick={onLogout}
-                                      className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Logout</Link>
+                                {/*<Link to="/login" onClick={onLogout}*/}
+                                {/*      className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Logout</Link>*/}
                             </>
                         ) : (
                             <>

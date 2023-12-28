@@ -5,6 +5,7 @@ import Navigation from "./layout/Navigation";
 import Login from "./dashboard/pages/Login";
 import Register from "./dashboard/pages/Register";
 import Dashboard from "./layout/Dashboard";
+
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
     const [email, setEmail] = useState(localStorage.getItem('email') || ''); // 修改这一行来从localStorage中恢复email
@@ -23,18 +24,26 @@ const App = () => {
     return (
         <Router>
             {/*<Dashboard />*/}
-            <Navigation isLoggedIn={isLoggedIn} onLogout={onLogout} />
+            <Navigation isLoggedIn={isLoggedIn}/>
             <Routes>
-                {/* 保存用户的电子邮件 */}
-                <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login onLogin={onLogin} />} />
-                {/* 保存用户的电子邮件 */}
-                <Route path="/register" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Register onRegister={onLogin} />} />
+                {/*/!* 保存用户的电子邮件 *!/*/}
+                {/*<Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login onLogin={onLogin} />} />*/}
+                {/*/!* 保存用户的电子邮件 *!/*/}
+                {/*<Route path="/register" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Register onRegister={onLogin} />} />*/}
 
-                <Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-                {/* 传递电子邮件作为一个属性 */}
-                <Route path="/dashboard" element={isLoggedIn ? <Dashboard email={email} /> : <Navigate to="/login" />} />
+                {/*<Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />*/}
+                {/*<Route path="/" element={isLoggedIn ? <Sidebar onLogout={onLogout} /> : <Navigate to="/login" />} />*/}
+                {/*/!* 传递电子邮件作为一个属性 *!/*/}
+                {/*<Route path="/dashboard" element={isLoggedIn ? <Dashboard email={email} /> : <Navigate to="/login" />} />*/}
 
+
+
+                <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
+                <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
+                <Route path="/dashboard" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />} />
+                {/*<Route path="/" element={<Navigate to={isLoggedIn ? "/dashboard" : "/login"} />} />*/}
                 <Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+
             </Routes>
         </Router>
     );
