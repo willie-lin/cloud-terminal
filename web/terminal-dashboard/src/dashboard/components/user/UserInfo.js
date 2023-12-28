@@ -64,19 +64,24 @@ function UserInfo({ email, onUpdate }) {
         {/*    {userInfo && <p className="text-blueGray-500">你的电子邮件是 {userInfo.email}。</p>}*/}
         {/*    <p className="text-blueGray-500">当前时间是 {currentTime.toLocaleTimeString()}。</p>*/}
         {/*</div>*/}
+
             <CardHeader floated={false} className="h-80">
                 <div>
                     {userInfo && <Avatar src={userInfo.avatar} alt="avatar" variant="rounded" size="xxl"/>}
-
-                    {/*<img src="https://docs.material-tailwind.com/img/team-3.jpg" alt="profile-picture"/>*/}
                 </div>
             </CardHeader>
             <CardBody className="text-center">
                 <Typography variant="h4" color="blue-gray" className="mb-2">
-                    Natalie Paisley
+                    欢迎，{userInfo?.nickname}!
                 </Typography>
+                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+                    你的用户名是 {userInfo.username}。
+                </Typography>}
+                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+                    你的电子邮件是 {userInfo.email}。
+                </Typography>}
                 <Typography color="blue-gray" className="font-medium" textGradient>
-                    CEO / Co-Founder
+                    当前时间是 {currentTime.toLocaleTimeString()}。
                 </Typography>
             </CardBody>
             <CardFooter className="flex justify-center gap-7 pt-2">
@@ -114,6 +119,8 @@ function UserInfo({ email, onUpdate }) {
                     </Typography>
                 </Tooltip>
             </CardFooter>
+
+
 
 
             {/*{isEditing ? (*/}

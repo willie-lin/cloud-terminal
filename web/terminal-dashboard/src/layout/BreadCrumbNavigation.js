@@ -9,18 +9,15 @@ function BreadCrumbNavigation() {
 
     return (
         <Breadcrumbs>
-            {/*<a href="#" className="opacity-60" onClick={() => navigate("/")}>Dashboard</a>*/}
             <a href="/" onClick={(e) => {
                 e.preventDefault();
                 navigate("/");
             }}>Dashboard</a>
-
             {pathname.map((value, index) => {
                 const last = index === pathname.length - 1;
                 const to = `/${pathname.slice(0, index + 1).join('/')}`;
                 return last ? (
                     <a href={to} className="opacity-60" key={to}>{value}</a>
-
             ) : (
                     <a href={to} className="opacity-60" key={to} onClick={() => navigate(to)}>
                         {value}
