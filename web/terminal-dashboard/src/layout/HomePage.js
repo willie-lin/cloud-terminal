@@ -1,47 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import {getAllUsers, getUserByEmail} from "../api/api";
 import UserInfo from "../dashboard/components/UserInfo";
 import UserList from "../dashboard/components/UserList";
+import {Input, ListItemPrefix} from "@material-tailwind/react";
+import {Cog6ToothIcon} from "@heroicons/react/24/solid";
+import BreadCrumbNavigation from "./BreadCrumbNavigation";
+import React from "react";
 
 function HomePage({ email }) {
-    const [currentTime, setCurrentTime] = useState(new Date());
-    const [users, setUsers] = useState([]);
-    const [userInfo, setUserInfo] = useState(null);
-
-    // 获取用户信息
-    useEffect(() => {
-        if (email) {  // 添加这一行来检查email是否存在
-            getUserByEmail(email)
-                .then(data => setUserInfo(data))
-                .catch(error => console.error('Error:', error));
-        }
-    }, [email]);
-
-    // 更新当前时间
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000); // 每秒更新一次
-        return () => {
-            clearInterval(timer);
-        };
-    }, []);
-
-    // 获取所有用户
-    useEffect(() => {
-        getAllUsers()
-            .then(data => setUsers(data))
-            .catch(error => console.error('Error:', error));
-    }, []);
-
-
-
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-blue-50">
-            <UserInfo userInfo={userInfo} currentTime={currentTime} />
-            <UserList users={users} />
+            <div className="flex justify-end items-center w-full p-4">
+                <BreadCrumbNavigation />
+                <div className="flex items-center">
+                <div className="group relative">
+                    <Input
+                        type="email"
+                        placeholder="Search"
+                        className="focus:!border-t-gray-900 group-hover:border-2 group-hover:!border-gray-900"
+                        labelProps={{
+                            className: "hidden",
+                        }}
+                        readOnly
+                    />
+                    <div className="absolute top-[calc(50%-1px)] right-2.5 -translate-y-2/4">
+                        <kbd
+                            className="rounded border border-blue-gray-100 bg-white px-1 pt-px pb-0 text-xs font-medium text-gray-900 shadow shadow-black/5">
+                            <span className="mr-0.5 inline-block translate-y-[1.5px] text-base">⌘</span>
+                            K
+                        </kbd>
+                    </div>
+                </div>
+                <ListItemPrefix>
+                    <Cog6ToothIcon className="h-5 w-5"/>
+                </ListItemPrefix>
+                </div>
+            </div>
+            <UserInfo email={email}/>
+            <UserList email={email}/>
         </div>
-
     );
 }
 

@@ -1,6 +1,6 @@
 // App.js
 import React, {useState} from 'react';
-import {BrowserRouter as Router, Navigate, Route, Routes} from 'react-router-dom';
+import {BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import Navigation from "./layout/Navigation";
 import Login from "./dashboard/pages/Login";
 import Register from "./dashboard/pages/Register";
@@ -28,6 +28,9 @@ const App = () => {
             <Routes>
                 <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
                 <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
+
+
+                {/*<Route path="/dashboard" element={isLoggedIn ? <><BreadCrumbNavigation /> <Dashboard onLogout={onLogout} email={email} /></> : <Navigate to="/login" />} />*/}
                 <Route path="/dashboard" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />} />
                 {/*<Route path="/" element={<Navigate to={isLoggedIn ? "/dashboard" : "/login"} />} />*/}
                 <Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />

@@ -1,4 +1,14 @@
-function UserList({ users }) {
+import {useEffect, useState} from "react";
+import {getAllUsers} from "../../api/api";
+
+function UserList({ email }) {
+    const [users, setUsers] = useState([]);
+    // 获取所有用户
+    useEffect(() => {
+        getAllUsers()
+            .then(data => setUsers(data))
+            .catch(error => console.error('Error:', error));
+    }, []);
 
 
     return (

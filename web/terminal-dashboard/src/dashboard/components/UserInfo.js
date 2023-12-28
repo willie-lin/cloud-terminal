@@ -1,5 +1,29 @@
 // 用户信息组件
-function UserInfo({ userInfo, currentTime}) {
+import {useEffect, useState} from "react";
+import {getUserByEmail} from "../../api/api";
+
+function UserInfo({ email }) {
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [userInfo, setUserInfo] = useState(null);
+
+    // 获取用户信息
+    useEffect(() => {
+        if (email) {  // 添加这一行来检查email是否存在
+            getUserByEmail(email)
+                .then(data => setUserInfo(data))
+                .catch(error => console.error('Error:', error));
+        }
+    }, [email]);
+
+    // 更新当前时间
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000); // 每秒更新一次
+        return () => {
+            clearInterval(timer);
+        };
+    }, []);
 
 
     return (
