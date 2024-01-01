@@ -43,11 +43,14 @@ function TwoFactorAuthPage({ email }) {
                 >
                     生成二次验证二维码
                 </Button>
-                {qrCode && <img src={qrCode} alt="二次验证二维码"/>}
+                {/*{qrCode && <img src={qrCode} alt="二次验证二维码"/>}*/}
+                {qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
             </div>
         </div>
     );
 }
+
+
 
 export default TwoFactorAuthPage;
 
