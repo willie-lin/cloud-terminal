@@ -72,10 +72,9 @@ export const enable2FA = async (email) => {
     }
 };
 
-
-export const confirm2FA = async (email, secret) => {
+export const confirm2FA = async (email, TotpSecret) => {
     try {
-        const response = await axios.post('/api/Confirm-2FA', { email, totpSecret: secret });
+        const response = await api.post('/api/Confirm-2FA', { email, TotpSecret});
         return response.data;
     } catch (error) {
         console.error(error);

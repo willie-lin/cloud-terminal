@@ -44,11 +44,13 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 
 func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		fmt.Println(33333333333333333)
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
+		fmt.Println(44444444444444444)
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {

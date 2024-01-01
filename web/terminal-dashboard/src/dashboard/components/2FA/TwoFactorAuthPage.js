@@ -31,7 +31,7 @@ function TwoFactorAuthPage({ email }) {
     // 确认二次验证
     const confirm2FAHandler = async () => {
         try {
-            const user = { email: email, totpSecret: secret };
+            const user = { email: email, TotpSecret: secret };
             await confirm2FA(user);
             alert("2FA confirmed");
         } catch (error) {
