@@ -145,23 +145,31 @@ function Sidebar({ email, onLogout }) {
                         <Chip value="14" size="sm" variant="ghost" color="blue-gray" className="rounded-full"/>
                     </ListItemSuffix>
                 </ListItem>
+
                 <ListItem>
+                    <Link to="/userinfo"style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                     <ListItemPrefix>
                         <UserCircleIcon className="h-5 w-5"/>
                     </ListItemPrefix>
-                    <Link to="/userinfo">Profile</Link>
+                    Profile</Link>
                 </ListItem>
+
                 <ListItem>
-                    <ListItemPrefix>
-                        <Cog6ToothIcon className="h-5 w-5"/>
-                    </ListItemPrefix>
-                    <Link to="/open-user-2fa">Settings</Link>
+                    <Link to="/open-user-2fa" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                        <ListItemPrefix>
+                            <Cog6ToothIcon className="h-5 w-5"/>
+                        </ListItemPrefix>
+                        Settings
+                    </Link>
                 </ListItem>
+
                 <ListItem className="hover:bg-blue-gray-100 transition-colors duration-200">
-                    <ListItemPrefix>
-                        <PowerIcon className="h-5 w-5"/>
-                    </ListItemPrefix>
-                    <Link to="/login" onClick={onLogout}>Logout</Link>
+                    <Link to="/login" style={{ display: 'flex', alignItems: 'center', width: '100%' }} onClick={onLogout}>
+                        <ListItemPrefix>
+                            <PowerIcon className="h-5 w-5"/>
+                        </ListItemPrefix>
+                        Logout
+                    </Link>
                 </ListItem>
             </List>
             <Alert open={openAlert} className="mt-auto" onClose={() => setOpenAlert(false)}>
