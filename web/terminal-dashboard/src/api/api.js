@@ -75,7 +75,7 @@ export const getUserByEmail = async (email) => {
     }
 };
 
-
+// Enable2FA
 export const enable2FA = async (email) => {
     try {
         const response = await api.post('/api/enable-2fa/email', { email });
@@ -85,6 +85,7 @@ export const enable2FA = async (email) => {
     }
 };
 
+// Validate2FA
 export const validate2FA = async (email, token) => {
     try {
         const response = await api.post(`/api/validate-2fa`, { passcode: token });
