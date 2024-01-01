@@ -6,6 +6,8 @@ function TwoFactorAuthPage({ email }) {
     const [userInfo, setUserInfo] = useState(null);
     const [qrCode, setQrCode] = useState(null);
     const [secret, setSecret] = useState(null);
+    const [qrGenerated, setQrGenerated] = useState(false); // 新增状态变量
+
     // 获取用户信息
     useEffect(() => {
         if (email) {
@@ -20,6 +22,7 @@ function TwoFactorAuthPage({ email }) {
             const data = await enable2FA(email);
             setQrCode(data.qrCode);
             setSecret(data.secret);
+            setQrGenerated(true); // 设置状态变量为true
         } catch (error) {
             console.error('Error:', error);
         }
@@ -27,7 +30,7 @@ function TwoFactorAuthPage({ email }) {
     // 确认二次验证
     const confirm2FAHandler = async () => {
         try {
-            const user = { email: email, TotpSecret: secret };
+            const user = { email: email, totp_secret: secret };
             await confirm2FA(user);
             alert("2FA confirmed");
         } catch (error) {
@@ -42,7 +45,7 @@ function TwoFactorAuthPage({ email }) {
                     用户名: {userInfo.email}。
                 </Typography>}
                 <p>你还没有开启二次验证，开启二次验证可以提高账户的安全性。</p>
-                <Button
+                {!qrGenerated && <Button
                     color="lightBlue"
                     buttonType="filled"
                     size="regular"
@@ -53,9 +56,9 @@ function TwoFactorAuthPage({ email }) {
                     onClick={generateQRCode}
                 >
                     生成二次验证二维码
-                </Button>
-                {qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
-                {qrCode && <Button
+                </Button>}
+                {qrGenerated && qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
+                {qrGenerated && qrCode && <Button
                     color="lightBlue"
                     buttonType="filled"
                     size="regular"

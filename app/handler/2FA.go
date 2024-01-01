@@ -10,20 +10,16 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
-	"io/ioutil"
 	"net/http"
 )
 
 func Enable2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		fmt.Println(11111111111111)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		fmt.Println(2222222222222)
-
 		key, err := totp.Generate(totp.GenerateOpts{
 			Issuer:      "Cloud-Terminal",
 			AccountName: u.Email,
@@ -45,24 +41,11 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 
 func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
-		// 读取请求体
-		body, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			log.Printf("Error reading body: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-		}
-		// 打印请求体
-		fmt.Println("Request body:", string(body))
-
-		fmt.Println(33333333333333333)
-
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		fmt.Println(44444444444444444)
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {
