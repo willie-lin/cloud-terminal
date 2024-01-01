@@ -39,9 +39,6 @@ function UserList({ email }) {
         },
     ];
 
-    // const img = "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-1.jpg"
-
-
     return (
             <Card className="h-full w-full">
                 <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -85,7 +82,7 @@ function UserList({ email }) {
                     <table className="mt-4 w-full min-w-max table-auto text-left">
                         <thead>
                         <tr>
-                            {['ID', '昵称', '用户名', '邮箱', '个人简介', '在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (
+                            {['ID', '昵称', '用户名', '邮箱', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (
                                 <th
                                     key={head}
                                     className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50"
@@ -179,6 +176,18 @@ function UserList({ email }) {
                                                 </Typography>
                                             </div>
                                         </td>
+                                        <td className={classes}>
+                                            <div className="flex flex-col">
+                                                <Typography
+                                                    variant="small"
+                                                    color="blue-gray"
+                                                    className="font-normal"
+                                                >
+                                                    {user.totp_secret}
+                                                </Typography>
+                                            </div>
+                                        </td>
+
                                         <td className={classes}>
                                             <div className="w-max">
                                                 <Chip

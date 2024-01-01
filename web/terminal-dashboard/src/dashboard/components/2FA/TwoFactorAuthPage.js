@@ -1,28 +1,44 @@
 import React, {useEffect, useState} from 'react';
-import {enable2FA, getUserByEmail, validate2FA} from "../../../api/api";
+import {confirm2FA, enable2FA, getUserByEmail, validate2FA} from "../../../api/api";
 import {Button, Typography} from "@material-tailwind/react";
 
 function TwoFactorAuthPage({ email }) {
     const [userInfo, setUserInfo] = useState(null);
+    const [qrCode, setQrCode] = useState(null);
+    const [secret, setSecret] = useState(null);
+
     // 获取用户信息
     useEffect(() => {
-        if (email) {  // 添加这一行来检查email是否存在
+        if (email) {
             getUserByEmail(email)
                 .then(data => setUserInfo(data))
                 .catch(error => console.error('Error:', error));
         }
     }, [email]);
 
-    const [qrCode, setQrCode] = useState(null);
     // 生成二次验证的二维码
     const generateQRCode = async () => {
         try {
             const data = await enable2FA(email);
-            setQrCode(data);
+            setQrCode(data.qrCode);
+            setSecret(data.secret);
         } catch (error) {
             console.error('Error:', error);
         }
     };
+
+    // 确认二次验证
+    // 确认二次验证
+    const confirm2FAHandler = async () => {
+        try {
+            const user = { email: email, totpSecret: secret };
+            await confirm2FA(user);
+            alert("2FA confirmed");
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
 
     return (
         <div>
@@ -43,14 +59,23 @@ function TwoFactorAuthPage({ email }) {
                 >
                     生成二次验证二维码
                 </Button>
-                {/*{qrCode && <img src={qrCode} alt="二次验证二维码"/>}*/}
                 {qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
+                {qrCode && <Button
+                    color="lightBlue"
+                    buttonType="filled"
+                    size="regular"
+                    rounded={false}
+                    block={false}
+                    iconOnly={false}
+                    ripple="light"
+                    onClick={confirm2FAHandler}
+                >
+                    确认二次验证
+                </Button>}
             </div>
         </div>
     );
 }
-
-
 
 export default TwoFactorAuthPage;
 

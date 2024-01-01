@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
@@ -12,15 +13,15 @@ import (
 	"net/http"
 )
 
-// Enable2FA 用户设置2FA
 func Enable2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-
+		fmt.Println(11111111111111)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
+		fmt.Println(2222222222222)
 
 		key, err := totp.Generate(totp.GenerateOpts{
 			Issuer:      "Cloud-Terminal",
@@ -30,32 +31,85 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 			return err
 		}
 		url := key.URL()
-
+		fmt.Println(url)
 		var png []byte
 		png, err = qrcode.Encode(url, qrcode.Medium, 256)
 		if err != nil {
 			return err
 		}
+		b64 := base64.StdEncoding.EncodeToString(png)
+		return c.JSON(http.StatusOK, map[string]string{"qrCode": b64, "secret": key.Secret()})
+	}
+}
+
+func Confirm2FA(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		u := new(ent.User)
+		if err := c.Bind(u); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {
-			return c.JSON(http.StatusNotFound, err.Error())
-			//return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return err
 		}
-
 		// 更新用户的 totp_secret 字段
 		_, err = client.User.
 			UpdateOne(ua).
-			SetTotpSecret(key.Secret()).
+			SetTotpSecret(u.TotpSecret).
 			Save(context.Background())
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, err.Error())
+			return err
 		}
-		b64 := base64.StdEncoding.EncodeToString(png)
-		return c.String(http.StatusOK, b64)
-		//return c.Blob(http.StatusOK, "image/png", png)
+		return c.String(http.StatusOK, "2FA confirmed")
 	}
 }
+
+// Enable2FA 用户设置2FA
+//func Enable2FA(client *ent.Client) echo.HandlerFunc {
+//	return func(c echo.Context) error {
+//		u := new(ent.User)
+//
+//		if err := c.Bind(u); err != nil {
+//			log.Printf("Error binding user: %v", err)
+//			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+//		}
+//
+//		key, err := totp.Generate(totp.GenerateOpts{
+//			Issuer:      "Cloud-Terminal",
+//			AccountName: u.Email,
+//		})
+//		if err != nil {
+//			return err
+//		}
+//		url := key.URL()
+//
+//		var png []byte
+//		png, err = qrcode.Encode(url, qrcode.Medium, 256)
+//		if err != nil {
+//			return err
+//		}
+//		// 从数据库中获取用户
+//		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+//		if err != nil {
+//			return c.JSON(http.StatusNotFound, err.Error())
+//			//return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+//		}
+//
+//		// 更新用户的 totp_secret 字段
+//		_, err = client.User.
+//			UpdateOne(ua).
+//			SetTotpSecret(key.Secret()).
+//			Save(context.Background())
+//		if err != nil {
+//			return c.JSON(http.StatusBadRequest, err.Error())
+//		}
+//		b64 := base64.StdEncoding.EncodeToString(png)
+//		return c.String(http.StatusOK, b64)
+//		//return c.Blob(http.StatusOK, "image/png", png)
+//	}
+//}
 
 //// GetCurrentEmail  获取当前登陆用户
 //func GetCurrentEmail(c echo.Context) (string, error) {

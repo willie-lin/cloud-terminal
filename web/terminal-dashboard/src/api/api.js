@@ -19,19 +19,6 @@ export const login = async (email, password) => {
     }
 };
 
-// export const login = async (email, password) => {
-//     try {
-//         const response = await api.post('/api/login', { email, password });
-//         if (response.status === 401) {
-//             throw new Error('用户名或密码错误');
-//         }
-//         return response.data;
-//     } catch (error) {
-//         console.error(error);
-//         throw error;
-//     }
-// };
-
 // register
 export const register = async (email, password) => {
     try {
@@ -78,12 +65,26 @@ export const getUserByEmail = async (email) => {
 // Enable2FA
 export const enable2FA = async (email) => {
     try {
-        const response = await api.post('/api/enable-2fa/email', { email });
+        const response = await api.post('/api/enable-2fa', { email });
         return response.data;
     } catch (error) {
         console.error(error);
     }
 };
+
+
+export const confirm2FA = async (email, secret) => {
+    try {
+        const response = await axios.post('/api/Confirm-2FA', { email, totpSecret: secret });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+
+
+
 
 // Validate2FA
 export const validate2FA = async (email, token) => {
