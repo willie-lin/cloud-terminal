@@ -2,16 +2,15 @@
 import {useEffect, useState} from "react";
 import {getUserByEmail} from "../../../api/api";
 import {
-    Avatar,
+    Avatar, Button,
     Card,
     CardBody,
-    CardFooter,
     CardHeader,
-    Tooltip,
     Typography
 } from "@material-tailwind/react";
+import {useNavigate} from "react-router-dom";
 
-function UserInfo({ email, onUpdate }) {
+function UserInfo({ email }) {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [userInfo, setUserInfo] = useState(null);
 
@@ -34,110 +33,41 @@ function UserInfo({ email, onUpdate }) {
         };
     }, []);
 
-
-    const [isEditing, setIsEditing] = useState(false);
-    const [newInfo, setNewInfo] = useState({});
+    const navigate = useNavigate();
 
     const handleEdit = () => {
-        setIsEditing(true);
-        setNewInfo(userInfo);
+        navigate('/edit-user-info');  // 跳转到用户信息编辑页面
+        // navigate(0);  // 强制刷新页面
     };
 
-    const handleChange = (event) => {
-        setNewInfo({
-            ...newInfo,
-            [event.target.name]: event.target.value,
-        });
-    };
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        onUpdate(newInfo);
-        setIsEditing(false);
-    };
     return (
         <Card className="w-full max-w-2xl p-4 bg-white rounded shadow-md">
-        {/*<div className="flex-grow w-full max-w-2xl p-4 bg-white rounded shadow-md">*/}
-        {/*    <Avatar src={userInfo.avatar} alt="avatar" />*/}
-        {/*    <h1 className="text-blueGray-500">欢迎，{userInfo?.nickname}!</h1>*/}
-        {/*    {userInfo && <p className="text-blueGray-500">你的用户名是 {userInfo.username}。</p>}*/}
-        {/*    {userInfo && <p className="text-blueGray-500">你的电子邮件是 {userInfo.email}。</p>}*/}
-        {/*    <p className="text-blueGray-500">当前时间是 {currentTime.toLocaleTimeString()}。</p>*/}
-        {/*</div>*/}
-
-            <CardHeader floated={false} className="h-80">
+            <CardHeader floated={false} className="h-50">
                 <div>
                     {userInfo && <Avatar src={userInfo.avatar} alt="avatar" variant="rounded" size="xxl"/>}
                 </div>
             </CardHeader>
             <CardBody className="text-center">
-                <Typography variant="h4" color="blue-gray" className="mb-2">
-                    欢迎，{userInfo?.nickname}!
-                </Typography>
-                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                    你的用户名是 {userInfo.username}。
-                </Typography>}
-                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                    你的电子邮件是 {userInfo.email}。
-                </Typography>}
-                <Typography color="blue-gray" className="font-medium" textGradient>
-                    当前时间是 {currentTime.toLocaleTimeString()}。
-                </Typography>
+                        <Typography variant="h4" color="blue-gray" className="mb-2">
+                            欢迎，{userInfo?.nickname}!
+                        </Typography>
+                        {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+                            用户名: {userInfo.username}。
+                        </Typography>}
+                        {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+                            电子邮件: {userInfo.email}。
+                        </Typography>}
+                        {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+                            个人简介: {userInfo.bio}。
+                        </Typography>}
+                        <Typography color="blue-gray" className="font-medium" textGradient>
+                            当前时间是 {currentTime.toLocaleTimeString()}。
+                        </Typography>
+
+                <Button onClick={handleEdit} color="lightBlue">修改</Button>
             </CardBody>
-            <CardFooter className="flex justify-center gap-7 pt-2">
-                <Tooltip content="Like">
-                    <Typography
-                        as="a"
-                        href="#facebook"
-                        variant="lead"
-                        color="blue"
-                        textGradient
-                    >
-                        <i className="fab fa-facebook" />
-                    </Typography>
-                </Tooltip>
-                <Tooltip content="Follow">
-                    <Typography
-                        as="a"
-                        href="#twitter"
-                        variant="lead"
-                        color="light-blue"
-                        textGradient
-                    >
-                        <i className="fab fa-twitter" />
-                    </Typography>
-                </Tooltip>
-                <Tooltip content="Follow">
-                    <Typography
-                        as="a"
-                        href="#instagram"
-                        variant="lead"
-                        color="purple"
-                        textGradient
-                    >
-                        <i className="fab fa-instagram" />
-                    </Typography>
-                </Tooltip>
-            </CardFooter>
-
-
-
-
-            {/*{isEditing ? (*/}
-            {/*    <Form onSubmit={handleSubmit}>*/}
-        {/*        <p>昵称：</p>*/}
-        {/*        <Input name="nickname" value={newInfo.nickname} onChange={handleChange}/>*/}
-        {/*        <p>邮箱：</p>*/}
-        {/*        <Input name="email" value={newInfo.email} onChange={handleChange}/>*/}
-        {/*        /!* 其他字段 *!/*/}
-        {/*        <Button type="submit" color="lightBlue">提交</Button>*/}
-        {/*    </Form>*/}
-        {/*) : (*/}
-        {/*    <Button onClick={handleEdit} color="lightBlue">修改</Button>*/}
-        {/*)}*/}
-    </Card>
-
-);
+        </Card>
+    );
 }
 
 export default UserInfo;

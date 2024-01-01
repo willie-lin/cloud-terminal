@@ -74,3 +74,22 @@ export const getUserByEmail = async (email) => {
         console.error(error);
     }
 };
+
+
+export const enable2FA = async (email) => {
+    try {
+        const response = await api.post('/api/enable-2fa/email', { email });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+export const validate2FA = async (email, token) => {
+    try {
+        const response = await api.post(`/api/validate-2fa`, { passcode: token });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};

@@ -2,8 +2,10 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
 	"github.com/skip2/go-qrcode"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
@@ -14,20 +16,23 @@ import (
 // Enable2FA 用户设置2FA
 func Enable2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		//username := c.Param("username")
-		username, err := GetCurrentUsername(c)
-		if err != nil {
-			return err
+		u := new(ent.User)
+		fmt.Println(11111111111111)
+		if err := c.Bind(u); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
+		fmt.Println(2222222222222)
 
 		key, err := totp.Generate(totp.GenerateOpts{
 			Issuer:      "Cloud-Terminal",
-			AccountName: username,
+			AccountName: u.Email,
 		})
 		if err != nil {
 			return err
 		}
 		url := key.URL()
+		fmt.Println(url)
 		var png []byte
 		png, err = qrcode.Encode(url, qrcode.Medium, 256)
 		if err != nil {
@@ -35,14 +40,14 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 从数据库中获取用户
-		u, err := client.User.Query().Where(user.UsernameEQ(username)).Only(context.Background())
+		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {
 			return err
 		}
 
 		// 更新用户的 totp_secret 字段
 		_, err = client.User.
-			UpdateOne(u).
+			UpdateOne(ua).
 			SetTotpSecret(key.Secret()).
 			Save(context.Background())
 		if err != nil {
@@ -53,24 +58,24 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// GetCurrentUsername 获取当前登陆用户
-func GetCurrentUsername(c echo.Context) (string, error) {
+// GetCurrentEmail  获取当前登陆用户
+func GetCurrentEmail(c echo.Context) (string, error) {
 	sess, err := session.Get("session", c)
 	if err != nil {
 		return "", err
 	}
-	username, ok := sess.Values["username"]
+	email, ok := sess.Values["email"]
 	if !ok {
 		return "", nil
 	}
 
-	return username.(string), nil
+	return email.(string), nil
 }
 
 // Validate2FA 验证2FA
 func Validate2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		username := c.Param("username")
+		email, err := GetCurrentEmail(c)
 		var body struct {
 			Passcode string `json:"passcode"`
 		}
@@ -78,7 +83,7 @@ func Validate2FA(client *ent.Client) echo.HandlerFunc {
 			return err
 		}
 
-		u, err := client.User.Query().Where(user.UsernameEQ(username)).Only(context.Background())
+		u, err := client.User.Query().Where(user.EmailEQ(email)).Only(context.Background())
 		if err != nil {
 			return err
 		}

@@ -7,6 +7,8 @@ import Register from "./dashboard/pages/Register";
 import Dashboard from "./layout/Dashboard";
 import UserInfo from "./dashboard/components/user/UserInfo";
 import HomePage from "./layout/HomePage";
+import EditUserInfo from "./dashboard/components/user/EditUserInfo";
+import TwoFactorAuthPage from "./dashboard/components/2FA/TwoFactorAuthPage";
 
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
@@ -33,6 +35,8 @@ const App = () => {
                 <Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>
                     <Route path="dashboard" element={<HomePage email={email}/>}/>
                     <Route path="userinfo" element={<UserInfo email={email}/>}/>
+                    <Route path="edit-user-info" element={<EditUserInfo email={email} />}/>
+                    <Route path="open-user-2fa" element={<TwoFactorAuthPage email={email} />}/>
                     <Route path="/" element={<Navigate to="dashboard" />} />
                 </Route>
             </Routes>

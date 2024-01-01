@@ -94,8 +94,8 @@ func main() {
 	//v1.Use()
 	e.GET("/", handler.Hello(client))
 	e.GET("/ip", handler.RealIP())
-	e.GET("/generate2fa", handler.Enable2FA(client))
-	e.POST("/validate2fa", handler.Validate2FA(client))
+	e.POST("api/enable-2fa/email", handler.Enable2FA(client))
+	e.POST("/api/validate-2fa", handler.Validate2FA(client))
 	e.POST("/validate2fa", handler.Validate2FA(client))
 
 	e.POST("/api/check-email", api.CheckEmail(client))

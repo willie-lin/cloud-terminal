@@ -14,7 +14,7 @@ import {
     InboxIcon,
     PowerIcon,} from "@heroicons/react/24/solid";
 import {Link} from "react-router-dom";
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {ChevronDownIcon, ChevronRightIcon, CubeTransparentIcon, MagnifyingGlassIcon} from "@heroicons/react/16/solid";
 
 
@@ -155,7 +155,7 @@ function Sidebar({ email, onLogout }) {
                     <ListItemPrefix>
                         <Cog6ToothIcon className="h-5 w-5"/>
                     </ListItemPrefix>
-                    Settings
+                    <Link to="/open-user-2fa">Settings</Link>
                 </ListItem>
                 <ListItem className="hover:bg-blue-gray-100 transition-colors duration-200">
                     <ListItemPrefix>
