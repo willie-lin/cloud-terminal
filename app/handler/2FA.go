@@ -10,6 +10,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -44,7 +45,18 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 
 func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+
+		// 读取请求体
+		body, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			log.Printf("Error reading body: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
+		// 打印请求体
+		fmt.Println("Request body:", string(body))
+
 		fmt.Println(33333333333333333)
+
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)

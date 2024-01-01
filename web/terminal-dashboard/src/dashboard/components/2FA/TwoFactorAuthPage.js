@@ -6,7 +6,6 @@ function TwoFactorAuthPage({ email }) {
     const [userInfo, setUserInfo] = useState(null);
     const [qrCode, setQrCode] = useState(null);
     const [secret, setSecret] = useState(null);
-
     // 获取用户信息
     useEffect(() => {
         if (email) {
@@ -15,7 +14,6 @@ function TwoFactorAuthPage({ email }) {
                 .catch(error => console.error('Error:', error));
         }
     }, [email]);
-
     // 生成二次验证的二维码
     const generateQRCode = async () => {
         try {
@@ -26,8 +24,6 @@ function TwoFactorAuthPage({ email }) {
             console.error('Error:', error);
         }
     };
-
-    // 确认二次验证
     // 确认二次验证
     const confirm2FAHandler = async () => {
         try {
@@ -38,7 +34,6 @@ function TwoFactorAuthPage({ email }) {
             console.error('Error:', error);
         }
     };
-
 
     return (
         <div>
