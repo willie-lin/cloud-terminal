@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {confirm2FA, enable2FA, getUserByEmail} from "../../../api/api";
+import {check2FA, confirm2FA, enable2FA, getUserByEmail} from "../../../api/api";
 import {Button, Typography} from "@material-tailwind/react";
 
 // 自定义Hook，用于处理二次验证的逻辑
@@ -12,6 +12,8 @@ function useTwoFactorAuth(email) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+
+     // 检测 用户是否存在
     useEffect(() => {
         if (email) {
             getUserByEmail(email)
@@ -22,6 +24,20 @@ function useTwoFactorAuth(email) {
                 });
         }
     }, [email]);
+
+    // 检测是否开启2FA
+    useEffect(() => {
+        const check2FAStatus = async () => {
+            try {
+                const response = await check2FA(email);
+                setIsConfirmed(response.isConfirmed);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        check2FAStatus().then(r => {});
+    }, []);
+
     // 生成二维码
     const generateQRCode = async () => {
         setLoading(true);
@@ -65,49 +81,55 @@ function TwoFactorAuthPage({ email }) {
                 {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
                     用户名: {userInfo.email}。
                 </Typography>}
-                {!qrGenerated && <p>你还没有开启二次验证，开启二次验证可以提高账户的安全性。</p>}
-                {!qrGenerated && <Button
-                    color="lightBlue"
-                    buttonType="filled"
-                    size="regular"
-                    rounded={false}
-                    block={false}
-                    iconOnly={false}
-                    ripple="light"
-                    onClick={generateQRCode}
-                >
-                    生成二次验证二维码
-                </Button>}
-                {qrGenerated && !isConfirmed && qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
-                {qrGenerated && !isConfirmed && qrCode && <input
-                    type="text"
-                    value={otp}
-                    onChange={e => setOtp(e.target.value)}
-                    placeholder="请输入你的一次性密码"
-                    style={{
-                        border: '1px solid lightBlue', // 添加边框
-                        backgroundColor: '#f8f9fa', // 改变背景颜色
-                        width: '250px', // 增加宽度
-                        padding: '5px', // 添加内边距
-                        borderRadius: '5px', // 添加边框圆角
-                        marginBottom: '20px', // 增加下边距
-                    }}
-                />}
-                {qrGenerated && !isConfirmed && qrCode && <Button
-                    color="lightBlue"
-                    buttonType="filled"
-                    size="regular"
-                    rounded={false}
-                    block={false}
-                    iconOnly={false}
-                    ripple="light"
-                    onClick={confirm2FAHandler}
-                >
-                    确认二次验证
-                </Button>}
-                {isConfirmed && <p>✅ 二次验证已成功绑定！</p>}
+                {isConfirmed ? (
+                    <p>✅ 已开启二次认证防护！</p>
+                ) : (
+                    <>
+                        {!qrGenerated && <p>你还没有开启二次验证，开启二次验证可以提高账户的安全性。</p>}
+                        {!qrGenerated && <Button
+                            color="lightBlue"
+                            buttonType="filled"
+                            size="regular"
+                            rounded={false}
+                            block={false}
+                            iconOnly={false}
+                            ripple="light"
+                            onClick={generateQRCode}
+                        >
+                            生成二次验证二维码
+                        </Button>}
+                        {qrGenerated && qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
+                        {qrGenerated && qrCode && <input
+                            type="text"
+                            value={otp}
+                            onChange={e => setOtp(e.target.value)}
+                            placeholder="请输入你的一次性密码"
+                            style={{
+                                border: '1px solid lightBlue', // 添加边框
+                                backgroundColor: '#f8f9fa', // 改变背景颜色
+                                width: '250px', // 增加宽度
+                                padding: '5px', // 添加内边距
+                                borderRadius: '5px', // 添加边框圆角
+                                marginBottom: '20px', // 增加下边距
+                            }}
+                        />}
+                        {qrGenerated && qrCode && <Button
+                            color="lightBlue"
+                            buttonType="filled"
+                            size="regular"
+                            rounded={false}
+                            block={false}
+                            iconOnly={false}
+                            ripple="light"
+                            onClick={confirm2FAHandler}
+                        >
+                            确认二次验证
+                        </Button>}
+                    </>
+                )}
             </div>
         </div>
     );
 }
+
 export default TwoFactorAuthPage;

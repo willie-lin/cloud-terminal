@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
@@ -35,7 +34,6 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		url := key.URL()
-		fmt.Println(url)
 		var png []byte
 		png, err = qrcode.Encode(url, qrcode.Medium, 256)
 		if err != nil {
@@ -63,18 +61,12 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		fmt.Println(u.Email)
-		fmt.Println(111111111111111111)
-
-		fmt.Println(u.TotpSecret)
-		fmt.Println(2222222222222222222)
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		fmt.Println(ua.TotpSecret)
 		otp := u.TotpSecret
 		valid := totp.Validate(otp, ua.TotpSecret)
 		if !valid {
@@ -85,63 +77,27 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// Enable2FA 用户设置2FA
-//func Enable2FA(client *ent.Client) echo.HandlerFunc {
-//	return func(c echo.Context) error {
-//		u := new(ent.User)
-//
-//		if err := c.Bind(u); err != nil {
-//			log.Printf("Error binding user: %v", err)
-//			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-//		}
-//
-//		key, err := totp.Generate(totp.GenerateOpts{
-//			Issuer:      "Cloud-Terminal",
-//			AccountName: u.Email,
-//		})
-//		if err != nil {
-//			return err
-//		}
-//		url := key.URL()
-//
-//		var png []byte
-//		png, err = qrcode.Encode(url, qrcode.Medium, 256)
-//		if err != nil {
-//			return err
-//		}
-//		// 从数据库中获取用户
-//		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
-//		if err != nil {
-//			return c.JSON(http.StatusNotFound, err.Error())
-//			//return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-//		}
-//
-//		// 更新用户的 totp_secret 字段
-//		_, err = client.User.
-//			UpdateOne(ua).
-//			SetTotpSecret(key.Secret()).
-//			Save(context.Background())
-//		if err != nil {
-//			return c.JSON(http.StatusBadRequest, err.Error())
-//		}
-//		b64 := base64.StdEncoding.EncodeToString(png)
-//		return c.String(http.StatusOK, b64)
-//		//return c.Blob(http.StatusOK, "image/png", png)
-//	}
-//}
-
-//// GetCurrentEmail  获取当前登陆用户
-//func GetCurrentEmail(c echo.Context) (string, error) {
-//	sess, err := session.Get("session", c)
-//	if err != nil {
-//		return "", err
-//	}
-//	email, ok := sess.Values["email"]
-//	if !ok {
-//		return "", nil
-//	}
-//	return email.(string), nil
-//}
+func Check2FA(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		u := new(ent.User)
+		if err := c.Bind(u); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
+		// 从数据库中获取用户
+		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+		if err != nil {
+			log.Printf("Error querying user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		// 检查用户是否已经绑定了二次验证（2FA）
+		if ua.TotpSecret != "" {
+			return c.JSON(http.StatusOK, map[string]bool{"isConfirmed": true})
+		} else {
+			return c.JSON(http.StatusOK, map[string]bool{"isConfirmed": false})
+		}
+	}
+}
 
 // Validate2FA 验证2FA
 func Validate2FA(client *ent.Client) echo.HandlerFunc {
