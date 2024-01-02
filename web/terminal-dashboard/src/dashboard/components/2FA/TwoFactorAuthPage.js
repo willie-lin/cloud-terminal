@@ -22,7 +22,6 @@ function useTwoFactorAuth(email) {
                 });
         }
     }, [email]);
-
     // 生成二维码
     const generateQRCode = async () => {
         setLoading(true);
@@ -37,32 +36,27 @@ function useTwoFactorAuth(email) {
             setLoading(false);
         }
     };
-
     // 扫描二维码，进行绑定
     const confirm2FAHandler = async () => {
         setLoading(true);
-
         try {
             // 将OTP赋值给totp_Secret
-            const totp_Secret = prompt("请输入你的一次性密码：");
+            const totp_Secret = otp
             // 将电子邮件地址和totp_Secret传递给后端
             await confirm2FA({ email, totp_Secret });
-            // await confirm2FA(email);
-            alert("2FA confirmed");
             setIsConfirmed(true); // 设置状态变量为true
         } catch (error) {
             console.error('Error:', error);
             setError('确认二次验证失败');
+            setIsConfirmed(false);
         } finally {
             setLoading(false);
         }
     };
     return { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler };
 }
-
 function TwoFactorAuthPage({ email }) {
     const { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler } = useTwoFactorAuth(email);
-
     return (
         <div>
             <div className="flex flex-col items-center justify-center h-screen">
@@ -84,9 +78,8 @@ function TwoFactorAuthPage({ email }) {
                 >
                     生成二次验证二维码
                 </Button>}
-                {qrGenerated && qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
-
-                {qrGenerated && qrCode && <input
+                {qrGenerated && !isConfirmed && qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
+                {qrGenerated && !isConfirmed && qrCode && <input
                     type="text"
                     value={otp}
                     onChange={e => setOtp(e.target.value)}
@@ -100,8 +93,7 @@ function TwoFactorAuthPage({ email }) {
                         marginBottom: '20px', // 增加下边距
                     }}
                 />}
-
-                {qrGenerated && qrCode && <Button
+                {qrGenerated && !isConfirmed && qrCode && <Button
                     color="lightBlue"
                     buttonType="filled"
                     size="regular"
@@ -118,5 +110,4 @@ function TwoFactorAuthPage({ email }) {
         </div>
     );
 }
-
 export default TwoFactorAuthPage;

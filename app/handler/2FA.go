@@ -76,10 +76,16 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 		}
 		fmt.Println(ua.TotpSecret)
 		// 使用存储的密钥
+		//valid := totp.Validate(u.TotpSecret, ua.TotpSecret)
+		//if !valid {
+		//	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid TOTP secret"})
+		//}
+
 		valid := totp.Validate(u.TotpSecret, ua.TotpSecret)
 		if !valid {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid TOTP secret"})
 		}
+
 		return c.String(http.StatusOK, "2FA confirmed")
 	}
 }
