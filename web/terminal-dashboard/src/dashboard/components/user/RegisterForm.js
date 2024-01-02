@@ -1,13 +1,14 @@
 // RegisterForm.js
 import React, { useState } from 'react';
 import {checkEmail, register} from "../../../api/api";
-import {Button, Card, Input} from "@material-tailwind/react";
+import {Alert, Button, Card, Input} from "@material-tailwind/react";
 
 function RegisterForm({ onRegister }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
+    const [passwordError, setPasswordError] = useState(''); // 添加一个新的状态来保存密码错误信息
 
     const handleEmailChange = async (e) => {
         const email = e.target.value;
@@ -19,19 +20,16 @@ function RegisterForm({ onRegister }) {
             console.error(error);
         }
     };
-    const getInputClass = () => {
-        if (email.length === 0) {
-            return "border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md";
-        }
-        return emailError ? "border-red-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-red-500 focus:ring-1 rounded-md" : "border-green-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-green-500 focus:ring-1 rounded-md";
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
-            alert("Passwords don't match");
+            setPasswordError("Passwords don't match"); // 设置密码错误信息
+            setTimeout(() => setPasswordError(''), 1000); // 1秒后清除错误信息
+            // alert("Passwords don't match");
             return;
         }
+        setPasswordError(''); // 清除密码错误信息
         if (emailError) {
             alert(emailError);
             return;
@@ -84,6 +82,16 @@ function RegisterForm({ onRegister }) {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                     />
                 </div>
+                {passwordError && (
+                    <Alert color="red" className="mb-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <i className="fas fa-info-circle mr-2"></i>
+                                <span className="text-sm">{passwordError}</span>
+                            </div>
+                        </div>
+                    </Alert>
+                )}
                 <div className="flex flex-col items-stretch"> {/* 改变布局 */}
                     <Button
                         type="submit"

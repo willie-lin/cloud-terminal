@@ -1,7 +1,7 @@
 // LoginForm.js
 import React, {useEffect, useState} from 'react';
 import {check2FA, checkEmail, login} from "../../../api/api";
-import {Button, Card, Input} from "@material-tailwind/react";
+import {Alert, Button, Card, Input} from "@material-tailwind/react";
 
 function LoginForm({ onLogin }) {
     const [email, setEmail] = React.useState('');
@@ -26,6 +26,16 @@ function LoginForm({ onLogin }) {
         checkUser2FA();
     }, [email]); // 将 email 添加到依赖数组中
 
+    useEffect(() => {
+        if (loginError) {
+            const timer = setTimeout(() => {
+                setLoginError('');
+            }, 500); // 设置3秒后自动隐藏
+
+            return () => clearTimeout(timer); // 清除定时器
+        }
+    }, [loginError]);
+
     const handleEmailChange = async (e) => {
         const email = e.target.value;
         setEmail(email);
@@ -37,13 +47,13 @@ function LoginForm({ onLogin }) {
             console.error(error);
         }
     };
-    const getInputClass = () => {
-        if (email.length === 0) {
-            return "border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md";
-        }
-        // return emailError ? "border-green-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-green-500 focus:ring-1 rounded-md" : "border-red-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-red-500 focus:ring-1 rounded-md";
-        return emailError ? "border-red-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-red-500 focus:ring-1 rounded-md" : "border-green-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-green-500 focus:ring-1 rounded-md";
-    };
+    // const getInputClass = () => {
+    //     if (email.length === 0) {
+    //         return "border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md";
+    //     }
+    //     // return emailError ? "border-green-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-green-500 focus:ring-1 rounded-md" : "border-red-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-red-500 focus:ring-1 rounded-md";
+    //     return emailError ? "border-red-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-red-500 focus:ring-1 rounded-md" : "border-green-500 w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-green-500 focus:ring-1 rounded-md";
+    // };
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -102,6 +112,19 @@ function LoginForm({ onLogin }) {
                         />
                     </div>
                 )}
+                {/*{loginError && <div className="text-red-500 mb-4">{loginError}</div>}*/}
+
+                {loginError && (
+                    <Alert color="red" className="mb-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <i className="fas fa-info-circle mr-2"></i>
+                                <span className="text-sm">{loginError}</span>
+                            </div>
+                        </div>
+                    </Alert>
+                )}
+
                 <div className="flex flex-col items-stretch"> {/* 改变布局 */}
                     <Button
                         type="submit"
