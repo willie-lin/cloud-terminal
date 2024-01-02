@@ -20,22 +20,40 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
+		// 从数据库中获取用户
+		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+		if err != nil {
+			log.Printf("Error querying user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
 		key, err := totp.Generate(totp.GenerateOpts{
 			Issuer:      "Cloud-Terminal",
 			AccountName: u.Email,
 		})
 		if err != nil {
-			return err
+			log.Printf("Error generating TOTP key: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		url := key.URL()
 		fmt.Println(url)
 		var png []byte
 		png, err = qrcode.Encode(url, qrcode.Medium, 256)
 		if err != nil {
-			return err
+			log.Printf("Error encoding QR code: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
+		fmt.Println(11111111)
 		b64 := base64.StdEncoding.EncodeToString(png)
-		return c.JSON(http.StatusOK, map[string]string{"qrCode": b64, "secret": key.Secret()})
+		// 存储密钥
+		_, err = client.User.
+			UpdateOne(ua).
+			SetTotpSecret(key.Secret()).
+			Save(context.Background())
+		if err != nil {
+			log.Printf("Error saving TOTP secret: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusOK, map[string]string{"qrCode": b64})
 	}
 }
 
@@ -49,15 +67,13 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {
-			return err
+			log.Printf("Error querying user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		// 更新用户的 totp_secret 字段
-		_, err = client.User.
-			UpdateOne(ua).
-			SetTotpSecret(u.TotpSecret).
-			Save(context.Background())
-		if err != nil {
-			return err
+		// 使用存储的密钥
+		valid := totp.Validate(u.TotpSecret, ua.TotpSecret)
+		if !valid {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid TOTP secret"})
 		}
 		return c.String(http.StatusOK, "2FA confirmed")
 	}
