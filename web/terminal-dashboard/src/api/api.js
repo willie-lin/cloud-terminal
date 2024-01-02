@@ -5,10 +5,10 @@ const api = axios.create({
 });
 
 // login
-export const login = async (email, password) => {
+export const login = async (email, password, totp_Secret) => {
     try {
-        const response = await api.post('/api/login', { email, password });
-        if (response.status === 403 || response.data === 'Invalid password') {
+        const response = await api.post('/api/login', { email, password, totp_Secret });
+        if (response.status === 403 || response.data === 'Invalid password' || response.data === 'Invalid-OTP') {
         // if (response.data === 'Invalid-password') {
             throw new Error('用户名或密码错误');
         }
@@ -73,9 +73,9 @@ export const enable2FA = async (email) => {
 };
 
 // Confirm2FA
-export const confirm2FA = async (data) => {
+export const confirm2FA = async (email, totp_Secret) => {
     try {
-        const response = await api.post('/api/confirm-2FA', data);
+        const response = await api.post('/api/confirm-2FA', { email, totp_Secret });
         if (response.status === 400) {
             throw new Error('Invalid TOTP secret');
         }

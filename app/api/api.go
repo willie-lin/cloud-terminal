@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
+	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -95,6 +97,17 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		if err := utils.CompareHashAndPassword([]byte(us.Password), []byte(u.Password)); err != nil {
 			//return c.JSON(http.StatusForbidden, map[string]string{"error": "Invalid-password"})
 			return c.JSON(http.StatusForbidden, "Invalid-password")
+		}
+		// 检查用户是否已经绑定了二次验证（2FA）
+		if us.TotpSecret != "" {
+			// 验证用户提供的OTP
+			otp := u.TotpSecret
+			fmt.Println(otp)
+			//valid := utils.ValidateOTP(us.TotpSecret, otp)
+			valid := totp.Validate(otp, us.TotpSecret)
+			if !valid {
+				return c.JSON(http.StatusForbidden, "Invalid-OTP")
+			}
 		}
 
 		// 更新 last_login_time 字段

@@ -57,9 +57,8 @@ function useTwoFactorAuth(email) {
         setLoading(true);
         try {
             // 将OTP赋值给totp_Secret
-            const totp_Secret = otp
             // 将电子邮件地址和totp_Secret传递给后端
-            await confirm2FA({ email, totp_Secret });
+            await confirm2FA(email, otp);
             setIsConfirmed(true); // 设置状态变量为true
         } catch (error) {
             console.error('Error:', error);
