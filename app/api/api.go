@@ -81,7 +81,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-		user, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+		us, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, "User-not-found")
@@ -92,14 +92,14 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 使用你的方法来验证密码和哈希值是否匹配
-		if err := utils.CompareHashAndPassword([]byte(user.Password), []byte(u.Password)); err != nil {
+		if err := utils.CompareHashAndPassword([]byte(us.Password), []byte(u.Password)); err != nil {
 			//return c.JSON(http.StatusForbidden, map[string]string{"error": "Invalid-password"})
 			return c.JSON(http.StatusForbidden, "Invalid-password")
 		}
 
 		// 更新 last_login_time 字段
-		user, err = client.User.
-			UpdateOneID(user.ID).
+		us, err = client.User.
+			UpdateOneID(us.ID).
 			SetLastLoginTime(time.Now()).
 			Save(context.Background())
 		if err != nil {
@@ -108,14 +108,14 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 生成JWT
-		token, err := utils.GenerateToken(user.Username)
+		token, err := utils.GenerateToken(us.Username)
 		if err != nil {
 			log.Printf("Error generating token: %v", err)
 			return c.JSON(http.StatusInternalServerError, "Error generating token")
 		}
 
 		// 生成Refresh Token
-		refreshToken, err := utils.GenerateRefreshToken(user.Username)
+		refreshToken, err := utils.GenerateRefreshToken(us.Username)
 		if err != nil {
 			log.Printf("Error generating refresh token: %v", err)
 			return c.JSON(http.StatusInternalServerError, "Error generating refresh token")

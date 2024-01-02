@@ -26,7 +26,7 @@ function useTwoFactorAuth(email) {
     // 检测是否开启2FA
     useEffect(() => {
         async function checkUser2FA() {
-            const email = 'test2@example.com'; // 替换为你需要检查的邮箱
+            // const email = 'test2@example.com'; // 替换为你需要检查的邮箱
             const response = await check2FA(email);
             console.log(response); // 在控制台打印响应
 
