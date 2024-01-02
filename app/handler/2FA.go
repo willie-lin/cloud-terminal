@@ -42,7 +42,6 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error encoding QR code: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		fmt.Println(11111111)
 		b64 := base64.StdEncoding.EncodeToString(png)
 		// 存储密钥
 		_, err = client.User.
@@ -64,12 +63,18 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
+		fmt.Println(u.Email)
+		fmt.Println(111111111111111111)
+
+		fmt.Println(u.TotpSecret)
+		fmt.Println(2222222222222222222)
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
+		fmt.Println(ua.TotpSecret)
 		// 使用存储的密钥
 		valid := totp.Validate(u.TotpSecret, ua.TotpSecret)
 		if !valid {
