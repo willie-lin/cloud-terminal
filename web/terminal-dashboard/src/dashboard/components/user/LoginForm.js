@@ -1,6 +1,7 @@
 // LoginForm.js
 import React, {useEffect, useState} from 'react';
 import {check2FA, checkEmail, login} from "../../../api/api";
+import {Button, Card, Input} from "@material-tailwind/react";
 
 function LoginForm({ onLogin }) {
     const [email, setEmail] = React.useState('');
@@ -22,11 +23,8 @@ function LoginForm({ onLogin }) {
                 }
             }
         }
-
         checkUser2FA();
     }, [email]); // 将 email 添加到依赖数组中
-
-
 
     const handleEmailChange = async (e) => {
         const email = e.target.value;
@@ -63,41 +61,101 @@ function LoginForm({ onLogin }) {
         }
     };
     return (
-        <form onSubmit={handleSubmit}>
-            <div
-                className="relative flex min-h-screen text-gray-800 antialiased flex-col justify-center overflow-hidden bg-gray-50 py-6 sm:py-12">
-                <div className="relative py-3 sm:w-96 mx-auto text-center">
-                    <span className="text-2xl font-light">Login to your account</span>
-                    <div className="mt-4 bg-white shadow-md rounded-lg text-left">
-                        <div
-                            className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"></div>
-                        <div className="px-8 py-6">
-                            <label className="block font-semibold mb-2">Email</label>
-                            <input type="email" value={email} onChange={handleEmailChange}
-                                   className={getInputClass()}/>
-                            {emailError && <p className="text-red-500">{emailError}</p>}
-                            <label className="block mt-3 font-semibold mb-2">Password</label>
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                                   className="border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md"/>
-                            {isConfirmed && (
-                                <div>
-                                    <label className="block mt-3 font-semibold mb-2">OTP</label>
-                                    <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)}
-                                           className="border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md"/>
-                                </div>
-                            )}
-                            {loginError && <div className="text-red-500">{loginError}</div>}
-                            <div className="flex justify-between items-baseline">
-                                <button type="submit"
-                                        className="mt-4 text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Login
-                                </button>
-                                <a href="#/" className="text-sm hover:underline">Forgot password?</a>
-                            </div>
-                        </div>
-                    </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center min-h-screen">
+            <Card className="w-full max-w-md"> {/* 设置最大宽度 */}
+                <h6 className="text-gray-500 text-lg text-center">Login to your account</h6>
+                <hr className="mb-6 border-b-1 border-gray-300"/>
+                <div className="mb-4">
+                    <Input
+                        type="email"
+                        color="lightBlue"
+                        size="regular"
+                        outline={true}
+                        placeholder="Email"
+                        value={email}
+                        onChange={handleEmailChange}
+                        error={!!emailError}
+                    />
                 </div>
-            </div>
+                <div className="mb-4">
+                    <Input
+                        type="password"
+                        color="lightBlue"
+                        size="regular"
+                        outline={true}
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </div>
+                {isConfirmed && (
+                    <div className="mb-4">
+                        <Input
+                            type="text"
+                            color="lightBlue"
+                            size="regular"
+                            outline={true}
+                            placeholder="OTP"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                        />
+                    </div>
+                )}
+                <div className="flex flex-col items-stretch"> {/* 改变布局 */}
+                    <Button
+                        type="submit"
+                        color="lightBlue"
+                        buttonType="filled"
+                        size="regular"
+                        rounded={false}
+                        block={false}
+                        iconOnly={false}
+                        ripple="light"
+                        className="mb-4" // 添加边距
+                    >
+                        Login
+                    </Button>
+                    <a href="#/" className="text-sm hover:underline">Forgot password?</a>
+                </div>
+            </Card>
         </form>
+
+        // <form onSubmit={handleSubmit}>
+        //     <div
+        //         className="relative flex min-h-screen text-gray-800 antialiased flex-col justify-center overflow-hidden bg-gray-50 py-6 sm:py-12">
+        //         <div className="relative py-3 sm:w-96 mx-auto text-center">
+        //             <span className="text-2xl font-light">Login to your account</span>
+        //             <div className="mt-4 bg-white shadow-md rounded-lg text-left">
+        //                 <div
+        //                     className="text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"></div>
+    //                 <div className="px-8 py-6">
+    //                     <label className="block font-semibold mb-2">Email</label>
+    //                     <input type="email" value={email} onChange={handleEmailChange}
+    //                            className={getInputClass()}/>
+    //                     {emailError && <p className="text-red-500">{emailError}</p>}
+    //                     <label className="block mt-3 font-semibold mb-2">Password</label>
+    //                     <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+    //                            className="border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md"/>
+    //                     {isConfirmed && (
+    //                         <div>
+    //                             <label className="block mt-3 font-semibold mb-2">OTP</label>
+    //                             <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)}
+    //                                    className="border w-full h-5 px-3 py-5 mt-2 hover:outline-none focus:outline-none focus:ring-indigo-500 focus:ring-1 rounded-md"/>
+    //                         </div>
+    //                     )}
+    //                     {loginError && <div className="text-red-500">{loginError}</div>}
+    //                     <div className="flex justify-between items-baseline">
+    //                         <button type="submit"
+    //                                 className="mt-4 text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">Login
+    //                             </button>
+    //                             <a href="#/" className="text-sm hover:underline">Forgot password?</a>
+    //                         </div>
+    //                     </div>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     </form>
     );
 }
 
