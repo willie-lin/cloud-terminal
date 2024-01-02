@@ -6,31 +6,6 @@ import TopNavbar from "./TopNavbar";
 // Dashboard组件
 function Dashboard({ isLoggedIn, onLogout, email }) {
 
-//     // 创建一个context
-//     const UserContext = createContext();
-//
-// // 创建一个Provider组件
-//     function UserProvider({ children }) {
-//         const [userInfo, setUserInfo] = useState(null);
-//
-//         const handleUpdate = (newInfo) => {
-//             // 更新用户信息
-//             setUserInfo(newInfo);
-//         };
-//
-//         // 将状态和更新函数作为value传递给Provider
-//         return (
-//             <UserContext.Provider value={{ userInfo, onUpdate: handleUpdate }}>
-//                 {children}
-//             </UserContext.Provider>
-//         );
-//     }
-//
-// // 创建一个自定义hook，用于在子组件中访问context
-//     function useUser() {
-//         return useContext(UserContext);
-//     }
-
     return (
         <div className="min-h-screen">
             <div className="w-64 bg-white shadow-lg fixed h-full z-10">

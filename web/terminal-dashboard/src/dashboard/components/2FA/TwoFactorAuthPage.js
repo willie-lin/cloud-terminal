@@ -48,7 +48,7 @@ function useTwoFactorAuth(email) {
         } catch (error) {
             console.error('Error:', error);
             setError('确认二次验证失败');
-            setIsConfirmed(false);
+            setIsConfirmed(false); // 在这里添加这行代码
         } finally {
             setLoading(false);
         }

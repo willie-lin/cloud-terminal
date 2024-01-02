@@ -8,21 +8,6 @@ function RegisterForm({ onRegister }) {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
 
-// 当 email 状态改变时，调用 checkEmail 函数
-//     const handleEmailChange = async (e) => {
-//         const email = e.target.value;
-//         setEmail(email);
-//         try {
-//             const response = await checkEmail(email);
-//             if (response.status === 200) {
-//                 setEmailError('');
-//             } else if (response.status === 400) {
-//                 setEmailError('Email already registered');
-//             }
-//         } catch (error) {
-//             console.error(error);
-//         }
-//     };
     const handleEmailChange = async (e) => {
         const email = e.target.value;
         setEmail(email);
