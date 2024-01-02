@@ -90,7 +90,7 @@ export const confirm2FA = async (data) => {
 //
 export const check2FA = async (email) => {
     try {
-        const response = await api.get('/api/check-2FA', email );
+        const response = await api.post('/api/check-2FA', { email } );
         return response.data;
     } catch (error) {
         console.error(error);

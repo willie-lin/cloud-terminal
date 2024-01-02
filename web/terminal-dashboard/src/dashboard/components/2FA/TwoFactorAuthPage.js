@@ -11,8 +11,6 @@ function useTwoFactorAuth(email) {
     const [isConfirmed, setIsConfirmed] = useState(false); // 新增状态变量
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
-
      // 检测 用户是否存在
     useEffect(() => {
         if (email) {
@@ -27,16 +25,18 @@ function useTwoFactorAuth(email) {
 
     // 检测是否开启2FA
     useEffect(() => {
-        const check2FAStatus = async () => {
-            try {
-                const response = await check2FA(email);
+        async function checkUser2FA() {
+            const email = 'test2@example.com'; // 替换为你需要检查的邮箱
+            const response = await check2FA(email);
+            console.log(response); // 在控制台打印响应
+
+            // 根据响应设置 isConfirmed 的值
+            if (response && response.isConfirmed !== undefined) {
                 setIsConfirmed(response.isConfirmed);
-            } catch (error) {
-                console.error(error);
             }
-        };
-        check2FAStatus().then(r => {});
-    }, []);
+        }
+        checkUser2FA();
+    }, []); // 空数组作为依赖，意味着这个 useEffect 只会在组件挂载时运行一次
 
     // 生成二维码
     const generateQRCode = async () => {
@@ -71,6 +71,7 @@ function useTwoFactorAuth(email) {
     };
     return { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler };
 }
+
 function TwoFactorAuthPage({ email }) {
     const { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler } = useTwoFactorAuth(email);
     return (
