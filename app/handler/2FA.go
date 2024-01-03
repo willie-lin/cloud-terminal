@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
@@ -85,9 +84,6 @@ func Check2FA(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		fmt.Println(1111111111)
-		fmt.Println(u.Email)
-		fmt.Println(2222222222)
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if err != nil {
