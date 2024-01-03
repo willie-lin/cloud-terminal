@@ -1,7 +1,7 @@
 // LoginForm.js
 import React, {useEffect, useState} from 'react';
 import {check2FA, checkEmail, login} from "../../../api/api";
-import {Alert, Button, Card, Input} from "@material-tailwind/react";
+import {Alert, Button, Card, Checkbox, Input, Typography} from "@material-tailwind/react";
 
 function LoginForm({ onLogin }) {
     const [email, setEmail] = React.useState('');
@@ -71,81 +71,160 @@ function LoginForm({ onLogin }) {
         }
     };
     return (
-
-        <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center min-h-screen">
-            <Card className="w-full max-w-md"> {/* 设置最大宽度 */}
-                <h6 className="text-gray-500 text-lg text-center">Login to your account</h6>
-                <hr className="mb-6 border-b-1 border-gray-300"/>
-                <div className="mb-4">
-                    <Input
-                        type="email"
-                        color="lightBlue"
-                        size="regular"
-                        outline={true}
-                        placeholder="Email"
-                        value={email}
-                        onChange={handleEmailChange}
-                        error={!!emailError}
-                    />
+        <section className="m-8 flex gap-4">
+            <div className="w-full lg:w-3/5 mt-24">
+                <div className="text-center">
+                    <Typography variant="h2" className="font-bold mb-4">Sign In</Typography>
+                    <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">Enter your email and password to Sign In.</Typography>
                 </div>
-                <div className="mb-4">
-                    <Input
-                        type="password"
-                        color="lightBlue"
-                        size="regular"
-                        outline={true}
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-                {isConfirmed && (
-                    <div className="mb-4">
-                        <Input
-                            type="text"
-                            color="lightBlue"
-                            size="regular"
-                            outline={true}
-                            placeholder="OTP"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                        />
-                    </div>
-                )}
-                {/*{loginError && <div className="text-red-500 mb-4">{loginError}</div>}*/}
-
-                {loginError && (
-                    <Alert color="red" className="mb-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <i className="fas fa-info-circle mr-2"></i>
-                                <span className="text-sm">{loginError}</span>
-                            </div>
+                <form onSubmit={handleSubmit} className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
+                        <div className="mb-1 flex flex-col gap-6">
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Your email
+                            </Typography>
+                            <Input
+                                type="email"
+                                color="lightBlue"
+                                size="regular"
+                                outline={true}
+                                placeholder="Email"
+                                value={email}
+                                onChange={handleEmailChange}
+                                error={!!emailError}
+                            />
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Password
+                            </Typography>
+                            <Input
+                                type="password"
+                                color="lightBlue"
+                                size="regular"
+                                outline={true}
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            {isConfirmed && (
+                                <>
+                                    <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                        OTP
+                                    </Typography>
+                                    <Input
+                                        type="text"
+                                        color="lightBlue"
+                                        size="regular"
+                                        outline={true}
+                                        placeholder="OTP"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                    />
+                                </>
+                            )}
+                            {loginError && (
+                                <Alert color="red" className="mb-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                            <i className="fas fa-info-circle mr-2"></i>
+                                            <span className="text-sm">{loginError}</span>
+                                        </div>
+                                    </div>
+                                </Alert>
+                            )}
                         </div>
-                    </Alert>
-                )}
+                        <Button
+                            className="mt-6"
+                            fullWidth
+                            type="submit"
+                            color="lightBlue"
+                            buttonType="filled"
+                            size="regular"
+                            rounded={false}
+                            block={false}
+                            iconOnly={false}
+                            ripple="light"
+                        >
+                            Sign In
+                        </Button>
+                    </form>
+            </div>
+        </section>
 
-                <div className="flex flex-col items-stretch"> {/* 改变布局 */}
-                    <Button
-                        type="submit"
-                        color="lightBlue"
-                        buttonType="filled"
-                        size="regular"
-                        rounded={false}
-                        block={false}
-                        iconOnly={false}
-                        ripple="light"
-                        className="mb-4" // 添加边距
-                    >
-                        Login
-                    </Button>
-                    <a href="#/" className="text-sm hover:underline">Forgot password?</a>
-                </div>
-            </Card>
-        </form>
 
-        // <form onSubmit={handleSubmit}>
-        //     <div
+// <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center min-h-screen">
+//                         <Card className="w-full max-w-md"> {/* 设置最大宽度 */}
+//                             <h6 className="text-gray-500 text-lg text-center">Login to your account</h6>
+//                             <hr className="mb-6 border-b-1 border-gray-300"/>
+//                             <div className="mb-4">
+//                                 <Input
+//                                     type="email"
+//                                     color="lightBlue"
+//                                     size="regular"
+//                                     outline={true}
+//                                     placeholder="Email"
+//                                     value={email}
+//                                     onChange={handleEmailChange}
+//                                     error={!!emailError}
+//                                 />
+//                             </div>
+//                             <div className="mb-4">
+//                                 <Input
+//                                     type="password"
+//                                     color="lightBlue"
+//                                     size="regular"
+//                                     outline={true}
+//                                     placeholder="Password"
+//                                     value={password}
+//                                     onChange={(e) => setPassword(e.target.value)}
+//                                 />
+//                             </div>
+//                             {isConfirmed && (
+//                                 <div className="mb-4">
+//                                     <Input
+//                                         type="text"
+//                                         color="lightBlue"
+//                                         size="regular"
+//                                         outline={true}
+//                                         placeholder="OTP"
+//                                         value={otp}
+//                                         onChange={(e) => setOtp(e.target.value)}
+//                                     />
+//                                 </div>
+//                             )}
+//                             {loginError && <div className="text-red-500 mb-4">{loginError}</div>}
+//
+//                             {loginError && (
+//                                 <Alert color="red" className="mb-4">
+//                                     <div className="flex items-center justify-between">
+//                                         <div className="flex items-center">
+//                                             <i className="fas fa-info-circle mr-2"></i>
+//                                             <span className="text-sm">{loginError}</span>
+//                                         </div>
+//                                     </div>
+//                                 </Alert>
+//                             )}
+//                             <div className="flex flex-col items-stretch"> {/* 改变布局 */}
+//                                 <Button
+//                                     type="submit"
+//                                     color="lightBlue"
+//                                     buttonType="filled"
+//                                     size="regular"
+//                                     rounded={false}
+//                                     block={false}
+//                                     iconOnly={false}
+//                                     ripple="light"
+//                                     className="mb-4" // 添加边距
+//                                 >
+//                                     Login
+//                                 </Button>
+//                                 <a href="#/" className="text-sm hover:underline">Forgot password?</a>
+//                             </div>
+//                         </Card>
+//                 </form>
+
+
+//
+// {/*//     <form onSubmit={handleSubmit}>*/}
+        // <div
         //         className="relative flex min-h-screen text-gray-800 antialiased flex-col justify-center overflow-hidden bg-gray-50 py-6 sm:py-12">
         //         <div className="relative py-3 sm:w-96 mx-auto text-center">
         //             <span className="text-2xl font-light">Login to your account</span>
