@@ -1,7 +1,7 @@
 // RegisterForm.js
 import React, { useState } from 'react';
 import {checkEmail, register} from "../../../api/api";
-import {Alert, Button, Card, Input} from "@material-tailwind/react";
+import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
 
 function RegisterForm({ onRegister }) {
     const [email, setEmail] = useState('');
@@ -44,71 +44,172 @@ function RegisterForm({ onRegister }) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center min-h-screen">
-            <Card className="w-full max-w-md"> {/* 设置最大宽度 */}
-                <h6 className="text-gray-500 text-lg text-center">Register for an account</h6>
-                <hr className="mb-6 border-b-1 border-gray-300"/>
-                <div className="mb-4">
-                    <Input
-                        type="email"
-                        color="lightBlue"
-                        size="regular"
-                        outline={true}
-                        placeholder="Email"
-                        value={email}
-                        onChange={handleEmailChange}
-                        error={!!emailError}
-                    />
+        <section className="m-8 flex">
+            <div className="w-2/5 h-full hidden lg:block">
+                <img src="/img/pattern.png" className="h-full w-full object-cover rounded-3xl" alt="/"/>
+            </div>
+            <div className="w-full lg:w-3/5 flex flex-col items-center justify-center">
+                <div className="text-center">
+                    <Typography variant="h2" className="font-bold mb-4">Join Us Today</Typography>
+                    <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">Enter your email and password to register.</Typography>
                 </div>
-                <div className="mb-4">
-                    <Input
-                        type="password"
-                        color="lightBlue"
-                        size="regular"
-                        outline={true}
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                <form onSubmit={handleSubmit} className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
+                    <div className="mb-1 flex flex-col gap-6">
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Your email
+                        </Typography>
+                        <Input
+                            size="lg"
+                            placeholder="name@mail.com"
+                            className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
+                            labelProps={{
+                                className: "before:content-none after:content-none",
+                            }}
+                            type="email"
+                            color="lightBlue"
+                            outline={true}
+                            value={email}
+                            onChange={handleEmailChange}
+                            error={!!emailError}
+                        />
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Password
+                        </Typography>
+                        <Input
+                            type="password"
+                            color="lightBlue"
+                            size="regular"
+                            outline={true}
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Confirm Password
+                        </Typography>
+                        <Input
+                            type="password"
+                            color="lightBlue"
+                            size="regular"
+                            outline={true}
+                            placeholder="Confirm Password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+
+                    </div>
+                    <Checkbox
+                        label={
+                            <Typography
+                                variant="small"
+                                color="gray"
+                                className="flex items-center justify-start font-medium"
+                            >
+                                I agree the&nbsp;
+                                <a
+                                    href="#/"
+                                    className="font-normal text-black transition-colors hover:text-gray-900 underline"
+                                >
+                                    Terms and Conditions
+                                </a>
+                            </Typography>
+                        }
+                        containerProps={{ className: "-ml-2.5" }}
                     />
-                </div>
-                <div className="mb-4">
-                    <Input
-                        type="password"
-                        color="lightBlue"
-                        size="regular"
-                        outline={true}
-                        placeholder="Confirm Password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                </div>
-                {passwordError && (
-                    <Alert color="red" className="mb-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <i className="fas fa-info-circle mr-2"></i>
-                                <span className="text-sm">{passwordError}</span>
-                            </div>
-                        </div>
-                    </Alert>
-                )}
-                <div className="flex flex-col items-stretch"> {/* 改变布局 */}
-                    <Button
-                        type="submit"
-                        color="lightBlue"
-                        buttonType="filled"
-                        size="regular"
-                        rounded={false}
-                        block={false}
-                        iconOnly={false}
-                        ripple="light"
-                        className="mb-4" // 添加边距
+                    {passwordError && (
+                                    <Alert color="red" className="mb-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center">
+                                                <i className="fas fa-info-circle mr-2"></i>
+                                                <span className="text-sm">{passwordError}</span>
+                                            </div>
+                                        </div>
+                                    </Alert>
+                                )}
+                    <Button fullWidth
+                            type="submit"
+                            color="lightBlue"
+                            buttonType="filled"
+                            size="regular"
+                            rounded={false}
+                            block={false}
+                            iconOnly={false}
+                            ripple="light"
+                            className="mt-6" // 添加边距
                     >
-                        Register
+                        Register Now
                     </Button>
-                </div>
-            </Card>
-        </form>
+            </form>
+            </div>
+        </section>
+
+
+//<form onSubmit={handleSubmit} className="flex flex-col items-center justify-center min-h-screen">
+        // <Card className="w-full max-w-md"> {/* 设置最大宽度 */}
+        // <h6 className="text-gray-500 text-lg text-center">Register for an account</h6>
+        // <hr className="mb-6 border-b-1 border-gray-300"/>
+        // <div className="mb-4">
+        //             <Input
+        //                 type="email"
+        //                 color="lightBlue"
+        //                 size="regular"
+        //                 outline={true}
+        //                 placeholder="Email"
+        //                 value={email}
+        //                 onChange={handleEmailChange}
+        //                 error={!!emailError}
+        //             />
+        //         </div>
+        //         <div className="mb-4">
+        //             <Input
+        //                 type="password"
+        //                 color="lightBlue"
+        //                 size="regular"
+        //                 outline={true}
+        //                 placeholder="Password"
+        //                 value={password}
+        //                 onChange={(e) => setPassword(e.target.value)}
+        //             />
+        //         </div>
+        //         <div className="mb-4">
+        //             <Input
+        //                 type="password"
+        //                 color="lightBlue"
+        //                 size="regular"
+        //                 outline={true}
+        //                 placeholder="Confirm Password"
+        //                 value={confirmPassword}
+        //                 onChange={(e) => setConfirmPassword(e.target.value)}
+        //             />
+        //         </div>
+        //         {passwordError && (
+        //             <Alert color="red" className="mb-4">
+        //                 <div className="flex items-center justify-between">
+        //                     <div className="flex items-center">
+        //                         <i className="fas fa-info-circle mr-2"></i>
+        //                         <span className="text-sm">{passwordError}</span>
+        //                     </div>
+        //                 </div>
+        //             </Alert>
+        //         )}
+        //         <div className="flex flex-col items-stretch"> {/* 改变布局 */}
+        //             <Button
+        //                 type="submit"
+        //                 color="lightBlue"
+        //                 buttonType="filled"
+        //                 size="regular"
+        //                 rounded={false}
+        //                 block={false}
+        //                 iconOnly={false}
+        //                 ripple="light"
+        //                 className="mb-4" // 添加边距
+        //             >
+        //                 Register
+        //             </Button>
+        //         </div>
+        //     </Card>
+        // </form>
 
 
         // <form onSubmit={handleSubmit}>
