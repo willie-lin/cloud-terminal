@@ -1,7 +1,7 @@
 // RegisterForm.js
 import React, { useState } from 'react';
 import {checkEmail, register} from "../../../api/api";
-import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
+import {Alert, Button, Card, Checkbox, Input, Typography} from "@material-tailwind/react";
 
 function RegisterForm({ onRegister }) {
     const [email, setEmail] = useState('');
@@ -9,6 +9,7 @@ function RegisterForm({ onRegister }) {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
     const [passwordError, setPasswordError] = useState(''); // 添加一个新的状态来保存密码错误信息
+    const [loginError, setLoginError] = useState(''); // 添加一个新的状态来保存密码错误信息
 
     const handleEmailChange = async (e) => {
         const email = e.target.value;
@@ -23,15 +24,16 @@ function RegisterForm({ onRegister }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // 验证电子邮件和密码是否已填写
+        if (!email || !password) {
+            setLoginError('请填写所有必填字段');
+            setTimeout(() => setLoginError(''), 1000); // 1秒后清除错误信息
+            return;
+        }
+        // 验证密码和确认密码是否匹配
         if (password !== confirmPassword) {
             setPasswordError("Passwords don't match"); // 设置密码错误信息
             setTimeout(() => setPasswordError(''), 1000); // 1秒后清除错误信息
-            // alert("Passwords don't match");
-            return;
-        }
-        setPasswordError(''); // 清除密码错误信息
-        if (emailError) {
-            alert(emailError);
             return;
         }
         try {
@@ -84,6 +86,16 @@ function RegisterForm({ onRegister }) {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                        {loginError && (
+                            <Alert color="red" className="mb-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                        <i className="fas fa-info-circle mr-2"></i>
+                                        <span className="text-sm">{loginError}</span>
+                                    </div>
+                                </div>
+                            </Alert>
+                        )}
 
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                             Confirm Password
@@ -97,8 +109,17 @@ function RegisterForm({ onRegister }) {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
-
                     </div>
+                    {passwordError && (
+                        <Alert color="red" className="mb-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <i className="fas fa-info-circle mr-2"></i>
+                                    <span className="text-sm">{passwordError}</span>
+                                </div>
+                            </div>
+                        </Alert>
+                    )}
                     <Checkbox
                         label={
                             <Typography
@@ -117,16 +138,7 @@ function RegisterForm({ onRegister }) {
                         }
                         containerProps={{ className: "-ml-2.5" }}
                     />
-                    {passwordError && (
-                                    <Alert color="red" className="mb-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center">
-                                                <i className="fas fa-info-circle mr-2"></i>
-                                                <span className="text-sm">{passwordError}</span>
-                                            </div>
-                                        </div>
-                                    </Alert>
-                                )}
+
                     <Button fullWidth
                             type="submit"
                             color="lightBlue"
@@ -145,71 +157,71 @@ function RegisterForm({ onRegister }) {
         </section>
 
 
-//<form onSubmit={handleSubmit} className="flex flex-col items-center justify-center min-h-screen">
-        // <Card className="w-full max-w-md"> {/* 设置最大宽度 */}
-        // <h6 className="text-gray-500 text-lg text-center">Register for an account</h6>
-        // <hr className="mb-6 border-b-1 border-gray-300"/>
-        // <div className="mb-4">
-        //             <Input
-        //                 type="email"
-        //                 color="lightBlue"
-        //                 size="regular"
-        //                 outline={true}
-        //                 placeholder="Email"
-        //                 value={email}
-        //                 onChange={handleEmailChange}
-        //                 error={!!emailError}
-        //             />
-        //         </div>
-        //         <div className="mb-4">
-        //             <Input
-        //                 type="password"
-        //                 color="lightBlue"
-        //                 size="regular"
-        //                 outline={true}
-        //                 placeholder="Password"
-        //                 value={password}
-        //                 onChange={(e) => setPassword(e.target.value)}
-        //             />
-        //         </div>
-        //         <div className="mb-4">
-        //             <Input
-        //                 type="password"
-        //                 color="lightBlue"
-        //                 size="regular"
-        //                 outline={true}
-        //                 placeholder="Confirm Password"
-        //                 value={confirmPassword}
-        //                 onChange={(e) => setConfirmPassword(e.target.value)}
-        //             />
-        //         </div>
-        //         {passwordError && (
-        //             <Alert color="red" className="mb-4">
-        //                 <div className="flex items-center justify-between">
-        //                     <div className="flex items-center">
-        //                         <i className="fas fa-info-circle mr-2"></i>
-        //                         <span className="text-sm">{passwordError}</span>
-        //                     </div>
-        //                 </div>
-        //             </Alert>
-        //         )}
-        //         <div className="flex flex-col items-stretch"> {/* 改变布局 */}
-        //             <Button
-        //                 type="submit"
-        //                 color="lightBlue"
-        //                 buttonType="filled"
-        //                 size="regular"
-        //                 rounded={false}
-        //                 block={false}
-        //                 iconOnly={false}
-        //                 ripple="light"
-        //                 className="mb-4" // 添加边距
-        //             >
-        //                 Register
-        //             </Button>
-        //         </div>
-        //     </Card>
-        // </form>
+// <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center min-h-screen">
+//         <Card className="w-full max-w-md"> {/* 设置最大宽度 */}
+//         <h6 className="text-gray-500 text-lg text-center">Register for an account</h6>
+//         <hr className="mb-6 border-b-1 border-gray-300"/>
+//         <div className="mb-4">
+//                     <Input
+//                         type="email"
+//                         color="lightBlue"
+//                         size="regular"
+//                         outline={true}
+//                         placeholder="Email"
+//                         value={email}
+//                         onChange={handleEmailChange}
+//                         error={!!emailError}
+//                     />
+//                 </div>
+//                 <div className="mb-4">
+//                     <Input
+//                         type="password"
+//                         color="lightBlue"
+//                         size="regular"
+//                         outline={true}
+//                         placeholder="Password"
+//                         value={password}
+//                         onChange={(e) => setPassword(e.target.value)}
+//                     />
+//                 </div>
+//                 <div className="mb-4">
+//                     <Input
+//                         type="password"
+//                         color="lightBlue"
+//                         size="regular"
+//                         outline={true}
+//                         placeholder="Confirm Password"
+//                         value={confirmPassword}
+//                         onChange={(e) => setConfirmPassword(e.target.value)}
+//                     />
+//                 </div>
+//                 {passwordError && (
+//                     <Alert color="red" className="mb-4">
+//                         <div className="flex items-center justify-between">
+//                             <div className="flex items-center">
+//                                 <i className="fas fa-info-circle mr-2"></i>
+//                                 <span className="text-sm">{passwordError}</span>
+//                             </div>
+//                         </div>
+//                     </Alert>
+//                 )}
+//                 <div className="flex flex-col items-stretch"> {/* 改变布局 */}
+//                     <Button
+//                         type="submit"
+//                         color="lightBlue"
+//                         buttonType="filled"
+//                         size="regular"
+//                         rounded={false}
+//                         block={false}
+//                         iconOnly={false}
+//                         ripple="light"
+//                         className="mb-4" // 添加边距
+//                     >
+//                         Register
+//                     </Button>
+//                 </div>
+//             </Card>
+//         </form>
 
 
         // <form onSubmit={handleSubmit}>

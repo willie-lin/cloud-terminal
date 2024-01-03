@@ -27,16 +27,6 @@ function LoginForm({ onLogin }) {
         checkUser2FA();
     }, [email]); // 将 email 添加到依赖数组中
 
-    useEffect(() => {
-        if (loginError) {
-            const timer = setTimeout(() => {
-                setLoginError('');
-            }, 500); // 设置3秒后自动隐藏
-
-            return () => clearTimeout(timer); // 清除定时器
-        }
-    }, [loginError]);
-
     const handleEmailChange = async (e) => {
         const email = e.target.value;
         setEmail(email);
@@ -57,6 +47,11 @@ function LoginForm({ onLogin }) {
     // };
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // 验证电子邮件和密码是否已填写
+        if (!email || !password) {
+            setLoginError('请填写所有必填字段');
+            return;
+        }
         try {
             // 将OTP赋值给totp_Secret
             const data = await login(email, password, otp); // 使用 login 函数
