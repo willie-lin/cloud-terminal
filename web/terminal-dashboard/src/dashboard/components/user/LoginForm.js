@@ -168,7 +168,7 @@ function LoginForm({ onLogin }) {
                             containerProps={{className: "-ml-2.5"}}
                         />
                         <Typography variant="small" className="font-medium text-gray-900">
-                            <a href="#/">
+                            <a href="/reset-password">
                                 Forgot Password
                             </a>
                         </Typography>
