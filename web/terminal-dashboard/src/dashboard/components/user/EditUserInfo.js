@@ -7,6 +7,8 @@ import {useFetchUserInfo} from "./UserHook";
 
 
 function EditUserInfo({ email, onUpdate }) {
+    // 获取用户信息
+    const userInfo = useFetchUserInfo(email);
     const [newInfo, setNewInfo] = useState(userInfo);
     const [file, setFile] = useState(null); // 添加一个新的 state 来存储文件
     const [preview, setPreview] = useState(null); // 用于存储预览图片的 URL
@@ -15,8 +17,6 @@ function EditUserInfo({ email, onUpdate }) {
     const [upImg, setUpImg] = useState();
     const [previewUrl, setPreviewUrl] = useState();
 
-    // 获取用户信息
-    const userInfo = useFetchUserInfo(email);
     // 当 userInfo 改变时，更新 newInfo
     useEffect(() => {
         setNewInfo(userInfo);

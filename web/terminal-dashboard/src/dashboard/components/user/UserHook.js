@@ -1,6 +1,6 @@
 // 自定义钩子函数，用于获取用户信息
-import React, {useEffect, useState} from "react";
-import {checkEmail, getAllUsers, getUserByEmail} from "../../../api/api";
+import {useEffect, useState} from "react";
+import {getAllUsers, getUserByEmail} from "../../../api/api";
 
 // 自定义钩子函数，用于获取用户信息
 export const useFetchUserInfo = (email) => {
