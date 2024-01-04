@@ -14,16 +14,11 @@ import {
     Typography
 } from "@material-tailwind/react";
 import {ChevronUpDownIcon, MagnifyingGlassIcon, PencilIcon, UserPlusIcon} from "@heroicons/react/16/solid";
+import {useFetchUsers} from "./UserHook";
 
 function UserList({ email }) {
-    const [users, setUsers] = useState([]);
-    // 获取所有用户
-    useEffect(() => {
-        getAllUsers()
-            .then(data => setUsers(data))
-            .catch(error => console.error('Error:', error));
-    }, []);
 
+    const users = useFetchUsers();
     const TABS = [
         {
             label: "All",
@@ -265,8 +260,6 @@ function UserList({ email }) {
                             },
                         )}
                         </tbody>
-
-
                     </table>
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
