@@ -63,16 +63,12 @@ function RegisterForm({ onRegister }) {
                         </Typography>
                         <Input
                             size="lg"
-                            placeholder="name@mail.com"
-                            className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
-                            labelProps={{
-                                className: "before:content-none after:content-none",
-                            }}
                             type="email"
                             color="lightBlue"
                             outline={true}
+                            placeholder="name@mail.com"
                             value={email}
-                            onChange={handleEmailChange}
+                            onChange={ handleEmailChange }
                             error={!!emailError}
                         />
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
