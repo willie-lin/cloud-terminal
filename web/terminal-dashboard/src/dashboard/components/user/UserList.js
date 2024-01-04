@@ -33,7 +33,6 @@ function UserList({ email }) {
             value: "unmonitored",
         },
     ];
-
     return (
             <Card className="h-full w-full">
                 <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -278,5 +277,4 @@ function UserList({ email }) {
             </Card>
     );
 }
-
 export default UserList;
