@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -187,7 +188,7 @@ func DeleteUserByUUID(client *ent.Client) echo.HandlerFunc {
 }
 
 // UploadFile UploadAvatar upload Avatar
-func UploadFile(client *ent.Client) echo.HandlerFunc {
+func UploadFile() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 获取上传的文件
 		file, err := c.FormFile("file")
@@ -212,8 +213,12 @@ func UploadFile(client *ent.Client) echo.HandlerFunc {
 		}
 		defer src.Close()
 
+		// 为文件重新命名
+		ext := filepath.Ext(file.Filename)
+		newFileName := fmt.Sprintf("%d%s", time.Now().Unix(), ext)
+
 		// 创建目标文件
-		dst, err := os.Create(filepath.Join("uploads", file.Filename))
+		dst, err := os.Create(filepath.Join("picture", newFileName))
 		if err != nil {
 			return err
 		}
@@ -225,11 +230,11 @@ func UploadFile(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 返回文件的路径
-		return c.String(http.StatusOK, filepath.Join("uploads", file.Filename))
+		return c.String(http.StatusOK, filepath.Join("picture", newFileName))
 	}
 }
 
-func UploadAvatar(client *ent.Client) echo.HandlerFunc {
+func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {

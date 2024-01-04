@@ -107,3 +107,21 @@ export const validate2FA = async (email, token) => {
         console.error(error);
     }
 };
+
+// upload file
+export const uploadFile = async (file) => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await api.post(`/api/uploads`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+}

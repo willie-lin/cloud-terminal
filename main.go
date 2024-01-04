@@ -104,6 +104,7 @@ func main() {
 
 	e.GET("/api/users", handler.GetAllUsers(client))
 	e.POST("/api/user/email", handler.GetUserByEmail(client))
+	e.POST("/api/uploads", handler.UploadFile())
 
 	e.POST("/user", handler.CreateUser(client))
 

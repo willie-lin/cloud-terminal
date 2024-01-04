@@ -12,6 +12,13 @@ type Role struct {
 	ent.Schema
 }
 
+// Mixin MiXin Mixin User
+func (Role) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}
+
 // Fields of the Role.
 func (Role) Fields() []ent.Field {
 	return []ent.Field{
@@ -23,7 +30,7 @@ func (Role) Fields() []ent.Field {
 // Edges of the Role.
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("permissions", Permission.Type),
 		edge.From("users", User.Type).Ref("roles"),
+		edge.To("permissions", Permission.Type),
 	}
 }

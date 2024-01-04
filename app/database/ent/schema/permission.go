@@ -12,6 +12,13 @@ type Permission struct {
 	ent.Schema
 }
 
+// Mixin MiXin Mixin User
+func (Permission) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		TimeMixin{},
+	}
+}
+
 // Fields of the Permission.
 func (Permission) Fields() []ent.Field {
 	return []ent.Field{
