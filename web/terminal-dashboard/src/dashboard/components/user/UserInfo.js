@@ -20,8 +20,6 @@ function UserInfo({ email }) {
         // navigate(0);  // 强制刷新页面
     };
     return (
-        // <Card className="w-full max-w-2xl p-4 bg-white rounded shadow-md">
-
         <Card className="w-96">
             <CardHeader floated={false} className="h-50">
                 <div>
