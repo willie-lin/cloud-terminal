@@ -41,31 +41,35 @@ function UserInfo({ email }) {
     };
 
     return (
-        <Card className="w-full max-w-2xl p-4 bg-white rounded shadow-md">
+        // <Card className="w-full max-w-2xl p-4 bg-white rounded shadow-md">
+
+        <Card className="w-96">
             <CardHeader floated={false} className="h-50">
                 <div>
                     {userInfo && <Avatar src={userInfo.avatar} alt="avatar" variant="rounded" size="xxl"/>}
+                    {/*<img src="https://docs.material-tailwind.com/img/team-3.jpg" alt="profile-picture"/>*/}
                 </div>
             </CardHeader>
-            <CardBody className="text-center">
-                        <Typography variant="h4" color="blue-gray" className="mb-2">
+            {/*<CardBody className="text-center">*/}
+            <CardBody className="text-left">
+            <Typography variant="h4" color="blue-gray" className="mb-2">
                             欢迎，{userInfo?.nickname}!
-                        </Typography>
-                        {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                            用户名: {userInfo.username}。
-                        </Typography>}
-                        {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                            电子邮件: {userInfo.email}。
-                        </Typography>}
-                        {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                            个人简介: {userInfo.bio}。
-                        </Typography>}
-                        <Typography color="blue-gray" className="font-medium" textGradient>
-                            当前时间是 {currentTime.toLocaleTimeString()}。
-                        </Typography>
+            </Typography>
 
-                <Button onClick={handleEdit} color="lightBlue">修改</Button>
+                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+                            USERNAME: {userInfo.username}。
+                </Typography>}
+                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+                            EMAIL: {userInfo.email}。
+                </Typography>}
+                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+                            BIO: {userInfo.bio}。
+                </Typography>}
+                <Typography color="blue-gray" className="font-medium" textGradient>
+                            TiME: {currentTime.toLocaleTimeString()}。
+                </Typography>
             </CardBody>
+            <Button onClick={handleEdit} color="lightBlue">修改</Button>
         </Card>
     );
 }

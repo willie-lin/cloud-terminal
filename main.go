@@ -98,8 +98,6 @@ func main() {
 	e.POST("/api/confirm-2FA", handler.Confirm2FA(client))
 	e.POST("/api/check-2FA", handler.Check2FA(client))
 
-	e.POST("/api/validate-2fa", handler.Validate2FA(client))
-
 	e.POST("/api/check-email", api.CheckEmail(client))
 	e.POST("/api/login", api.LoginUser(client))
 	e.POST("/api/register", api.RegisterUser(client))

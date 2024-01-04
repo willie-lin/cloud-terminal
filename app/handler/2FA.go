@@ -99,37 +99,6 @@ func Check2FA(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// Validate2FA 验证2FA
-func Validate2FA(client *ent.Client) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var body struct {
-			Passcode string `json:"passcode"`
-		}
-		u := new(ent.User)
-		//email, err := GetCurrentEmail(c)
-
-		if err := c.Bind(&body); err != nil {
-			return err
-		}
-
-		us, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
-		if err != nil {
-			return err
-		}
-
-		valid := totp.Validate(body.Passcode, us.TotpSecret)
-		if valid {
-			return c.JSON(http.StatusOK, map[string]string{
-				"status": "valid",
-			})
-		} else {
-			return c.JSON(http.StatusOK, map[string]string{
-				"status": "invalid",
-			})
-		}
-	}
-}
-
 // Reset2FA 用户重新设置2FA
 func Reset2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {

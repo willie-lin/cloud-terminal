@@ -75,7 +75,7 @@ func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-		user, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		un, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusBadRequest, err.Error())
@@ -84,7 +84,7 @@ func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		return c.JSON(http.StatusOK, user)
+		return c.JSON(http.StatusOK, un)
 	}
 }
 
@@ -179,6 +179,38 @@ func DeleteUserByUUID(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, "Error deleting user")
 		}
 		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+// UploadAvatar upload Avatar
+func UploadAvatar(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) (err error) {
+		u := new(ent.User)
+
+		// 直接解析raw数据为json
+		if err := c.Bind(u); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+
+		user, err := client.User.Create().
+			SetUsername(u.Username).
+			SetPassword(u.Password).
+			SetEmail(u.Email).
+			SetNickname(u.Nickname).
+			SetTotpSecret(u.TotpSecret).
+			SetEnableType(u.EnableType).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(context.Background())
+		if ent.IsConstraintError(err) {
+			return c.JSON(http.StatusConflict, err.Error())
+		}
+		if err != nil {
+			log.Printf("Error creating user: %v", err)
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+		return c.JSON(http.StatusCreated, user)
 	}
 }
 
