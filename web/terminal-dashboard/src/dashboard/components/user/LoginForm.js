@@ -57,6 +57,7 @@ function LoginForm({ onLogin }) {
             // setLoginError(error.message);
             console.error(error);
             setLoginError('用户名或密码错误');
+            setTimeout(() => setLoginError(''), 1000); // 1秒后清除错误信息
         }
     };
     return (

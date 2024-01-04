@@ -29,6 +29,18 @@ export const register = async (email, password) => {
     }
 };
 
+// forgot-password
+export const ForgotPd = async (email, password) => {
+    try {
+        const response = await api.post('/api/forgot-password', { email, password });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+
+
 // checkEmail
 export const checkEmail = async (email) => {
     try {
