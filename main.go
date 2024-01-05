@@ -42,6 +42,9 @@ func main() {
 	//log, _ := zap.NewProduction()
 	//log := zap.NewProductionEncoderConfig()
 	e := echo.New()
+	// 使用重定向中间件将http连接重定向到https
+	//e.Pre(middleware.HTTPSRedirect())
+
 	// 设置日志
 	zapLogger, _ := zap.NewProduction()
 	e.Use(logger.ZapLogger(zapLogger))
@@ -140,6 +143,12 @@ func main() {
 	//e.GET("/group/group_with_user", handler.GetAllGroupsWithUsers(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	//go func() {
+	//	e.Logger.Fatal(e.Start(":80"))
+	//}()
+	//
+	//e.Logger.Fatal(e.StartTLS(":443", "./cert/cert.pem", "./cert/key.pem"))
 
 	e.Logger.Fatal(e.Start(":2023"))
 

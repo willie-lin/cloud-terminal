@@ -2,6 +2,18 @@
 import {useEffect, useState} from "react";
 import {getAllUsers, getUserByEmail} from "../../../api/api";
 
+// 自定义钩子函数，用于获取所有用户
+export const useFetchUsers = () => {
+    const [users, setUsers] = useState([]);
+
+    useEffect(() => {
+        getAllUsers()
+            .then(data => setUsers(data))
+            .catch(error => console.error('Error:', error));
+    }, []);
+
+    return users;
+};
 // 自定义钩子函数，用于获取用户信息
 export const useFetchUserInfo = (email) => {
     const [userInfo, setUserInfo] = useState(null);
@@ -16,6 +28,8 @@ export const useFetchUserInfo = (email) => {
 
     return userInfo;
 };
+
+
 
 // 自定义钩子函数，用于更新当前时间
 export const useCurrentTime = () => {
@@ -33,16 +47,4 @@ export const useCurrentTime = () => {
     return currentTime;
 };
 
-// 自定义钩子函数，用于获取所有用户
-export const useFetchUsers = () => {
-    const [users, setUsers] = useState([]);
-
-    useEffect(() => {
-        getAllUsers()
-            .then(data => setUsers(data))
-            .catch(error => console.error('Error:', error));
-    }, []);
-
-    return users;
-};
 

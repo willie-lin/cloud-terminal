@@ -3,6 +3,7 @@ import axios from 'axios';
 const api = axios.create({
     baseURL: 'http://0.0.0.0:2023',
 });
+// const baseURL =  'https://0.0.0.0'
 
 // login
 export const login = async (email, password, totp_Secret) => {
@@ -52,7 +53,6 @@ export const checkEmail = async (email) => {
 };
 
 // /api/users getAllUsers
-
 export const getAllUsers = async () => {
     try {
         const response = await api.get('/api/users', {});
@@ -61,7 +61,6 @@ export const getAllUsers = async () => {
         console.error(error);
     }
 };
-
 
 
 //getUserByEmail

@@ -18,7 +18,6 @@ import {useFetchUsers} from "./UserHook";
 
 function UserList({ email }) {
 
-    const users = useFetchUsers();
     const TABS = [
         {
             label: "All",
@@ -33,6 +32,8 @@ function UserList({ email }) {
             value: "unmonitored",
         },
     ];
+
+    const users = useFetchUsers();
     return (
             <Card className="h-full w-full">
                 <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -75,42 +76,45 @@ function UserList({ email }) {
                 <CardBody className="overflow-scroll px-0">
                     <table className="mt-4 w-full min-w-max table-auto text-left">
                         <thead>
+                        {/*<tr>{['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (*/}
+                        {/*    <th key={head} className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">*/}
+                        {/*            <Typography variant="small" color="blue-gray" className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">*/}
+                        {/*                {head}{" "}*/}
+                        {/*                {index !== 7 && (*/}
+                        {/*                    <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4"/>*/}
+                        {/*                )}*/}
+                        {/*            </Typography>*/}
+                        {/*        </th>*/}
+                        {/*    ))}*/}
+                        {/*</tr>*/}
                         <tr>
-                            {['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (
-                                <th
-                                    key={head}
-                                    className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50"
-                                >
-                                    <Typography
-                                        variant="small"
-                                        color="blue-gray"
-                                        className="flex items-center justify-between gap-2 font-normal leading-none opacity-70"
-                                    >
-                                        {head}{" "}
+                            {users && users.length > 0 && ['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (
+                                <th key={head} className="p-4 border-b border-blue-gray-50">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <Typography variant="small" color="blue-gray" className="font-normal">
+                                            {head}
+                                        </Typography>
                                         {index !== 7 && (
                                             <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4"/>
                                         )}
-                                    </Typography>
+                                    </div>
                                 </th>
                             ))}
                         </tr>
-                        </thead>
-                        <tbody>
-                        {users.map((user, index) => {
-                                const isLast = index === users.length - 1;
-                                const classes = isLast
-                                    ? "p-4"
-                                    : "p-4 border-b border-blue-gray-50";
 
-                                return (
-                                    <tr key={user.id}>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                        </thead>
+                        {/*<tbody>*/}
+                        {users.map((user, index) => {
+                            const isLast = index === users.length - 1;
+                            const classes = isLast
+                                ? "p-4"
+                                : "p-4 border-b border-blue-gray-50";
+
+                            return (
+                                <tr key={user.id}>
+                                    <td className={classes}>
+                                    <div className="flex flex-col">
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.id}
                                                 </Typography>
                                             </div>
@@ -120,18 +124,10 @@ function UserList({ email }) {
                                                 {/* 这里可以添加Avatar组件 */}
                                                 <Avatar src={user.avatar} alt={user.nickname} size="sm"/>
                                                 <div className="flex flex-col">
-                                                    <Typography
-                                                        variant="small"
-                                                        color="blue-gray"
-                                                        className="font-normal"
-                                                    >
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
                                                         {user.nickname}
                                                     </Typography>
-                                                    <Typography
-                                                        variant="small"
-                                                        color="blue-gray"
-                                                        className="font-normal opacity-70"
-                                                    >
+                                                    <Typography variant="small" color="blue-gray" className="font-normal opacity-70">
                                                         {user.email}
                                                     </Typography>
                                                 </div>
@@ -139,110 +135,69 @@ function UserList({ email }) {
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.username}
                                                 </Typography>
                                             </div>
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.email}
                                                 </Typography>
                                             </div>
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.phone}
                                                 </Typography>
                                             </div>
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.bio}
                                                 </Typography>
                                             </div>
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.totp_secret}
                                                 </Typography>
                                             </div>
                                         </td>
-
                                         <td className={classes}>
                                             <div className="w-max">
-                                                <Chip
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    value={user.online ? "在线" : "离线"}
-                                                    color={user.online ? "green" : "blue-gray"}
+                                                <Chip variant="ghost" size="sm" value={user.online ? "在线" : "离线"} color={user.online ? "green" : "blue-gray"}
                                                 />
                                             </div>
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.enable_type ? '启用' : '禁用'}
                                                 </Typography>
                                             </div>
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.created_at}
                                                 </Typography>
                                             </div>
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.updated_at}
                                                 </Typography>
                                             </div>
                                         </td>
                                         <td className={classes}>
                                             <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
+                                                <Typography variant="small" color="blue-gray" className="font-normal">
                                                     {user.last_login_time}
                                                 </Typography>
                                             </div>
@@ -258,7 +213,7 @@ function UserList({ email }) {
                                 );
                             },
                         )}
-                        </tbody>
+                        {/*</tbody>*/}
                     </table>
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
