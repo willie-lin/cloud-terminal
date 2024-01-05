@@ -1,7 +1,58 @@
-import React from "react";
-import {Button, Card, CardBody, CardHeader, Input, Typography} from "@material-tailwind/react";
+import React, {useState, } from "react";
+import {Button, Card, Input, Typography} from "@material-tailwind/react";
+import {checkEmail, login, resetPassword} from "../../../api/api";
+import {useNavigate} from "react-router-dom";
+
 
 function ResetPasswordForm({ onResetPassword }) {
+
+    const [step, setStep] = useState(1);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
+    const [ResetPasswordError, setResetPasswordError] = useState(''); // 保存登录错误消息
+
+    const navigate = useNavigate();
+
+    const handleEmailChange = async (e) => {
+        const email = e.target.value;
+        setEmail(email);
+        try {
+            const exists = await checkEmail(email);
+            // setEmailError(exists ? 'Email already registered' : '');
+            setEmailError(exists ? '' : 'Email not registered');
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (step === 1) {
+            const exists = await checkEmail(email);
+            if (exists) {
+                setStep(2);
+            } else {
+                alert("Email not exists");
+            }
+        }
+        else if (step === 2) {
+            if (password === confirmPassword) {
+                try {
+                    const data = await resetPassword(email, password);
+                    console.log(data)
+                    alert("reset Password ✅");
+                    navigate('/login'); // 跳转到登录页面
+                }catch (error) {
+                    setResetPasswordError(error.message);
+                }
+            } else {
+                    alert("Passwords don't match");
+                }
+            }
+    };
+
     return (
         <div className="flex justify-center items-center h-screen">
             <Card className="w-1/2">
@@ -9,9 +60,11 @@ function ResetPasswordForm({ onResetPassword }) {
                     <Typography variant="h2" className="font-bold mb-4">Reset Password</Typography>
                     <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">Enter your email reset password to Sign In.</Typography>
                 </div>
-                <form onSubmit="">
-                {/*<form onSubmit={handleSubmit}>*/}
-                <div className="mb-1 flex flex-col gap-6">
+                {/*<form onSubmit="">*/}
+                <form onSubmit={handleSubmit}>
+                    {step === 1 && (
+                        <>
+                        <div className="mb-1 flex flex-col gap-6">
                     <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                         Email
                     </Typography>
@@ -21,8 +74,15 @@ function ResetPasswordForm({ onResetPassword }) {
                         size="regular"
                         outline={true}
                         placeholder="Email"
-                        // onChange={handleChange}
+                        onChange={handleEmailChange}
+                        error={!!emailError}
                     />
+                        </div>
+                        </>
+                        )}
+                    {step === 2 && (
+                        <>
+                    <div className="mb-1 flex flex-col gap-6">
                     <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                         Password
                     </Typography>
@@ -48,6 +108,8 @@ function ResetPasswordForm({ onResetPassword }) {
                         // onChange={(e) => setConfirmPassword(e.target.value)}
                     />
                 </div>
+                        </>
+                    )}
                 <Button fullWidth
                         type="submit"
                         color="lightBlue"
@@ -59,7 +121,7 @@ function ResetPasswordForm({ onResetPassword }) {
                         ripple="light"
                         className="mt-6" // 添加边距
                 >
-                    Submit
+                    {step === 1 ? 'NEXT' : 'Submit'}
                 </Button>
             </form>
             </Card>

@@ -30,9 +30,9 @@ export const register = async (email, password) => {
 };
 
 // forgot-password
-export const ForgotPd = async (email, password) => {
+export const resetPassword = async (email, password) => {
     try {
-        const response = await api.post('/api/forgot-password', { email, password });
+        const response = await api.post('/api/reset-password', { email, password });
         return response.data;
     } catch (error) {
         console.error(error);
