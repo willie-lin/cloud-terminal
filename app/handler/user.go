@@ -250,6 +250,7 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 		// 存储头像路径
 		_, err = client.User.
 			UpdateOne(ua).
+			SetNickname(u.Nickname).
 			SetAvatar(u.Avatar).
 			SetPhone(u.Phone).
 			SetBio(u.Bio).

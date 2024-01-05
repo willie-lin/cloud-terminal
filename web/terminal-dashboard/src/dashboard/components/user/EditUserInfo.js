@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Button, Card, CardBody, CardHeader, Input, Typography} from "@material-tailwind/react";
-import {confirm2FA, editUserInfo, uploadFile} from "../../../api/api";
-import {useLocation} from "react-router-dom";
+import {editUserInfo, uploadFile} from "../../../api/api";
+import {useLocation, useNavigate} from "react-router-dom";
 
 function EditUserInfo({ email }) {
     // 获取用户信息
@@ -11,11 +11,11 @@ function EditUserInfo({ email }) {
     const [nickname, setNickname] = useState(null)
     const [phone, setPhone] = useState(null)
     const [bio, setBio] = useState(null)
-
-
     const [file, setFile] = useState(null); // 添加一个新的 state 来存储文件
     const [preview, setPreview] = useState(null); // 用于存储预览图片的 URL
     const fileInputRef = useRef(); // 用于访问文件输入元素
+
+    const navigate = useNavigate();
 
     // 当 userInfo 改变时，更新 newInfo
     useEffect(() => {
@@ -78,6 +78,7 @@ function EditUserInfo({ email }) {
             };
             // console.log(data);  // 打印出data对象
             await editUserInfo(data);
+            navigate('/userinfo');
         } catch (error) {
             console.error(error);
         }
@@ -114,7 +115,7 @@ function EditUserInfo({ email }) {
                                 Nickname
                             </Typography>
                             <Input
-                                type="text"
+                                type="nickname"
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
