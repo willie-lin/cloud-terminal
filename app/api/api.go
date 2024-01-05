@@ -82,6 +82,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
+		fmt.Println(u)
+		fmt.Println(u.Email)
 
 		us, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
@@ -92,11 +94,22 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, "Error-querying-user")
 		}
+		fmt.Println(us)
+		if len(u.Password) == 0 {
+			log.Printf("Error: password is empty")
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+		}
+
+		fmt.Println(u.Password)
+		fmt.Println(11111111111)
+		fmt.Println(us.Password)
 
 		// 使用你的方法来验证密码和哈希值是否匹配
-		if err := utils.CompareHashAndPassword([]byte(us.Password), []byte(u.Password)); err != nil {
+		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(u.Password))
+		if err != nil {
 			//return c.JSON(http.StatusForbidden, map[string]string{"error": "Invalid-password"})
-			return c.JSON(http.StatusForbidden, "Invalid-password")
+			log.Printf("Error comparing password: %v", err)
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 		}
 		// 检查用户是否已经绑定了二次验证（2FA）
 		if us.TotpSecret != "" {
@@ -109,10 +122,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 				return c.JSON(http.StatusForbidden, "Invalid-OTP")
 			}
 		}
-
-		// 更新 last_login_time 字段
-		us, err = client.User.
-			UpdateOneID(us.ID).
+		_, err = client.User.
+			UpdateOne(us).
 			SetLastLoginTime(time.Now()).
 			Save(context.Background())
 		if err != nil {
@@ -159,6 +170,7 @@ func ForgotPassword(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
+		fmt.Println(u)
 
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {

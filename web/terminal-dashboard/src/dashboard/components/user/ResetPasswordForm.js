@@ -92,8 +92,8 @@ function ResetPasswordForm({ onResetPassword }) {
                         size="regular"
                         outline={true}
                         placeholder="Password"
-                        // value={password}
-                        // onChange={(e) => setPassword(e.target.value)}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                     />
                     <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                         Confirm Password
@@ -104,8 +104,8 @@ function ResetPasswordForm({ onResetPassword }) {
                         size="regular"
                         outline={true}
                         placeholder="Confirm Password"
-                        // value={confirmPassword}
-                        // onChange={(e) => setConfirmPassword(e.target.value)}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                     />
                 </div>
                         </>
