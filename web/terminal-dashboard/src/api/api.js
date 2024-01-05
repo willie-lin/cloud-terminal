@@ -108,17 +108,6 @@ export const check2FA = async (email) => {
     }
 };
 
-
-// Validate2FA
-export const validate2FA = async (email, token) => {
-    try {
-        const response = await api.post(`/api/validate-2fa`, { passcode: token });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-    }
-};
-
 // upload file
 export const uploadFile = async (file) => {
     try {
@@ -131,6 +120,16 @@ export const uploadFile = async (file) => {
                 },
             }
         );
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+// edit-user-info
+export const editUserInfo = async (data) => {
+    try {
+        const response = await api.post(`/api/edit-userinfo`, data);
         return response.data;
     } catch (error) {
         console.error(error);

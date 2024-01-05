@@ -39,7 +39,7 @@ function RegisterForm({ onRegister }) {
         }
         try {
             const data = await register(email, password); // 使用 register 函数
-            console.log(data);
+            // console.log(data);
             onRegister(email);
         } catch (error) {
             console.error(error);

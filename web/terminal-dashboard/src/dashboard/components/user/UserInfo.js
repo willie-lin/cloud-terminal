@@ -16,7 +16,7 @@ function UserInfo({ email }) {
     const currentTime = useCurrentTime();
     const navigate = useNavigate();
     const handleEdit = () => {
-        navigate('/edit-user-info');  // 跳转到用户信息编辑页面
+        navigate('/edit-user-info',  { state: { userInfo } });  // 跳转到用户信息编辑页面
         // navigate(0);  // 强制刷新页面
     };
     return (

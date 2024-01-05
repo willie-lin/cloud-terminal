@@ -106,11 +106,11 @@ func main() {
 	e.POST("/api/register", api.RegisterUser(client))
 	e.POST("/api/reset-password", api.ForgotPassword(client))
 
-	e.GET("/api/users", handler.GetAllUsers(client))
-	e.POST("/api/user/email", handler.GetUserByEmail(client))
 	e.POST("/api/uploads", handler.UploadFile())
+	e.GET("/api/users", handler.GetAllUsers(client))
+	e.POST("/api/edit-userinfo", handler.UpdateUserInfo(client))
 
-	e.POST("/user", handler.CreateUser(client))
+	e.POST("/api/user/email", handler.GetUserByEmail(client))
 
 	//e.POST("/api/login", api.Login(client))
 	//e.GET("/user/uid", handler.FindUserById(client))

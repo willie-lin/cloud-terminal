@@ -251,6 +251,8 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 		_, err = client.User.
 			UpdateOne(ua).
 			SetAvatar(u.Avatar).
+			SetPhone(u.Phone).
+			SetBio(u.Bio).
 			Save(context.Background())
 		if err != nil {
 			log.Printf("Error saving avatar: %v", err)
