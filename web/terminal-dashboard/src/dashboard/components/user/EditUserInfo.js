@@ -7,6 +7,7 @@ function EditUserInfo({ email }) {
     // 获取用户信息
     const location = useLocation();
     const userInfo = location.state.userInfo;
+
     const [newInfo, setNewInfo] = useState(userInfo);
     const [nickname, setNickname] = useState(null)
     const [phone, setPhone] = useState(null)
@@ -16,6 +17,13 @@ function EditUserInfo({ email }) {
     const fileInputRef = useRef(); // 用于访问文件输入元素
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        setNickname(userInfo.nickname);
+        setPhone(userInfo.phone);
+        setBio(userInfo.bio);
+    }, []);
+
 
     // 当 userInfo 改变时，更新 newInfo
     useEffect(() => {
