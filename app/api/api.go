@@ -11,6 +11,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
+	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -58,6 +59,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
+		fmt.Println(u.Password)
 
 		// 使用你的方法来创建密码的哈希值
 		hashedPassword, err := utils.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
@@ -104,13 +106,19 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(11111111111)
 		fmt.Println(us.Password)
 
-		// 使用你的方法来验证密码和哈希值是否匹配
-		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(u.Password))
+		// 假设 u.Password 是前端发送的哈希值
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
 		if err != nil {
-			//return c.JSON(http.StatusForbidden, map[string]string{"error": "Invalid-password"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		// 假设 us.Password 是数据库中存储的哈希值
+		err = bcrypt.CompareHashAndPassword([]byte(us.Password), hashedPassword)
+		if err != nil {
 			log.Printf("Error comparing password: %v", err)
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 		}
+
 		// 检查用户是否已经绑定了二次验证（2FA）
 		if us.TotpSecret != "" {
 			// 验证用户提供的OTP

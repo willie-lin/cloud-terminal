@@ -6,17 +6,16 @@ import (
 	"github.com/bykof/gostradamus"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/gommon/log"
-	"github.com/willie-lin/cloud-terminal/app/api"
-	"github.com/willie-lin/cloud-terminal/app/logger"
-	"go.elastic.co/apm/module/apmechov4"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/swaggo/echo-swagger"
+	"github.com/willie-lin/cloud-terminal/app/api"
 	"github.com/willie-lin/cloud-terminal/app/config"
 	"github.com/willie-lin/cloud-terminal/app/handler"
+	"github.com/willie-lin/cloud-terminal/app/logger"
 	_ "github.com/willie-lin/cloud-terminal/docs"
+	"go.elastic.co/apm/module/apmechov4"
 	"go.uber.org/zap"
 )
 
@@ -43,7 +42,13 @@ func main() {
 	//log := zap.NewProductionEncoderConfig()
 	e := echo.New()
 	// 使用重定向中间件将http连接重定向到https
-	//e.Pre(middleware.HTTPSRedirect())
+	e.Pre(middleware.HTTPSRedirect())
+
+	// 设置主机策略
+	// e.AutoTLSManager.HostPolicy = autocert.HostWhitelist("<DOMAIN>")
+
+	// 缓存证书以避免达到速率限制
+	//e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
 
 	// 设置日志
 	zapLogger, _ := zap.NewProduction()
@@ -148,12 +153,13 @@ func main() {
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	//go func() {
-	//	e.Logger.Fatal(e.Start(":80"))
-	//}()
-	//
-	//e.Logger.Fatal(e.StartTLS(":443", "./cert/cert.pem", "./cert/key.pem"))
+	go func() {
+		e.Logger.Fatal(e.Start(":80"))
+	}()
 
-	e.Logger.Fatal(e.Start(":2023"))
+	e.Logger.Fatal(e.StartTLS(":443", "./cert/cert.pem", "./cert/key.pem"))
+
+	//e.Logger.Fatal(e.StartAutoTLS(":443"))
+	//e.Logger.Fatal(e.Start(":2023"))
 
 }

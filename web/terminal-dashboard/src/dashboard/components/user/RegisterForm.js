@@ -23,6 +23,7 @@ function RegisterForm({ onRegister }) {
         }
     };
 
+    const CryptoJS = require("crypto-js");
     const handleSubmit = async (e) => {
         e.preventDefault();
         // 验证电子邮件和密码是否已填写
@@ -38,7 +39,9 @@ function RegisterForm({ onRegister }) {
             return;
         }
         try {
-            const data = await register(email, password); // 使用 register 函数
+            // 对密码进行哈希处理
+            const hashedPassword = CryptoJS.SHA256(password).toString();
+            const data = await register(email, hashedPassword); // 使用 register 函数
             // console.log(data);
             onRegister(email);
         } catch (error) {

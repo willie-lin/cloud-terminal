@@ -230,7 +230,7 @@ func UploadFile() echo.HandlerFunc {
 		}
 
 		// 服务器地址
-		serverAddress := "http://127.0.0.1:2023/"
+		serverAddress := "http://127.0.0.1/"
 		// 返回文件的路径
 		return c.String(http.StatusOK, serverAddress+filepath.Join("picture", newFileName))
 	}
