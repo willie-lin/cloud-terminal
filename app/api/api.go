@@ -97,6 +97,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
+
 		fmt.Println(us)
 		if len(u.Password) == 0 {
 			log.Printf("Error: password is empty")
