@@ -85,6 +85,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 		fmt.Println(u)
 		fmt.Println(u.Email)
+		fmt.Println(u.Password)
 		fmt.Println(len(u.Password))
 		fmt.Println(11111)
 
