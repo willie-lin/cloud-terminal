@@ -107,13 +107,12 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(us.Password)
 
 		// 假设 u.Password 是前端发送的哈希值
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-
+		//hashedPassword, err := utils.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
+		//if err != nil {
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		//}
 		// 假设 us.Password 是数据库中存储的哈希值
-		err = bcrypt.CompareHashAndPassword([]byte(us.Password), hashedPassword)
+		err = bcrypt.CompareHashAndPassword([]byte(us.Password), []byte(u.Password))
 		if err != nil {
 			log.Printf("Error comparing password: %v", err)
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
