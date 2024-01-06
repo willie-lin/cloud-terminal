@@ -47,7 +47,7 @@ function UserInfo({ email }) {
                             TiME: {currentTime.toLocaleTimeString()}。
                 </Typography>
             </CardBody>
-            <Button onClick={handleEdit} color="lightBlue">修改</Button>
+            <Button onClick={handleEdit} color="lightBlue">Edit User</Button>
         </Card>
     );
 }

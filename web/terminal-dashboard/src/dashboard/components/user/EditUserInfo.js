@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Button, Card, CardBody, CardHeader, Input, Typography} from "@material-tailwind/react";
+import {Button, Card, CardBody, CardHeader, Input, Textarea, Typography} from "@material-tailwind/react";
 import {editUserInfo, uploadFile} from "../../../api/api";
 import {useLocation, useNavigate} from "react-router-dom";
 
@@ -7,7 +7,6 @@ function EditUserInfo({ email }) {
     // 获取用户信息
     const location = useLocation();
     const userInfo = location.state.userInfo;
-
     const [newInfo, setNewInfo] = useState(userInfo);
     const [nickname, setNickname] = useState(null)
     const [phone, setPhone] = useState(null)
@@ -25,17 +24,32 @@ function EditUserInfo({ email }) {
     }, []);
 
 
-    // 当 userInfo 改变时，更新 newInfo
+    // 当组件挂载时，设置 initialInfo
     useEffect(() => {
         setNewInfo(userInfo);
-    }, [userInfo]);
+    }, []);
 
     const handleChange = (event) => {
-        setNewInfo({
-            ...newInfo,
-            [event.target.name]: event.target.value,
-        });
+            setNewInfo({
+                ...newInfo,
+                [event.target.name]: event.target.value,
+            });
+        switch (event.target.name) {
+            case 'nickname':
+                setNickname(event.target.value);
+                break;
+            case 'phone':
+                setPhone(event.target.value);
+                break;
+            case 'bio':
+                setBio(event.target.value);
+                break;
+            default:
+                break;
+        }
     };
+
+
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -123,11 +137,13 @@ function EditUserInfo({ email }) {
                                 Nickname
                             </Typography>
                             <Input
+                                variant="outlined"
+                                label="Nickname"
                                 type="nickname"
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
-                                placeholder="Nickname"
+                                // placeholder="Nickname"
                                 value={nickname}
                                 name="nickname"  // 添加name属性
                                 onChange={handleChange}
@@ -136,11 +152,13 @@ function EditUserInfo({ email }) {
                                 Phone
                             </Typography>
                             <Input
+                                variant="outlined"
+                                label="Phone"
                                 type="phone"
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
-                                placeholder="Phone"
+                                // placeholder="Phone"
                                 value={phone}
                                 name="phone"  // 添加name属性
                                 onChange={handleChange}
@@ -148,12 +166,14 @@ function EditUserInfo({ email }) {
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Bio
                             </Typography>
-                            <Input
+                            <Textarea
+                                variant="outlined"
+                                label="Bio"
                                 type="text"
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
-                                placeholder="Bio"
+                                // placeholder="Bio"
                                 value={bio}
                                 name="bio"  // 添加name属性
                                 onChange={handleChange}

@@ -27,7 +27,7 @@ func (User) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("avatar").Optional(), // 新增的头像字段
 		field.String("nickname").MinLen(2).MaxLen(30).Unique().Optional(),
-		field.String("bio").Optional(),
+		field.String("bio").MaxLen(200).Optional(),
 		field.String("username").NotEmpty().MinLen(6).MaxLen(30).Unique(),
 		field.String("password").NotEmpty().MinLen(8).MaxLen(120).Sensitive(),
 		field.String("email").NotEmpty().Match(regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,4}$`)).Unique(),

@@ -86,6 +86,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 		fmt.Println(u)
 		fmt.Println(u.Email)
+		fmt.Println(len(u.Password))
+		fmt.Println(11111)
 
 		us, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
@@ -97,10 +99,10 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		fmt.Println(us)
-		if len(u.Password) == 0 {
-			log.Printf("Error: password is empty")
-			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
-		}
+		//if len(u.Password) == 0 {
+		//	log.Printf("Error: password is empty")
+		//	return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+		//}
 
 		fmt.Println(u.Password)
 		fmt.Println(11111111111)

@@ -65,11 +65,13 @@ function RegisterForm({ onRegister }) {
                             Your email
                         </Typography>
                         <Input
+                            variant="outlined"
+                            label="Email"
                             size="lg"
                             type="email"
                             color="lightBlue"
                             outline={true}
-                            placeholder="name@mail.com"
+                            // placeholder="Email"
                             value={email}
                             onChange={ handleEmailChange }
                             error={!!emailError}
@@ -78,11 +80,13 @@ function RegisterForm({ onRegister }) {
                             Password
                         </Typography>
                         <Input
+                            variant="outlined"
+                            label="Password"
                             type="password"
                             color="lightBlue"
                             size="regular"
                             outline={true}
-                            placeholder="Password"
+                            // placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
@@ -101,11 +105,13 @@ function RegisterForm({ onRegister }) {
                             Confirm Password
                         </Typography>
                         <Input
+                            variant="outlined"
+                            label="Confirm Password"
                             type="password"
                             color="lightBlue"
                             size="regular"
                             outline={true}
-                            placeholder="Confirm Password"
+                            // placeholder="ConfirmPassword"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />

@@ -108,6 +108,10 @@ func init() {
 			return nil
 		}
 	}()
+	// userDescBio is the schema descriptor for bio field.
+	userDescBio := userFields[3].Descriptor()
+	// user.BioValidator is a validator for the "bio" field. It is called by the builders before save.
+	user.BioValidator = userDescBio.Validators[0].(func(string) error)
 	// userDescUsername is the schema descriptor for username field.
 	userDescUsername := userFields[4].Descriptor()
 	// user.UsernameValidator is a validator for the "username" field. It is called by the builders before save.

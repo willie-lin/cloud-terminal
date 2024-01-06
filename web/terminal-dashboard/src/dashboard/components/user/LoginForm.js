@@ -77,14 +77,16 @@ function LoginForm({ onLogin }) {
                 <form onSubmit={handleSubmit} className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
                     <div className="mb-1 flex flex-col gap-6">
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                            Your email
+                            Your Email
                         </Typography>
                         <Input
+                            variant="outlined"
+                            label="Email"
                             type="email"
                             color="lightBlue"
                             size="regular"
                             outline={true}
-                            placeholder="name@mail.com"
+                            // placeholder="email"
                             value={email}
                             onChange={handleEmailChange}
                             error={!!emailError}
@@ -93,11 +95,13 @@ function LoginForm({ onLogin }) {
                             Password
                         </Typography>
                         <Input
+                            variant="outlined"
+                            label="Password"
                             type="password"
                             color="lightBlue"
                             size="regular"
                             outline={true}
-                            placeholder="********"
+                            // placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
@@ -107,11 +111,13 @@ function LoginForm({ onLogin }) {
                                     OTP
                                 </Typography>
                                 <Input
+                                    variant="outlined"
+                                    label="OTP"
                                     type="text"
                                     color="lightBlue"
                                     size="regular"
                                     outline={true}
-                                    placeholder="OTP"
+                                    // placeholder="OTP"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value)}
                                 />

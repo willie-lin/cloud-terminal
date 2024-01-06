@@ -95,6 +95,8 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// NicknameValidator is a validator for the "nickname" field. It is called by the builders before save.
 	NicknameValidator func(string) error
+	// BioValidator is a validator for the "bio" field. It is called by the builders before save.
+	BioValidator func(string) error
 	// UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	UsernameValidator func(string) error
 	// PasswordValidator is a validator for the "password" field. It is called by the builders before save.
