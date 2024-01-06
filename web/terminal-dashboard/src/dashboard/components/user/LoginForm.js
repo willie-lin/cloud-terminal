@@ -62,7 +62,7 @@ function LoginForm({ onLogin }) {
             // setLoginError(error.message);
             // console.error(error);
             console.error("Error during login:", error);
-            setLoginError('用户名或密码错误');
+            setLoginError('用户名或密码错误或者OTP错误');
             setTimeout(() => setLoginError(''), 1000); // 1秒后清除错误信息
         }
     };
