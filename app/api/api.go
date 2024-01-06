@@ -57,7 +57,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, err.Error())
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		fmt.Println(u.Password)
 
@@ -65,15 +65,15 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		hashedPassword, err := utils.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
 		if err != nil {
 			log.Printf("Error hashing password: %v", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
 		user, err := client.User.Create().SetEmail(u.Email).SetUsername(username).SetPassword(string(hashedPassword)).Save(context.Background())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusCreated, user)
+		return c.JSON(http.StatusCreated, user.ID)
 	}
 }
 
@@ -82,7 +82,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, err.Error())
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		fmt.Println(u)
 		fmt.Println(u.Email)
@@ -90,11 +90,11 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		us, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, "User-not-found")
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error-querying-user")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		fmt.Println(us)
 		if len(u.Password) == 0 {
@@ -105,12 +105,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(u.Password)
 		fmt.Println(11111111111)
 		fmt.Println(us.Password)
-
-		// 假设 u.Password 是前端发送的哈希值
-		//hashedPassword, err := utils.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
-		//if err != nil {
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		//}
 		// 假设 us.Password 是数据库中存储的哈希值
 		err = bcrypt.CompareHashAndPassword([]byte(us.Password), []byte(u.Password))
 		if err != nil {
@@ -126,7 +120,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			//valid := utils.ValidateOTP(us.TotpSecret, otp)
 			valid := totp.Validate(otp, us.TotpSecret)
 			if !valid {
-				return c.JSON(http.StatusForbidden, "Invalid-OTP")
+				return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 			}
 		}
 		_, err = client.User.
@@ -135,21 +129,21 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			Save(context.Background())
 		if err != nil {
 			log.Printf("Error updating last login time: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error updating last login time")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
 		// 生成JWT
 		token, err := utils.GenerateToken(us.Username)
 		if err != nil {
 			log.Printf("Error generating token: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error generating token")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
 		// 生成Refresh Token
 		refreshToken, err := utils.GenerateRefreshToken(us.Username)
 		if err != nil {
 			log.Printf("Error generating refresh token: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error generating refresh token")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
 		// 登录成功后，保存用户的登录信息到session
@@ -175,31 +169,31 @@ func ForgotPassword(client *ent.Client) echo.HandlerFunc {
 		u := new(ent.User)
 		if err := c.Bind(u); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, err.Error())
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		fmt.Println(u)
 
 		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, "User-not-found")
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error-querying-user")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		// 使用你的方法来创建密码的哈希值
 		hashedPassword, err := utils.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
 		if err != nil {
 			log.Printf("Error hashing password: %v", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
 		_, err = client.User.
 			UpdateOne(ua).SetPassword(string(hashedPassword)).Save(context.Background())
 		if err != nil {
 			log.Printf("Error updating password: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error updating password")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusOK, "Password reset successful, please log in again.")
 	}

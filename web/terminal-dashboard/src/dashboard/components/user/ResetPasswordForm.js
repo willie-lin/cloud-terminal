@@ -27,6 +27,7 @@ function ResetPasswordForm({ onResetPassword }) {
         }
     };
 
+    const CryptoJS = require("crypto-js");
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (step === 1) {
@@ -40,7 +41,9 @@ function ResetPasswordForm({ onResetPassword }) {
         else if (step === 2) {
             if (password === confirmPassword) {
                 try {
-                    const data = await resetPassword(email, password);
+                    // 对密码进行哈希处理
+                    const hashedPassword = CryptoJS.SHA256(password).toString();
+                    const data = await resetPassword(email, hashedPassword);
                     console.log(data)
                     alert("reset Password ✅");
                     navigate('/login'); // 跳转到登录页面
