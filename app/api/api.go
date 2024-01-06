@@ -11,7 +11,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
-	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -99,16 +98,16 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		fmt.Println(us)
-		//if len(u.Password) == 0 {
-		//	log.Printf("Error: password is empty")
-		//	return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
-		//}
+		if len(u.Password) == 0 {
+			log.Printf("Error: password is empty")
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Password is empty"})
+		}
 
 		fmt.Println(u.Password)
 		fmt.Println(11111111111)
 		fmt.Println(us.Password)
 		// 假设 us.Password 是数据库中存储的哈希值
-		err = bcrypt.CompareHashAndPassword([]byte(us.Password), []byte(u.Password))
+		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(u.Password))
 		if err != nil {
 			log.Printf("Error comparing password: %v", err)
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
