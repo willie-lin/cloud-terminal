@@ -15,7 +15,7 @@ import (
 func Enable2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -57,7 +57,7 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -80,7 +80,7 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 func Check2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}

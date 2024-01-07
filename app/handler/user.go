@@ -23,7 +23,7 @@ import (
 func CreateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -74,7 +74,7 @@ func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -96,7 +96,7 @@ func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -118,7 +118,7 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 func UpdateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -239,7 +239,7 @@ func UploadFile() echo.HandlerFunc {
 func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -268,7 +268,7 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 func UpdateUserByUUID(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}

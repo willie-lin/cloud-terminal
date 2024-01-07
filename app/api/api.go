@@ -21,7 +21,7 @@ import (
 func CheckEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -54,7 +54,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		username := generateUsername()
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -79,7 +79,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 func LoginUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
@@ -170,7 +170,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 func ForgotPassword(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(ent.User)
-		if err := c.Bind(u); err != nil {
+		if err := c.Bind(&u); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}

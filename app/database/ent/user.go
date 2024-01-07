@@ -35,7 +35,9 @@ type User struct {
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
 	// Phone holds the value of the "phone" field.
-	Phone string `json:"phone,omitempty"`
+	Phone string `json:"phone
+UserType string
+`
 	// TotpSecret holds the value of the "totp_secret" field.
 	TotpSecret string `json:"totp_secret,omitempty"`
 	// Online holds the value of the "online" field.
