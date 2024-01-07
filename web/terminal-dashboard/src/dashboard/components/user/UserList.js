@@ -74,17 +74,6 @@ function UserList({ email }) {
                 <CardBody className="overflow-scroll px-0">
                     <table className="mt-4 w-full min-w-max table-auto text-left">
                         <thead>
-                        {/*<tr>{['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (*/}
-                        {/*    <th key={head} className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50">*/}
-                        {/*            <Typography variant="small" color="blue-gray" className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">*/}
-                        {/*                {head}{" "}*/}
-                        {/*                {index !== 7 && (*/}
-                        {/*                    <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4"/>*/}
-                        {/*                )}*/}
-                        {/*            </Typography>*/}
-                        {/*        </th>*/}
-                        {/*    ))}*/}
-                        {/*</tr>*/}
                         <tr>
                             {users && users.length > 0 && ['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (
                                 <th key={head} className="p-4 border-b border-blue-gray-50">
