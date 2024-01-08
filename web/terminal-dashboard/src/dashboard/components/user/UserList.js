@@ -13,6 +13,7 @@ import {
 } from "@material-tailwind/react";
 import {ChevronUpDownIcon, MagnifyingGlassIcon, PencilIcon, UserPlusIcon} from "@heroicons/react/16/solid";
 import {useFetchUsers} from "./UserHook";
+import {useState} from "react";
 
 function UserList({ email }) {
 
@@ -32,6 +33,23 @@ function UserList({ email }) {
     ];
 
     const users = useFetchUsers();
+    const [page, setPage] = useState(1);
+    const totalPages = 10;
+
+    const handlePrevious = () => {
+        if (page > 1) {
+            setPage(page - 1);
+        }
+    };
+
+    const handleNext = () => {
+        if (page < totalPages) {
+            setPage(page + 1);
+        }
+    };
+
+
+
     return (
             <Card className="h-full w-full">
                 <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -77,6 +95,7 @@ function UserList({ email }) {
                         <tr>
                             {users && users.length > 0 && ['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (
                                 <th key={head} className="p-4 border-b border-blue-gray-50">
+                                    {/*className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50" >*/}
                                     <div className="flex items-center justify-between gap-2">
                                         <Typography variant="small" color="blue-gray" className="font-normal">
                                             {head}
@@ -88,9 +107,8 @@ function UserList({ email }) {
                                 </th>
                             ))}
                         </tr>
-
                         </thead>
-                        {/*<tbody>*/}
+                        <tbody>
                         {users.map((user, index) => {
                             const isLast = index === users.length - 1;
                             const classes = isLast
@@ -200,23 +218,25 @@ function UserList({ email }) {
                                 );
                             },
                         )}
-                        {/*</tbody>*/}
+                        </tbody>
                     </table>
+                    {/*<DefaultPagination className="items-center" />*/}
+
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                     <Typography variant="small" color="blue-gray" className="font-normal">
-                        Page 1 of 10
+                        Page {page} of {totalPages}
                     </Typography>
                     <div className="flex gap-2">
-                        <Button variant="outlined" size="sm">
+                        <Button variant="outlined" size="sm" onClick={handlePrevious}>
                             Previous
                         </Button>
-                        <Button variant="outlined" size="sm">
+                        <Button variant="outlined" size="sm" onClick={handleNext}>
                             Next
                         </Button>
                     </div>
                 </CardFooter>
             </Card>
-    );
+);
 }
 export default UserList;
