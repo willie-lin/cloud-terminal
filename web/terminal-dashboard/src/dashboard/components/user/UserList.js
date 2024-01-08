@@ -15,7 +15,7 @@ import {ChevronUpDownIcon, MagnifyingGlassIcon, PencilIcon, UserPlusIcon} from "
 import {useFetchUsers} from "./UserHook";
 import {useState} from "react";
 
-function UserList({ email }) {
+function UserList() {
 
     const TABS = [
         {
@@ -32,9 +32,32 @@ function UserList({ email }) {
         },
     ];
 
+    const [sortField, setSortField] = useState(null);
+    const [sortDirection, setSortDirection] = useState('asc');
+    const headers = ['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'];
+
+    const handleSort = (field) => {
+        if (sortField === field) {
+            // 如果已经在按这个字段排序，那么改变排序方向
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            // 否则，按这个字段进行升序排序
+            setSortField(field);
+            setSortDirection('asc');
+        }
+
+        // 在这里，你应该根据sortField和sortDirection来更新你的数据
+    };
+
+
     const users = useFetchUsers();
     const [page, setPage] = useState(1);
-    const totalPages = 10;
+    const usersPerPage = 10;
+    const totalPages = Math.ceil(users.length / usersPerPage);
+
+    const indexOfLastUser = page * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
 
     const handlePrevious = () => {
         if (page > 1) {
@@ -47,8 +70,6 @@ function UserList({ email }) {
             setPage(page + 1);
         }
     };
-
-
 
     return (
             <Card className="h-full w-full">
@@ -89,139 +110,139 @@ function UserList({ email }) {
                         </div>
                     </div>
                 </CardHeader>
-                <CardBody className="overflow-scroll px-0">
-                    <table className="mt-4 w-full min-w-max table-auto text-left">
-                        <thead>
-                        <tr>
-                            {users && users.length > 0 && ['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'].map((head, index) => (
-                                <th key={head} className="p-4 border-b border-blue-gray-50">
-                                    {/*className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50" >*/}
-                                    <div className="flex items-center justify-between gap-2">
-                                        <Typography variant="small" color="blue-gray" className="font-normal">
-                                            {head}
-                                        </Typography>
-                                        {index !== 7 && (
-                                            <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4"/>
-                                        )}
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {users.map((user, index) => {
-                            const isLast = index === users.length - 1;
-                            const classes = isLast
-                                ? "p-4"
-                                : "p-4 border-b border-blue-gray-50";
 
-                            return (
-                                <tr key={user.id}>
-                                    <td className={classes}>
-                                    <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.id}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex items-center gap-3">
-                                                {/* 这里可以添加Avatar组件 */}
-                                                <Avatar src={user.avatar} alt={user.nickname} size="sm"/>
+                <CardBody className="overflow-scroll px-0">
+                        <table className="mt-4 w-full min-w-max table-auto text-left">
+                            <thead className="sticky top-0 bg-white">
+                            <tr>
+                                {headers.map((head, index) => (
+                                    // <th key={head} className="p-4 border-b border-blue-gray-50"
+                                    <th key={head}  className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50" onClick={() => handleSort(head)}>
+                                            <Typography variant="small" color="blue-gray" className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
+                                                {head}
+                                            {index !== 7 && (
+                                                <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4"/>
+                                            )}
+                                            </Typography>
+                                    </th>
+                                ))}
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {/*{users.map((user, index) => {*/}
+                            {currentUsers.map((user, index) => {
+                                    const isLast = index === users.length - 1;
+                                    const classes = isLast
+                                        ? "p-4"
+                                        : "p-4 border-b border-blue-gray-50";
+
+                                    return (
+                                        <tr key={user.id}>
+                                            <td className={classes}>
                                                 <div className="flex flex-col">
                                                     <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.nickname}
+                                                        {user.id}
                                                     </Typography>
-                                                    <Typography variant="small" color="blue-gray" className="font-normal opacity-70">
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex items-center gap-3">
+                                                    {/* 这里可以添加Avatar组件 */}
+                                                    <Avatar src={user.avatar} alt={user.nickname} size="sm"/>
+                                                    <div className="flex flex-col">
+                                                        <Typography variant="small" color="blue-gray" className="font-normal">
+                                                            {user.nickname}
+                                                        </Typography>
+                                                        <Typography variant="small" color="blue-gray"
+                                                                    className="font-normal">
+                                                            {user.email}
+                                                        </Typography>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        {user.username}
+                                                    </Typography>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
                                                         {user.email}
                                                     </Typography>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.username}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.email}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.phone}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.bio}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.totp_secret}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="w-max">
-                                                <Chip variant="ghost" size="sm" value={user.online ? "在线" : "离线"} color={user.online ? "green" : "blue-gray"}
-                                                />
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.enable_type ? '启用' : '禁用'}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.created_at}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.updated_at}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <div className="flex flex-col">
-                                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                                    {user.last_login_time}
-                                                </Typography>
-                                            </div>
-                                        </td>
-                                        <td className={classes}>
-                                            <Tooltip content="修改用户">
-                                                <IconButton variant="text">
-                                                    <PencilIcon className="h-4 w-4"/>
-                                                </IconButton>
-                                            </Tooltip>
-                                        </td>
-                                    </tr>
-                                );
-                            },
-                        )}
-                        </tbody>
-                    </table>
-                    {/*<DefaultPagination className="items-center" />*/}
-
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        {user.phone}
+                                                    </Typography>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        {user.bio}
+                                                    </Typography>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        {user.totp_secret}
+                                                    </Typography>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="w-max">
+                                                    <Chip variant="ghost" size="sm" value={user.online ? "在线" : "离线"}
+                                                          color={user.online ? "green" : "blue-gray"}
+                                                    />
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        {user.enable_type ? '启用' : '禁用'}
+                                                    </Typography>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        {user.created_at}
+                                                    </Typography>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        {user.updated_at}
+                                                    </Typography>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <div className="flex flex-col">
+                                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        {user.last_login_time}
+                                                    </Typography>
+                                                </div>
+                                            </td>
+                                            <td className={classes}>
+                                                <Tooltip content="修改用户">
+                                                    <IconButton variant="text">
+                                                        <PencilIcon className="h-4 w-4"/>
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </td>
+                                        </tr>
+                                    );
+                                },
+                            )}
+                            </tbody>
+                        </table>
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                     <Typography variant="small" color="blue-gray" className="font-normal">

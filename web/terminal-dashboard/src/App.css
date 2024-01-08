@@ -64,4 +64,17 @@
   }
 }
 
+.break-all {
+  word-break: break-all;
+}
+
+th, td {
+  width: 100px;
+}
+
+td {
+  word-break: break-all;
+}
+
+
 
