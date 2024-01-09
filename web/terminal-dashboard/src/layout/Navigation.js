@@ -1,10 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {Button} from "@material-tailwind/react";
 
 const Navigation = ({ isLoggedIn, onLogout }) => {
     return (
-        <div className="bg-white fixed w-full z-50">
+        <div className="fixed w-full z-10">
             <div className="mx-auto px-6">
                 <div className="flex justify-between items-center py-2">
                     <Link to="/">

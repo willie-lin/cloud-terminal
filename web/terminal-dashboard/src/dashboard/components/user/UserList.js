@@ -73,10 +73,10 @@ function UserList() {
 
     return (
             <Card className="h-full w-full">
-                <CardHeader floated={false} shadow={false} className="rounded-none">
-                    <div className="mb-8 flex items-center justify-between gap-8">
+                <CardHeader floated={true} shadow={false} className="rounded-none">
+                    <div className="flex items-center justify-between gap-4 mb-1">
                         <div>
-                            <Typography variant="h5" color="blue-gray">
+                            <Typography variant="h4" color="blue-gray">
                                 Users list
                             </Typography>
                             <Typography color="gray" className="mt-1 font-normal">
@@ -105,19 +105,19 @@ function UserList() {
                         <div className="w-full md:w-72">
                             <Input
                                 label="Search"
-                                icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+                                icon={<MagnifyingGlassIcon className="h-4 w-4" />}
                             />
                         </div>
                     </div>
                 </CardHeader>
 
-                <CardBody className="overflow-scroll px-0">
-                        <table className="mt-4 w-full min-w-max table-auto text-left">
-                            <thead className="sticky top-0 bg-white">
+                <CardBody className="overflow-scroll justify-between px-2 mt-0">
+                        <table className="mt-1 w-full min-w-max table-auto text-left">
+                            <thead className="sticky top-2">
                             <tr>
                                 {headers.map((head, index) => (
-                                    // <th key={head} className="p-4 border-b border-blue-gray-50"
-                                    <th key={head}  className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50" onClick={() => handleSort(head)}>
+                                    // <th key={head} className="p-4 border-b border-blue-gray-50">
+                                    <th key={head}  className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 transition-colors hover:bg-blue-gray-50" onClick={() => handleSort(head)}>
                                             <Typography variant="small" color="blue-gray" className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
                                                 {head}
                                             {index !== 7 && (

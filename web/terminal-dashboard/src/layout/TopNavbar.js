@@ -4,7 +4,7 @@ import {Cog6ToothIcon} from "@heroicons/react/24/solid";
 
 function TopNavbar() {
     return (
-    <div className="flex justify-start items-center w-full p-4">
+    <div className="flex justify-start items-center w-full p-2 ">
         <BreadCrumbNavigation/>
         <div className="group relative ml-auto">
             <Input
