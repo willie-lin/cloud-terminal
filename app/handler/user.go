@@ -58,11 +58,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 // GetAllUsers 获取所有用户
 func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		//users, err := client.User.Query().All(context.Background())
 		users, err := client.User.Query().All(c.Request().Context())
-		if ent.IsNotFound(err) {
-			return c.JSON(http.StatusNotFound, err.Error())
-		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
@@ -73,13 +69,17 @@ func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 // GetUserByUsername 根据用户名查找
 func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
+		// DTO
+		type UsernameDTO struct {
+			Username string `json:"username`
+		}
+		dto := new(UsernameDTO)
+		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 
-		un, err := client.User.Query().Where(user.UsernameEQ(u.Username)).Only(context.Background())
+		us, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusBadRequest, err.Error())
@@ -88,20 +88,25 @@ func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		return c.JSON(http.StatusOK, un)
+		return c.JSON(http.StatusOK, us.Username)
 	}
 }
 
 // GetUserByEmail 根据邮箱查找用户
 func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
+		// EmailDTO
+		type EmailDTO struct {
+			Email string `json:"email"`
+		}
+
+		dto := new(EmailDTO)
+		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 
-		ue, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+		ue, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, err.Error())
@@ -110,7 +115,7 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		return c.JSON(http.StatusOK, ue)
+		return c.JSON(http.StatusOK, ue.Email)
 	}
 }
 

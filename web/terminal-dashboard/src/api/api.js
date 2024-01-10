@@ -85,9 +85,9 @@ export const enable2FA = async (email) => {
 };
 
 // Confirm2FA
-export const confirm2FA = async (email, totp_Secret) => {
+export const confirm2FA = async (email, otp) => {
     try {
-        const response = await api.post('/api/confirm-2FA', { email, totp_Secret });
+        const response = await api.post('/api/confirm-2FA', { email, otp });
         if (response.status === 400) {
             throw new Error('Invalid TOTP secret');
         }
