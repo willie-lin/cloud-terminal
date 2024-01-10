@@ -17,6 +17,7 @@ function Dashboard({ isLoggedIn, onLogout, email }) {
                     <TopNavbar/>
                 </div>
                 <div className="sticky p-4 mt-0 flex-grow overflow-auto">
+                {/*<div className="flex-grow p-4 overflow-auto">*/}
                     <Outlet/>
                 </div>
                 <div className="sticky bottom-0">

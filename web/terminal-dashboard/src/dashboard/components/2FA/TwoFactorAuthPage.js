@@ -74,18 +74,20 @@ function useTwoFactorAuth(email) {
 function TwoFactorAuthPage({ email }) {
     const { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler } = useTwoFactorAuth(email);
     return (
-        <div>
-            <div className="flex flex-col items-center justify-center h-screen">
-                {error && <p>{error}</p>}
-                {loading && <p>加载中...</p>}
-                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
+        <div className="flex flex-col items-center justify-center flex-grow bg-gray-200">
+            <div
+                className="p-6 mt-6 text-left border w-96 rounded-xl hover:shadow-xl transition-shadow duration-300 ease-in-out">
+                {error && <p className="text-red-500">{error}</p>}
+                {loading && <p className="text-blue-500">加载中...</p>}
+                {userInfo && <Typography color="blue-gray" className="font-medium text-black textGradient">
                     用户名: {userInfo.email}。
                 </Typography>}
                 {isConfirmed ? (
-                    <p>✅ 已开启二次认证防护！</p>
+                    <p className="text-green-500 text-lg">✅ 已开启二次认证防护！</p>
                 ) : (
                     <>
-                        {!qrGenerated && <p>你还没有开启二次验证，开启二次验证可以提高账户的安全性。</p>}
+                        {!qrGenerated &&
+                            <p className="text-black text-lg">你还没有开启二次验证，开启二次验证可以提高账户的安全性。</p>}
                         {!qrGenerated && <Button
                             color="lightBlue"
                             buttonType="filled"
@@ -95,10 +97,12 @@ function TwoFactorAuthPage({ email }) {
                             iconOnly={false}
                             ripple="light"
                             onClick={generateQRCode}
+                            className="mt-4"
                         >
                             生成二次验证二维码
                         </Button>}
-                        {qrGenerated && qrCode && <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"/>}
+                        {qrGenerated && qrCode &&
+                            <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码" className="mt-4"/>}
                         {qrGenerated && qrCode && <input
                             type="text"
                             value={otp}
@@ -111,7 +115,9 @@ function TwoFactorAuthPage({ email }) {
                                 padding: '5px', // 添加内边距
                                 borderRadius: '5px', // 添加边框圆角
                                 marginBottom: '20px', // 增加下边距
+                                textAlign: 'center', // 文字居中
                             }}
+                            className="mt-4"
                         />}
                         {qrGenerated && qrCode && <Button
                             color="lightBlue"
@@ -122,6 +128,7 @@ function TwoFactorAuthPage({ email }) {
                             iconOnly={false}
                             ripple="light"
                             onClick={confirm2FAHandler}
+                            className="mt-4"
                         >
                             确认二次验证
                         </Button>}
