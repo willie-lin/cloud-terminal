@@ -111,19 +111,23 @@ function UserList() {
                     </div>
                 </CardHeader>
 
-                <CardBody className="overflow-scroll justify-between px-2 mt-0">
+                <CardBody className="overflow-auto justify-between px-4 flex-grow mt-0">
+                    <div className="overflow-auto" style={{maxHeight: 'calc(100vh - 200px)'}}>
                         <table className="mt-1 w-full min-w-max table-auto text-left">
-                            <thead className="sticky top-2">
+                            <thead className="sticky top-0">
                             <tr>
                                 {headers.map((head, index) => (
                                     // <th key={head} className="p-4 border-b border-blue-gray-50">
-                                    <th key={head}  className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 transition-colors hover:bg-blue-gray-50" onClick={() => handleSort(head)}>
-                                            <Typography variant="small" color="blue-gray" className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
-                                                {head}
+                                    <th key={head}
+                                        className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 transition-colors hover:bg-blue-gray-50"
+                                        onClick={() => handleSort(head)}>
+                                        <Typography variant="small" color="blue-gray"
+                                                    className="flex items-center justify-between gap-2 font-normal leading-none opacity-70">
+                                            {head}
                                             {index !== 7 && (
                                                 <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4"/>
                                             )}
-                                            </Typography>
+                                        </Typography>
                                     </th>
                                 ))}
                             </tr>
@@ -133,8 +137,8 @@ function UserList() {
                             {currentUsers.map((user, index) => {
                                     const isLast = index === users.length - 1;
                                     const classes = isLast
-                                        ? "p-4"
-                                        : "p-4 border-b border-blue-gray-50";
+                                        ? "p-2"
+                                        : "p-2 border-b border-blue-gray-50";
 
                                     return (
                                         <tr key={user.id}>
@@ -150,7 +154,8 @@ function UserList() {
                                                     {/* 这里可以添加Avatar组件 */}
                                                     <Avatar src={user.avatar} alt={user.nickname} size="sm"/>
                                                     <div className="flex flex-col">
-                                                        <Typography variant="small" color="blue-gray" className="font-normal">
+                                                        <Typography variant="small" color="blue-gray"
+                                                                    className="font-normal">
                                                             {user.nickname}
                                                         </Typography>
                                                         <Typography variant="small" color="blue-gray"
@@ -243,8 +248,9 @@ function UserList() {
                             )}
                             </tbody>
                         </table>
+                    </div>
                 </CardBody>
-                <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
+                <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">
                     <Typography variant="small" color="blue-gray" className="font-normal">
                         Page {page} of {totalPages}
                     </Typography>
