@@ -67,29 +67,36 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
-		user, err := client.User.Create().SetEmail(u.Email).SetUsername(username).SetPassword(string(hashedPassword)).Save(context.Background())
+		us, err := client.User.Create().SetEmail(u.Email).SetUsername(username).SetPassword(string(hashedPassword)).Save(context.Background())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-		return c.JSON(http.StatusCreated, user.ID)
+		return c.JSON(http.StatusCreated, us.ID)
 	}
 }
 
 func LoginUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
+		type LoginDTO struct {
+			Email    string  `json:"email"`
+			Password string  `json:"password"`
+			OTP      *string `json:"otp,omitempty"`
+		}
+
+		dto := new(LoginDTO)
+		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		fmt.Println(u)
-		fmt.Println(u.Email)
-		fmt.Println(u.Password)
-		fmt.Println(len(u.Password))
-		fmt.Println(11111)
+		//fmt.Println(dto)
+		//fmt.Println(dto.Email)
+		//fmt.Println(dto.Password)
+		//fmt.Println(dto.OTP)
+		//fmt.Println(len(dto.Password))
+		//fmt.Println(11111)
 
-		us, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
@@ -98,34 +105,34 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-
-		fmt.Println(us)
-		if len(u.Password) == 0 {
+		if len(dto.Password) == 0 {
 			log.Printf("Error: password is empty")
 			return c.JSON(http.StatusForbidden, map[string]string{"error": "Password is empty"})
 		}
-
-		fmt.Println(u.Password)
-		fmt.Println(11111111111)
-		fmt.Println(us.Password)
+		//
+		//fmt.Println(dto.Password)
+		//fmt.Println(2222222222)
+		//fmt.Println(us.Password)
 		// 假设 us.Password 是数据库中存储的哈希值
-		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(u.Password))
+		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(dto.Password))
 		if err != nil {
 			log.Printf("Error comparing password: %v", err)
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 		}
 
+		//fmt.Println(3333333333)
 		// 检查用户是否已经绑定了二次验证（2FA）
 		if us.TotpSecret != "" {
 			// 验证用户提供的OTP
-			otp := u.TotpSecret
-			fmt.Println(otp)
-			//valid := utils.ValidateOTP(us.TotpSecret, otp)
-			valid := totp.Validate(otp, us.TotpSecret)
-			if !valid {
-				return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+			otp := dto.OTP
+			if otp != nil {
+				valid := totp.Validate(*otp, us.TotpSecret)
+				if !valid {
+					return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+				}
 			}
 		}
+		//fmt.Println(444444444)
 		_, err = client.User.
 			UpdateOne(us).
 			SetLastLoginTime(time.Now()).
@@ -137,6 +144,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 生成JWT
 		token, err := utils.GenerateToken(us.Username)
+		//token, err := utils.GenerateToken(string(111))
 		if err != nil {
 			log.Printf("Error generating token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -144,6 +152,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 生成Refresh Token
 		refreshToken, err := utils.GenerateRefreshToken(us.Username)
+		//refreshToken, err := utils.GenerateRefreshToken(string(222))
 		if err != nil {
 			log.Printf("Error generating refresh token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -156,13 +165,15 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			MaxAge:   86400 * 7, // 设置session的过期时间
 			HttpOnly: true,
 		}
-		sess.Values["username"] = user.Username // 保存用户名到session
-		sess.Save(c.Request(), c.Response())
+		sess.Values["username"] = us.Username // 保存用户名到session
+		err = sess.Save(c.Request(), c.Response())
+		if err != nil {
+			return err
+		}
 
 		return c.JSON(http.StatusOK, map[string]string{
 			"token":         token,
-			"refresh_token": refreshToken,
-		})
+			"refresh_token": refreshToken})
 	}
 }
 

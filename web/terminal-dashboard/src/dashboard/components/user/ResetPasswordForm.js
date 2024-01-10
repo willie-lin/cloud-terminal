@@ -73,6 +73,8 @@ function ResetPasswordForm({ onResetPassword }) {
                     </Typography>
                     <Input
                         type="email"
+                        variant="outlined"
+                        label="Email"
                         color="lightBlue"
                         size="regular"
                         outline={true}
@@ -90,7 +92,9 @@ function ResetPasswordForm({ onResetPassword }) {
                         Password
                     </Typography>
                     <Input
+                        variant="outlined"
                         type="password"
+                        label="Password"
                         color="lightBlue"
                         size="regular"
                         outline={true}
@@ -103,6 +107,8 @@ function ResetPasswordForm({ onResetPassword }) {
                     </Typography>
                     <Input
                         type="password"
+                        variant="outlined"
+                        label="Password"
                         color="lightBlue"
                         size="regular"
                         outline={true}
