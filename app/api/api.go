@@ -95,18 +95,18 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		dto := new(LoginDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
 		//fmt.Println(dto.OTP)
 		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
 		if len(dto.Password) == 0 {
 			log.Printf("Error: password is empty")
@@ -116,21 +116,21 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(dto.Password))
 		if err != nil {
 			log.Printf("Error comparing password: %v", err)
-			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Invalid password"})
 		}
 
 		// 检查用户是否已经绑定了二次验证（2FA）
 		if us.TotpSecret != "" {
 			// 用户已经启用了OTP，所以必须提供OTP
 			if dto.OTP == nil {
-				log.Printf("Error: OTP是必需的")
-				return c.JSON(http.StatusForbidden, map[string]string{"error": "OTP是必需的"})
+				log.Printf("Error: OTP is required")
+				return c.JSON(http.StatusForbidden, map[string]string{"error": "OTP is required"})
 			}
 			// 验证用户提供的OTP
 			valid := totp.Validate(*dto.OTP, us.TotpSecret)
 			if !valid {
-				log.Printf("Error: 无效的OTP")
-				return c.JSON(http.StatusForbidden, map[string]string{"error": "无效的OTP"})
+				log.Printf("Error: Invalid OTP")
+				return c.JSON(http.StatusForbidden, map[string]string{"error": "Invalid OTP"})
 			}
 		}
 		// update user LastLoginTime
@@ -140,7 +140,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			Save(context.Background())
 		if err != nil {
 			log.Printf("Error updating last login time: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
 
 		// 生成JWT
@@ -148,7 +148,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		//token, err := utils.GenerateToken(string(111))
 		if err != nil {
 			log.Printf("Error generating token: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating token"})
 		}
 
 		// 生成Refresh Token
@@ -156,11 +156,16 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		//refreshToken, err := utils.GenerateRefreshToken(string(222))
 		if err != nil {
 			log.Printf("Error generating refresh token: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating refresh token"})
 		}
 
 		// 登录成功后，保存用户的登录信息到session
 		sess, _ := session.Get("session", c)
+		if err != nil {
+			log.Printf("Error getting session: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error getting session"})
+		}
+
 		sess.Options = &sessions.Options{
 			Path:     "/",
 			MaxAge:   86400 * 7, // 设置session的过期时间
@@ -169,7 +174,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		sess.Values["username"] = us.Username // 保存用户名到session
 		err = sess.Save(c.Request(), c.Response())
 		if err != nil {
-			return err
+			log.Printf("Error saving session: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving session"})
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{
