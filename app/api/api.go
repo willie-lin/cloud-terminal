@@ -56,26 +56,31 @@ func generateUsername() string {
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		username := generateUsername()
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
-			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		type UserDTO struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
 		}
-		fmt.Println(u.Password)
+
+		dto := new(UserDTO)
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+		fmt.Println(dto.Password)
 
 		// 使用你的方法来创建密码的哈希值
-		hashedPassword, err := utils.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
+		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
 		if err != nil {
 			log.Printf("Error hashing password: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		us, err := client.User.Create().SetEmail(u.Email).SetUsername(username).SetPassword(string(hashedPassword)).Save(context.Background())
+		us, err := client.User.Create().SetEmail(dto.Email).SetUsername(username).SetPassword(string(hashedPassword)).Save(context.Background())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
 		}
-		return c.JSON(http.StatusCreated, us.ID)
+		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
 	}
 }
 
