@@ -184,38 +184,42 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// ForgotPassword  reset password
-func ForgotPassword(client *ent.Client) echo.HandlerFunc {
+// ResetPassword  reset password
+func ResetPassword(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
-			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		type UserDTO struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
 		}
-		fmt.Println(u)
 
-		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+		dto := new(UserDTO)
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
+		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
 		// 使用你的方法来创建密码的哈希值
-		hashedPassword, err := utils.GenerateFromPassword([]byte(u.Password), utils.DefaultCost)
+		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
 		if err != nil {
 			log.Printf("Error hashing password: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
 		_, err = client.User.
 			UpdateOne(ua).SetPassword(string(hashedPassword)).Save(context.Background())
 		if err != nil {
 			log.Printf("Error updating password: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating password in database"})
 		}
-		return c.JSON(http.StatusOK, "Password reset successful, please log in again.")
+		return c.JSON(http.StatusOK, map[string]string{"message": "Password reset successful, please log in again."})
 	}
 }
