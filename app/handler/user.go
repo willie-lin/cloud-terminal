@@ -60,7 +60,8 @@ func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		users, err := client.User.Query().All(c.Request().Context())
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			log.Printf("Error querying users: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
 		}
 		return c.JSON(http.StatusOK, users)
 	}
@@ -70,23 +71,23 @@ func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// DTO
-		type UsernameDTO struct {
-			Username string `json:"username`
+		type UserDTO struct {
+			Username string `json:"username"`
 		}
-		dto := new(UsernameDTO)
+		dto := new(UserDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
 		us, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusBadRequest, err.Error())
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
 		return c.JSON(http.StatusOK, us.Username)
 	}
@@ -103,17 +104,17 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 		dto := new(EmailDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
 		ue, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, err.Error())
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
 		return c.JSON(http.StatusOK, ue)
 	}
@@ -243,28 +244,42 @@ func UploadFile() echo.HandlerFunc {
 
 func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
-			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		type UpdateUserDTO struct {
+			Email    string `json:"email"`
+			Nickname string `json:"nickname"`
+			Avatar   string `json:"avatar"`
+			Phone    string `json:"phone"`
+			Bio      string `json:"bio"`
 		}
+
+		dto := new(UpdateUserDTO)
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
 		// 从数据库中获取用户
-		ua, err := client.User.Query().Where(user.EmailEQ(u.Email)).Only(context.Background())
+		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
+		if ent.IsNotFound(err) {
+			log.Printf("User not found: %v", err)
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
-		// 存储头像路径
+
+		// 更新用户信息
 		_, err = client.User.
 			UpdateOne(ua).
-			SetNickname(u.Nickname).
-			SetAvatar(u.Avatar).
-			SetPhone(u.Phone).
-			SetBio(u.Bio).
+			SetNickname(dto.Nickname).
+			SetAvatar(dto.Avatar).
+			SetPhone(dto.Phone).
+			SetBio(dto.Bio).
 			Save(context.Background())
 		if err != nil {
-			log.Printf("Error saving avatar: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			log.Printf("Error updating user info: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating user info in database"})
 		}
 		return c.JSON(http.StatusOK, map[string]string{"img": ua.Avatar})
 	}

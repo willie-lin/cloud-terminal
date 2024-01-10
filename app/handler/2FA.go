@@ -24,12 +24,6 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		//// 从数据库中获取用户
-		//ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
-		//if err != nil {
-		//	log.Printf("Error querying user: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
-		//}
 
 		key, err := totp.Generate(totp.GenerateOpts{
 			Issuer:      "Cloud-Terminal",
@@ -48,16 +42,6 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 		}
 		b64 := base64.StdEncoding.EncodeToString(png)
 
-		// 不要在这里存储密钥，而是在确认OTP时存储
-		//// 存储密钥
-		//_, err = client.User.
-		//	UpdateOne(ua).
-		//	SetTotpSecret(key.Secret()).
-		//	Save(context.Background())
-		//if err != nil {
-		//	log.Printf("Error saving TOTP secret: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving TOTP secret"})
-		//}
 		return c.JSON(http.StatusOK, map[string]string{"qrCode": b64, "secret": key.Secret()})
 	}
 }
