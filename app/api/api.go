@@ -90,7 +90,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 
-		fmt.Println(dto.OTP)
+		//fmt.Println(dto.OTP)
 		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
@@ -111,22 +111,21 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 		}
 
-		//fmt.Println(3333333333)
 		// 检查用户是否已经绑定了二次验证（2FA）
 		if us.TotpSecret != "" {
 			// 用户已经启用了OTP，所以必须提供OTP
 			if dto.OTP == nil {
-				log.Printf("Error OTP是必需的: %v", err)
+				log.Printf("Error: OTP是必需的")
 				return c.JSON(http.StatusForbidden, map[string]string{"error": "OTP是必需的"})
 			}
 			// 验证用户提供的OTP
 			valid := totp.Validate(*dto.OTP, us.TotpSecret)
 			if !valid {
-				log.Printf("Error OTP error: %v", err)
-				return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+				log.Printf("Error: 无效的OTP")
+				return c.JSON(http.StatusForbidden, map[string]string{"error": "无效的OTP"})
 			}
 		}
-		//fmt.Println(444444444)
+		// update user LastLoginTime
 		_, err = client.User.
 			UpdateOne(us).
 			SetLastLoginTime(time.Now()).
