@@ -35,16 +35,16 @@ function UserInfo({ email }) {
             </Typography>
 
                 {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                            USERNAME: {userInfo.username}。
+                            USERNAME: {userInfo.username}
                 </Typography>}
                 {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                            EMAIL: {userInfo.email}。
+                            EMAIL: {userInfo.email}
                 </Typography>}
                 {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                            BIO: {userInfo.bio}。
+                            BIO: {userInfo.bio}
                 </Typography>}
                 <Typography color="blue-gray" className="font-medium" textGradient>
-                            TiME: {currentTime.toLocaleTimeString()}。
+                            TiME: {currentTime.toLocaleTimeString()}
                 </Typography>
             </CardBody>
             <Button onClick={handleEdit} color="lightBlue">Edit User</Button>

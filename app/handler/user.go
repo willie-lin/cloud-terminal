@@ -115,7 +115,7 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		return c.JSON(http.StatusOK, ue.Email)
+		return c.JSON(http.StatusOK, ue)
 	}
 }
 
