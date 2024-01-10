@@ -24,12 +24,12 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		// 从数据库中获取用户
-		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
-		if err != nil {
-			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
-		}
+		//// 从数据库中获取用户
+		//ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
+		//if err != nil {
+		//	log.Printf("Error querying user: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
+		//}
 
 		key, err := totp.Generate(totp.GenerateOpts{
 			Issuer:      "Cloud-Terminal",
@@ -47,16 +47,18 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error encoding QR code"})
 		}
 		b64 := base64.StdEncoding.EncodeToString(png)
-		// 存储密钥
-		_, err = client.User.
-			UpdateOne(ua).
-			SetTotpSecret(key.Secret()).
-			Save(context.Background())
-		if err != nil {
-			log.Printf("Error saving TOTP secret: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving TOTP secret"})
-		}
-		return c.JSON(http.StatusOK, map[string]string{"qrCode": b64})
+
+		// 不要在这里存储密钥，而是在确认OTP时存储
+		//// 存储密钥
+		//_, err = client.User.
+		//	UpdateOne(ua).
+		//	SetTotpSecret(key.Secret()).
+		//	Save(context.Background())
+		//if err != nil {
+		//	log.Printf("Error saving TOTP secret: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving TOTP secret"})
+		//}
+		return c.JSON(http.StatusOK, map[string]string{"qrCode": b64, "secret": key.Secret()})
 	}
 }
 
@@ -64,8 +66,9 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// EmailDTO
 		type UserDTO struct {
-			Email string  `json:"email"`
-			OTP   *string `json:"otp,omitempty"`
+			Email  string  `json:"email"`
+			OTP    *string `json:"otp,omitempty"`
+			Secret string  `json:"secret"`
 		}
 
 		dto := new(UserDTO)
@@ -76,6 +79,10 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
+		if ent.IsNotFound(err) {
+			log.Printf("User not found: %v", err)
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
@@ -85,9 +92,19 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "OTP is required"})
 		}
 
-		valid := totp.Validate(*dto.OTP, ua.TotpSecret)
+		valid := totp.Validate(*dto.OTP, dto.Secret)
 		if !valid {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid TOTP secret"})
+		}
+
+		// 确认OTP后，将密钥存储到数据库中
+		_, err = client.User.
+			UpdateOne(ua).
+			SetTotpSecret(dto.Secret).
+			Save(context.Background())
+		if err != nil {
+			log.Printf("Error saving TOTP secret: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving TOTP secret"})
 		}
 
 		return c.JSON(http.StatusOK, "2FA confirmed")
