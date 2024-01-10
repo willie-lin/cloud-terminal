@@ -89,13 +89,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		//fmt.Println(dto)
-		//fmt.Println(dto.Email)
-		//fmt.Println(dto.Password)
-		//fmt.Println(dto.OTP)
-		//fmt.Println(len(dto.Password))
-		//fmt.Println(11111)
 
+		fmt.Println(dto.OTP)
 		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
@@ -109,10 +104,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error: password is empty")
 			return c.JSON(http.StatusForbidden, map[string]string{"error": "Password is empty"})
 		}
-		//
-		//fmt.Println(dto.Password)
-		//fmt.Println(2222222222)
-		//fmt.Println(us.Password)
 		// 假设 us.Password 是数据库中存储的哈希值
 		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(dto.Password))
 		if err != nil {
@@ -123,13 +114,16 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		//fmt.Println(3333333333)
 		// 检查用户是否已经绑定了二次验证（2FA）
 		if us.TotpSecret != "" {
+			// 用户已经启用了OTP，所以必须提供OTP
+			if dto.OTP == nil {
+				log.Printf("Error OTP是必需的: %v", err)
+				return c.JSON(http.StatusForbidden, map[string]string{"error": "OTP是必需的"})
+			}
 			// 验证用户提供的OTP
-			otp := dto.OTP
-			if otp != nil {
-				valid := totp.Validate(*otp, us.TotpSecret)
-				if !valid {
-					return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
-				}
+			valid := totp.Validate(*dto.OTP, us.TotpSecret)
+			if !valid {
+				log.Printf("Error OTP error: %v", err)
+				return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 			}
 		}
 		//fmt.Println(444444444)

@@ -7,9 +7,9 @@ const api = axios.create({
 // const baseURL =  'https://0.0.0.0'
 
 // login
-export const login = async (email, password, totp_Secret) => {
+export const login = async (email, password, otp) => {
     try {
-        const response = await api.post('/api/login', { email, password, totp_Secret });
+        const response = await api.post('/api/login', { email, password, otp });
         if (response.status === 403 || response.data === 'Invalid password' || response.data === 'Invalid-OTP') {
         // if (response.data === 'Invalid-password') {
             throw new Error('用户名或密码错误');
