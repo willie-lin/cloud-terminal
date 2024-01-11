@@ -37,17 +37,19 @@ const App = () => {
                 <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
 
                 <Route path="/reset-password" element={!isLoggedIn ? <ResetPassword onResetPassword={onLogin} /> : <Navigate to="/dashboard" />} />
+
                 <Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>
                     <Route path="dashboard" element={<HomePage email={email}/>}/>
                     <Route path="userinfo" element={<UserInfo email={email}/>}/>
                     <Route path="edit-user-info" element={<EditUserInfo email={email} />}/>
                     <Route path="open-user-2fa" element={<TwoFactorAuthPage email={email} />}/>
                     <Route path="/" element={<Navigate to="dashboard" />} />
-                    <Route path="*" element={<NotFoundPage />} />
+                    {/*<Route path="*" element={<NotFoundPage />} />*/}
                 </Route>
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </Router>
-        );
+
+    );
     }
 export default App;

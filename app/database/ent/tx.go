@@ -18,6 +18,8 @@ type Tx struct {
 	AssetGroup *AssetGroupClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
+	// RefreshToken is the client for interacting with the RefreshToken builders.
+	RefreshToken *RefreshTokenClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
 	// User is the client for interacting with the User builders.
@@ -158,6 +160,7 @@ func (tx *Tx) init() {
 	tx.Asset = NewAssetClient(tx.config)
 	tx.AssetGroup = NewAssetGroupClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
+	tx.RefreshToken = NewRefreshTokenClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserGroup = NewUserGroupClient(tx.config)

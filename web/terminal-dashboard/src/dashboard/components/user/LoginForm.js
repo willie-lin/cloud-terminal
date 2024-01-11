@@ -2,7 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import {check2FA, checkEmail, login} from "../../../api/api";
 import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 
 function LoginForm({ onLogin }) {
     const [email, setEmail] = React.useState('');
@@ -11,6 +11,7 @@ function LoginForm({ onLogin }) {
     const [loginError, setLoginError] = useState(''); // 保存登录错误消息
     const [isConfirmed, setIsConfirmed] = useState(false); // 新增状态变量
     const [otp, setOtp] = useState(''); // OTP 输入框的状态变量
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function checkUser2FA() {
@@ -58,6 +59,10 @@ function LoginForm({ onLogin }) {
             localStorage.setItem('refreshToken', data.refreshToken);
             // 将 token 存储到 localStorage 中
             onLogin(email);
+            // 在登录成功后重定向到/dashboard
+            navigate('/dashboard'); // 登录后重定向到仪表盘
+
+
         } catch (error) {
             // setLoginError(error.message);
             // console.error(error);

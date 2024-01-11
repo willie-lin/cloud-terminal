@@ -15,8 +15,11 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/handler"
 	"github.com/willie-lin/cloud-terminal/app/logger"
 	_ "github.com/willie-lin/cloud-terminal/docs"
+	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"go.elastic.co/apm/module/apmechov4"
 	"go.uber.org/zap"
+	"net/http"
+	"time"
 )
 
 const versionFile = "/app/VERSION"
@@ -41,6 +44,7 @@ func main() {
 	//log, _ := zap.NewProduction()
 	//log := zap.NewProductionEncoderConfig()
 	e := echo.New()
+
 	// 使用重定向中间件将http连接重定向到https
 	e.Pre(middleware.HTTPSRedirect())
 
@@ -63,20 +67,6 @@ func main() {
 	e.Use(middleware.RequestID())
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 
-	// 设置 Static 中间件
-	e.Static("/picture", "picture")
-
-	// CORS middleware
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
-	}))
-
-	e.Use(middleware.Gzip())
-
-	// 连接 数据库
-	//client, err := database.Client()
-	//client, err := database.Client()
 	client, err := config.NewClient()
 	fmt.Println(client)
 	if err != nil {
@@ -102,6 +92,63 @@ func main() {
 
 	debugMode(err, client, ctx)
 
+	// 设置 Static 中间件
+	e.Static("/picture", "picture")
+
+	// CORS middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+	}))
+
+	// 限制IP速率
+	config := middleware.RateLimiterConfig{
+		Skipper: middleware.DefaultSkipper,
+		Store: middleware.NewRateLimiterMemoryStoreWithConfig(
+			middleware.RateLimiterMemoryStoreConfig{Rate: 10, Burst: 30, ExpiresIn: 3 * time.Minute},
+		),
+		IdentifierExtractor: func(ctx echo.Context) (string, error) {
+			id := ctx.RealIP()
+			return id, nil
+		},
+		ErrorHandler: func(context echo.Context, err error) error {
+			return context.JSON(http.StatusForbidden, nil)
+		},
+		DenyHandler: func(context echo.Context, identifier string, err error) error {
+			return context.JSON(http.StatusTooManyRequests, nil)
+		},
+	}
+	e.Use(middleware.RateLimiterWithConfig(config))
+
+	//Secure 安全
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+		XSSProtection:         "1; mode=block",
+		ContentTypeNosniff:    "nosniff",
+		XFrameOptions:         "SAMEORIGIN",
+		HSTSMaxAge:            3600,
+		ContentSecurityPolicy: "default-src 'self'",
+	}))
+	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Skipper:      middleware.DefaultSkipper,
+		ErrorMessage: "custom timeout error message returns to client",
+		OnTimeoutRouteErrorHandler: func(err error, c echo.Context) {
+			log.Print(c.Path())
+		},
+		Timeout: 30 * time.Second,
+	}))
+
+	e.Use(middleware.Gzip())
+
+	// 连接 数据库
+	//client, err := database.Client()
+	//client, err := database.Client()
+
+	// 使用TokenAuthMiddleware
+	authorized := e.Group("")
+	authorized.Use(utils.TokenAuthMiddleware())
+	//authorized.GET("/api/users", handler.GetAllUsers(client))
+	//authorized.POST("/api/edit-userinfo", handler.UpdateUserInfo(client))
+
 	//v1 := e.Group("/api/v1")
 	//v1.Use()
 	e.GET("/", handler.Hello(client))
@@ -120,36 +167,6 @@ func main() {
 	e.POST("/api/edit-userinfo", handler.UpdateUserInfo(client))
 
 	e.POST("/api/user/email", handler.GetUserByEmail(client))
-
-	//e.POST("/api/login", api.Login(client))
-	//e.GET("/user/uid", handler.FindUserById(client))
-	//e.PUT("/user", handler.UpdateUser(client))
-	//e.PUT("/user/uid", handler.UpdateUserById(client))
-	//e.PUT("/test", handler.TestBindJson(client))
-	//
-	//e.DELETE("/user", handler.DeleteUser(client))
-	//e.DELETE("/user/uid", handler.DeleteUserById(client))
-	//// UserGroup
-	//e.GET("/groups", handler.GetAllGroups(client))
-	//e.GET("/group/name", handler.FindGroupByName(client))
-	//e.POST("/group", handler.CreateGroup(client))
-	//e.DELETE("/group/uid", handler.DeleteGroupById(client))
-	//e.DELETE("/group/name", handler.DeleteGroup(client))
-	//e.DELETE("/user/uid", handler.DeleteUserById(client))
-	//e.DELETE("/user/uid", handler.DeleteUserById(client))
-	//
-	//e.POST("/user2group", handler.AddUserToGroup(client))
-	//e.PUT("/user4group", handler.DeleteUserFromGroup(client))
-	//
-	//e.POST("/group2user", handler.AddGroupToUser(client))
-	//e.PUT("/group4user", handler.DeleteUserFromGroup(client))
-	//
-	//e.GET("/group/group8user", handler.FindGroupWithUser(client))
-	//e.GET("/group/user_group_name", handler.FindUserByGroupName(client))
-	//e.GET("/group/group_user_username", handler.FindGroupByUsername(client))
-	//
-	//e.GET("/group/user_with_group", handler.GetAllUsersWithGroups(client))
-	//e.GET("/group/group_with_user", handler.GetAllGroupsWithUsers(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
