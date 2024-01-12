@@ -56,7 +56,7 @@ export const checkEmail = async (email) => {
 // /api/users getAllUsers
 export const getAllUsers = async () => {
     try {
-        const response = await api.get('/api/users', {});
+        const response = await api.get('/apis/users', {});
         return response.data;
     } catch (error) {
         console.error(error);

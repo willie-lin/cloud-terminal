@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -14,7 +13,6 @@ import (
 	"github.com/swaggo/echo-swagger"
 	"github.com/willie-lin/cloud-terminal/app/api"
 	"github.com/willie-lin/cloud-terminal/app/config"
-	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/handler"
 	"github.com/willie-lin/cloud-terminal/app/logger"
 	_ "github.com/willie-lin/cloud-terminal/docs"
@@ -24,17 +22,6 @@ import (
 	"net/http"
 	"time"
 )
-
-func GetAllUsers(client *ent.Client) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		users, err := client.User.Query().All(c.Request().Context())
-		if err != nil {
-			log.Printf("Error querying users: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
-		}
-		return c.JSON(http.StatusOK, users)
-	}
-}
 
 const versionFile = "/app/VERSION"
 
@@ -153,23 +140,13 @@ func main() {
 	e.Use(middleware.Gzip())
 
 	// 定义一个受保护的路由组
-	r := e.Group("/api")
+	r := e.Group("/apis")
 
 	// 使用JWT中间件
 	// 使用JWT中间件
 	r.Use(echojwt.WithConfig(utils.CreateJWTConfig()))
 
-	// 在受保护的路由组中定义路由
-	r.GET("/user", func(c echo.Context) error {
-		user := c.Get("user").(*jwt.Token)
-		claims := user.Claims.(*jwtCustomClaims)
-
-		// 现在你可以访问JWT中的信息了
-		email := claims.Email
-
-		return c.JSON(http.StatusOK, "Hello, "+email+"!")
-	})
-	//r.GET("/all", GetAllUsers(client))
+	//r.GET("/all", handler.GetAllUsers(client))
 
 	//v1 := e.Group("/api/v1")
 	//v1.Use()
@@ -203,9 +180,4 @@ func main() {
 	//e.Logger.Fatal(e.StartAutoTLS(":443"))
 	//e.Logger.Fatal(e.Start(":2023"))
 
-}
-
-type jwtCustomClaims struct {
-	Email string `json:"email"`
-	jwt.RegisteredClaims
 }
