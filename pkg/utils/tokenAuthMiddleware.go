@@ -1,17 +1,17 @@
 package utils
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
+)
 
-func TokenAuthMiddleware() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// 获取token
-			token := c.Request().Header.Get("Authorization")
-			// 验证token，这里只是简单的示例，你应该使用你自己的验证逻辑
-			if token != "your_token" {
-				return echo.ErrUnauthorized
-			}
-			return next(c)
-		}
+// CreateJWTConfig 创建一个函数来生成JWT中间件的配置
+func CreateJWTConfig() echojwt.Config {
+	return echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(jwtCustomClaims)
+		},
+		SigningKey: []byte("secret"),
 	}
 }

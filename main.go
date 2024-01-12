@@ -4,14 +4,17 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/swaggo/echo-swagger"
 	"github.com/willie-lin/cloud-terminal/app/api"
 	"github.com/willie-lin/cloud-terminal/app/config"
+	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/handler"
 	"github.com/willie-lin/cloud-terminal/app/logger"
 	_ "github.com/willie-lin/cloud-terminal/docs"
@@ -21,6 +24,17 @@ import (
 	"net/http"
 	"time"
 )
+
+func GetAllUsers(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		users, err := client.User.Query().All(c.Request().Context())
+		if err != nil {
+			log.Printf("Error querying users: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
+		}
+		return c.JSON(http.StatusOK, users)
+	}
+}
 
 const versionFile = "/app/VERSION"
 
@@ -34,7 +48,6 @@ const versionFile = "/app/VERSION"
 // @contact.email support@swagger.io
 
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
 // @host petstore.swagger.io
 // @BasePath /v2
 func main() {
@@ -102,7 +115,7 @@ func main() {
 	}))
 
 	// 限制IP速率
-	config := middleware.RateLimiterConfig{
+	rateLimiterConfig := middleware.RateLimiterConfig{
 		Skipper: middleware.DefaultSkipper,
 		Store: middleware.NewRateLimiterMemoryStoreWithConfig(
 			middleware.RateLimiterMemoryStoreConfig{Rate: 10, Burst: 30, ExpiresIn: 3 * time.Minute},
@@ -118,7 +131,7 @@ func main() {
 			return context.JSON(http.StatusTooManyRequests, nil)
 		},
 	}
-	e.Use(middleware.RateLimiterWithConfig(config))
+	e.Use(middleware.RateLimiterWithConfig(rateLimiterConfig))
 
 	//Secure 安全
 	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
@@ -139,21 +152,30 @@ func main() {
 
 	e.Use(middleware.Gzip())
 
-	// 连接 数据库
-	//client, err := database.Client()
-	//client, err := database.Client()
+	// 定义一个受保护的路由组
+	r := e.Group("/api")
 
-	// 使用TokenAuthMiddleware
-	authorized := e.Group("")
-	authorized.Use(utils.TokenAuthMiddleware())
-	//authorized.GET("/api/users", handler.GetAllUsers(client))
-	//authorized.POST("/api/edit-userinfo", handler.UpdateUserInfo(client))
+	// 使用JWT中间件
+	// 使用JWT中间件
+	r.Use(echojwt.WithConfig(utils.CreateJWTConfig()))
+
+	// 在受保护的路由组中定义路由
+	r.GET("/user", func(c echo.Context) error {
+		user := c.Get("user").(*jwt.Token)
+		claims := user.Claims.(*jwtCustomClaims)
+
+		// 现在你可以访问JWT中的信息了
+		email := claims.Email
+
+		return c.JSON(http.StatusOK, "Hello, "+email+"!")
+	})
+	//r.GET("/all", GetAllUsers(client))
 
 	//v1 := e.Group("/api/v1")
 	//v1.Use()
 	e.GET("/", handler.Hello(client))
 	e.GET("/ip", handler.RealIP())
-	e.POST("api/enable-2fa", handler.Enable2FA(client))
+	e.POST("/api/enable-2fa", handler.Enable2FA(client))
 	e.POST("/api/confirm-2FA", handler.Confirm2FA(client))
 	e.POST("/api/check-2FA", handler.Check2FA(client))
 
@@ -163,7 +185,9 @@ func main() {
 	e.POST("/api/reset-password", api.ResetPassword(client))
 
 	e.POST("/api/uploads", handler.UploadFile())
-	e.GET("/api/users", handler.GetAllUsers(client))
+
+	r.GET("/users", handler.GetAllUsers(client))
+
 	e.POST("/api/edit-userinfo", handler.UpdateUserInfo(client))
 
 	e.POST("/api/user/email", handler.GetUserByEmail(client))
@@ -179,4 +203,9 @@ func main() {
 	//e.Logger.Fatal(e.StartAutoTLS(":443"))
 	//e.Logger.Fatal(e.Start(":2023"))
 
+}
+
+type jwtCustomClaims struct {
+	Email string `json:"email"`
+	jwt.RegisteredClaims
 }

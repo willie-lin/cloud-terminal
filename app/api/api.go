@@ -154,15 +154,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		//
 
 		// 生成JWT
-		// 生成JWT
-		claims := &jwtCustomClaims{
-			Email: us.Email,
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
-			},
-		}
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		t, err := token.SignedString([]byte("secret"))
+		t, err := utils.CreateToken(us.Email)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
@@ -197,21 +189,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		return c.JSON(http.StatusOK, map[string]string{
 			"token": t})
-	}
-}
-
-func Accessible(c echo.Context) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "Accessible")
-	}
-}
-
-func Restricted(c echo.Context) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		email := c.Get("email").(*jwt.Token)
-		claims := email.Claims.(*jwtCustomClaims)
-		name := claims.Email
-		return c.String(http.StatusOK, "Welcome "+name+"!")
 	}
 }
 

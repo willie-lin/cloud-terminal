@@ -1,31 +1,56 @@
 package utils
 
 import (
-	"errors"
-	"fmt"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
 
-//var jwtKey = []byte("your_secret_key")
 //
-//type Claims struct {
-//	Username string `json:"username"`
+////var jwtKey = []byte("your_secret_key")
+////
+////type Claims struct {
+////	Username string `json:"username"`
+////	jwt.StandardClaims
+////}
+////
+////// GenerateToken 生成JWT
+////func GenerateToken(username string) (string, error) {
+////	expirationTime := time.Now().Add(24 * time.Hour)
+////	claims := &Claims{
+////		Username: username,
+////		StandardClaims: jwt.StandardClaims{
+////			ExpiresAt: expirationTime.Unix(),
+////		},
+////	}
+////
+////	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+////	tokenString, err := token.SignedString(jwtKey)
+////
+////	if err != nil {
+////		return "", err
+////	}
+////
+////	return tokenString, nil
+////}
+//
+//var refreshKey = []byte("your_refresh_key")
+//
+//type RefreshClaims struct {
+//	Email string `json:"email"`
 //	jwt.StandardClaims
 //}
 //
-//// GenerateToken 生成JWT
-//func GenerateToken(username string) (string, error) {
-//	expirationTime := time.Now().Add(24 * time.Hour)
-//	claims := &Claims{
-//		Username: username,
+//// GenerateRefreshToken 生成Refresh Token
+//func GenerateRefreshToken(email string) (string, error) {
+//	expirationTime := time.Now().Add(24 * 7 * time.Hour) // Refresh token的有效期通常比access token长
+//	claims := &RefreshClaims{
+//		Email: email,
 //		StandardClaims: jwt.StandardClaims{
 //			ExpiresAt: expirationTime.Unix(),
 //		},
 //	}
-//
 //	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-//	tokenString, err := token.SignedString(jwtKey)
+//	tokenString, err := token.SignedString(refreshKey)
 //
 //	if err != nil {
 //		return "", err
@@ -33,153 +58,145 @@ import (
 //
 //	return tokenString, nil
 //}
+//
+////func ValidateToken(myToken string) (*jwt.Token, error) {
+////	token, err := jwt.Parse(myToken, func(token *jwt.Token) (interface{}, error) {
+////		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+////			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+////		}
+////		return jwtKey, nil
+////	})
+////
+////	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+////		fmt.Println(claims["foo"], claims["nbf"])
+////	} else {
+////		fmt.Println(err)
+////	}
+////
+////	return token, err
+////}
+////
+////func ValidateRefreshToken(myToken string) (*jwt.Token, error) {
+////	token, err := jwt.Parse(myToken, func(token *jwt.Token) (interface{}, error) {
+////		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+////			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+////		}
+////		return refreshKey, nil
+////	})
+////
+////	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+////		fmt.Println(claims["username"], claims["exp"])
+////	} else {
+////		fmt.Println(err)
+////	}
+////
+////	return token, err
+////}
+//
+////生成和存储 RefreshToken
+//
+////func GenerateRefreshToken(email string) (*ent.RefreshTokens, error) {
+////	//claims := &jwt.StandardClaims{
+////	//	Subject:   email,
+////	//	IssuedAt:  time.Now().Unix(),
+////	//	ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
+////	//}
+////	//
+////	//token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+////	//return token.SignedString([]byte("your-secret-key"))
+////
+////	// 将 RefreshToken 存储到数据库中...
+////
+////	return nil, nil
+////}
+//
+//// GenerateAccessToken 生成 AccessToken：
+//func GenerateAccessToken(email string) (string, error) {
+//	claims := &jwt.StandardClaims{
+//		Subject:   email,
+//		IssuedAt:  time.Now().Unix(),
+//		ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
+//	}
+//
+//	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+//	return token.SignedString([]byte("your-secret-key"))
+//}
+//
+//// ValidateAccessToken 验证 AccessToken
+//func ValidateAccessToken(tokenString string) (*jwt.StandardClaims, error) {
+//	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+//		return []byte("your-secret-key"), nil
+//	})
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	claims, ok := token.Claims.(*jwt.StandardClaims)
+//	if !ok || !token.Valid {
+//		return nil, errors.New("invalid token")
+//	}
+//
+//	return claims, nil
+//}
+//
+////刷新 AccessToken
+//
+//func RefreshAccessToken(refreshTokenString string) (string, error) {
+//	// 从数据库中获取 RefreshToken...
+//
+//	//if refreshToken.ExpiresAt.Before(time.Now()) {
+//	//	return "", errors.New("refresh token expired")
+//	//}
+//	//
+//	//// 生成新的 AccessToken...
+//	//newAccessToken, err := GenerateAccessToken(refreshToken.User)
+//	//if err != nil {
+//	//	return "", err
+//	//}
+//	//
+//	//return newAccessToken, nil
+//	return "qqq", nil
+//}
+//
+//func GenerateToken(email string) (string, error) {
+//	claims := jwt.MapClaims{}
+//	claims["email"] = email
+//	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+//	return token.SignedString([]byte("secret"))
+//}
+//
+//func VerifyToken(tokenString string) (jwt.MapClaims, error) {
+//	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+//		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+//			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+//		}
+//		return []byte("secret"), nil
+//	})
+//	if err != nil {
+//		return nil, err
+//	}
+//	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+//		return claims, nil
+//	} else {
+//		return nil, fmt.Errorf("invalid token")
+//	}
+//}
 
-var refreshKey = []byte("your_refresh_key")
-
-type RefreshClaims struct {
+// 在全局范围内定义你的jwtCustomClaims类型
+type jwtCustomClaims struct {
 	Email string `json:"email"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
-// GenerateRefreshToken 生成Refresh Token
-func GenerateRefreshToken(email string) (string, error) {
-	expirationTime := time.Now().Add(24 * 7 * time.Hour) // Refresh token的有效期通常比access token长
-	claims := &RefreshClaims{
+// CreateToken 创建一个函数来生成JWT
+func CreateToken(email string) (string, error) {
+	claims := &jwtCustomClaims{
 		Email: email,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(refreshKey)
-
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-//func ValidateToken(myToken string) (*jwt.Token, error) {
-//	token, err := jwt.Parse(myToken, func(token *jwt.Token) (interface{}, error) {
-//		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-//			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-//		}
-//		return jwtKey, nil
-//	})
-//
-//	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-//		fmt.Println(claims["foo"], claims["nbf"])
-//	} else {
-//		fmt.Println(err)
-//	}
-//
-//	return token, err
-//}
-//
-//func ValidateRefreshToken(myToken string) (*jwt.Token, error) {
-//	token, err := jwt.Parse(myToken, func(token *jwt.Token) (interface{}, error) {
-//		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-//			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-//		}
-//		return refreshKey, nil
-//	})
-//
-//	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-//		fmt.Println(claims["username"], claims["exp"])
-//	} else {
-//		fmt.Println(err)
-//	}
-//
-//	return token, err
-//}
-
-//生成和存储 RefreshToken
-
-//func GenerateRefreshToken(email string) (*ent.RefreshTokens, error) {
-//	//claims := &jwt.StandardClaims{
-//	//	Subject:   email,
-//	//	IssuedAt:  time.Now().Unix(),
-//	//	ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
-//	//}
-//	//
-//	//token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-//	//return token.SignedString([]byte("your-secret-key"))
-//
-//	// 将 RefreshToken 存储到数据库中...
-//
-//	return nil, nil
-//}
-
-// GenerateAccessToken 生成 AccessToken：
-func GenerateAccessToken(email string) (string, error) {
-	claims := &jwt.StandardClaims{
-		Subject:   email,
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte("your-secret-key"))
-}
-
-// ValidateAccessToken 验证 AccessToken
-func ValidateAccessToken(tokenString string) (*jwt.StandardClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte("your-secret-key"), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(*jwt.StandardClaims)
-	if !ok || !token.Valid {
-		return nil, errors.New("invalid token")
-	}
-
-	return claims, nil
-}
-
-//刷新 AccessToken
-
-func RefreshAccessToken(refreshTokenString string) (string, error) {
-	// 从数据库中获取 RefreshToken...
-
-	//if refreshToken.ExpiresAt.Before(time.Now()) {
-	//	return "", errors.New("refresh token expired")
-	//}
-	//
-	//// 生成新的 AccessToken...
-	//newAccessToken, err := GenerateAccessToken(refreshToken.User)
-	//if err != nil {
-	//	return "", err
-	//}
-	//
-	//return newAccessToken, nil
-	return "qqq", nil
-}
-
-func GenerateToken(email string) (string, error) {
-	claims := jwt.MapClaims{}
-	claims["email"] = email
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte("secret"))
-}
-
-func VerifyToken(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte("secret"), nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	} else {
-		return nil, fmt.Errorf("invalid token")
-	}
 }
