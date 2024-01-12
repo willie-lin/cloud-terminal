@@ -154,38 +154,27 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		//
 
 		// 生成JWT
-		//token, err := utils.GenerateToken(us.Username)
-		//if err != nil {
-		//	log.Printf("Error generating token: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating token"})
-		//}
-		// Set custom claims
+		// 生成JWT
 		claims := &jwtCustomClaims{
-			dto.Email,
-			jwt.RegisteredClaims{
+			Email: us.Email,
+			RegisteredClaims: jwt.RegisteredClaims{
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
 			},
 		}
-
-		// Create token with claims
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-		// Generate encoded token and send it as response.
 		t, err := token.SignedString([]byte("secret"))
 		if err != nil {
-			log.Printf("Error generating token: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating token"})
+			log.Printf("Error signing token: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 
-		//token, err := GenerateToken(us.Username)
-
-		// 生成RefreshToken
-		refreshToken, err := utils.GenerateRefreshToken(us.Username)
-		//refreshToken, err := utils.GenerateRefreshToken(string(222))
-		if err != nil {
-			log.Printf("Error generating refresh token: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating refresh token"})
-		}
+		//// 生成RefreshToken
+		//refreshToken, err := utils.GenerateRefreshToken(us.Username)
+		////refreshToken, err := utils.GenerateRefreshToken(string(222))
+		//if err != nil {
+		//	log.Printf("Error generating refresh token: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating refresh token"})
+		//}
 
 		// 登录成功后，保存用户的登录信息到session
 		sess, _ := session.Get("session", c)
@@ -207,8 +196,22 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{
-			"token":         t,
-			"refresh_token": refreshToken})
+			"token": t})
+	}
+}
+
+func Accessible(c echo.Context) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return c.JSON(http.StatusOK, "Accessible")
+	}
+}
+
+func Restricted(c echo.Context) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		email := c.Get("email").(*jwt.Token)
+		claims := email.Claims.(*jwtCustomClaims)
+		name := claims.Email
+		return c.String(http.StatusOK, "Welcome "+name+"!")
 	}
 }
 
