@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
 	"regexp"
 	"time"
@@ -44,5 +45,10 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("roles", Role.Type),
 		edge.To("refresh_tokens", RefreshToken.Type),
+	}
+}
+func (User) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("username", "email"),
 	}
 }

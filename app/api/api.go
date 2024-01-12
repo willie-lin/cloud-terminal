@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -39,6 +40,7 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
+// 生成唯一用户名
 func generateUsername() string {
 	var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	var digits = []rune("0123456789")
@@ -53,6 +55,7 @@ func generateUsername() string {
 	return b.String()
 }
 
+// RegisterUser 用户注册
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		username := generateUsername()
@@ -84,6 +87,12 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
+type jwtCustomClaims struct {
+	Email string `json:"email"`
+	jwt.RegisteredClaims
+}
+
+// LoginUser 用户登陆
 func LoginUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		type LoginDTO struct {
@@ -142,16 +151,35 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error updating last login time: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
+		//
 
 		// 生成JWT
-		token, err := utils.GenerateToken(us.Username)
-		//token, err := utils.GenerateToken(string(111))
+		//token, err := utils.GenerateToken(us.Username)
+		//if err != nil {
+		//	log.Printf("Error generating token: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating token"})
+		//}
+		// Set custom claims
+		claims := &jwtCustomClaims{
+			dto.Email,
+			jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+			},
+		}
+
+		// Create token with claims
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+		// Generate encoded token and send it as response.
+		t, err := token.SignedString([]byte("secret"))
 		if err != nil {
 			log.Printf("Error generating token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating token"})
 		}
 
-		// 生成Refresh Token
+		//token, err := GenerateToken(us.Username)
+
+		// 生成RefreshToken
 		refreshToken, err := utils.GenerateRefreshToken(us.Username)
 		//refreshToken, err := utils.GenerateRefreshToken(string(222))
 		if err != nil {
@@ -179,7 +207,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{
-			"token":         token,
+			"token":         t,
 			"refresh_token": refreshToken})
 	}
 }

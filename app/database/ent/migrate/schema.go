@@ -69,6 +69,13 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "refreshtoken_token",
+				Unique:  false,
+				Columns: []*schema.Column{RefreshTokensColumns[1]},
+			},
+		},
 	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
@@ -105,6 +112,13 @@ var (
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_username_email",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[6], UsersColumns[8]},
+			},
+		},
 	}
 	// UserGroupsColumns holds the columns for the "user_groups" table.
 	UserGroupsColumns = []*schema.Column{

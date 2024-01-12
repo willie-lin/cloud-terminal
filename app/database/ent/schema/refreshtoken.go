@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
 	"time"
 )
@@ -27,5 +28,11 @@ func (RefreshToken) Fields() []ent.Field {
 func (RefreshToken) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).Ref("refresh_tokens").Unique().Required(),
+	}
+}
+
+func (RefreshToken) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("token"),
 	}
 }
