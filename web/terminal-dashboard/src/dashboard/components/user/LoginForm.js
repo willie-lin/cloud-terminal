@@ -57,8 +57,10 @@ function LoginForm({ onLogin }) {
             console.log(data);
             console.log(data.token);
             localStorage.setItem('user_token', data.token);
+            localStorage.setItem('token', data.token);
             console.log(1111111);
-            console.log(localStorage.getItem('user_token'));
+            // console.log(localStorage.getItem('user_token'));
+            // console.log(localStorage.getItem('token'));
             // localStorage.setItem('refreshToken', data.refreshToken);
             // 将 token 存储到 localStorage 中
             onLogin(email);

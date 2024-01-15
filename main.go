@@ -140,7 +140,7 @@ func main() {
 	e.Use(middleware.Gzip())
 
 	// 定义一个受保护的路由组
-	r := e.Group("/apis")
+	r := e.Group("/admin")
 
 	// 使用JWT中间件
 	// 使用JWT中间件
