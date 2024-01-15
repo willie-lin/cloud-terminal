@@ -139,7 +139,7 @@ export const uploadFile = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await api.post(`/api/uploads`, formData, {
+        const response = await api.post(`/admin/uploads`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     "Authorization": "Bearer " + localStorage.getItem("user_token")
@@ -155,7 +155,7 @@ export const uploadFile = async (file) => {
 // edit-user-info
 export const editUserInfo = async (data) => {
     try {
-        const response = await api.post(`/api/edit-userinfo`, data,
+        const response = await api.post(`/admin/edit-userinfo`, data,
             {
                 headers: {
                     "Authorization": "Bearer " + localStorage.getItem("user_token")}

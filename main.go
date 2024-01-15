@@ -152,25 +152,19 @@ func main() {
 	//v1.Use()
 	e.GET("/", handler.Hello(client))
 	e.GET("/ip", handler.RealIP())
-	//e.POST("/api/enable-2fa", handler.Enable2FA(client))
-	r.POST("/enable-2fa", handler.Enable2FA(client))
-	//e.POST("/api/confirm-2FA", handler.Confirm2FA(client))
-	r.POST("/confirm-2FA", handler.Confirm2FA(client))
-	e.POST("/api/check-2FA", handler.Check2FA(client))
-
 	e.POST("/api/check-email", api.CheckEmail(client))
+	e.POST("/api/check-2FA", handler.Check2FA(client))
 	e.POST("/api/login", api.LoginUser(client))
 	e.POST("/api/register", api.RegisterUser(client))
 	e.POST("/api/reset-password", api.ResetPassword(client))
 
-	e.POST("/api/uploads", handler.UploadFile())
-
+	// 需要token认证
+	r.POST("/enable-2fa", handler.Enable2FA(client))
+	r.POST("/confirm-2FA", handler.Confirm2FA(client))
+	r.POST("/uploads", handler.UploadFile())
 	//e.GET("/api/users", handler.GetAllUsers(client))
 	r.GET("/users", handler.GetAllUsers(client))
-
-	e.POST("/api/edit-userinfo", handler.UpdateUserInfo(client))
-
-	e.POST("/api/user/email", handler.GetUserByEmail(client))
+	r.POST("/edit-userinfo", handler.UpdateUserInfo(client))
 	r.POST("/user/email", handler.GetUserByEmail(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
