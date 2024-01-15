@@ -81,7 +81,10 @@ export const getAllUsers = async () => {
 //getUserByEmail
 export const getUserByEmail = async (email) => {
     try {
-        const response = await api.post('/api/user/email', { email });
+        const response = await api.post('/admin/user/email', { email },{
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("user_token")}
+        });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -91,7 +94,10 @@ export const getUserByEmail = async (email) => {
 // Enable2FA
 export const enable2FA = async (email) => {
     try {
-        const response = await api.post('/api/enable-2fa', { email });
+        const response = await api.post('/admin/enable-2fa', { email }, {
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("user_token")}
+        });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -101,7 +107,11 @@ export const enable2FA = async (email) => {
 // Confirm2FA
 export const confirm2FA = async (email, otp, secret) => {
     try {
-        const response = await api.post('/api/confirm-2FA', { email, otp, secret });
+        const response = await api.post('/admin/confirm-2FA', { email, otp, secret },
+            {
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("user_token")}
+            });
         if (response.status === 400) {
             throw new Error('Invalid TOTP secret');
         }
@@ -132,6 +142,7 @@ export const uploadFile = async (file) => {
         const response = await api.post(`/api/uploads`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    "Authorization": "Bearer " + localStorage.getItem("user_token")
                 },
             }
         );
@@ -144,7 +155,11 @@ export const uploadFile = async (file) => {
 // edit-user-info
 export const editUserInfo = async (data) => {
     try {
-        const response = await api.post(`/api/edit-userinfo`, data);
+        const response = await api.post(`/api/edit-userinfo`, data,
+            {
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("user_token")}
+            });
         return response.data;
     } catch (error) {
         console.error(error);
