@@ -54,9 +54,12 @@ function LoginForm({ onLogin }) {
 
             // 将OTP赋值给totp_Secret
             const data = await login(email, hashedPassword, otp); // 使用 login 函数
-            // console.log(data);
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('refreshToken', data.refreshToken);
+            console.log(data);
+            console.log(data.token);
+            localStorage.setItem('user_token', data.token);
+            console.log(1111111);
+            console.log(localStorage.getItem('user_token'));
+            // localStorage.setItem('refreshToken', data.refreshToken);
             // 将 token 存储到 localStorage 中
             onLogin(email);
             // 在登录成功后重定向到/dashboard

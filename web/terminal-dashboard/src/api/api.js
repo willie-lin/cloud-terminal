@@ -54,9 +54,23 @@ export const checkEmail = async (email) => {
 };
 
 // /api/users getAllUsers
+// export const getAllUsers = async () => {
+//     try {
+//         const response = await api.get('/apis/users', {
+//             headers: {
+//                 "Authorization": "Bearer " + localStorage.getItem("token")
+//             }
+//         });
+//         return response.data;
+//     } catch (error) {
+//         console.error(error);
+//     }
+// };
+
 export const getAllUsers = async () => {
     try {
-        const response = await api.get('/apis/users', {});
+        const response = await api.get('/api/users', {
+        });
         return response.data;
     } catch (error) {
         console.error(error);

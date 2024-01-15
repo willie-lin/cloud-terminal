@@ -163,6 +163,7 @@ func main() {
 
 	e.POST("/api/uploads", handler.UploadFile())
 
+	e.GET("/api/users", handler.GetAllUsers(client))
 	r.GET("/users", handler.GetAllUsers(client))
 
 	e.POST("/api/edit-userinfo", handler.UpdateUserInfo(client))
