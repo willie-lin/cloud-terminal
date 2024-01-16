@@ -100,7 +100,14 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 		type EmailDTO struct {
 			Email string `json:"email"`
 		}
-
+		// user response
+		type UserResponse struct {
+			Avatar   string `json:"avatar"`
+			Nickname string `json:"nickname"`
+			Username string `json:"username"`
+			Email    string `json:"email"`
+			Bio      string `json:"bio"`
+		}
 		dto := new(EmailDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
@@ -116,7 +123,15 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
-		return c.JSON(http.StatusOK, ue)
+		// Map the user entity to the response struct
+		response := &UserResponse{
+			Avatar:   ue.Avatar,
+			Nickname: ue.Nickname,
+			Username: ue.Username,
+			Email:    ue.Email,
+			Bio:      ue.Bio,
+		}
+		return c.JSON(http.StatusOK, response)
 	}
 }
 

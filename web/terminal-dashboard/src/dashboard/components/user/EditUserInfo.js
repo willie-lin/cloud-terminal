@@ -119,7 +119,7 @@ function EditUserInfo({ email }) {
                         <label>
                             <img
                                 className="w-24 h-24 rounded-full object-cover mb-6 mx-auto cursor-pointer"
-                                src={preview || newInfo?.avatar || "https://i1.pngguru.com/preview/137/834/449/cartoon-cartoon-character-avatar-drawing-film-ecommerce-facial-expression-png-clipart.jpg"}
+                                src={preview || newInfo?.avatar || "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg"}
                                 alt="Avatar Upload"
                                 style={{width: '120px', height: '120px', border: '1px solid'}} // Added border here
                             />

@@ -4,13 +4,20 @@ import {getUserByEmail} from "../../../api/api";
 import {
     Avatar, Button,
     Card,
-    CardBody, CardFooter,
+    CardBody,
     CardHeader,
     Typography
 } from "@material-tailwind/react";
 import {useNavigate} from "react-router-dom";
 import {useCurrentTime, useFetchUserInfo} from "./UserHook";
-import {FaUser} from "react-icons/fa";
+import {
+    MdAccessTimeFilled,
+    MdDescription,
+    MdEmail,
+    MdOutlineAccessTime,
+    MdOutlineAccessTimeFilled
+} from "react-icons/md";
+import {FaAudioDescription, FaUser} from "react-icons/fa6";
 
 function UserInfo({ email }) {
     const userInfo = useFetchUserInfo(email);
@@ -31,22 +38,42 @@ function UserInfo({ email }) {
             </CardHeader>
             {/*<CardBody className="text-center">*/}
             <CardBody className="text-left">
-            <Typography variant="h4" color="blue-gray" className="mb-2">
-                            欢迎，{userInfo?.nickname}!
-            </Typography>
-                <FaUser />
-                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                    USERNAME: {userInfo.username}
-                </Typography>}
-                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                            EMAIL: {userInfo.email}
-                </Typography>}
-                {userInfo && <Typography color="blue-gray" className="font-medium" textGradient>
-                            BIO: {userInfo.bio}
-                </Typography>}
-                <Typography color="blue-gray" className="font-medium" textGradient>
-                            TiME: {currentTime.toLocaleTimeString()}
+                <Typography variant="h4" color="blue-gray" className="mb-2">
+                    欢迎，{userInfo?.nickname}!
                 </Typography>
+                <div className="flex items-center">
+                    <FaUser/>
+                    {userInfo && (
+                        <Typography color="blue-gray" className="font-medium ml-2" textGradient>
+                            {userInfo.username}
+                        </Typography>
+                    )}
+                </div>
+                <div className="flex items-center">
+                    <MdEmail/>
+                    {userInfo && (
+                        <Typography color="blue-gray" className="font-medium ml-2" textGradient>
+                            {userInfo.email}
+                        </Typography>
+                    )}
+                </div>
+                <div className="flex items-start">
+                    <FaAudioDescription size="1.5em" />
+                    {userInfo && (
+                        <Typography color="blue-gray" className="font-medium ml-2" textGradient>
+                            {userInfo.bio}
+                        </Typography>
+                    )}
+                </div>
+
+                <div className="flex items-center">
+                    <MdOutlineAccessTimeFilled size="1.2em" />
+                    <Typography color="blue-gray" className="font-medium ml-2" textGradient>
+                        {currentTime.toLocaleTimeString()}
+                    </Typography>
+                </div>
+
+
             </CardBody>
             <Button onClick={handleEdit} color="lightBlue">Edit User</Button>
         </Card>
