@@ -162,12 +162,12 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 将token保存在HTTP-only的cookie中，并设置相关的属性
 		cookie := new(http.Cookie)
-		cookie.Name = "token"
+		cookie.Name = "user-token"
 		cookie.Value = t
-		expirationTime := time.Now().Add(1 * time.Hour)
-		cookie.Expires = expirationTime
+		cookie.Expires = time.Now().Add(1 * time.Hour)
+		cookie.SameSite = http.SameSiteNoneMode
 		cookie.HttpOnly = true
-		cookie.Path = "/"
+		//cookie.Path = "/"
 		c.SetCookie(cookie)
 		// 返回成功的响应
 
@@ -187,7 +187,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 		sess.Options = &sessions.Options{
 			Path:     "/",
-			MaxAge:   86400 * 7, // 设置session的过期时间
+			MaxAge:   86400 * 3, // 设置session的过期时间
 			HttpOnly: true,
 		}
 		sess.Values["username"] = us.Username // 保存用户名到session
@@ -197,9 +197,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving session"})
 		}
 
-		return c.JSON(http.StatusOK, map[string]string{
-			"message": "Login successful",
-		})
+		//return c.JSON(http.StatusOK, map[string]string{"message": "Login successful",})
+		return c.JSON(http.StatusOK, map[string]string{"token": t})
 	}
 }
 

@@ -189,11 +189,6 @@ type jwtCustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func (j jwtCustomClaims) Valid() error {
-	//TODO implement me
-	panic("implement me")
-}
-
 // CreateToken 创建一个函数来生成JWT
 func CreateToken(email string) (string, error) {
 	claims := &jwtCustomClaims{

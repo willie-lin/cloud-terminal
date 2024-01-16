@@ -56,11 +56,9 @@ export const checkEmail = async (email) => {
 // api/users getAllUsers
 export const getAllUsers = async () => {
     try {
-        const response = await api.get('/admin/users', {
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("user_token")
-            }
-        });
+        const response = await api.get('/admin/users',
+            {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
+        );
         return response.data;
     } catch (error) {
         console.error(error);

@@ -96,6 +96,12 @@ func main() {
 	e.Static("/picture", "picture")
 
 	// CORS middleware
+	//e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	//	AllowOrigins:     []string{"https://localhost:3000"},
+	//	AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	//	AllowCredentials: true,
+	//	AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+	//}))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
@@ -145,6 +151,7 @@ func main() {
 	// 使用JWT中间件
 	// 使用JWT中间件
 	//r.Use(echojwt.WithConfig(utils.CreateJWTConfig()))
+
 	r.Use(echojwt.WithConfig(utils.CreateJWTConfig()))
 
 	//r.GET("/all", handler.GetAllUsers(client))

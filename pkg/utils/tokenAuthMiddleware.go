@@ -12,13 +12,22 @@ func CreateJWTConfig() echojwt.Config {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(jwtCustomClaims)
 		},
-		SigningKey:  []byte("secret"),
-		TokenLookup: "cookie:token",
-		ErrorHandler: func(c echo.Context, err error) error {
-			return echo.ErrUnauthorized
-		},
+		SigningKey: []byte("secret"),
 	}
 }
+
+//func CreateJWTConfig() echojwt.Config {
+//	return echojwt.Config{
+//		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+//			return new(jwtCustomClaims)
+//		},
+//		SigningKey:  []byte("secret"),
+//		TokenLookup: "cookie:token",
+//		ErrorHandler: func(c echo.Context, err error) error {
+//			return echo.ErrUnauthorized
+//		},
+//	}
+//}
 
 //func CreateJWTConfigs() middleware.JWTConfig {
 //	return middleware.JWTConfig{
