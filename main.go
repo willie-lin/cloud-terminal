@@ -144,6 +144,7 @@ func main() {
 
 	// 使用JWT中间件
 	// 使用JWT中间件
+	//r.Use(echojwt.WithConfig(utils.CreateJWTConfig()))
 	r.Use(echojwt.WithConfig(utils.CreateJWTConfig()))
 
 	//r.GET("/all", handler.GetAllUsers(client))

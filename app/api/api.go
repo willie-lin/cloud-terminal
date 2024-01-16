@@ -160,6 +160,17 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 
+		// 将token保存在HTTP-only的cookie中，并设置相关的属性
+		cookie := new(http.Cookie)
+		cookie.Name = "token"
+		cookie.Value = t
+		expirationTime := time.Now().Add(1 * time.Hour)
+		cookie.Expires = expirationTime
+		cookie.HttpOnly = true
+		cookie.Path = "/"
+		c.SetCookie(cookie)
+		// 返回成功的响应
+
 		//// 生成RefreshToken
 		//refreshToken, err := utils.GenerateRefreshToken(us.Username)
 		////refreshToken, err := utils.GenerateRefreshToken(string(222))
@@ -174,7 +185,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error getting session: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error getting session"})
 		}
-
 		sess.Options = &sessions.Options{
 			Path:     "/",
 			MaxAge:   86400 * 7, // 设置session的过期时间
@@ -188,7 +198,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{
-			"token": t})
+			"message": "Login successful",
+		})
 	}
 }
 
