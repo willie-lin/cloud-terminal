@@ -106,6 +106,7 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 			Nickname string `json:"nickname"`
 			Username string `json:"username"`
 			Email    string `json:"email"`
+			Phone    string `json:"phone"`
 			Bio      string `json:"bio"`
 		}
 		dto := new(EmailDTO)
@@ -129,6 +130,7 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 			Nickname: ue.Nickname,
 			Username: ue.Username,
 			Email:    ue.Email,
+			Phone:    ue.Phone,
 			Bio:      ue.Bio,
 		}
 		return c.JSON(http.StatusOK, response)
@@ -257,6 +259,7 @@ func UploadFile() echo.HandlerFunc {
 	}
 }
 
+// UpdateUserInfo Update user info
 func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
 		type UpdateUserDTO struct {
@@ -296,7 +299,8 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error updating user info: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating user info in database"})
 		}
-		return c.JSON(http.StatusOK, map[string]string{"img": ua.Avatar})
+		//return c.JSON(http.StatusOK, map[string]string{"img": ua.Avatar})
+		return c.JSON(http.StatusOK, map[string]string{"message": "User update successful"})
 	}
 }
 
