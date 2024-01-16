@@ -96,16 +96,17 @@ func main() {
 	e.Static("/picture", "picture")
 
 	// CORS middleware
-	//e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-	//	AllowOrigins:     []string{"https://localhost:3000"},
-	//	AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
-	//	AllowCredentials: true,
-	//	AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
-	//}))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+		AllowOrigins:     []string{"https://localhost:3000"},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowCredentials: true,
+		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
 	}))
+
+	//e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	//	AllowOrigins: []string{"*"},
+	//	AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+	//}))
 
 	// 限制IP速率
 	rateLimiterConfig := middleware.RateLimiterConfig{
