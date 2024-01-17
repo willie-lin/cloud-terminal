@@ -149,7 +149,6 @@ func main() {
 	// 定义一个受保护的路由组
 	r := e.Group("/admin")
 	r.Use(utils.CheckAccessToken)
-
 	// 使用JWT中间件
 	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
 
