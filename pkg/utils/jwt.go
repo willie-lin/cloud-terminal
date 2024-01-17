@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"net/http"
 	"time"
 )
 
@@ -35,7 +35,7 @@ func ValidAccessTokenConfig() echojwt.Config {
 			return new(JwtCustomClaims)
 		},
 		SigningKey:  []byte("secret"),
-		TokenLookup: "cookie:token",
+		TokenLookup: "cookie:AccessToken",
 	}
 }
 
@@ -52,19 +52,65 @@ func CreateRefreshToken(email, username string) (string, error) {
 	return token.SignedString([]byte("refresh_secret"))
 }
 
-// ValidateRefreshToken 创建一个函数来验证RefreshToken
-func ValidateRefreshToken(refreshToken string) (*JwtCustomClaims, error) {
-	token, err := jwt.ParseWithClaims(refreshToken, &JwtCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte("refresh_secret"), nil
-	})
-
-	if err != nil {
-		return nil, err
+// ValidateRefreshTokenConfig  创建一个函数来验证RefreshToken
+func ValidateRefreshTokenConfig(refreshToken string) echojwt.Config {
+	return echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(JwtCustomClaims)
+		},
+		SigningKey:  []byte("refresh_secret"),
+		TokenLookup: "cookie:RefreshToken",
 	}
+}
 
-	claims, ok := token.Claims.(*JwtCustomClaims)
-	if !ok || !token.Valid {
-		return nil, errors.New("invalid refresh token")
+// CheckAccessToken Middleware for checking the AccessToken in the cookie
+func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		accessToken, err := c.Cookie("AccessToken")
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "missing access token")
+		}
+
+		// Validate the AccessToken
+		config := ValidAccessTokenConfig()
+		token, err := jwt.ParseWithClaims(accessToken.Value, config.NewClaimsFunc(c), func(token *jwt.Token) (interface{}, error) {
+			return config.SigningKey, nil
+		})
+
+		if err != nil || !token.Valid {
+			// If the AccessToken is invalid, use the RefreshToken to generate a new AccessToken
+			refreshToken, err := c.Cookie("RefreshToken")
+			if err != nil {
+				return echo.NewHTTPError(http.StatusUnauthorized, "missing refresh token")
+			}
+
+			// Validate the RefreshToken
+			config = ValidateRefreshTokenConfig(refreshToken.Value)
+			token, err = jwt.ParseWithClaims(refreshToken.Value, config.NewClaimsFunc(c), func(token *jwt.Token) (interface{}, error) {
+				return config.SigningKey, nil
+			})
+
+			if err != nil || !token.Valid {
+				// If the RefreshToken is invalid, return an error and prompt the user to log in again
+				return echo.NewHTTPError(http.StatusUnauthorized, "invalid refresh token, please log in again")
+			}
+
+			if claims, ok := token.Claims.(*JwtCustomClaims); ok {
+				// Use the RefreshToken's claims to generate a new AccessToken
+				newAccessToken, err := CreateAccessToken(claims.Email, claims.Username)
+				if err != nil {
+					return err
+				}
+
+				// Set the new AccessToken in the cookie
+				c.SetCookie(&http.Cookie{
+					Name:  "AccessToken",
+					Value: newAccessToken,
+					// Set other cookie properties as needed
+				})
+			}
+		}
+
+		return next(c)
 	}
-	return claims, nil
 }

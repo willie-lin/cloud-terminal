@@ -168,7 +168,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		// 将token保存在HTTP-only的cookie中，并设置相关的属性
 		// 创建一个cookie来保存AccessToken
 		accessTokenCookie := new(http.Cookie)
-		accessTokenCookie.Name = "token"
+		accessTokenCookie.Name = "AccessToken"
 		accessTokenCookie.Value = accessToken
 		accessTokenCookie.Expires = time.Now().Add(1 * time.Hour)
 		accessTokenCookie.SameSite = http.SameSiteNoneMode
@@ -179,7 +179,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 创建另一个cookie来保存RefreshToken
 		refreshTokenCookie := new(http.Cookie)
-		refreshTokenCookie.Name = "refreshToken"
+		refreshTokenCookie.Name = "RefreshToken"
 		refreshTokenCookie.Value = refreshToken
 		refreshTokenCookie.Expires = time.Now().Add(24 * time.Hour) // RefreshToken通常有更长的过期时间
 		refreshTokenCookie.SameSite = http.SameSiteNoneMode
@@ -207,7 +207,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{"message": "Login successful"})
-		//return c.JSON(http.StatusOK, map[string]string{"token": t})
 	}
 }
 
