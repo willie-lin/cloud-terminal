@@ -162,12 +162,13 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 将token保存在HTTP-only的cookie中，并设置相关的属性
 		cookie := new(http.Cookie)
-		cookie.Name = "user-token"
+		cookie.Name = "token"
 		cookie.Value = t
 		cookie.Expires = time.Now().Add(1 * time.Hour)
 		cookie.SameSite = http.SameSiteNoneMode
 		cookie.HttpOnly = true
-		//cookie.Path = "/"
+		cookie.Secure = true // 添加这一行
+		cookie.Path = "/"
 		c.SetCookie(cookie)
 		// 返回成功的响应
 

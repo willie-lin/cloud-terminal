@@ -3,8 +3,22 @@ import axios from 'axios';
 const api = axios.create({
     // baseURL: 'http://0.0.0.0:2023',
     baseURL: 'https://127.0.0.1:443',
+    withCredentials: true,  // 添加这一行
 });
-// const baseURL =  'https://0.0.0.0'
+
+// 添加请求拦截器
+api.interceptors.request.use(function (config) {
+    // 在发送请求之前做些什么
+    const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        .split('=')[1];
+    config.headers.Authorization = `Bearer ${token}`;
+    return config;
+}, function (error) {
+    // 对请求错误做些什么
+    return Promise.reject(error);
+});
 
 // login
 export const login = async (email, password, otp) => {
@@ -57,7 +71,7 @@ export const checkEmail = async (email) => {
 export const getAllUsers = async () => {
     try {
         const response = await api.get('/admin/users',
-            {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
+            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
         );
         return response.data;
     } catch (error) {
