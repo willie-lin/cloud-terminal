@@ -2,6 +2,8 @@ package utils
 
 import (
 	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
 	"time"
 )
 
@@ -199,4 +201,14 @@ func CreateToken(email string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte("secret"))
+}
+
+func CreateJWTConfig() echojwt.Config {
+	return echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(jwtCustomClaims)
+		},
+		SigningKey:  []byte("secret"),
+		TokenLookup: "cookie:token",
+	}
 }

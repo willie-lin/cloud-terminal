@@ -48,7 +48,6 @@ function LoginForm({ onLogin }) {
             return;
         }
         try {
-
             // 对密码进行哈希处理
             const hashedPassword = CryptoJS.SHA256(password).toString();
 
@@ -56,8 +55,8 @@ function LoginForm({ onLogin }) {
             const data = await login(email, hashedPassword, otp); // 使用 login 函数
             // console.log(data);
             // console.log(data.token);
-            localStorage.setItem('user_token', data.token);
-            localStorage.setItem('token', data.token);
+            // localStorage.setItem('user_token', data.token);
+            // localStorage.setItem('token', data.token);
             // console.log(1111111);
             // console.log(localStorage.getItem('user_token'));
             // console.log(localStorage.getItem('token'));

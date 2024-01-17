@@ -198,8 +198,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving session"})
 		}
 
-		//return c.JSON(http.StatusOK, map[string]string{"message": "Login successful",})
-		return c.JSON(http.StatusOK, map[string]string{"token": t})
+		return c.JSON(http.StatusOK, map[string]string{"message": "Login successful"})
+		//return c.JSON(http.StatusOK, map[string]string{"token": t})
 	}
 }
 
