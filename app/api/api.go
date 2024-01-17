@@ -154,31 +154,39 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		//
 
 		// 生成JWT
-		t, err := utils.CreateToken(us.Email)
+		accessToken, err := utils.CreateAccessToken(us.Email, us.Username)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
-
+		// 生成RefreshToken
+		refreshToken, err := utils.CreateRefreshToken(us.Email, us.Username)
+		if err != nil {
+			log.Printf("Error signing refreshToken: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})
+		}
 		// 将token保存在HTTP-only的cookie中，并设置相关的属性
-		cookie := new(http.Cookie)
-		cookie.Name = "token"
-		cookie.Value = t
-		cookie.Expires = time.Now().Add(1 * time.Hour)
-		cookie.SameSite = http.SameSiteNoneMode
-		cookie.HttpOnly = true
-		cookie.Secure = true // 添加这一行
-		cookie.Path = "/"
-		c.SetCookie(cookie)
-		// 返回成功的响应
+		// 创建一个cookie来保存AccessToken
+		accessTokenCookie := new(http.Cookie)
+		accessTokenCookie.Name = "token"
+		accessTokenCookie.Value = accessToken
+		accessTokenCookie.Expires = time.Now().Add(1 * time.Hour)
+		accessTokenCookie.SameSite = http.SameSiteNoneMode
+		accessTokenCookie.HttpOnly = true
+		accessTokenCookie.Secure = true
+		accessTokenCookie.Path = "/"
+		c.SetCookie(accessTokenCookie)
 
-		//// 生成RefreshToken
-		//refreshToken, err := utils.GenerateRefreshToken(us.Username)
-		////refreshToken, err := utils.GenerateRefreshToken(string(222))
-		//if err != nil {
-		//	log.Printf("Error generating refresh token: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error generating refresh token"})
-		//}
+		// 创建另一个cookie来保存RefreshToken
+		refreshTokenCookie := new(http.Cookie)
+		refreshTokenCookie.Name = "refreshToken"
+		refreshTokenCookie.Value = refreshToken
+		refreshTokenCookie.Expires = time.Now().Add(24 * time.Hour) // RefreshToken通常有更长的过期时间
+		refreshTokenCookie.SameSite = http.SameSiteNoneMode
+		refreshTokenCookie.HttpOnly = true
+		refreshTokenCookie.Secure = true
+		refreshTokenCookie.Path = "/"
+		c.SetCookie(refreshTokenCookie)
 
 		// 登录成功后，保存用户的登录信息到session
 		sess, _ := session.Get("session", c)

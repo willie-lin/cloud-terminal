@@ -150,7 +150,7 @@ func main() {
 	r := e.Group("/admin")
 
 	// 使用JWT中间件
-	r.Use(echojwt.WithConfig(utils.CreateJWTConfig()))
+	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
 
 	//r.GET("/all", handler.GetAllUsers(client))
 
