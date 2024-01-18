@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -52,7 +51,6 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		fmt.Println(dto.Password)
 
 		// 使用你的方法来创建密码的哈希值
 		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)

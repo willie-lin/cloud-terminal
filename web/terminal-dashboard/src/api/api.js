@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import {data} from "autoprefixer";
 
 
 const api = axios.create({
@@ -171,3 +172,12 @@ export const editUserInfo = async (data) => {
         console.error(error);
     }
 }
+
+export const addUser = async (data) => {
+    try {
+        const response = await api.post('/admin/add-user', data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};

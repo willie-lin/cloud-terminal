@@ -9738,10 +9738,10 @@ url-parse@^1.5.3:
     querystringify "^2.1.1"
     requires-port "^1.0.0"
 
-use-react-countries@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.npmmirror.com/use-react-countries/-/use-react-countries-1.1.0.tgz#59bd7966c9d8a5305861292be72134c8cceb322b"
-  integrity sha512-RjBW+D+Sf0jsMTVul/HBRIs0cOsWvDYo1fQPa+Ob9z7+/or70WL0Nf4IeiGHuhyX+ob/wbVCbwLuaq4xY79rtg==
+use-react-countries@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmmirror.com/use-react-countries/-/use-react-countries-2.0.0.tgz#663d4d2b36739da6f465311456b41e0f050014c5"
+  integrity sha512-0D7YHhPZAQOtCxukJr7gkeLhPzYN+qOUFiaf+rZW7Ty8Uwk7hV7Mx8pP6rU44kz/LN6sjkuubbXhEf15dDS5dA==
 
 util-deprecate@^1.0.1, util-deprecate@^1.0.2, util-deprecate@~1.0.1:
   version "1.0.2"

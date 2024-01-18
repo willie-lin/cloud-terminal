@@ -172,6 +172,7 @@ func main() {
 	r.GET("/users", handler.GetAllUsers(client))
 	r.POST("/edit-userinfo", handler.UpdateUserInfo(client))
 	r.POST("/user/email", handler.GetUserByEmail(client))
+	r.POST("/add-user", handler.CreateUser(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

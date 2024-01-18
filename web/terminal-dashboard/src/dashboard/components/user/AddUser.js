@@ -1,43 +1,149 @@
 import React, { useState } from 'react';
+import {Alert, Button, Card, CardBody, CardHeader, Input, Select, Typography, Option} from "@material-tailwind/react";
+import {addUser, checkEmail, register} from "../../../api/api";
+import CryptoJS from "crypto-js";
 
 function AddUserForm({ onAddUser }) {
-    const [email, setEmail] = useState('');
+    const [addUserError, setAddUserError] = useState(''); // 添加一个新的状态来保存密码错误信息
     const [password, setPassword] = useState('');
+    const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
+    const [email, setEmail] = useState('');
+    const [enableType, setEnableType] = useState('');
+    const [onlineStatus, setOnlineStatus] = useState('');
+    const handleEmailChange = async (e) => {
+        const email = e.target.value;
+        setEmail(email);
+        try {
+            const exists = await checkEmail(email);
+            setEmailError(exists ? 'Email already registered' : '');
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        onAddUser({ email, password });
-        setEmail('');
-        setPassword('');
+
+    const CryptoJS = require("crypto-js");
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        // 验证电子邮件和密码是否已填写
+        if (!email || !password) {
+            setAddUserError('请填写所有必填字段');
+            setTimeout(() => setAddUserError(''), 1000); // 1秒后清除错误信息
+            return;
+        }
+        try {
+            // 对密码进行哈希处理
+            const hashedPassword = CryptoJS.SHA256(password).toString();
+            // console.log(email);
+            // console.log(hashedPassword);
+            // console.log(onlineStatus);
+            // console.log(enableType);
+            const data = {
+                email: email,  // 使用传递过来的email
+                password: hashedPassword,
+                online: onlineStatus,
+                enableType: enableType
+            }
+            console.log(data)
+            console.log(data.email);
+            console.log(data.password);
+            console.log(data.online);
+            console.log(data.enableType);
+            await addUser(data); // 使用 register 函数
+            // console.log(datas);
+            onAddUser(email);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <label>
-                Email:
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-            </label>
-            <label>
-                Password:
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-            </label>
-            <button type="submit">Add User</button>
-        </form>
+            <Card className="w-96">
+                <CardHeader variant="gradient" color="gray" className="mb-4 grid h-20 place-items-center">
+                    <Typography variant="h4" color="white">
+                        Add User
+                    </Typography>
+                </CardHeader>
+                <CardBody className="px-4 py-8">
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-1 flex flex-col gap-6">
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Email
+                            </Typography>
+                            <Input
+                                variant="outlined"
+                                label="Email"
+                                type="email"
+                                color="lightBlue"
+                                size="regular"
+                                outline={true}
+                                value={email}
+                                name="email"  // 添加name属性
+                                onChange={handleEmailChange}
+                                className="mb-4" // 添加边距
+                                error={!!emailError}
+                            />
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Password
+                            </Typography>
+                            <Input
+                                variant="outlined"
+                                label="Password"
+                                type="password"
+                                color="lightBlue"
+                                size="regular"
+                                outline={true}
+                                value={password}
+                                name="password"  // 添加name属性
+                                // onChange={handleChange}
+                                className="mb-4" // 添加边距
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            {addUserError && (
+                                <Alert color="red" className="mb-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                            <i className="fas fa-info-circle mr-2"></i>
+                                            <span className="text-sm">{addUserError}</span>
+                                        </div>
+                                    </div>
+                                </Alert>
+                            )}
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Online Status
+                            </Typography>
+                            <Select size="md"
+                                    label="OnlineStatus"
+                                    onChange={value => setOnlineStatus(value)} >
+                                <Option value={true}>True</Option>
+                                <Option value={false}>False</Option>
+                            </Select>
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Enable Type
+                            </Typography>
+                            <Select size="lg" label="EnableType" onChange={value => setEnableType(value)} >
+                                <Option value={true}>True</Option>
+                                <Option value={false}>False</Option>
+                            </Select>
+                        </div>
+                        <Button fullWidth
+                                type="submit"
+                                color="lightBlue"
+                                buttonType="filled"
+                                size="regular"
+                                rounded={false}
+                                block={false}
+                                iconOnly={false}
+                                ripple="light"
+                                className="mt-6" // 添加边距
+                        >
+                            Submit
+                        </Button>
+                    </form>
+                </CardBody>
+            </Card>
     );
 }
 
-// 在你的 UserList 组件中使用 AddUserForm 组件：
-function UserList() {
-    // ...你的其他代码...
+export default AddUserForm;
 
-    const handleAddUser = (newUser) => {
-        // 这里是处理新用户的代码，例如发送一个请求到后端服务
-    };
-
-    return (
-        <div>
-            {/* ...你的其他代码... */}
-            <AddUserForm onAddUser={handleAddUser} />
-        </div>
-    );
-}

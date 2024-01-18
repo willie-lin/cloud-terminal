@@ -10,7 +10,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"net/http"
 	"os"
@@ -22,36 +21,40 @@ import (
 // CreateUser 创建一个新用户
 func CreateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
+		username := utils.GenerateUsername()
+
+		type UserDTO struct {
+			Email      string `json:"email"`
+			Password   string `json:"password"`
+			Online     bool   `json:"online"`
+			EnableType bool   `json:"enable_type"`
+		}
+
+		dto := new(UserDTO)
+		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		pwd, err := utils.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+		// 使用你的方法来创建密码的哈希值
+		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			log.Printf("Error hashing password: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
-		u.Password = string(pwd)
 
-		user, err := client.User.Create().
-			SetUsername(u.Username).
-			SetPassword(u.Password).
-			SetEmail(u.Email).
-			SetNickname(u.Nickname).
-			SetTotpSecret(u.TotpSecret).
-			SetEnableType(u.EnableType).
-			SetCreatedAt(time.Now()).
-			SetUpdatedAt(time.Now()).
+		us, err := client.User.Create().
+			SetEmail(dto.Email).
+			SetUsername(username).
+			SetPassword(string(hashedPassword)).
+			SetOnline(dto.Online).
+			SetEnableType(dto.EnableType).
 			Save(context.Background())
-		if ent.IsConstraintError(err) {
-			return c.JSON(http.StatusConflict, err.Error())
-		}
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
 		}
-		return c.JSON(http.StatusCreated, user)
+		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
 	}
 }
 

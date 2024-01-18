@@ -1,20 +1,19 @@
 import {
-    Avatar,
     Button,
     Card,
     CardBody, CardFooter,
-    CardHeader, Chip, IconButton,
+    CardHeader,
     Input,
     Tab,
     Tabs,
     TabsHeader,
-    Tooltip,
     Typography
 } from "@material-tailwind/react";
 import {ChevronUpDownIcon, MagnifyingGlassIcon, PencilIcon, UserPlusIcon} from "@heroicons/react/16/solid";
 import {useFetchUsers} from "./UserHook";
 import {useState} from "react";
 import UserRow from "./UserRow";
+import AddUserForm from "./AddUser";
 
 function UserList() {
 
@@ -47,7 +46,6 @@ function UserList() {
             setSortField(field);
             setSortDirection('asc');
         }
-
         // 在这里，你应该根据sortField和sortDirection来更新你的数据
     };
 
@@ -69,21 +67,31 @@ function UserList() {
     if (!Array.isArray(currentUsers)) {
         currentUsers = [];
     }
-
     const handlePrevious = () => {
         if (page > 1) {
             setPage(page - 1);
         }
     };
-
     const handleNext = () => {
         if (page < totalPages) {
             setPage(page + 1);
         }
     };
 
+    // 添加用户
+    const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
+    const handleAddUser = (newUser) => {
+        // 这里是处理新用户的代码，例如发送一个请求到后端服务
+    };
 
+    const openAddUser = () => {
+        setIsAddUserOpen(true);
+    };
+
+    const closeAddUser = () => {
+        setIsAddUserOpen(false);
+    };
 
     return (
             <Card className="h-full w-full">
@@ -101,15 +109,31 @@ function UserList() {
                             <Button variant="outlined" size="sm">
                                 view all
                             </Button>
-                            <Button className="flex items-center gap-3" size="sm">
-                                <UserPlusIcon strokeWidth={2} className="h-4 w-4" /> Add User
+                            <Button className="flex items-center gap-3" size="sm" onClick={openAddUser}>
+                                <UserPlusIcon strokeWidth={2} className="h-4 w-4"/> Add User
                             </Button>
                         </div>
+                        {isAddUserOpen && (
+                            <div style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                zIndex: 9999,
+                            }}>
+                                <AddUserForm onAddUser={handleAddUser} onClose={closeAddUser}/>
+                            </div>
+                        )}
                     </div>
                     <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
                         <Tabs value="all" className="w-full md:w-max">
                             <TabsHeader>
-                                {TABS.map(({ label, value }) => (
+                                {TABS.map(({label, value}) => (
                                     <Tab key={value} value={value}>
                                         &nbsp;&nbsp;{label}&nbsp;&nbsp;
                                     </Tab>
@@ -119,7 +143,7 @@ function UserList() {
                         <div className="w-full md:w-72">
                             <Input
                                 label="Search"
-                                icon={<MagnifyingGlassIcon className="h-4 w-4" />}
+                                icon={<MagnifyingGlassIcon className="h-4 w-4"/>}
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                             />
@@ -159,7 +183,7 @@ function UserList() {
                     </div>
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">
-                    <Typography variant="small" color="blue-gray" className="font-normal">
+                    <Typography variant="small" color="blue-gray" className="font-normal mx-2">
                         Page {page} of {totalPages}
                     </Typography>
                     <div className="flex gap-2">

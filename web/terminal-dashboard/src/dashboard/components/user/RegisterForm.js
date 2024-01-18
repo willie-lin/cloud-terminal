@@ -10,7 +10,7 @@ function RegisterForm({ onRegister }) {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
     const [passwordError, setPasswordError] = useState(''); // 添加一个新的状态来保存密码错误信息
-    const [loginError, setLoginError] = useState(''); // 添加一个新的状态来保存密码错误信息
+    const [registerError, setRegisterError] = useState(''); // 添加一个新的状态来保存密码错误信息
 
     const handleEmailChange = async (e) => {
         const email = e.target.value;
@@ -28,8 +28,8 @@ function RegisterForm({ onRegister }) {
         e.preventDefault();
         // 验证电子邮件和密码是否已填写
         if (!email || !password) {
-            setLoginError('请填写所有必填字段');
-            setTimeout(() => setLoginError(''), 1000); // 1秒后清除错误信息
+            setRegisterError('请填写所有必填字段');
+            setTimeout(() => setRegisterError(''), 1000); // 1秒后清除错误信息
             return;
         }
         // 验证密码和确认密码是否匹配
@@ -90,12 +90,12 @@ function RegisterForm({ onRegister }) {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
-                        {loginError && (
+                        {registerError && (
                             <Alert color="red" className="mb-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
                                         <i className="fas fa-info-circle mr-2"></i>
-                                        <span className="text-sm">{loginError}</span>
+                                        <span className="text-sm">{registerError}</span>
                                     </div>
                                 </div>
                             </Alert>

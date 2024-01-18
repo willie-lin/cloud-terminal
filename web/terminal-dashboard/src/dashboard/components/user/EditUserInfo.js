@@ -119,12 +119,12 @@ function EditUserInfo({ email }) {
     return (
         <div className="flex justify-center items-center h-screen">
             <Card className="w-1/2">
-                <CardHeader color="lightBlue">
-                    <Typography color="black" style={{marginBottom: '0'}} className="font-bold text-center">
+                <CardHeader variant="gradient" color="gray" className="mb-4 grid h-20 place-items-center"> {/* Change the height here */}
+                    <Typography variant="h4" color="white">
                         Edit UserInfo
                     </Typography>
                 </CardHeader>
-                <CardBody className="px-4 py-8">
+                <CardBody className="px-4 py-4">
                     <form onSubmit={handleSubmit}>
                         <label>
                             <img
