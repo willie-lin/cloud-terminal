@@ -51,13 +51,18 @@ function UserList() {
 
 
     const users = useFetchUsers();
+    console.log(users)
     const [page, setPage] = useState(1);
     const usersPerPage = 10;
     const totalPages = Math.ceil(users.length / usersPerPage);
 
     const indexOfLastUser = page * usersPerPage;
     const indexOfFirstUser = indexOfLastUser - usersPerPage;
-    const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+    // const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+    let currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+    if (!Array.isArray(currentUsers)) {
+        currentUsers = [];
+    }
 
     const handlePrevious = () => {
         if (page > 1) {
