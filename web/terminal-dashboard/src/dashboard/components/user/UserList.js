@@ -51,7 +51,6 @@ function UserList() {
 
 
     const users = useFetchUsers();
-    console.log(users)
     const [page, setPage] = useState(1);
     const usersPerPage = 10;
     const totalPages = Math.ceil(users.length / usersPerPage);

@@ -6,6 +6,8 @@ const api = axios.create({
     // baseURL: 'http://0.0.0.0:2023',
     baseURL: 'https://127.0.0.1:443',
     withCredentials: true,  // 添加这一行
+    timeout: 1000,
+    // headers: {'Authorization': `Bearer ${document.cookie.replace(/(?:^|.*;\s*)AccessToken\s*=\s*([^;]*).*$|^.*$/, "$1")}`}
 });
 
 
