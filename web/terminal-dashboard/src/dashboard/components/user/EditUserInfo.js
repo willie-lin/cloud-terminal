@@ -14,6 +14,7 @@ function EditUserInfo({ email }) {
     const [file, setFile] = useState(null); // 添加一个新的 state 来存储文件
     const [preview, setPreview] = useState(null); // 用于存储预览图片的 URL
     const fileInputRef = useRef(); // 用于访问文件输入元素
+    const [inputError, setInputError] = useState(false);
 
     const navigate = useNavigate();
 
@@ -30,6 +31,12 @@ function EditUserInfo({ email }) {
     }, []);
 
     const handleChange = (event) => {
+        const { name, value } = event.target;
+        if (name === 'bio' && value.length > 200) {
+            setInputError(true);
+        } else {
+            setInputError(false);
+        }
             setNewInfo({
                 ...newInfo,
                 [event.target.name]: event.target.value,
@@ -48,8 +55,6 @@ function EditUserInfo({ email }) {
                 break;
         }
     };
-
-
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -89,6 +94,11 @@ function EditUserInfo({ email }) {
         if (file) {
             const filePath = await uploadFile(file);
             updatedInfo = { ...updatedInfo, avatar: filePath};
+        }
+        const MAX_LENGTH = 196; // 设置最大长度为200
+        if (updatedInfo.bio.length > MAX_LENGTH) {
+            console.error('Error: Bio is greater than the required length');
+            return; // 如果bio的长度超过了最大长度，就返回并不执行后续的更新操作
         }
         try {
             const data = {
@@ -173,6 +183,7 @@ function EditUserInfo({ email }) {
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
+                                className={`border-${inputError ? 'red-500' : 'blue-500'}`}
                                 // placeholder="Bio"
                                 value={bio}
                                 name="bio"  // 添加name属性

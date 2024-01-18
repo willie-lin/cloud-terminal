@@ -17,7 +17,8 @@ import {
     MdOutlineAccessTime,
     MdOutlineAccessTimeFilled
 } from "react-icons/md";
-import {FaAudioDescription, FaUser} from "react-icons/fa6";
+import {FaAudioDescription, FaUser} from "react-icons/fa";
+import {BiObjectsHorizontalRight} from "react-icons/bi";
 
 function UserInfo({ email }) {
     const userInfo = useFetchUserInfo(email);
@@ -57,8 +58,9 @@ function UserInfo({ email }) {
                         </Typography>
                     )}
                 </div>
-                <div className="flex items-start">
-                    <FaAudioDescription size="1.5em" />
+
+                <div className="flex items-center">
+                    <FaAudioDescription />
                     {userInfo && (
                         <Typography color="blue-gray" className="font-medium ml-2" textGradient>
                             {userInfo.bio}
@@ -66,8 +68,9 @@ function UserInfo({ email }) {
                     )}
                 </div>
 
+
                 <div className="flex items-center">
-                    <MdOutlineAccessTimeFilled size="1.2em" />
+                    <MdOutlineAccessTimeFilled size="1.2em"/>
                     <Typography color="blue-gray" className="font-medium ml-2" textGradient>
                         {currentTime.toLocaleTimeString()}
                     </Typography>
@@ -77,35 +80,6 @@ function UserInfo({ email }) {
             </CardBody>
             <Button onClick={handleEdit} color="lightBlue">Edit User</Button>
         </Card>
-
-        // <Card className="w-96 mx-auto my-10">
-        //     <CardHeader floated={false} className="h-50">
-        //         <div className="flex justify-center">
-        //             {userInfo && <Avatar src={ userInfo.avatar } alt="avatar" variant="rounded" size="xxl"/>}
-        //         </div>
-        //     </CardHeader>
-        //     <CardBody className="text-center">
-        //         <Typography variant="h4" color="blue-gray" className="mb-2">
-        //             欢迎，{userInfo?.nickname}!
-        //         </Typography>
-        //         {userInfo && <Typography color="blue-gray" className="font-medium mb-2">
-        //             <HeartIcon name="account_circle" size="xl" /> USERNAME: {userInfo.username}
-        //         </Typography>}
-        //         {userInfo && <Typography color="blue-gray" className="font-medium mb-2">
-        //             <HeartIcon name="email" size="xl" /> EMAIL: {userInfo.email}
-        //         </Typography>}
-        //         {userInfo && <Typography color="blue-gray" className="font-medium mb-2">
-        //             <HeartIcon name="info" size="xl" /> BIO: {userInfo.bio}
-        //         </Typography>}
-        //         <Typography color="blue-gray" className="font-medium mb-2">
-        //             <HeartIcon name="access_time" size="xl" /> TIME: {currentTime.toLocaleTimeString()}
-        //         </Typography>
-        //     </CardBody>
-        //     <CardFooter>
-        //         <Button onClick={handleEdit} color="lightBlue" fullWidth>Edit User</Button>
-        //     </CardFooter>
-        // </Card>
-
     );
 }
 

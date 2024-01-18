@@ -14,6 +14,7 @@ import {
 import {ChevronUpDownIcon, MagnifyingGlassIcon, PencilIcon, UserPlusIcon} from "@heroicons/react/16/solid";
 import {useFetchUsers} from "./UserHook";
 import {useState} from "react";
+import UserRow from "./UserRow";
 
 function UserList() {
 
@@ -32,6 +33,7 @@ function UserList() {
         },
     ];
 
+    const [search, setSearch] = useState('');
     const [sortField, setSortField] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
     const headers = ['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'];
@@ -49,7 +51,6 @@ function UserList() {
         // 在这里，你应该根据sortField和sortDirection来更新你的数据
     };
 
-
     const users = useFetchUsers();
     const [page, setPage] = useState(1);
     const usersPerPage = 10;
@@ -57,7 +58,13 @@ function UserList() {
 
     const indexOfLastUser = page * usersPerPage;
     const indexOfFirstUser = indexOfLastUser - usersPerPage;
-    // const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+
+    // const filteredUsers = users.filter(user => user.nickname.includes(search) || user.email.includes(search));
+    const filteredUsers = users.filter(user =>
+        (user.nickname && user.nickname.includes(search)) ||
+        (user.email && user.email.includes(search))
+    );
+
     let currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
     if (!Array.isArray(currentUsers)) {
         currentUsers = [];
@@ -74,6 +81,9 @@ function UserList() {
             setPage(page + 1);
         }
     };
+
+
+
 
     return (
             <Card className="h-full w-full">
@@ -110,11 +120,12 @@ function UserList() {
                             <Input
                                 label="Search"
                                 icon={<MagnifyingGlassIcon className="h-4 w-4" />}
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
                             />
                         </div>
                     </div>
                 </CardHeader>
-
                 <CardBody className="overflow-auto justify-between px-4 flex-grow mt-0">
                     <div className="overflow-auto" style={{maxHeight: 'calc(100vh - 200px)'}}>
                         <table className="mt-1 w-full min-w-max table-auto text-left">
@@ -137,119 +148,12 @@ function UserList() {
                             </tr>
                             </thead>
                             <tbody>
-                            {/*{users.map((user, index) => {*/}
-                            {currentUsers.map((user, index) => {
-                                    const isLast = index === users.length - 1;
-                                    const classes = isLast
-                                        ? "p-2"
-                                        : "p-2 border-b border-blue-gray-50";
-
-                                    return (
-                                        <tr key={user.id}>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.id}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex items-center gap-3">
-                                                    {/* 这里可以添加Avatar组件 */}
-                                                    <Avatar src={user.avatar} alt={user.nickname} size="sm"/>
-                                                    <div className="flex flex-col">
-                                                        <Typography variant="small" color="blue-gray"
-                                                                    className="font-normal">
-                                                            {user.nickname}
-                                                        </Typography>
-                                                        <Typography variant="small" color="blue-gray"
-                                                                    className="font-normal">
-                                                            {user.email}
-                                                        </Typography>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.username}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.email}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.phone}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.bio}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.totp_secret}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="w-max">
-                                                    <Chip variant="ghost" size="sm" value={user.online ? "在线" : "离线"}
-                                                          color={user.online ? "green" : "blue-gray"}
-                                                    />
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.enable_type ? '启用' : '禁用'}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.created_at}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.updated_at}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <div className="flex flex-col">
-                                                    <Typography variant="small" color="blue-gray" className="font-normal">
-                                                        {user.last_login_time}
-                                                    </Typography>
-                                                </div>
-                                            </td>
-                                            <td className={classes}>
-                                                <Tooltip content="修改用户">
-                                                    <IconButton variant="text">
-                                                        <PencilIcon className="h-4 w-4"/>
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </td>
-                                        </tr>
-                                    );
-                                },
-                            )}
+                            {/*{currentUsers.map((user, index) =>(*/}
+                            {/*    <UserRow user={user} isLast={index === users.length - 1} />*/}
+                            {/*))}*/}
+                            {(search ? filteredUsers : currentUsers).map((user, index) => (
+                                <UserRow user={user} isLast={index === (search ? filteredUsers : currentUsers).length - 1} />
+                            ))}
                             </tbody>
                         </table>
                     </div>

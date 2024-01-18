@@ -12,9 +12,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
-	"math/rand"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -40,25 +38,10 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// 生成唯一用户名
-func generateUsername() string {
-	var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	var digits = []rune("0123456789")
-
-	var b strings.Builder
-	for i := 0; i < 6; i++ {
-		b.WriteRune(letters[rand.Intn(len(letters))])
-	}
-	for i := 0; i < 10; i++ {
-		b.WriteRune(digits[rand.Intn(len(digits))])
-	}
-	return b.String()
-}
-
 // RegisterUser 用户注册
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		username := generateUsername()
+		username := utils.GenerateUsername()
 		type UserDTO struct {
 			Email    string `json:"email"`
 			Password string `json:"password"`
@@ -170,7 +153,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		accessTokenCookie := new(http.Cookie)
 		accessTokenCookie.Name = "AccessToken"
 		accessTokenCookie.Value = accessToken
-		accessTokenCookie.Expires = time.Now().Add(1 * time.Hour)
+		accessTokenCookie.Expires = time.Now().Add(24 * time.Hour)
 		accessTokenCookie.SameSite = http.SameSiteNoneMode
 		accessTokenCookie.HttpOnly = true
 		accessTokenCookie.Secure = true
