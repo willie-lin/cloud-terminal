@@ -34,21 +34,12 @@ function AddUserForm({ onAddUser }) {
         try {
             // 对密码进行哈希处理
             const hashedPassword = CryptoJS.SHA256(password).toString();
-            // console.log(email);
-            // console.log(hashedPassword);
-            // console.log(onlineStatus);
-            // console.log(enableType);
             const data = {
                 email: email,  // 使用传递过来的email
                 password: hashedPassword,
                 online: onlineStatus,
                 enableType: enableType
             }
-            console.log(data)
-            console.log(data.email);
-            console.log(data.password);
-            console.log(data.online);
-            console.log(data.enableType);
             await addUser(data); // 使用 register 函数
             // console.log(datas);
             onAddUser(email);

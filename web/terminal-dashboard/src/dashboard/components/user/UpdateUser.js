@@ -4,7 +4,7 @@ import {
     Card,
     CardBody,
     CardHeader,
-    Input,
+    Input, Option, Select,
     Textarea,
     Typography
 } from '@material-tailwind/react';
@@ -13,6 +13,8 @@ function UpdateUser({ onUpdateUser }) {
     const [nickname, setNickname] = useState(null)
     const [phone, setPhone] = useState(null)
     const [bio, setBio] = useState(null)
+    const [onlineStatus, setOnlineStatus] = useState('');
+    const [enableType, setEnableType] = useState('');
 
     function handleSubmit() {
 
@@ -74,6 +76,22 @@ function UpdateUser({ onUpdateUser }) {
                                 name="bio"  // 添加name属性
                                 // onChange={handleChange}
                             />
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Online Status
+                            </Typography>
+                            <Select size="md"
+                                    label="OnlineStatus"
+                                    onChange={value => setOnlineStatus(value)} >
+                                <Option value={true}>True</Option>
+                                <Option value={false}>False</Option>
+                            </Select>
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Enable Type
+                            </Typography>
+                            <Select size="lg" label="EnableType" onChange={value => setEnableType(value)} >
+                                <Option value={true}>True</Option>
+                                <Option value={false}>False</Option>
+                            </Select>
                         </div>
                         <Button fullWidth
                                 type="submit"
