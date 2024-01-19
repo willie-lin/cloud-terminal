@@ -41,7 +41,11 @@ function RegisterForm({ onRegister }) {
         try {
             // 对密码进行哈希处理
             const hashedPassword = CryptoJS.SHA256(password).toString();
-            const data = await register(email, hashedPassword); // 使用 register 函数
+            const data = {
+                email: email,
+                password: hashedPassword,
+            }
+           await register(data); // 使用 register 函数
             // console.log(data);
             onRegister(email);
         } catch (error) {

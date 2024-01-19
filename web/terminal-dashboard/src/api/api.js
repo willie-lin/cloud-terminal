@@ -1,6 +1,4 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
-import {data} from "autoprefixer";
 
 
 const api = axios.create({
@@ -13,9 +11,9 @@ const api = axios.create({
 
 
 // login
-export const login = async (email, password, otp) => {
+export const login = async (data) => {
     try {
-        const response = await api.post('/api/login', { email, password, otp });
+        const response = await api.post('/api/login', data);
         if (response.status === 403 || response.data === 'Invalid password' || response.data === 'Invalid-OTP') {
         // if (response.data === 'Invalid-password') {
             throw new Error('用户名或密码错误');
@@ -28,9 +26,9 @@ export const login = async (email, password, otp) => {
 };
 
 // register
-export const register = async (email, password) => {
+export const register = async (data) => {
     try {
-        const response = await api.post('/api/register', { email, password });
+        const response = await api.post('/api/register', data);
         return response.data;
     } catch (error) {
         console.error(error);
@@ -38,9 +36,9 @@ export const register = async (email, password) => {
 };
 
 // forgot-password
-export const resetPassword = async (email, password) => {
+export const resetPassword = async (data) => {
     try {
-        const response = await api.post('/api/reset-password', { email, password });
+        const response = await api.post('/api/reset-password', data);
         return response.data;
     } catch (error) {
         console.error(error);
@@ -88,10 +86,9 @@ export const getAllUsers = async () => {
 //getUserByEmail
 export const getUserByEmail = async (email) => {
     try {
-        const response = await api.post('/admin/user/email', { email },{
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("user_token")}
-        });
+        const response = await api.post('/admin/user/email', { email },
+            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
+        );
         return response.data;
     } catch (error) {
         console.error(error);
@@ -101,10 +98,10 @@ export const getUserByEmail = async (email) => {
 // Enable2FA
 export const enable2FA = async (email) => {
     try {
-        const response = await api.post('/admin/enable-2fa', { email }, {
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("user_token")}
-        });
+        const response = await api.post('/admin/enable-2fa', { email },
+
+            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
+        );
         return response.data;
     } catch (error) {
         console.error(error);
@@ -112,13 +109,11 @@ export const enable2FA = async (email) => {
 };
 
 // Confirm2FA
-export const confirm2FA = async (email, otp, secret) => {
+export const confirm2FA = async (data) => {
     try {
-        const response = await api.post('/admin/confirm-2FA', { email, otp, secret },
-            {
-                headers: {
-                    "Authorization": "Bearer " + localStorage.getItem("user_token")}
-            });
+        const response = await api.post('/admin/confirm-2FA', data,
+            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
+            );
         if (response.status === 400) {
             throw new Error('Invalid TOTP secret');
         }
@@ -146,10 +141,11 @@ export const uploadFile = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await api.post(`/admin/uploads`, formData, {
+        const response = await api.post(`/admin/uploads`, formData,
+            {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    "Authorization": "Bearer " + localStorage.getItem("user_token")
+                    // "Authorization": "Bearer " + localStorage.getItem("user_token")
                 },
             }
         );
@@ -163,10 +159,8 @@ export const uploadFile = async (file) => {
 export const editUserInfo = async (data) => {
     try {
         const response = await api.post(`/admin/edit-userinfo`, data,
-            {
-                headers: {
-                    "Authorization": "Bearer " + localStorage.getItem("user_token")}
-            });
+            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
+        );
         return response.data;
     } catch (error) {
         console.error(error);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {Alert, Button, Card, CardBody, CardHeader, Input, Select, Typography, Option} from "@material-tailwind/react";
-import {addUser, checkEmail, register} from "../../../api/api";
+import {addUser, checkEmail} from "../../../api/api";
 import CryptoJS from "crypto-js";
 
 function AddUserForm({ onAddUser }) {

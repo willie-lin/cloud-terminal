@@ -52,9 +52,15 @@ function LoginForm({ onLogin }) {
             const hashedPassword = CryptoJS.SHA256(password).toString();
 
             // 将OTP赋值给totp_Secret
-            const data = await login(email, hashedPassword, otp); // 使用 login 函数
-            console.log(data);
-            console.log(data.token);
+            const data = {
+                email: email,
+                password: hashedPassword,
+                otp: otp
+
+            }
+            await login(data); // 使用 login 函数
+            // console.log(data);
+            // console.log(data.token);
             onLogin(email);
             // 在登录成功后重定向到/dashboard
             navigate('/dashboard'); // 登录后重定向到仪表盘

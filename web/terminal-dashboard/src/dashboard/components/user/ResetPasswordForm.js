@@ -43,7 +43,12 @@ function ResetPasswordForm({ onResetPassword }) {
                 try {
                     // 对密码进行哈希处理
                     const hashedPassword = CryptoJS.SHA256(password).toString();
-                    const data = await resetPassword(email, hashedPassword);
+
+                    const data = {
+                        email: email,
+                        password: hashedPassword,
+                    }
+                        await resetPassword(data);
                     console.log(data)
                     alert("reset Password ✅");
                     navigate('/login'); // 跳转到登录页面
