@@ -60,7 +60,8 @@ function UserList() {
     // const filteredUsers = users.filter(user => user.nickname.includes(search) || user.email.includes(search));
     const filteredUsers = users.filter(user =>
         (user.nickname && user.nickname.includes(search)) ||
-        (user.email && user.email.includes(search))
+        (user.email && user.email.includes(search)) ||
+        (user.username && user.username.includes(search))
     );
 
     let currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
