@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useRef, useState} from "react";
 import {Button, Card, CardBody, CardHeader, Input, Textarea, Typography} from "@material-tailwind/react";
 import {editUserInfo, uploadFile} from "../../../api/api";
 import {useLocation, useNavigate} from "react-router-dom";

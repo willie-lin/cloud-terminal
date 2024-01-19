@@ -10,7 +10,7 @@ import {
 } from '@material-tailwind/react';
 import {updateUser} from "../../../api/api";
 
-function UpdateUser({ user, onUpdateUser, onClose}) {
+function UpdateUser({ user, onUpdateUser }) {
 
     // 使用user的值来初始化你的状态
     const [username, setUsername] = useState(user ? user.username : '');
@@ -31,10 +31,11 @@ function UpdateUser({ user, onUpdateUser, onClose}) {
                 nickname: nickname,
                 phone: phone,
                 bio: bio,
-                onlineStatus: onlineStatus,
-                enableType: enableType,
+                online: onlineStatus,
+                enable_type: enableType,
             };
             await updateUser(data);
+            onUpdateUser()
         } catch (error) {
             console.error(error);
     }

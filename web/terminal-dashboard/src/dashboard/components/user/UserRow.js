@@ -8,10 +8,12 @@ function UserRow({ user, isLast }) {
     const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";
     // 假设你有一个状态来存储当前正在编辑的用户
     const [editingUser, setEditingUser] = useState(null);
+
+    const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
+
     const handleUpdateUser = () => {
         setIsUpdateUserOpen(false);
     };
-    const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
     const openUpdateUser = (user) => {
         setEditingUser(user)
         setIsUpdateUserOpen(true);
