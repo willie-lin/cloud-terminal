@@ -95,20 +95,6 @@ function UserList() {
         setIsAddUserOpen(false);
     };
 
-
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
-
-    const handleEdit = (user) => {
-        setCurrentUser(user);
-        setIsModalOpen(true);
-    };
-
-    const handleClose = () => {
-        setIsModalOpen(false);
-        setCurrentUser(null);
-    };
-
     return (
             <Card className="h-full w-full">
                 <CardHeader floated={true} shadow={false} className="rounded-none">
@@ -130,7 +116,14 @@ function UserList() {
                             </Button>
                         </div>
                         {isAddUserOpen && (
-                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                                 onClick={(e) => {
+                                     // 如果事件的目标是这个容器本身，那么关闭模态窗口
+                                     if (e.target === e.currentTarget) {
+                                         closeAddUser();
+                                     }
+                                 }}
+                            >
                                 <AddUserForm onAddUser={handleAddUser} onClose={closeAddUser}/>
                             </div>
                         )}

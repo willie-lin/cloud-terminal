@@ -6,14 +6,20 @@ import {useState} from "react";
 
 function UserRow({ user, isLast }) {
     const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";
-    const [editUser, setEditUser] = useState(null);
 
-    const handleEdit = () => {
-        setEditUser(user);
+
+    const handleUpdateUser = () => {
+        setIsUpdateUserOpen(false);
     };
 
-    const handleClose = () => {
-        setEditUser(null);
+
+    const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
+    const openUpdateUser = () => {
+        setIsUpdateUserOpen(true);
+    };
+
+    const closeUpdateUser = () => {
+        setIsUpdateUserOpen(false);
     };
 
     return (
@@ -113,25 +119,33 @@ function UserRow({ user, isLast }) {
                 </div>
             </td>
             <td className={classes}>
-                <Tooltip content="修改用户" placement="top">
-                    <IconButton
+                <Tooltip content="Edit User" placement="top">
+                    <IconButton variant="text"
                         color="lightBlue"
                         buttonType="filled"
                         size="regular"
                         rounded={false}
                         block={false}
                         iconOnly={true}
-                        ripple="dark"
-                        onClick={() => handleEdit(user)}
+                        ripple="light"  // dark
+                        onClick={() => openUpdateUser()}
                     >
-                        <PencilIcon name="edit" color="white" size="20px" />
+                        <PencilIcon className="h-4 w-4" />
+                        {/*<PencilIcon name="edit" color="white" size="20px" />*/}
                     </IconButton>
                 </Tooltip>
             </td>
         </tr>
-    {editUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <UpdateUser />
+    {isUpdateUserOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+             onClick={(e) => {
+                 // 如果事件的目标是这个容器本身，那么关闭模态窗口
+                 if (e.target === e.currentTarget) {
+                     closeUpdateUser();
+                 }
+             }}
+        >
+            <UpdateUser onUpdateUser={handleUpdateUser}  onClose={closeUpdateUser}/>
         </div>
     )}
     </>

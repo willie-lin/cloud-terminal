@@ -9,7 +9,7 @@ import {
     Typography
 } from '@material-tailwind/react';
 
-function UpdateUser({ EditUser }) {
+function UpdateUser({ onUpdateUser }) {
     const [nickname, setNickname] = useState(null)
     const [phone, setPhone] = useState(null)
     const [bio, setBio] = useState(null)
