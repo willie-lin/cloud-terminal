@@ -9,15 +9,29 @@ import {
     Typography
 } from '@material-tailwind/react';
 
-function UpdateUser({ onUpdateUser }) {
-    const [nickname, setNickname] = useState(null)
-    const [phone, setPhone] = useState(null)
-    const [bio, setBio] = useState(null)
-    const [onlineStatus, setOnlineStatus] = useState('');
-    const [enableType, setEnableType] = useState('');
+function UpdateUser({ user, onUpdateUser, onClose}) {
+    // const [nickname, setNickname] = useState(null)
+    // const [phone, setPhone] = useState(null)
+    // const [bio, setBio] = useState(null)
+    // const [onlineStatus, setOnlineStatus] = useState('');
+    // const [enableType, setEnableType] = useState('');
 
-    function handleSubmit() {
+    // 使用user的值来初始化你的状态
+    const [username, setUsername] = useState(user ? user.username : '');
+    const [nickname, setNickname] = useState(user ? user.nickname : '');
+    const [phone, setPhone] = useState(user ? user.phone : '');
+    const [bio, setBio] = useState(user ? user.bio : '');
+    const [onlineStatus, setOnlineStatus] = useState(user ? user.online : '');
+    const [enableType, setEnableType] =  useState(user ? user.enable_type : '');
+    const [inputError, setInputError] = useState(false);
 
+    function handleSubmit(e) {
+        const { name, value } = e.target;
+        if (name === 'bio' && value.length > 200) {
+            setInputError(true);
+        } else {
+            setInputError(false);
+        }
     }
 
     return (
@@ -31,6 +45,21 @@ function UpdateUser({ onUpdateUser }) {
                     <form onSubmit={handleSubmit}>
                         <div className="mb-1 flex flex-col gap-6">
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                ID
+                            </Typography>
+                            <Input
+                                variant="outlined"
+                                label="Disabled"
+                                disabled
+                                type="username"
+                                color="lightBlue"
+                                size="regular"
+                                outline={true}
+                                value={username}
+                                name="username"  // 添加name属性
+                                onChange={e => setUsername(e.target.value)}
+                            />
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Nickname
                             </Typography>
                             <Input
@@ -40,10 +69,9 @@ function UpdateUser({ onUpdateUser }) {
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
-                                // placeholder="Nickname"
                                 value={nickname}
                                 name="nickname"  // 添加name属性
-                                // onChange={handleChange}
+                                onChange={e => setNickname(e.target.value)}
                             />
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Phone
@@ -55,10 +83,10 @@ function UpdateUser({ onUpdateUser }) {
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
-                                // placeholder="Phone"
                                 value={phone}
                                 name="phone"  // 添加name属性
-                                // onChange={handleChange}
+                                onChange={e => setPhone(e.target.value)}
+
                             />
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Bio
@@ -70,27 +98,30 @@ function UpdateUser({ onUpdateUser }) {
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
-                                // className={`border-${inputError ? 'red-500' : 'blue-500'}`}
-                                // placeholder="Bio"
+                                className={`border-${inputError ? 'red-500' : 'blue-500'}`}
                                 value={bio}
                                 name="bio"  // 添加name属性
-                                // onChange={handleChange}
+                                onChange={e => setBio(e.target.value)}
                             />
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Online Status
                             </Typography>
                             <Select size="md"
                                     label="OnlineStatus"
-                                    onChange={value => setOnlineStatus(value)} >
-                                <Option value={true}>True</Option>
-                                <Option value={false}>False</Option>
+                                    value={onlineStatus ? 'true' : 'false'}
+                                    onChange={value => setOnlineStatus(value === 'true')} >
+                                <Option value='true'>True</Option>
+                                <Option value='false'>False</Option>
                             </Select>
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Enable Type
                             </Typography>
-                            <Select size="lg" label="EnableType" onChange={value => setEnableType(value)} >
-                                <Option value={true}>True</Option>
-                                <Option value={false}>False</Option>
+                            <Select size="md"
+                                    label="EnableType"
+                                    value={enableType ? 'true' : 'false'}
+                                    onChange={value => setEnableType(value === 'true')} >
+                                <Option value='true'>True</Option>
+                                <Option value='false'>False</Option>
                             </Select>
                         </div>
                         <Button fullWidth

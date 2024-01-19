@@ -6,15 +6,14 @@ import {useState} from "react";
 
 function UserRow({ user, isLast }) {
     const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";
-
-
+    // 假设你有一个状态来存储当前正在编辑的用户
+    const [editingUser, setEditingUser] = useState(null);
     const handleUpdateUser = () => {
         setIsUpdateUserOpen(false);
     };
-
-
     const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
-    const openUpdateUser = () => {
+    const openUpdateUser = (user) => {
+        setEditingUser(user)
         setIsUpdateUserOpen(true);
     };
 
@@ -128,10 +127,9 @@ function UserRow({ user, isLast }) {
                         block={false}
                         iconOnly={true}
                         ripple="light"  // dark
-                        onClick={() => openUpdateUser()}
+                        onClick={() => openUpdateUser(user)}
                     >
                         <PencilIcon className="h-4 w-4" />
-                        {/*<PencilIcon name="edit" color="white" size="20px" />*/}
                     </IconButton>
                 </Tooltip>
             </td>
@@ -145,7 +143,7 @@ function UserRow({ user, isLast }) {
                  }
              }}
         >
-            <UpdateUser onUpdateUser={handleUpdateUser}  onClose={closeUpdateUser}/>
+            <UpdateUser user={editingUser} onUpdateUser={handleUpdateUser}  onClose={closeUpdateUser}/>
         </div>
     )}
     </>
