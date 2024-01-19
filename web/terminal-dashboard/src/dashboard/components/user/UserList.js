@@ -9,7 +9,7 @@ import {
     TabsHeader,
     Typography
 } from "@material-tailwind/react";
-import {ChevronUpDownIcon, MagnifyingGlassIcon, PencilIcon, UserPlusIcon} from "@heroicons/react/16/solid";
+import {ChevronUpDownIcon, MagnifyingGlassIcon, UserPlusIcon} from "@heroicons/react/16/solid";
 import {useFetchUsers} from "./UserHook";
 import {useState} from "react";
 import UserRow from "./UserRow";
@@ -81,8 +81,10 @@ function UserList() {
     // 添加用户
     const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
-    const handleAddUser = (newUser) => {
+    const handleAddUser = () => {
         // 这里是处理新用户的代码，例如发送一个请求到后端服务
+        setIsAddUserOpen(false);
+        // 添加用户成功后，将新用户添加到用户列表中
     };
 
     const openAddUser = () => {
@@ -91,6 +93,20 @@ function UserList() {
 
     const closeAddUser = () => {
         setIsAddUserOpen(false);
+    };
+
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+
+    const handleEdit = (user) => {
+        setCurrentUser(user);
+        setIsModalOpen(true);
+    };
+
+    const handleClose = () => {
+        setIsModalOpen(false);
+        setCurrentUser(null);
     };
 
     return (
@@ -114,18 +130,7 @@ function UserList() {
                             </Button>
                         </div>
                         {isAddUserOpen && (
-                            <div style={{
-                                position: 'fixed',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                zIndex: 9999,
-                            }}>
+                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                                 <AddUserForm onAddUser={handleAddUser} onClose={closeAddUser}/>
                             </div>
                         )}
@@ -172,9 +177,6 @@ function UserList() {
                             </tr>
                             </thead>
                             <tbody>
-                            {/*{currentUsers.map((user, index) =>(*/}
-                            {/*    <UserRow user={user} isLast={index === users.length - 1} />*/}
-                            {/*))}*/}
                             {(search ? filteredUsers : currentUsers).map((user, index) => (
                                 <UserRow user={user} isLast={index === (search ? filteredUsers : currentUsers).length - 1} />
                             ))}

@@ -1,12 +1,23 @@
 import {Avatar, Chip, IconButton, Tooltip, Typography} from "@material-tailwind/react";
 import {PencilIcon} from "@heroicons/react/16/solid";
+import UpdateUser from "./UpdateUser";
+import {useState} from "react";
+
 
 function UserRow({ user, isLast }) {
-    const classes = isLast
-        ? "p-2"
-        : "p-2 border-b border-blue-gray-50";
+    const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";
+    const [editUser, setEditUser] = useState(null);
+
+    const handleEdit = () => {
+        setEditUser(user);
+    };
+
+    const handleClose = () => {
+        setEditUser(null);
+    };
 
     return (
+        <>
         <tr key={user.id}>
             <td className={classes}>
                 <div className="flex flex-col">
@@ -102,13 +113,28 @@ function UserRow({ user, isLast }) {
                 </div>
             </td>
             <td className={classes}>
-                <Tooltip content="修改用户">
-                    <IconButton variant="text">
-                        <PencilIcon className="h-4 w-4"/>
+                <Tooltip content="修改用户" placement="top">
+                    <IconButton
+                        color="lightBlue"
+                        buttonType="filled"
+                        size="regular"
+                        rounded={false}
+                        block={false}
+                        iconOnly={true}
+                        ripple="dark"
+                        onClick={() => handleEdit(user)}
+                    >
+                        <PencilIcon name="edit" color="white" size="20px" />
                     </IconButton>
                 </Tooltip>
             </td>
         </tr>
+    {editUser && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <UpdateUser />
+        </div>
+    )}
+    </>
     );
 }
 export default UserRow;

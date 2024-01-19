@@ -4,9 +4,9 @@ import {addUser, checkEmail} from "../../../api/api";
 import CryptoJS from "crypto-js";
 
 function AddUserForm({ onAddUser }) {
-    const [addUserError, setAddUserError] = useState(''); // 添加一个新的状态来保存密码错误信息
+    const [addUserError, setAddUserError] = useState('');
     const [password, setPassword] = useState('');
-    const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
+    const [emailError, setEmailError] = useState('');
     const [email, setEmail] = useState('');
     const [enableType, setEnableType] = useState('');
     const [onlineStatus, setOnlineStatus] = useState('');
