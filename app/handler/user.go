@@ -143,27 +143,46 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 // UpdateUser 更新一个用户
 func UpdateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
+		type UpdateUserDTO struct {
+			Username   string `json:"username"`
+			Nickname   string `json:"nickname"`
+			Phone      string `json:"phone"`
+			Bio        string `json:"bio"`
+			Online     bool   `json:"online"`
+			EnableType bool   `json:"enable_type"`
+		}
+
+		dto := new(UpdateUserDTO)
+		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		// 检查ID是否有效
-		if u.ID == uuid.Nil {
-			return c.JSON(http.StatusBadRequest, "Invalid ID")
-		}
-
-		ue, err := client.User.UpdateOneID(u.ID).SetEmail(u.Email).SetNickname(u.Nickname).Save(context.Background())
+		// 从数据库中获取用户
+		ua, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, err.Error())
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
-			log.Printf("Error updating user: %v", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			log.Printf("Error querying user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
-		return c.JSON(http.StatusOK, ue)
+
+		// 更新数据库
+		_, err = client.User.UpdateOne(ua).
+			SetNickname(dto.Nickname).
+			SetPhone(dto.Phone).
+			SetBio(dto.Bio).
+			SetOnline(dto.Online).
+			SetEnableType(dto.EnableType).
+			Save(context.Background())
+		if err != nil {
+			log.Printf("Error updating user info: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating user info in database"})
+		}
+		//return c.JSON(http.StatusOK, map[string]string{"img": ua.Avatar})
+		return c.JSON(http.StatusOK, map[string]string{"message": "User update successful"})
 	}
 }
 

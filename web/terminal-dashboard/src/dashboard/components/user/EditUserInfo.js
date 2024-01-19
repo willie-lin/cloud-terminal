@@ -7,54 +7,19 @@ function EditUserInfo({ email }) {
     // 获取用户信息
     const location = useLocation();
     const userInfo = location.state.userInfo;
-    const [newInfo, setNewInfo] = useState(userInfo);
-    const [nickname, setNickname] = useState(null)
-    const [phone, setPhone] = useState(null)
-    const [bio, setBio] = useState(null)
+    // const [avatar, setAvatar] = useState(userInfo ? userInfo.avatar : '');
+
+    const [nickname, setNickname] = useState(userInfo ? userInfo.nickname : '');
+    const [phone, setPhone] = useState(userInfo ? userInfo.phone : '');
+    const [bio, setBio] = useState(userInfo ? userInfo.bio : '');
+
     const [file, setFile] = useState(null); // 添加一个新的 state 来存储文件
     const [preview, setPreview] = useState(null); // 用于存储预览图片的 URL
     const fileInputRef = useRef(); // 用于访问文件输入元素
+
+    const MAX_LENGTH = 180; // 设置最大长度为180
     const [inputError, setInputError] = useState(false);
-
     const navigate = useNavigate();
-
-    useEffect(() => {
-        setNickname(userInfo.nickname);
-        setPhone(userInfo.phone);
-        setBio(userInfo.bio);
-    }, []);
-
-
-    // 当组件挂载时，设置 initialInfo
-    useEffect(() => {
-        setNewInfo(userInfo);
-    }, []);
-
-    const handleChange = (event) => {
-        const { name, value } = event.target;
-        if (name === 'bio' && value.length > 200) {
-            setInputError(true);
-        } else {
-            setInputError(false);
-        }
-            setNewInfo({
-                ...newInfo,
-                [event.target.name]: event.target.value,
-            });
-        switch (event.target.name) {
-            case 'nickname':
-                setNickname(event.target.value);
-                break;
-            case 'phone':
-                setPhone(event.target.value);
-                break;
-            case 'bio':
-                setBio(event.target.value);
-                break;
-            default:
-                break;
-        }
-    };
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -86,32 +51,25 @@ function EditUserInfo({ email }) {
             reader.readAsDataURL(file);
         }
     };
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-
-        let updatedInfo = {...newInfo }; // 这里将newInfo的属性添加到userInfo中
-        if (file) {
-            const filePath = await uploadFile(file);
-            updatedInfo = { ...updatedInfo, avatar: filePath};
-        }
-        const MAX_LENGTH = 196; // 设置最大长度为200
-        if (updatedInfo.bio.length > MAX_LENGTH) {
-            console.error('Error: Bio is greater than the required length');
-            return; // 如果bio的长度超过了最大长度，就返回并不执行后续的更新操作
-        }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         try {
-            const data = {
-                email: email,  // 使用传递过来的email
-                avatar: updatedInfo.avatar,
-                nickname:updatedInfo.nickname,
-                phone: updatedInfo.phone,
-                bio: updatedInfo.bio
-            };
-            // console.log(data);  // 打印出data对象
-            await editUserInfo(data);
-            navigate('/userinfo');
-        } catch (error) {
+            if (file) {
+                const filePath = await uploadFile(file);
+                const data = {
+                    email: email,  // 使用传递过来的email
+                    avatar: filePath,
+                    nickname: nickname,
+                    phone: phone,
+                    bio: bio
+                };
+                // console.log(data);  // 打印出data对象
+                await editUserInfo(data);
+                navigate('/userinfo');
+            }
+        }
+        catch
+            (error) {
             console.error(error);
         }
     };
@@ -129,7 +87,7 @@ function EditUserInfo({ email }) {
                         <label>
                             <img
                                 className="w-24 h-24 rounded-full object-cover mb-6 mx-auto cursor-pointer"
-                                src={preview || newInfo?.avatar || "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg"}
+                                src={preview || userInfo?.avatar || "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg"}
                                 alt="Avatar Upload"
                                 style={{width: '120px', height: '120px', border: '1px solid'}} // Added border here
                             />
@@ -153,10 +111,10 @@ function EditUserInfo({ email }) {
                                 color="lightBlue"
                                 size="regular"
                                 outline={true}
-                                // placeholder="Nickname"
                                 value={nickname}
                                 name="nickname"  // 添加name属性
-                                onChange={handleChange}
+                                // onChange={handleChange}
+                                onChange={e => setNickname(e.target.value)}
                             />
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Phone
@@ -171,7 +129,8 @@ function EditUserInfo({ email }) {
                                 // placeholder="Phone"
                                 value={phone}
                                 name="phone"  // 添加name属性
-                                onChange={handleChange}
+                                // onChange={handleChange}
+                                onChange={e => setPhone(e.target.value)}
                             />
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Bio
@@ -187,7 +146,15 @@ function EditUserInfo({ email }) {
                                 // placeholder="Bio"
                                 value={bio}
                                 name="bio"  // 添加name属性
-                                onChange={handleChange}
+                                onChange={e =>{
+                                    const value = e.target.value;
+                                    if (value.length > MAX_LENGTH) {
+                                        setInputError(true);
+                                    } else {
+                                        setInputError(false);
+                                    }
+                                    setBio(e.target.value)}
+                                }
                             />
                         </div>
                         <Button fullWidth

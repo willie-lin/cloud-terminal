@@ -8,13 +8,9 @@ import {
     Textarea,
     Typography
 } from '@material-tailwind/react';
+import {updateUser} from "../../../api/api";
 
 function UpdateUser({ user, onUpdateUser, onClose}) {
-    // const [nickname, setNickname] = useState(null)
-    // const [phone, setPhone] = useState(null)
-    // const [bio, setBio] = useState(null)
-    // const [onlineStatus, setOnlineStatus] = useState('');
-    // const [enableType, setEnableType] = useState('');
 
     // 使用user的值来初始化你的状态
     const [username, setUsername] = useState(user ? user.username : '');
@@ -24,14 +20,24 @@ function UpdateUser({ user, onUpdateUser, onClose}) {
     const [onlineStatus, setOnlineStatus] = useState(user ? user.online : '');
     const [enableType, setEnableType] =  useState(user ? user.enable_type : '');
     const [inputError, setInputError] = useState(false);
+    const MAX_LENGTH = 180; // 设置最大长度为200
 
-    function handleSubmit(e) {
-        const { name, value } = e.target;
-        if (name === 'bio' && value.length > 200) {
-            setInputError(true);
-        } else {
-            setInputError(false);
-        }
+    async function handleSubmit(e) {
+        e.preventDefault();  // 阻止表单的默认提交行为
+        try {
+            // 创建一个对象来存储你的表单数据
+            const data = {
+                username: username,
+                nickname: nickname,
+                phone: phone,
+                bio: bio,
+                onlineStatus: onlineStatus,
+                enableType: enableType,
+            };
+            await updateUser(data);
+        } catch (error) {
+            console.error(error);
+    }
     }
 
     return (
@@ -101,7 +107,16 @@ function UpdateUser({ user, onUpdateUser, onClose}) {
                                 className={`border-${inputError ? 'red-500' : 'blue-500'}`}
                                 value={bio}
                                 name="bio"  // 添加name属性
-                                onChange={e => setBio(e.target.value)}
+                                // onChange={e => setBio(e.target.value)}
+                                onChange={e =>{
+                                    const value = e.target.value;
+                                    if (value.length > MAX_LENGTH) {
+                                        setInputError(true);
+                                    } else {
+                                        setInputError(false);
+                                    }
+                                    setBio(e.target.value)}
+                                }
                             />
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Online Status

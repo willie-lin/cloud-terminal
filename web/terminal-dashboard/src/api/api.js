@@ -175,3 +175,12 @@ export const addUser = async (data) => {
         console.error(error);
     }
 };
+
+export const updateUser = async (data) => {
+    try {
+        const response = await api.post('/admin/update-user', data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
