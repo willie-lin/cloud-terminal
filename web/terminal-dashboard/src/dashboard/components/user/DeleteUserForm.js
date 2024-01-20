@@ -1,23 +1,25 @@
 import React, {useState} from 'react';
 import {Button, Card, CardBody, CardHeader, Input, Typography} from "@material-tailwind/react";
+import {deleteUser, } from "../../../api/api";
 
 function DeleteUserForm({ user, onDeleteUser, onClose }) {
     // 使用user的值来初始化你的状态
     const [username, setUsername] = useState(user ? user.username : '');
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();  // 阻止表单的默认提交行为
         if (window.confirm('Are you sure you want to delete this user?')) {
-            // Your delete logic here
-        }
-        try {
-
-            onDeleteUser()
-        }catch (error) {
-            console.log(error)
+            try {
+                const data = {
+                    username: username,
+                };
+                await deleteUser(data);
+                onDeleteUser();
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred while deleting the user.');
+            }
         }
     }
-
-
 
     return (
         <Card className="w-96">
