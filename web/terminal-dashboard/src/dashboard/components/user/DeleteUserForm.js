@@ -1,12 +1,9 @@
 import React, {useState} from 'react';
 import {Button, Card, CardBody, CardHeader, Input, Typography} from "@material-tailwind/react";
 
-function DeleteUserForm({ user, onDeleteUser }) {
-    const [modalOpen, setModalOpen] = useState(false);
+function DeleteUserForm({ user, onDeleteUser, onClose }) {
     // 使用user的值来初始化你的状态
     const [username, setUsername] = useState(user ? user.username : '');
-
-
     function handleSubmit(e) {
         e.preventDefault();  // 阻止表单的默认提交行为
         if (window.confirm('Are you sure you want to delete this user?')) {
@@ -70,11 +67,11 @@ function DeleteUserForm({ user, onDeleteUser }) {
                             iconOnly={false}
                             ripple="light"
                             type="button"
-                            // onClick={() => setModalOpen(false)}
-                            onClick={() => window.close()}
+                            onClick={onClose}
                         >
                             取消
                         </Button>
+
                     </div>
                 </form>
             </CardBody>

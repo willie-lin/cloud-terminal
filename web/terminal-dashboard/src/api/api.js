@@ -184,3 +184,12 @@ export const updateUser = async (data) => {
         console.error(error);
     }
 };
+
+export const deleteUser = async (data) => {
+    try {
+        const response = await api.post('/admin/delete-user', data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};

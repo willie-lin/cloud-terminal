@@ -180,6 +180,7 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 			SetBio(dto.Bio).
 			SetOnline(dto.Online).
 			SetEnableType(dto.EnableType).
+			SetLastLoginTime(time.Now()).
 			Save(context.Background())
 		if err != nil {
 			log.Printf("Error updating user info: %v", err)
@@ -191,46 +192,39 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 }
 
 // GetUserByUUID 根据ID查找用户
-func GetUserByUUID(client *ent.Client) echo.HandlerFunc {
+
+// DeleteUserByUsername 删除一个用户
+func DeleteUserByUsername(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		idParam := c.Param("id")
-		id, err := uuid.Parse(idParam)
-		if err != nil {
-			log.Printf("Invalid UUID: %v", err)
-			return c.JSON(http.StatusBadRequest, "Invalid UUID")
+		// UserDTO
+		type UserDTO struct {
+			Username string `json:"username"`
 		}
 
-		user, err := client.User.Query().Where(user.ID(id)).Only(context.Background())
+		dto := new(UserDTO)
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
+		ue, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, "User not found")
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error querying user")
-		}
-		return c.JSON(http.StatusOK, user)
-	}
-}
-
-// DeleteUserByUUID  删除一个用户
-func DeleteUserByUUID(client *ent.Client) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		idParam := c.Param("id")
-		id, err := uuid.Parse(idParam)
-		if err != nil {
-			log.Printf("Invalid UUID: %v", err)
-			return c.JSON(http.StatusBadRequest, "Invalid UUID")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
 
-		err = client.User.DeleteOneID(id).Exec(context.Background())
+		err = client.User.DeleteOne(ue).Exec(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, "User not found")
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
 			log.Printf("Error deleting user: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error deleting user")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error deleting user"})
 		}
 		return c.NoContent(http.StatusNoContent)
 	}

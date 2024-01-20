@@ -184,7 +184,7 @@ function UserRow({ user, isLast }) {
                                      closeDeleteUser();
                                  }}}
                         >
-                        <DeleteUserForm user={deleteUser} onDeleteUser={handleDeleteUser} onclose={closeDeleteUser}/>
+                        <DeleteUserForm user={deleteUser} onDeleteUser={handleDeleteUser} onClose={closeDeleteUser}/>
                         </div>
                     )}
                 </td>
