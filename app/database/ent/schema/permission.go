@@ -24,6 +24,7 @@ func (Permission) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique(),
+		field.String("description"),
 	}
 }
 
@@ -31,5 +32,7 @@ func (Permission) Fields() []ent.Field {
 func (Permission) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("roles", Role.Type).Ref("permissions"),
+		// Add more edges here
+		edge.To("users", User.Type),
 	}
 }
