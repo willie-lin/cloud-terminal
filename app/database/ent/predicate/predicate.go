@@ -15,9 +15,6 @@ type AssetGroup func(*sql.Selector)
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)
 
-// RefreshToken is the predicate function for refreshtoken builders.
-type RefreshToken func(*sql.Selector)
-
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
 

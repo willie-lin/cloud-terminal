@@ -46,19 +46,18 @@ type User struct {
 	LastLoginTime time.Time `json:"last_login_time,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges        UserEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges            UserEdges `json:"edges"`
+	permission_users *uuid.UUID
+	selectValues     sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
-	// RefreshTokens holds the value of the refresh_tokens edge.
-	RefreshTokens []*RefreshToken `json:"refresh_tokens,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
 // RolesOrErr returns the Roles value or an error if the edge
@@ -68,15 +67,6 @@ func (e UserEdges) RolesOrErr() ([]*Role, error) {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
-}
-
-// RefreshTokensOrErr returns the RefreshTokens value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) RefreshTokensOrErr() ([]*RefreshToken, error) {
-	if e.loadedTypes[1] {
-		return e.RefreshTokens, nil
-	}
-	return nil, &NotLoadedError{edge: "refresh_tokens"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -92,6 +82,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
+		case user.ForeignKeys[0]: // permission_users
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -191,6 +183,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.LastLoginTime = value.Time
 			}
+		case user.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field permission_users", values[i])
+			} else if value.Valid {
+				u.permission_users = new(uuid.UUID)
+				*u.permission_users = *value.S.(*uuid.UUID)
+			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
 		}
@@ -207,11 +206,6 @@ func (u *User) Value(name string) (ent.Value, error) {
 // QueryRoles queries the "roles" edge of the User entity.
 func (u *User) QueryRoles() *RoleQuery {
 	return NewUserClient(u.config).QueryRoles(u)
-}
-
-// QueryRefreshTokens queries the "refresh_tokens" edge of the User entity.
-func (u *User) QueryRefreshTokens() *RefreshTokenQuery {
-	return NewUserClient(u.config).QueryRefreshTokens(u)
 }
 
 // Update returns a builder for updating this User.

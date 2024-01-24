@@ -15,6 +15,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
 // PermissionUpdate is the builder for updating Permission entities.
@@ -50,6 +51,20 @@ func (pu *PermissionUpdate) SetNillableName(s *string) *PermissionUpdate {
 	return pu
 }
 
+// SetDescription sets the "description" field.
+func (pu *PermissionUpdate) SetDescription(s string) *PermissionUpdate {
+	pu.mutation.SetDescription(s)
+	return pu
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (pu *PermissionUpdate) SetNillableDescription(s *string) *PermissionUpdate {
+	if s != nil {
+		pu.SetDescription(*s)
+	}
+	return pu
+}
+
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (pu *PermissionUpdate) AddRoleIDs(ids ...uuid.UUID) *PermissionUpdate {
 	pu.mutation.AddRoleIDs(ids...)
@@ -63,6 +78,21 @@ func (pu *PermissionUpdate) AddRoles(r ...*Role) *PermissionUpdate {
 		ids[i] = r[i].ID
 	}
 	return pu.AddRoleIDs(ids...)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (pu *PermissionUpdate) AddUserIDs(ids ...uuid.UUID) *PermissionUpdate {
+	pu.mutation.AddUserIDs(ids...)
+	return pu
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (pu *PermissionUpdate) AddUsers(u ...*User) *PermissionUpdate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return pu.AddUserIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
@@ -89,6 +119,27 @@ func (pu *PermissionUpdate) RemoveRoles(r ...*Role) *PermissionUpdate {
 		ids[i] = r[i].ID
 	}
 	return pu.RemoveRoleIDs(ids...)
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (pu *PermissionUpdate) ClearUsers() *PermissionUpdate {
+	pu.mutation.ClearUsers()
+	return pu
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (pu *PermissionUpdate) RemoveUserIDs(ids ...uuid.UUID) *PermissionUpdate {
+	pu.mutation.RemoveUserIDs(ids...)
+	return pu
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (pu *PermissionUpdate) RemoveUsers(u ...*User) *PermissionUpdate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return pu.RemoveUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -142,6 +193,9 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.Name(); ok {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 	}
+	if value, ok := pu.mutation.Description(); ok {
+		_spec.SetField(permission.FieldDescription, field.TypeString, value)
+	}
 	if pu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -180,6 +234,51 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if pu.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   permission.UsersTable,
+			Columns: []string{permission.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RemovedUsersIDs(); len(nodes) > 0 && !pu.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   permission.UsersTable,
+			Columns: []string{permission.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   permission.UsersTable,
+			Columns: []string{permission.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -227,6 +326,20 @@ func (puo *PermissionUpdateOne) SetNillableName(s *string) *PermissionUpdateOne 
 	return puo
 }
 
+// SetDescription sets the "description" field.
+func (puo *PermissionUpdateOne) SetDescription(s string) *PermissionUpdateOne {
+	puo.mutation.SetDescription(s)
+	return puo
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (puo *PermissionUpdateOne) SetNillableDescription(s *string) *PermissionUpdateOne {
+	if s != nil {
+		puo.SetDescription(*s)
+	}
+	return puo
+}
+
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (puo *PermissionUpdateOne) AddRoleIDs(ids ...uuid.UUID) *PermissionUpdateOne {
 	puo.mutation.AddRoleIDs(ids...)
@@ -240,6 +353,21 @@ func (puo *PermissionUpdateOne) AddRoles(r ...*Role) *PermissionUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return puo.AddRoleIDs(ids...)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (puo *PermissionUpdateOne) AddUserIDs(ids ...uuid.UUID) *PermissionUpdateOne {
+	puo.mutation.AddUserIDs(ids...)
+	return puo
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (puo *PermissionUpdateOne) AddUsers(u ...*User) *PermissionUpdateOne {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return puo.AddUserIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
@@ -266,6 +394,27 @@ func (puo *PermissionUpdateOne) RemoveRoles(r ...*Role) *PermissionUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return puo.RemoveRoleIDs(ids...)
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (puo *PermissionUpdateOne) ClearUsers() *PermissionUpdateOne {
+	puo.mutation.ClearUsers()
+	return puo
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (puo *PermissionUpdateOne) RemoveUserIDs(ids ...uuid.UUID) *PermissionUpdateOne {
+	puo.mutation.RemoveUserIDs(ids...)
+	return puo
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (puo *PermissionUpdateOne) RemoveUsers(u ...*User) *PermissionUpdateOne {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return puo.RemoveUserIDs(ids...)
 }
 
 // Where appends a list predicates to the PermissionUpdate builder.
@@ -349,6 +498,9 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 	if value, ok := puo.mutation.Name(); ok {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 	}
+	if value, ok := puo.mutation.Description(); ok {
+		_spec.SetField(permission.FieldDescription, field.TypeString, value)
+	}
 	if puo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -387,6 +539,51 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if puo.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   permission.UsersTable,
+			Columns: []string{permission.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RemovedUsersIDs(); len(nodes) > 0 && !puo.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   permission.UsersTable,
+			Columns: []string{permission.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   permission.UsersTable,
+			Columns: []string{permission.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

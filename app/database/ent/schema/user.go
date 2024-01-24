@@ -44,7 +44,6 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("roles", Role.Type),
-		edge.To("refresh_tokens", RefreshToken.Type),
 	}
 }
 func (User) Indexes() []ent.Index {

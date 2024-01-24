@@ -15,7 +15,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/assetgroup"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/refreshtoken"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/usergroup"
@@ -79,13 +78,12 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			asset.Table:        asset.ValidColumn,
-			assetgroup.Table:   assetgroup.ValidColumn,
-			permission.Table:   permission.ValidColumn,
-			refreshtoken.Table: refreshtoken.ValidColumn,
-			role.Table:         role.ValidColumn,
-			user.Table:         user.ValidColumn,
-			usergroup.Table:    usergroup.ValidColumn,
+			asset.Table:      asset.ValidColumn,
+			assetgroup.Table: assetgroup.ValidColumn,
+			permission.Table: permission.ValidColumn,
+			role.Table:       role.ValidColumn,
+			user.Table:       user.ValidColumn,
+			usergroup.Table:  usergroup.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

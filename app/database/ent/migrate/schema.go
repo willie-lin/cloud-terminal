@@ -41,41 +41,13 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
 	PermissionsTable = &schema.Table{
 		Name:       "permissions",
 		Columns:    PermissionsColumns,
 		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
-	}
-	// RefreshTokensColumns holds the columns for the "refresh_tokens" table.
-	RefreshTokensColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "token", Type: field.TypeString},
-		{Name: "issued_at", Type: field.TypeTime},
-		{Name: "expires_at", Type: field.TypeTime},
-		{Name: "user_refresh_tokens", Type: field.TypeUUID},
-	}
-	// RefreshTokensTable holds the schema information for the "refresh_tokens" table.
-	RefreshTokensTable = &schema.Table{
-		Name:       "refresh_tokens",
-		Columns:    RefreshTokensColumns,
-		PrimaryKey: []*schema.Column{RefreshTokensColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "refresh_tokens_users_refresh_tokens",
-				Columns:    []*schema.Column{RefreshTokensColumns[4]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "refreshtoken_token",
-				Unique:  false,
-				Columns: []*schema.Column{RefreshTokensColumns[1]},
-			},
-		},
 	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
@@ -106,12 +78,21 @@ var (
 		{Name: "online", Type: field.TypeBool, Default: true},
 		{Name: "enable_type", Type: field.TypeBool, Default: true},
 		{Name: "last_login_time", Type: field.TypeTime},
+		{Name: "permission_users", Type: field.TypeUUID, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "users_permissions_users",
+				Columns:    []*schema.Column{UsersColumns[14]},
+				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "user_username_email",
@@ -186,7 +167,6 @@ var (
 		AssetsTable,
 		AssetGroupsTable,
 		PermissionsTable,
-		RefreshTokensTable,
 		RolesTable,
 		UsersTable,
 		UserGroupsTable,
@@ -199,7 +179,7 @@ func init() {
 	AssetsTable.Annotation = &entsql.Annotation{
 		Table: "assets",
 	}
-	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
+	UsersTable.ForeignKeys[0].RefTable = PermissionsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable

@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/refreshtoken"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
@@ -57,24 +56,6 @@ func init() {
 	permissionDescID := permissionFields[0].Descriptor()
 	// permission.DefaultID holds the default value on creation for the id field.
 	permission.DefaultID = permissionDescID.Default.(func() uuid.UUID)
-	refreshtokenFields := schema.RefreshToken{}.Fields()
-	_ = refreshtokenFields
-	// refreshtokenDescToken is the schema descriptor for token field.
-	refreshtokenDescToken := refreshtokenFields[1].Descriptor()
-	// refreshtoken.TokenValidator is a validator for the "token" field. It is called by the builders before save.
-	refreshtoken.TokenValidator = refreshtokenDescToken.Validators[0].(func(string) error)
-	// refreshtokenDescIssuedAt is the schema descriptor for issued_at field.
-	refreshtokenDescIssuedAt := refreshtokenFields[2].Descriptor()
-	// refreshtoken.DefaultIssuedAt holds the default value on creation for the issued_at field.
-	refreshtoken.DefaultIssuedAt = refreshtokenDescIssuedAt.Default.(func() time.Time)
-	// refreshtokenDescExpiresAt is the schema descriptor for expires_at field.
-	refreshtokenDescExpiresAt := refreshtokenFields[3].Descriptor()
-	// refreshtoken.DefaultExpiresAt holds the default value on creation for the expires_at field.
-	refreshtoken.DefaultExpiresAt = refreshtokenDescExpiresAt.Default.(time.Time)
-	// refreshtokenDescID is the schema descriptor for id field.
-	refreshtokenDescID := refreshtokenFields[0].Descriptor()
-	// refreshtoken.DefaultID holds the default value on creation for the id field.
-	refreshtoken.DefaultID = refreshtokenDescID.Default.(func() uuid.UUID)
 	roleMixin := schema.Role{}.Mixin()
 	roleMixinFields0 := roleMixin[0].Fields()
 	_ = roleMixinFields0
