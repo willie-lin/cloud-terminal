@@ -48,7 +48,7 @@ const App = () => {
 
 
                     <Route path="userinfo" element={<UserInfo email={email}/>}/>
-                    <Route path="edit-user-info" element={<EditUserInfo email={email} />}/>
+                    {/*<Route path="edit-user-info" element={<EditUserInfo email={email} />}/>*/}
                     <Route path="open-user-2fa" element={<TwoFactorAuthPage email={email} />}/>
                     <Route path="/" element={<Navigate to="dashboard" />} />
                     {/*<Route path="*" element={<NotFoundPage />} />*/}

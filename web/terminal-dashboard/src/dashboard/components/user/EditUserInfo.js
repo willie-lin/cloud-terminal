@@ -3,7 +3,7 @@ import {Button, Card, CardBody, CardHeader, Input, Textarea, Typography} from "@
 import {editUserInfo, uploadFile} from "../../../api/api";
 import {useLocation, useNavigate} from "react-router-dom";
 
-function EditUserInfo({ email }) {
+function EditUserInfo({ email, onClose }) {
     // 获取用户信息
     const location = useLocation();
     const userInfo = location.state.userInfo;
@@ -77,12 +77,21 @@ function EditUserInfo({ email }) {
     return (
         <div className="flex justify-center items-center h-screen">
             <Card className="w-1/2">
-                <CardHeader variant="gradient" color="gray" className="mb-4 grid h-20 place-items-center"> {/* Change the height here */}
-                    <Typography variant="h4" color="white">
-                        Edit UserInfo
-                    </Typography>
-                </CardHeader>
                 <CardBody className="px-4 py-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <Typography variant="h4" color="gray">
+                            Edit User
+                        </Typography>
+                        <Button color="gray" buttonType="link" onClick={onClose}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                 stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                            </svg>
+                        </Button>
+                    </div>
+                    <Typography variant="body2" color="blueGray" className="mb-2">
+                        Edit the data for the user.
+                    </Typography>
                     <form onSubmit={handleSubmit}>
                         <label>
                             <img
@@ -146,14 +155,15 @@ function EditUserInfo({ email }) {
                                 // placeholder="Bio"
                                 value={bio}
                                 name="bio"  // 添加name属性
-                                onChange={e =>{
+                                onChange={e => {
                                     const value = e.target.value;
                                     if (value.length > MAX_LENGTH) {
                                         setInputError(true);
                                     } else {
                                         setInputError(false);
                                     }
-                                    setBio(e.target.value)}
+                                    setBio(e.target.value)
+                                }
                                 }
                             />
                         </div>
@@ -176,4 +186,5 @@ function EditUserInfo({ email }) {
         </div>
     );
 }
+
 export default EditUserInfo;

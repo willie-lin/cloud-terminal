@@ -19,18 +19,35 @@ import {
 } from "react-icons/md";
 import {FaAudioDescription, FaUser} from "react-icons/fa";
 import {BiObjectsHorizontalRight} from "react-icons/bi";
+import UpdateUser from "./UpdateUser";
 
 function UserInfo({ email }) {
     const userInfo = useFetchUserInfo(email);
     const currentTime = useCurrentTime();
     const navigate = useNavigate();
 
-    const handleEdit = () => {
-        navigate('/edit-user-info',  { state: { userInfo } });  // 跳转到用户信息编辑页面
-        // navigate(0);  // 强制刷新页面
+    // const handleEdit = () => {
+    //     navigate('/edit-user-info',  { state: { userInfo } });  // 跳转到用户信息编辑页面
+    //     // navigate(0);  // 强制刷新页面
+    // };
+
+
+    const [editUser, setEditUser] = useState(null);
+    const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
+    const handleUpdateUser = () => {
+        setIsUpdateUserOpen(false);
     };
+    const openUpdateUser = (user) => {
+        setEditUser(user)
+        setIsUpdateUserOpen(true);
+    };
+    const closeUpdateUser = () => {
+        setIsUpdateUserOpen(false);
+    };
+
+
     return (
-        <Card className="w-96">
+        <Card className="w-1/2">
             <CardHeader floated={false} className="h-50">
                 <div>
                     {userInfo && <Avatar src={ userInfo.avatar } alt="avatar" variant="rounded" size="xxl"/>}
@@ -78,7 +95,25 @@ function UserInfo({ email }) {
 
 
             </CardBody>
-            <Button onClick={handleEdit} color="lightBlue">Edit User</Button>
+            <Button
+                // onClick={handleEdit}
+                    color="lightBlue"
+                    onClick={() => openUpdateUser(userInfo)}
+            >
+                Edit User
+            </Button>
+            {isUpdateUserOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                     onClick={(e) => {
+                         // 如果事件的目标是这个容器本身，那么关闭模态窗口
+                         if (e.target === e.currentTarget) {
+                             closeUpdateUser();
+                         }
+                     }}
+                >
+                    <UpdateUser user={editUser} onUpdateUser={handleUpdateUser}  onClose={closeUpdateUser}/>
+                </div>
+            )}
         </Card>
     );
 }

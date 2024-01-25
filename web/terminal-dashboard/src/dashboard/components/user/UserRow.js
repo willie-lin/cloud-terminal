@@ -8,13 +8,13 @@ import DeleteUserForm from "./DeleteUserForm";
 function UserRow({ user, isLast }) {
     const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";
 
-    const [editingUser, setEditingUser] = useState(null);
+    const [updatedUser, setUpdatedUser] = useState(null);
     const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
     const handleUpdateUser = () => {
         setIsUpdateUserOpen(false);
     };
     const openUpdateUser = (user) => {
-        setEditingUser(user)
+        setUpdatedUser(user)
         setIsUpdateUserOpen(true);
     };
     const closeUpdateUser = () => {
@@ -157,7 +157,7 @@ function UserRow({ user, isLast }) {
                                  }
                              }}
                         >
-                            <UpdateUser user={editingUser} onUpdateUser={handleUpdateUser}  onClose={closeUpdateUser}/>
+                            <UpdateUser user={updatedUser} onUpdateUser={handleUpdateUser}  onClose={closeUpdateUser}/>
                         </div>
                     )}
                 </td>
