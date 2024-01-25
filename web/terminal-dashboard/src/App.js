@@ -11,6 +11,8 @@ import EditUserInfo from "./dashboard/components/user/EditUserInfo";
 import TwoFactorAuthPage from "./dashboard/components/2FA/TwoFactorAuthPage";
 import ResetPassword from "./dashboard/pages/ResetPassword";
 import NotFoundPage from "./dashboard/pages/404";
+import Roles from "./dashboard/components/role/Roles";
+import Permission from "./dashboard/components/permission/Permission";
 
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
@@ -40,6 +42,11 @@ const App = () => {
 
                 <Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>
                     <Route path="dashboard" element={<HomePage email={email}/>}/>
+
+                    <Route path="roles" element={<Roles email={email}/>}/>
+                    <Route path="permissions" element={<Permission email={email}/>}/>
+
+
                     <Route path="userinfo" element={<UserInfo email={email}/>}/>
                     <Route path="edit-user-info" element={<EditUserInfo email={email} />}/>
                     <Route path="open-user-2fa" element={<TwoFactorAuthPage email={email} />}/>

@@ -24,6 +24,7 @@ func (Role) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique(),
+		field.String("description"),
 	}
 }
 

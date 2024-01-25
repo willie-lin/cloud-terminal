@@ -14,6 +14,7 @@ import {useFetchUsers} from "./UserHook";
 import {useState} from "react";
 import UserRow from "./UserRow";
 import AddUserForm from "./AddUser";
+import {ArrowDownTrayIcon} from "@heroicons/react/24/outline";
 
 function UserList() {
 
@@ -109,6 +110,9 @@ function UserList() {
                             </Typography>
                         </div>
                         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                            <Button className="flex items-center gap-3" size="sm">
+                                <ArrowDownTrayIcon strokeWidth={2} className="h-4 w-4" /> Download
+                            </Button>
                             <Button variant="outlined" size="sm">
                                 view all
                             </Button>

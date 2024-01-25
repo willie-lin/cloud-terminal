@@ -8,14 +8,19 @@ import {
 } from "@material-tailwind/react";
 import {
     PresentationChartBarIcon,
-    ShoppingBagIcon,
     UserCircleIcon,
     Cog6ToothIcon,
     InboxIcon,
     PowerIcon,} from "@heroicons/react/24/solid";
 import {Link} from "react-router-dom";
 import React from "react";
-import {ChevronDownIcon, ChevronRightIcon, CubeTransparentIcon, MagnifyingGlassIcon} from "@heroicons/react/16/solid";
+import {
+    ChevronDownIcon,
+    ChevronRightIcon,
+    CubeTransparentIcon,
+    MagnifyingGlassIcon,
+    UserIcon
+} from "@heroicons/react/16/solid";
 
 
 
@@ -97,33 +102,77 @@ function Sidebar({ email, onLogout }) {
                         />
                     }
                 >
+                    {/*{user.role === 'Super Admin' && (*/}
                     <ListItem className="p-0" selected={open === 2}>
                         <AccordionHeader onClick={() => handleOpen(2)} className="border-b-0 p-3">
                             <ListItemPrefix>
-                                <ShoppingBagIcon className="h-5 w-5"/>
+                                <UserIcon className="h-5 w-5"/>
                             </ListItemPrefix>
                             <Typography color="blue-gray" className="mr-auto font-normal">
-                                E-Commerce
+                                Management
                             </Typography>
                         </AccordionHeader>
                     </ListItem>
                     <AccordionBody className="py-1">
                         <List className="p-0">
                             <ListItem>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
-                                </ListItemPrefix>
-                                Orders
+                                <Link to="/users" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                    <ListItemPrefix>
+                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
+                                    </ListItemPrefix>
+                                    Users
+                                </Link>
                             </ListItem>
                             <ListItem>
-                                <ListItemPrefix>
-                                    <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
-                                </ListItemPrefix>
-                                Products
+                                <Link to="/roles" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                    <ListItemPrefix>
+                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
+                                    </ListItemPrefix>
+                                    Roles
+                                </Link>
+                            </ListItem>
+                            <ListItem>
+                                <Link to="/permissions" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                    <ListItemPrefix>
+                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
+                                    </ListItemPrefix>
+                                    Permissions
+                                </Link>
                             </ListItem>
                         </List>
                     </AccordionBody>
                 </Accordion>
+            {/*</ListItem>*/}
+            {/*)}*/}
+            {/*    {user.role === 'Super Admin' && (*/}
+            {/*        <ListItem className="p-0" selected={open === 2}>*/}
+            {/*            <AccordionHeader onClick={() => handleOpen(2)} className="border-b-0 p-3">*/}
+            {/*                <ListItemPrefix>*/}
+            {/*                    <UserIcon className="h-5 w-5"/>*/}
+            {/*                </ListItemPrefix>*/}
+            {/*                <Typography color="blue-gray" className="mr-auto font-normal">*/}
+            {/*                    User Management*/}
+            {/*                </Typography>*/}
+            {/*            </AccordionHeader>*/}
+            {/*            <AccordionBody className="py-1">*/}
+            {/*                <List className="p-0">*/}
+            {/*                    <ListItem>*/}
+            {/*                        <ListItemPrefix>*/}
+            {/*                            <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>*/}
+            {/*                        </ListItemPrefix>*/}
+            {/*                        User Permissions*/}
+            {/*                    </ListItem>*/}
+            {/*                    <ListItem>*/}
+            {/*                        <ListItemPrefix>*/}
+            {/*                            <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>*/}
+            {/*                        </ListItemPrefix>*/}
+            {/*                        User Roles*/}
+            {/*                    </ListItem>*/}
+            {/*                </List>*/}
+            {/*            </AccordionBody>*/}
+            {/*        </ListItem>*/}
+            {/*    )}*/}
+
                 <hr className="my-2 border-blue-gray-50"/>
                 <ListItem>
                     <ListItemPrefix>
