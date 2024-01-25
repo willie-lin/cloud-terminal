@@ -10,7 +10,7 @@ import {
 } from '@material-tailwind/react';
 import {updateUser} from "../../../api/api";
 
-function UpdateUser({ user, onUpdateUser }) {
+function UpdateUser({ user, onUpdateUser, onClose }) {
 
     // 使用user的值来初始化你的状态
     const [username, setUsername] = useState(user ? user.username : '');
@@ -42,120 +42,130 @@ function UpdateUser({ user, onUpdateUser }) {
     }
 
     return (
-        <Card className="w-96">
-            <CardHeader variant="gradient" color="gray" className="mb-4 grid h-20 place-items-center">
-                <Typography variant="h4" color="white">
+        <Card className="w-1/3">
+            <CardBody className="px-4 py-4">
+                <div className="flex justify-between items-center mb-2">
+                    <Typography variant="h4" color="gray">
                         Update User
                     </Typography>
-                </CardHeader>
-                <CardBody className="px-4 py-4">
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-1 flex flex-col gap-6">
-                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                                ID
-                            </Typography>
-                            <Input
-                                variant="outlined"
-                                label="Disabled"
-                                disabled
-                                type="username"
-                                color="lightBlue"
-                                size="regular"
-                                outline={true}
-                                value={username}
-                                name="username"  // 添加name属性
-                                onChange={e => setUsername(e.target.value)}
-                            />
-                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                                Nickname
-                            </Typography>
-                            <Input
-                                variant="outlined"
-                                label="Nickname"
-                                type="nickname"
-                                color="lightBlue"
-                                size="regular"
-                                outline={true}
-                                value={nickname}
-                                name="nickname"  // 添加name属性
-                                onChange={e => setNickname(e.target.value)}
-                            />
-                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                                Phone
-                            </Typography>
-                            <Input
-                                variant="outlined"
-                                label="Phone"
-                                type="phone"
-                                color="lightBlue"
-                                size="regular"
-                                outline={true}
-                                value={phone}
-                                name="phone"  // 添加name属性
-                                onChange={e => setPhone(e.target.value)}
+                    <Button color="gray" buttonType="link" onClick={onClose}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                             stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                        </svg>
+                    </Button>
+                </div>
+                <Typography variant="body2" color="blueGray" className="mb-2">
+                    Update the data for the user.
+                </Typography>
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-1 flex flex-col gap-3.5">
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            ID
+                        </Typography>
+                        <Input
+                            variant="outlined"
+                            label="Disabled"
+                            disabled
+                            type="username"
+                            color="lightBlue"
+                            size="regular"
+                            outline={true}
+                            value={username}
+                            name="username"  // 添加name属性
+                            onChange={e => setUsername(e.target.value)}
+                        />
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Nickname
+                        </Typography>
+                        <Input
+                            variant="outlined"
+                            label="Nickname"
+                            type="nickname"
+                            color="lightBlue"
+                            size="regular"
+                            outline={true}
+                            value={nickname}
+                            name="nickname"  // 添加name属性
+                            onChange={e => setNickname(e.target.value)}
+                        />
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Phone
+                        </Typography>
+                        <Input
+                            variant="outlined"
+                            label="Phone"
+                            type="phone"
+                            color="lightBlue"
+                            size="regular"
+                            outline={true}
+                            value={phone}
+                            name="phone"  // 添加name属性
+                            onChange={e => setPhone(e.target.value)}
 
-                            />
-                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                                Bio
-                            </Typography>
-                            <Textarea
-                                variant="outlined"
-                                label="Bio"
-                                type="text"
-                                color="lightBlue"
-                                size="regular"
-                                outline={true}
-                                className={`border-${inputError ? 'red-500' : 'blue-500'}`}
-                                value={bio}
-                                name="bio"  // 添加name属性
-                                // onChange={e => setBio(e.target.value)}
-                                onChange={e =>{
-                                    const value = e.target.value;
-                                    if (value.length > MAX_LENGTH) {
-                                        setInputError(true);
-                                    } else {
-                                        setInputError(false);
-                                    }
-                                    setBio(e.target.value)}
+                        />
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Bio
+                        </Typography>
+                        <Textarea
+                            variant="outlined"
+                            label="Bio"
+                            type="text"
+                            color="lightBlue"
+                            size="regular"
+                            outline={true}
+                            className={`border-${inputError ? 'red-500' : 'blue-500'}`}
+                            value={bio}
+                            name="bio"  // 添加name属性
+                            // onChange={e => setBio(e.target.value)}
+                            onChange={e => {
+                                const value = e.target.value;
+                                if (value.length > MAX_LENGTH) {
+                                    setInputError(true);
+                                } else {
+                                    setInputError(false);
                                 }
-                            />
-                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                                Online Status
-                            </Typography>
-                            <Select size="md"
-                                    label="OnlineStatus"
-                                    value={onlineStatus ? 'true' : 'false'}
-                                    onChange={value => setOnlineStatus(value === 'true')} >
-                                <Option value='true'>True</Option>
-                                <Option value='false'>False</Option>
-                            </Select>
-                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                                Enable Type
-                            </Typography>
-                            <Select size="md"
-                                    label="EnableType"
-                                    value={enableType ? 'true' : 'false'}
-                                    onChange={value => setEnableType(value === 'true')} >
-                                <Option value='true'>True</Option>
-                                <Option value='false'>False</Option>
-                            </Select>
-                        </div>
-                        <Button fullWidth
-                                type="submit"
-                                color="lightBlue"
-                                buttonType="filled"
-                                size="regular"
-                                rounded={false}
-                                block={false}
-                                iconOnly={false}
-                                ripple="light"
-                                className="mt-6" // 添加边距
-                        >
-                            Submit
-                        </Button>
-                    </form>
-                </CardBody>
-            </Card>
+                                setBio(e.target.value)
+                            }
+                            }
+                        />
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Online Status
+                        </Typography>
+                        <Select size="md"
+                                label="OnlineStatus"
+                                value={onlineStatus ? 'true' : 'false'}
+                                onChange={value => setOnlineStatus(value === 'true')}>
+                            <Option value='true'>True</Option>
+                            <Option value='false'>False</Option>
+                        </Select>
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Enable Type
+                        </Typography>
+                        <Select size="md"
+                                label="EnableType"
+                                value={enableType ? 'true' : 'false'}
+                                onChange={value => setEnableType(value === 'true')}>
+                            <Option value='true'>True</Option>
+                            <Option value='false'>False</Option>
+                        </Select>
+                    </div>
+                    <Button fullWidth
+                            type="submit"
+                            color="lightBlue"
+                            buttonType="filled"
+                            size="regular"
+                            rounded={false}
+                            block={false}
+                            iconOnly={false}
+                            ripple="light"
+                            className="mt-6" // 添加边距
+                    >
+                        Submit
+                    </Button>
+                </form>
+            </CardBody>
+        </Card>
     );
 }
 

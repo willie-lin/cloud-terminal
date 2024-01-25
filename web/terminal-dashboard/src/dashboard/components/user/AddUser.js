@@ -3,7 +3,7 @@ import {Alert, Button, Card, CardBody, CardHeader, Input, Select, Typography, Op
 import {addUser, checkEmail} from "../../../api/api";
 import CryptoJS from "crypto-js";
 
-function AddUserForm({ onAddUser }) {
+function AddUserForm({ onAddUser, onClose }) {
     const [addUserError, setAddUserError] = useState('');
     const [password, setPassword] = useState('');
     const [emailError, setEmailError] = useState('');
@@ -49,13 +49,22 @@ function AddUserForm({ onAddUser }) {
     };
 
     return (
-            <Card className="w-96">
-                <CardHeader variant="gradient" color="gray" className="mb-4 grid h-20 place-items-center">
-                    <Typography variant="h4" color="white">
-                        Add User
-                    </Typography>
-                </CardHeader>
+            <Card className="w-1/3">
                 <CardBody className="px-4 py-8">
+                    <div className="flex justify-between items-center mb-4">
+                        <Typography variant="h4" color="gray">
+                            Create User
+                        </Typography>
+                        <Button color="gray" buttonType="link" onClick={onClose}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                 stroke="currentColor" className="w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                            </svg>
+                        </Button>
+                    </div>
+                    <Typography variant="body2" color="blueGray" className="mb-4">
+                        Enter the data for the new user.
+                    </Typography>
                     <form onSubmit={handleSubmit}>
                         <div className="mb-1 flex flex-col gap-6">
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
@@ -71,7 +80,7 @@ function AddUserForm({ onAddUser }) {
                                 value={email}
                                 name="email"  // 添加name属性
                                 onChange={handleEmailChange}
-                                className="mb-4" // 添加边距
+                                className="mb-4  w-full" // 添加边距
                                 error={!!emailError}
                             />
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
@@ -105,14 +114,14 @@ function AddUserForm({ onAddUser }) {
                             </Typography>
                             <Select size="md"
                                     label="OnlineStatus"
-                                    onChange={value => setOnlineStatus(value)} >
+                                    onChange={value => setOnlineStatus(value)}>
                                 <Option value={true}>True</Option>
                                 <Option value={false}>False</Option>
                             </Select>
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Enable Type
                             </Typography>
-                            <Select size="lg" label="EnableType" onChange={value => setEnableType(value)} >
+                            <Select size="lg" label="EnableType" onChange={value => setEnableType(value)}>
                                 <Option value={true}>True</Option>
                                 <Option value={false}>False</Option>
                             </Select>

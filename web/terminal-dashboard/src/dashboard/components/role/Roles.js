@@ -2,6 +2,8 @@ import { PencilIcon } from "@heroicons/react/24/solid";
 import {
     ArrowDownTrayIcon,
     MagnifyingGlassIcon,
+
+
 } from "@heroicons/react/24/outline";
 import {
     Card,
@@ -17,6 +19,8 @@ import {
     Input,
 } from "@material-tailwind/react";
 import {UserPlusIcon} from "@heroicons/react/16/solid";
+import {useState} from "react";
+import AddRole from "./AddRole";
 
 
 // const TABLE_HEAD = ['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'];
@@ -37,6 +41,22 @@ const TABLE_ROWS = [
 ];
 
 function Roles() {
+
+    // 添加role 
+    const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
+
+    const handleAddRole = () => {
+        setIsAddRoleOpen(false);
+    };
+
+    const openAddRole = () => {
+        setIsAddRoleOpen(true);
+    };
+
+    const closeAddRole = () => {
+        setIsAddRoleOpen(false);
+    };
+
     return (
         <Card className="h-full w-full">
             <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -46,7 +66,7 @@ function Roles() {
                             Roles
                         </Typography>
                         <Typography color="gray" className="mt-1 font-normal">
-                            These are details about the last transactions
+                            Define some some management roles.
                         </Typography>
                     </div>
                     <div className="flex w-full shrink-0 gap-2 md:w-max">
@@ -56,13 +76,26 @@ function Roles() {
                                 icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                             />
                         </div>
+
                         <Button className="flex items-center gap-3" size="sm">
                             <ArrowDownTrayIcon strokeWidth={2} className="h-4 w-4" /> Download
                         </Button>
-                        <Button className="flex items-center gap-3" size="sm" >
+                        <Button className="flex items-center gap-3" size="sm" onClick={openAddRole}>
                             <UserPlusIcon strokeWidth={2} className="h-4 w-4"/> Add Role
                         </Button>
                     </div>
+                    {isAddRoleOpen && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                             onClick={(e) => {
+                                 // 如果事件的目标是这个容器本身，那么关闭模态窗口
+                                 if (e.target === e.currentTarget) {
+                                     closeAddRole();
+                                 }
+                             }}
+                        >
+                            <AddRole onAddrole={handleAddRole} onClose={closeAddRole}/>
+                        </div>
+                    )}
                 </div>
             </CardHeader>
             <CardBody className="overflow-scroll px-0">
@@ -107,23 +140,6 @@ function Roles() {
 
                             return (
                                 <tr key={name}>
-                                    <td className={classes}>
-                                        <div className="flex items-center gap-3">
-                                            <Avatar
-                                                src={img}
-                                                alt={name}
-                                                size="md"
-                                                className="border border-blue-gray-50 bg-blue-gray-50/50 object-contain p-1"
-                                            />
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-bold"
-                                            >
-                                                {name}
-                                            </Typography>
-                                        </div>
-                                    </td>
                                     <td className={classes}>
                                         <Typography
                                             variant="small"
