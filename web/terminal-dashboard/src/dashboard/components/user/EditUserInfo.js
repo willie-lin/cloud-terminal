@@ -3,11 +3,13 @@ import {Button, Card, CardBody, CardHeader, Input, Textarea, Typography} from "@
 import {editUserInfo, uploadFile} from "../../../api/api";
 import {useLocation, useNavigate} from "react-router-dom";
 
-function EditUserInfo({ email, onClose }) {
+function EditUserInfo({ userInfo, onClose }) {
     // 获取用户信息
-    const location = useLocation();
-    const userInfo = location.state.userInfo;
+    // const location = useLocation();
+    // const userInfo = location.state.userInfo;
     // const [avatar, setAvatar] = useState(userInfo ? userInfo.avatar : '');
+    const [username, setUsername] = useState(userInfo ? userInfo.username : '');
+    const [email, setEmail] = useState(userInfo ? userInfo.email : '');
 
     const [nickname, setNickname] = useState(userInfo ? userInfo.nickname : '');
     const [phone, setPhone] = useState(userInfo ? userInfo.phone : '');
@@ -75,8 +77,7 @@ function EditUserInfo({ email, onClose }) {
     };
 
     return (
-        <div className="flex justify-center items-center h-screen">
-            <Card className="w-1/2">
+            <Card className="w-1/3">
                 <CardBody className="px-4 py-4">
                     <div className="flex justify-between items-center mb-2">
                         <Typography variant="h4" color="gray">
@@ -183,7 +184,6 @@ function EditUserInfo({ email, onClose }) {
                     </form>
                 </CardBody>
             </Card>
-        </div>
     );
 }
 

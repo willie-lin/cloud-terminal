@@ -20,11 +20,14 @@ import {
 import {FaAudioDescription, FaUser} from "react-icons/fa";
 import {BiObjectsHorizontalRight} from "react-icons/bi";
 import UpdateUser from "./UpdateUser";
+import EditUserInfo from "./EditUserInfo";
 
 function UserInfo({ email }) {
-    const userInfo = useFetchUserInfo(email);
+    // const userInfo = useFetchUserInfo(email);
     const currentTime = useCurrentTime();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
+
+    const userInfo = useFetchUserInfo(email)
 
     // const handleEdit = () => {
     //     navigate('/edit-user-info',  { state: { userInfo } });  // 跳转到用户信息编辑页面
@@ -33,16 +36,16 @@ function UserInfo({ email }) {
 
 
     const [editUser, setEditUser] = useState(null);
-    const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
-    const handleUpdateUser = () => {
-        setIsUpdateUserOpen(false);
+    const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+    const handleEditUser = () => {
+        setIsEditUserOpen(false);
     };
-    const openUpdateUser = (user) => {
-        setEditUser(user)
-        setIsUpdateUserOpen(true);
+    const openEditUser = (userInfo) => {
+        setEditUser(userInfo)
+        setIsEditUserOpen(true);
     };
-    const closeUpdateUser = () => {
-        setIsUpdateUserOpen(false);
+    const closeEditUser = () => {
+        setIsEditUserOpen(false);
     };
 
 
@@ -98,20 +101,20 @@ function UserInfo({ email }) {
             <Button
                 // onClick={handleEdit}
                     color="lightBlue"
-                    onClick={() => openUpdateUser(userInfo)}
+                    onClick={() => openEditUser()}
             >
                 Edit User
             </Button>
-            {isUpdateUserOpen && (
+            {isEditUserOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
                      onClick={(e) => {
                          // 如果事件的目标是这个容器本身，那么关闭模态窗口
                          if (e.target === e.currentTarget) {
-                             closeUpdateUser();
+                             closeEditUser();
                          }
                      }}
                 >
-                    <UpdateUser user={editUser} onUpdateUser={handleUpdateUser}  onClose={closeUpdateUser}/>
+                    <EditUserInfo user={editUser} onEditUser={handleEditUser}  onClose={closeEditUser}/>
                 </div>
             )}
         </Card>
