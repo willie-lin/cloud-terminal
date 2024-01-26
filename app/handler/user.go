@@ -296,6 +296,7 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
+		fmt.Println(dto.Avatar)
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {

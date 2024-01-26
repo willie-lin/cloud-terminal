@@ -1,19 +1,18 @@
 import React, {useRef, useState} from "react";
-import {Button, Card, CardBody, CardHeader, Input, Textarea, Typography} from "@material-tailwind/react";
+import {Button, Card, CardBody, Input, Textarea, Typography} from "@material-tailwind/react";
 import {editUserInfo, uploadFile} from "../../../api/api";
-import {useLocation, useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
+import {useFetchUserInfo} from "./UserHook";
 
-function EditUserInfo({ userInfo, onClose }) {
-    // 获取用户信息
-    // const location = useLocation();
-    // const userInfo = location.state.userInfo;
-    // const [avatar, setAvatar] = useState(userInfo ? userInfo.avatar : '');
-    const [username, setUsername] = useState(userInfo ? userInfo.username : '');
-    const [email, setEmail] = useState(userInfo ? userInfo.email : '');
+function EditUserInfo({ user, onEditUser,  onUserChange, onClose }) {
 
-    const [nickname, setNickname] = useState(userInfo ? userInfo.nickname : '');
-    const [phone, setPhone] = useState(userInfo ? userInfo.phone : '');
-    const [bio, setBio] = useState(userInfo ? userInfo.bio : '');
+    // 使用user的值来初始化你的状态
+    const [email, setEmail] = useState(user ? user.email : '');
+    const [avatar, setAvatar] = useState(user ? user.avatar : '');
+
+    const [nickname, setNickname] = useState(user ? user.nickname : '');
+    const [phone, setPhone] = useState(user ? user.phone : '');
+    const [bio, setBio] = useState(user ? user.bio : '');
 
     const [file, setFile] = useState(null); // 添加一个新的 state 来存储文件
     const [preview, setPreview] = useState(null); // 用于存储预览图片的 URL
@@ -21,6 +20,8 @@ function EditUserInfo({ userInfo, onClose }) {
 
     const MAX_LENGTH = 180; // 设置最大长度为180
     const [inputError, setInputError] = useState(false);
+
+    // 在你的组件中
     const navigate = useNavigate();
 
     const handleFileChange = (event) => {
@@ -56,22 +57,24 @@ function EditUserInfo({ userInfo, onClose }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            let avatar = user.avatar;  // 默认使用用户原来的头像
             if (file) {
-                const filePath = await uploadFile(file);
+                avatar = await uploadFile(file);  // 如果用户上传了新的头像，就使用新的头像
+            }
                 const data = {
                     email: email,  // 使用传递过来的email
-                    avatar: filePath,
+                    avatar: avatar,
                     nickname: nickname,
                     phone: phone,
                     bio: bio
                 };
                 // console.log(data);  // 打印出data对象
                 await editUserInfo(data);
-                navigate('/userinfo');
-            }
+               onEditUser()
+            // navigate("/userinfo")
+            navigate("/")
         }
-        catch
-            (error) {
+        catch (error) {
             console.error(error);
         }
     };
@@ -97,7 +100,7 @@ function EditUserInfo({ userInfo, onClose }) {
                         <label>
                             <img
                                 className="w-24 h-24 rounded-full object-cover mb-6 mx-auto cursor-pointer"
-                                src={preview || userInfo?.avatar || "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg"}
+                                src={preview || user?.avatar || "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg"}
                                 alt="Avatar Upload"
                                 style={{width: '120px', height: '120px', border: '1px solid'}} // Added border here
                             />

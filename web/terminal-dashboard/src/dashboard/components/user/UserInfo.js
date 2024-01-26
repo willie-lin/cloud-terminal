@@ -1,6 +1,5 @@
 // 用户信息组件
 import {useEffect, useState} from "react";
-import {getUserByEmail} from "../../../api/api";
 import {
     Avatar, Button,
     Card,
@@ -8,31 +7,28 @@ import {
     CardHeader,
     Typography
 } from "@material-tailwind/react";
-import {useNavigate} from "react-router-dom";
 import {useCurrentTime, useFetchUserInfo} from "./UserHook";
 import {
-    MdAccessTimeFilled,
-    MdDescription,
     MdEmail,
-    MdOutlineAccessTime,
-    MdOutlineAccessTimeFilled
+    MdOutlineAccessTimeFilled, MdOutlinePhoneAndroid, MdOutlinePhoneIphone, MdSmartphone
 } from "react-icons/md";
 import {FaAudioDescription, FaUser} from "react-icons/fa";
-import {BiObjectsHorizontalRight} from "react-icons/bi";
-import UpdateUser from "./UpdateUser";
 import EditUserInfo from "./EditUserInfo";
 
 function UserInfo({ email }) {
-    // const userInfo = useFetchUserInfo(email);
+
     const currentTime = useCurrentTime();
-    // const navigate = useNavigate();
 
-    const userInfo = useFetchUserInfo(email)
+    // 在 UserInfo 组件中
+    const userInfo = useFetchUserInfo(email);
 
-    // const handleEdit = () => {
-    //     navigate('/edit-user-info',  { state: { userInfo } });  // 跳转到用户信息编辑页面
-    //     // navigate(0);  // 强制刷新页面
-    // };
+    // const [userInfo, setUserInfo] = useState(null);
+    //
+    // const fetchedUserInfo = useFetchUserInfo(email);
+    //
+    // useEffect(() => {
+    //     setUserInfo(fetchedUserInfo);
+    // }, [fetchedUserInfo]);
 
 
     const [editUser, setEditUser] = useState(null);
@@ -47,7 +43,6 @@ function UserInfo({ email }) {
     const closeEditUser = () => {
         setIsEditUserOpen(false);
     };
-
 
     return (
         <Card className="w-1/2">
@@ -80,7 +75,16 @@ function UserInfo({ email }) {
                 </div>
 
                 <div className="flex items-center">
-                    <FaAudioDescription />
+                    <MdOutlinePhoneIphone size="1.3em"/>
+                    {userInfo && (
+                        <Typography color="blue-gray" className="font-medium ml-2" textGradient>
+                            {userInfo.phone}
+                        </Typography>
+                    )}
+                </div>
+
+                <div className="flex items-center">
+                    <FaAudioDescription/>
                     {userInfo && (
                         <Typography color="blue-gray" className="font-medium ml-2" textGradient>
                             {userInfo.bio}
@@ -100,8 +104,8 @@ function UserInfo({ email }) {
             </CardBody>
             <Button
                 // onClick={handleEdit}
-                    color="lightBlue"
-                    onClick={() => openEditUser()}
+                color="lightBlue"
+                onClick={() => openEditUser(userInfo)}
             >
                 Edit User
             </Button>
@@ -114,7 +118,7 @@ function UserInfo({ email }) {
                          }
                      }}
                 >
-                    <EditUserInfo user={editUser} onEditUser={handleEditUser}  onClose={closeEditUser}/>
+                    <EditUserInfo user={editUser} onEditUser={handleEditUser} onClose={closeEditUser}/>
                 </div>
             )}
         </Card>
