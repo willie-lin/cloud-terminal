@@ -177,8 +177,9 @@ func main() {
 	r.POST("/delete-user", handler.DeleteUserByUsername(client))
 
 	// role
-	r.POST("/roles", handler.GetAllRoles(client))
+
 	r.POST("/add-role", handler.CreateRole(client))
+	r.POST("/roles", handler.GetAllRoles(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

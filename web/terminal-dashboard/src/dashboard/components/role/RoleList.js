@@ -26,7 +26,9 @@ const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
 
 function RoleList() {
 
+    console.log(111111)
     const roles = useFetchRoles()
+    console.log(222222)
 
     const [page, setPage] = useState(1);
     const rolesPerPage = 10;
