@@ -1,32 +1,13 @@
-import { PencilIcon } from "@heroicons/react/24/solid";
-import {
-    ArrowDownTrayIcon,
-    MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
-import {
-    Card,
-    CardHeader,
-    Typography,
-    Button,
-    CardBody,
-    Chip,
-    CardFooter,
-    Avatar,
-    IconButton,
-    Tooltip,
-    Input,
-} from "@material-tailwind/react";
-import {UserPlusIcon} from "@heroicons/react/16/solid";
-import {useState} from "react";
-import AddRole from "./AddRole";
 import {useFetchRoles} from "./RoleHook";
-import UserRow from "../user/UserRow";
+import {useState} from "react";
+import {Button, Card, CardBody, CardFooter, CardHeader, Input, Typography} from "@material-tailwind/react";
+import {ArrowDownTrayIcon, MagnifyingGlassIcon} from "@heroicons/react/24/outline";
+import {UserPlusIcon} from "@heroicons/react/16/solid";
+import AddRole from "./AddRole";
 import RenderRole from "./RenderRole";
 
-const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
-
-
 function RoleList() {
+    const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
 
     console.log(111111)
     const roles = useFetchRoles()
@@ -56,7 +37,7 @@ function RoleList() {
 
 
 
-    // 添加role 
+    // 添加role
     const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
 
     const handleAddRole = () => {

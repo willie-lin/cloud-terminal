@@ -1,13 +1,10 @@
-import {Button, Card, CardBody, CardHeader, IconButton, Input, Tooltip, Typography} from "@material-tailwind/react";
+import {Button, Card, CardBody, IconButton, Input, Tooltip, Typography} from "@material-tailwind/react";
 import React, {useState} from "react";
 import {TrashIcon} from "@heroicons/react/16/solid";
 import {addRole} from "../../../api/api";
 
 
-function AddRoleForm({ onAddRole, onClose }) {
-    // const [key, setKey] = useState('');
-    // const [displayName, setDisplayName] = useState('');
-    // const [group, setGroup] = useState('');
+function AddRoleForm({ onAddrole, onClose }) {
 
     const [roles, setRoles] = useState([{ name: '', description: '' }]);
 
@@ -16,7 +13,6 @@ function AddRoleForm({ onAddRole, onClose }) {
         newRoles[index][field] = value;
         setRoles(newRoles);
     };
-
     const handleAddRole = () => {
         setRoles([...roles, { name: '', description: '' }]);
     };
@@ -30,11 +26,17 @@ function AddRoleForm({ onAddRole, onClose }) {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log(roles);
+        // console.log(roles);
+        // 检查每个角色的'name'和'description'是否为空
+        for (let role of roles) {
+            if (!role.name.trim() || !role.description.trim()) {
+                console.error('Error: Role name and description cannot be empty');
+                return;  // 如果'name'或'description'为空，阻止提交
+            }
+        }
         try {
-
             await addRole(roles)
-            onAddRole();
+            onAddrole(roles);
         } catch (error) {
             console.log(error)
         }

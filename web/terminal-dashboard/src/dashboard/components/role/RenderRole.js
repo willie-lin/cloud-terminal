@@ -1,4 +1,4 @@
-import {IconButton, Tooltip, Typography} from "@material-tailwind/react";
+import {Chip, IconButton, Tooltip, Typography} from "@material-tailwind/react";
 import {PencilIcon} from "@heroicons/react/16/solid";
 
 function RenderRole({ role, isLast }) {
@@ -14,9 +14,20 @@ function RenderRole({ role, isLast }) {
                 </Typography>
             </td>
             <td className={classes}>
-                <Typography variant="small" color="blue-gray" className="font-normal">
-                    {role.name}
-                </Typography>
+                <div className="w-max">
+                    <Chip
+                        size="sm"
+                        variant="ghost"
+                        value={role.name}
+                        color={
+                            role.name === "管理员"
+                                ? "green"
+                                : role.name === "普通用户"
+                                    ? "blue"
+                                    : "gray"
+                        }
+                    />
+                </div>
             </td>
             <td className={classes}>
                 <Typography variant="small" color="blue-gray" className="font-normal">
@@ -25,7 +36,7 @@ function RenderRole({ role, isLast }) {
             </td>
             <td className={classes}>
                 <Typography variant="small" color="blue-gray" className="font-normal">
-                    {role.created_at}
+                {role.created_at}
                 </Typography>
             </td>
             <td className={classes}>
