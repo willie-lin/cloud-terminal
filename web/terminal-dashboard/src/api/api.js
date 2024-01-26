@@ -15,7 +15,6 @@ export const login = async (data) => {
     try {
         const response = await api.post('/api/login', data);
         if (response.status === 403 || response.data === 'Invalid password' || response.data === 'Invalid-OTP') {
-        // if (response.data === 'Invalid-password') {
             throw new Error('用户名或密码错误');
         }
         return response.data;
@@ -60,11 +59,7 @@ export const checkEmail = async (email) => {
 // api/users getAllUsers
 export const getAllUsers = async () => {
     try {
-        // const token = Cookies.get('user_token');
-        // console.log(token)
         const response = await api.get('/admin/users',
-            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
-            // {headers: {'Authorization': `Bearer ${token}`}}
         );
         return response.data;
     } catch (error) {
@@ -72,22 +67,11 @@ export const getAllUsers = async () => {
     }
 };
 
-// export const getAllUsers = async () => {
-//     try {
-//         const response = await api.get('/api/users', {
-//         });
-//         return response.data;
-//     } catch (error) {
-//         console.error(error);
-//     }
-// };
-
 
 //getUserByEmail
 export const getUserByEmail = async (email) => {
     try {
         const response = await api.post('/admin/user/email', { email },
-            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
         );
         return response.data;
     } catch (error) {
@@ -100,7 +84,6 @@ export const enable2FA = async (email) => {
     try {
         const response = await api.post('/admin/enable-2fa', { email },
 
-            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
         );
         return response.data;
     } catch (error) {
@@ -112,7 +95,6 @@ export const enable2FA = async (email) => {
 export const confirm2FA = async (data) => {
     try {
         const response = await api.post('/admin/confirm-2FA', data,
-            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
             );
         if (response.status === 400) {
             throw new Error('Invalid TOTP secret');
@@ -145,7 +127,6 @@ export const uploadFile = async (file) => {
             {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    // "Authorization": "Bearer " + localStorage.getItem("user_token")
                 },
             }
         );
@@ -159,7 +140,6 @@ export const uploadFile = async (file) => {
 export const editUserInfo = async (data) => {
     try {
         const response = await api.post(`/admin/edit-userinfo`, data,
-            // {headers: {"Authorization": "Bearer " + localStorage.getItem("user_token")}}
         );
         return response.data;
     } catch (error) {
@@ -188,6 +168,25 @@ export const updateUser = async (data) => {
 export const deleteUser = async (data) => {
     try {
         const response = await api.post('/admin/delete-user', data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// addRole
+export const addRole = async (data) => {
+    try {
+        const response = await api.post('/admin/add-role', data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+export const getAllRoles = async () => {
+    try {
+        const response = await api.get('/admin/roles',);
         return response.data;
     } catch (error) {
         console.error(error);

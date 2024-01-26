@@ -61,7 +61,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 // GetAllUsers 获取所有用户
 func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		users, err := client.User.Query().All(c.Request().Context())
+		users, err := client.User.Query().All(context.Background())
 		if err != nil {
 			log.Printf("Error querying users: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})

@@ -176,6 +176,10 @@ func main() {
 	r.POST("/update-user", handler.UpdateUser(client))
 	r.POST("/delete-user", handler.DeleteUserByUsername(client))
 
+	// role
+	r.POST("/roles", handler.GetAllRoles(client))
+	r.POST("/add-role", handler.CreateRole(client))
+
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	go func() {

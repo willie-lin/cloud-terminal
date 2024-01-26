@@ -2,8 +2,6 @@ import { PencilIcon } from "@heroicons/react/24/solid";
 import {
     ArrowDownTrayIcon,
     MagnifyingGlassIcon,
-
-
 } from "@heroicons/react/24/outline";
 import {
     Card,
@@ -21,26 +19,46 @@ import {
 import {UserPlusIcon} from "@heroicons/react/16/solid";
 import {useState} from "react";
 import AddRole from "./AddRole";
+import {useFetchRoles} from "./RoleHook";
+
+const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
 
 
-// const TABLE_HEAD = ['ID', '昵称', '用户名', '邮箱', '手机号', '个人简介', '2FA','在线状态', '启用类型', '创建时间', '更新时间', '最后登录时间'];
+function RoleList() {
 
-const TABLE_HEAD = ["KEY", "DisplayName", "CREATED", "LASTMODIFIED", ""];
+    const roles = useFetchRoles()
 
-const TABLE_ROWS = [
-    {
-        img: "https://docs.material-tailwind.com/img/logos/logo-netflix.svg",
-        name: "netflix",
-        amount: "$14,000",
-        date: "Wed 3:30am",
-        status: "cancelled",
-        account: "visa",
-        accountNumber: "1234",
-        expiry: "06/2026",
-    },
-];
+    const [page, setPage] = useState(1);
+    const rolesPerPage = 10;
+    const totalPages = Math.ceil(roles.length / rolesPerPage);
 
-function Roles() {
+    const indexOfLastUser = page * rolesPerPage;
+    const indexOfFirstUser = indexOfLastUser - rolesPerPage;
+
+    // const filteredUsers = users.filter(user => user.nickname.includes(search) || user.email.includes(search));
+    // const filteredUsers = users.filter(user =>
+    //     (user.nickname && user.nickname.includes(search)) ||
+    //     (user.email && user.email.includes(search)) ||
+    //     (user.username && user.username.includes(search))
+    // );
+
+    let currentRoles = roles.slice(indexOfFirstUser, indexOfLastUser);
+    if (!Array.isArray(currentRoles)) {
+        currentRoles = [];
+    }
+    const handlePrevious = () => {
+        if (page > 1) {
+            setPage(page - 1);
+        }
+    };
+    const handleNext = () => {
+        if (page < totalPages) {
+            setPage(page + 1);
+        }
+    };
+
+
+
 
     // 添加role 
     const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
@@ -119,98 +137,43 @@ function Roles() {
                     </tr>
                     </thead>
                     <tbody>
-                    {TABLE_ROWS.map(
-                        (
-                            {
-                                img,
-                                name,
-                                amount,
-                                date,
-                                status,
-                                account,
-                                accountNumber,
-                                expiry,
-                            },
-                            index,
-                        ) => {
-                            const isLast = index === TABLE_ROWS.length - 1;
+                    {currentRoles.map(( role, index,) => {
+                            const isLast = index === currentRoles.length - 1;
                             const classes = isLast
                                 ? "p-4"
                                 : "p-4 border-b border-blue-gray-50";
 
                             return (
-                                <tr key={name}>
+                                <tr key={role.id}>
                                     <td className={classes}>
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal"
-                                        >
-                                            {amount}
+                                        <Typography variant="small" color="blue-gray" className="font-normal">
+                                            {role.id}
                                         </Typography>
                                     </td>
                                     <td className={classes}>
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal"
-                                        >
-                                            {date}
+                                        <Typography variant="small" color="blue-gray" className="font-normal">
+                                            {role.name}
                                         </Typography>
                                     </td>
                                     <td className={classes}>
-                                        <div className="w-max">
-                                            <Chip
-                                                size="sm"
-                                                variant="ghost"
-                                                value={status}
-                                                color={
-                                                    status === "paid"
-                                                        ? "green"
-                                                        : status === "pending"
-                                                            ? "amber"
-                                                            : "red"
-                                                }
-                                            />
-                                        </div>
+                                        <Typography variant="small" color="blue-gray" className="font-normal">
+                                            {role.description}
+                                        </Typography>
                                     </td>
                                     <td className={classes}>
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-9 w-12 rounded-md border border-blue-gray-50 p-1">
-                                                <Avatar
-                                                    src={
-                                                        account === "visa"
-                                                            ? "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/logos/visa.png"
-                                                            : "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/logos/mastercard.png"
-                                                    }
-                                                    size="sm"
-                                                    alt={account}
-                                                    variant="square"
-                                                    className="h-full w-full object-contain p-1"
-                                                />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal capitalize"
-                                                >
-                                                    {account.split("-").join(" ")} {accountNumber}
-                                                </Typography>
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal opacity-70"
-                                                >
-                                                    {expiry}
-                                                </Typography>
-                                            </div>
-                                        </div>
+                                        <Typography variant="small" color="blue-gray" className="font-normal">
+                                            {role.created_at}
+                                        </Typography>
                                     </td>
                                     <td className={classes}>
-                                        <Tooltip content="Edit User">
+                                        <Typography variant="small" color="blue-gray" className="font-normal">
+                                            {role.updated_at}
+                                        </Typography>
+                                    </td>
+                                    <td className={classes}>
+                                        <Tooltip content="Edit Role">
                                             <IconButton variant="text">
-                                                <PencilIcon className="h-4 w-4" />
+                                                <PencilIcon className="h-4 w-4"/>
                                             </IconButton>
                                         </Tooltip>
                                     </td>
@@ -256,4 +219,4 @@ function Roles() {
     );
 }
 
-export default Roles;
+export default RoleList;

@@ -1,11 +1,15 @@
 import {Button, Card, CardBody, CardHeader, IconButton, Input, Tooltip, Typography} from "@material-tailwind/react";
 import React, {useState} from "react";
 import {TrashIcon} from "@heroicons/react/16/solid";
+import {addRole} from "../../../api/api";
 
 
-function AddRole({ onAddUser, onClose }) {
+function AddRoleForm({ onAddRole, onClose }) {
+    // const [key, setKey] = useState('');
+    // const [displayName, setDisplayName] = useState('');
+    // const [group, setGroup] = useState('');
 
-    const [roles, setRoles] = useState([{ key: '', displayName: '', group: '' }]);
+    const [roles, setRoles] = useState([{ name: '', description: '' }]);
 
     const handleRoleChange = (index, field, value) => {
         const newRoles = [...roles];
@@ -14,7 +18,7 @@ function AddRole({ onAddUser, onClose }) {
     };
 
     const handleAddRole = () => {
-        setRoles([...roles, { key: '', displayName: '', group: '' }]);
+        setRoles([...roles, { name: '', description: '' }]);
     };
 
     const handleRemoveRole = (index) => {
@@ -24,9 +28,16 @@ function AddRole({ onAddUser, onClose }) {
     };
 
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
         console.log(roles);
+        try {
+
+            await addRole(roles)
+            onAddRole();
+        } catch (error) {
+            console.log(error)
+        }
     };
 
     return (
@@ -55,14 +66,14 @@ function AddRole({ onAddUser, onClose }) {
                                 </Typography>
                                 <Input
                                     variant="outlined"
-                                    label="KEY"
-                                    type="KEY"
+                                    label="name"
+                                    type="name"
                                     color="lightBlue"
                                     size="regular"
                                     outline={true}
-                                    value={role.key}
-                                    name="KEY"
-                                    onChange={(e) => handleRoleChange(index, 'key', e.target.value)}
+                                    value={role.name}
+                                    name="name"
+                                    onChange={(e) => handleRoleChange(index, 'name', e.target.value)}
                                     className="mb-4"
                                 />
                             </div>
@@ -72,14 +83,14 @@ function AddRole({ onAddUser, onClose }) {
                                 </Typography>
                                 <Input
                                     variant="outlined"
-                                    label="DisplayName"
-                                    type="DisplayName"
+                                    label="description"
+                                    type="description"
                                     color="lightBlue"
                                     size="regular"
                                     outline={true}
-                                    value={role.displayName}
-                                    name="DisplayName"
-                                    onChange={(e) => handleRoleChange(index, 'displayName', e.target.value)}
+                                    value={role.description}
+                                    name="description"
+                                    onChange={(e) => handleRoleChange(index, 'description', e.target.value)}
                                     className="mb-4"
                                 />
                             </div>
@@ -200,4 +211,4 @@ function AddRole({ onAddUser, onClose }) {
     )
 }
 
-export default AddRole
+export default AddRoleForm;
