@@ -13,6 +13,7 @@ import (
 	"github.com/swaggo/echo-swagger"
 	"github.com/willie-lin/cloud-terminal/app/api"
 	"github.com/willie-lin/cloud-terminal/app/config"
+	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/handler"
 	"github.com/willie-lin/cloud-terminal/app/logger"
 	_ "github.com/willie-lin/cloud-terminal/docs"
@@ -80,7 +81,12 @@ func main() {
 	fmt.Println(client)
 	fmt.Println("eeee")
 
-	defer client.Close()
+	defer func(client *ent.Client) {
+		err := client.Close()
+		if err != nil {
+
+		}
+	}(client)
 	ctx := context.Background()
 
 	//autoMigration := database.AutoMigration
@@ -164,7 +170,6 @@ func main() {
 	r.POST("/enable-2fa", handler.Enable2FA(client))
 	r.POST("/confirm-2FA", handler.Confirm2FA(client))
 	r.POST("/uploads", handler.UploadFile())
-	//e.GET("/api/users", handler.GetAllUsers(client))
 	r.GET("/users", handler.GetAllUsers(client))
 	r.POST("/edit-userinfo", handler.UpdateUserInfo(client))
 	r.POST("/user/email", handler.GetUserByEmail(client))
