@@ -74,6 +74,7 @@ function EditUserInfo({ user, onEditUser,  onUserChange, onClose }) {
             // navigate("/userinfo")
             navigate("/")
         }
+
         catch (error) {
             console.error(error);
         }
