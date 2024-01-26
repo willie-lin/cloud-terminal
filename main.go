@@ -152,10 +152,6 @@ func main() {
 	// 使用JWT中间件
 	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
 
-	//r.GET("/all", handler.GetAllUsers(client))
-
-	//v1 := e.Group("/api/v1")
-	//v1.Use()
 	e.GET("/", handler.Hello(client))
 	e.GET("/ip", handler.RealIP())
 	e.POST("/api/check-email", api.CheckEmail(client))
@@ -177,9 +173,8 @@ func main() {
 	r.POST("/delete-user", handler.DeleteUserByUsername(client))
 
 	// role
-
+	r.GET("/roles", handler.GetAllRoles(client))
 	r.POST("/add-role", handler.CreateRole(client))
-	r.POST("/roles", handler.GetAllRoles(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

@@ -11,10 +11,8 @@ import (
 
 // GetAllRoles 获取所有role
 func GetAllRoles(client *ent.Client) echo.HandlerFunc {
-	fmt.Println(111111)
 	return func(c echo.Context) error {
 		roles, err := client.Role.Query().All(context.Background())
-		fmt.Println(222222)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})

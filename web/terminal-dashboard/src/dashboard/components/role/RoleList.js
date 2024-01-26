@@ -20,6 +20,8 @@ import {UserPlusIcon} from "@heroicons/react/16/solid";
 import {useState} from "react";
 import AddRole from "./AddRole";
 import {useFetchRoles} from "./RoleHook";
+import UserRow from "../user/UserRow";
+import RenderRole from "./RenderRole";
 
 const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
 
@@ -36,14 +38,6 @@ function RoleList() {
 
     const indexOfLastUser = page * rolesPerPage;
     const indexOfFirstUser = indexOfLastUser - rolesPerPage;
-
-    // const filteredUsers = users.filter(user => user.nickname.includes(search) || user.email.includes(search));
-    // const filteredUsers = users.filter(user =>
-    //     (user.nickname && user.nickname.includes(search)) ||
-    //     (user.email && user.email.includes(search)) ||
-    //     (user.username && user.username.includes(search))
-    // );
-
     let currentRoles = roles.slice(indexOfFirstUser, indexOfLastUser);
     if (!Array.isArray(currentRoles)) {
         currentRoles = [];
@@ -139,83 +133,24 @@ function RoleList() {
                     </tr>
                     </thead>
                     <tbody>
-                    {currentRoles.map(( role, index,) => {
-                            const isLast = index === currentRoles.length - 1;
-                            const classes = isLast
-                                ? "p-4"
-                                : "p-4 border-b border-blue-gray-50";
-
-                            return (
-                                <tr key={role.id}>
-                                    <td className={classes}>
-                                        <Typography variant="small" color="blue-gray" className="font-normal">
-                                            {role.id}
-                                        </Typography>
-                                    </td>
-                                    <td className={classes}>
-                                        <Typography variant="small" color="blue-gray" className="font-normal">
-                                            {role.name}
-                                        </Typography>
-                                    </td>
-                                    <td className={classes}>
-                                        <Typography variant="small" color="blue-gray" className="font-normal">
-                                            {role.description}
-                                        </Typography>
-                                    </td>
-                                    <td className={classes}>
-                                        <Typography variant="small" color="blue-gray" className="font-normal">
-                                            {role.created_at}
-                                        </Typography>
-                                    </td>
-                                    <td className={classes}>
-                                        <Typography variant="small" color="blue-gray" className="font-normal">
-                                            {role.updated_at}
-                                        </Typography>
-                                    </td>
-                                    <td className={classes}>
-                                        <Tooltip content="Edit Role">
-                                            <IconButton variant="text">
-                                                <PencilIcon className="h-4 w-4"/>
-                                            </IconButton>
-                                        </Tooltip>
-                                    </td>
-                                </tr>
-                            );
-                        },
+                    {currentRoles.map(( role, index) =>
+                        <RenderRole role={role} isLast={index === currentRoles.length - 1} />
                     )}
                     </tbody>
                 </table>
             </CardBody>
-            <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
-                <Button variant="outlined" size="sm">
-                    Previous
-                </Button>
-                <div className="flex items-center gap-2">
-                    <IconButton variant="outlined" size="sm">
-                        1
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        2
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        3
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        ...
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        8
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        9
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        10
-                    </IconButton>
+            <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">
+                <Typography variant="small" color="blue-gray" className="font-normal mx-2">
+                    Page {page} of {totalPages}
+                </Typography>
+                <div className="flex gap-2">
+                    <Button variant="outlined" size="sm" onClick={handlePrevious}>
+                        Previous
+                    </Button>
+                    <Button variant="outlined" size="sm" onClick={handleNext}>
+                        Next
+                    </Button>
                 </div>
-                <Button variant="outlined" size="sm">
-                    Next
-                </Button>
             </CardFooter>
         </Card>
     );
