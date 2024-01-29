@@ -15,9 +15,8 @@ function DeleteRoleForm({ role, onDeleteRole, onClose }) {
                     name: name,
                 };
                 await deleteRole(data);
-                navigate("/")
                 onDeleteRole();
-
+                navigate("/")
             } catch (error) {
                 console.error(error);
                 alert('An error occurred while deleting the role.');

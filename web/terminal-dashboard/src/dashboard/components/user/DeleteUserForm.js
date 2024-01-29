@@ -1,8 +1,11 @@
 import React, {useState} from 'react';
-import {Button, Card, CardBody, CardHeader, Input, Typography} from "@material-tailwind/react";
+import {Button, Card, CardBody, Input, Typography} from "@material-tailwind/react";
 import {deleteUser, } from "../../../api/api";
+import {useNavigate} from "react-router-dom";
 
 function DeleteUserForm({ user, onDeleteUser, onClose }) {
+
+    const navigate = useNavigate();
     // 使用user的值来初始化你的状态
     const [username, setUsername] = useState(user ? user.username : '');
     async function handleSubmit(e) {
@@ -14,6 +17,8 @@ function DeleteUserForm({ user, onDeleteUser, onClose }) {
                 };
                 await deleteUser(data);
                 onDeleteUser();
+                navigate("/")
+
             } catch (error) {
                 console.error(error);
                 alert('An error occurred while deleting the user.');
