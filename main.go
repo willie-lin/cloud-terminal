@@ -180,6 +180,7 @@ func main() {
 	// role
 	r.GET("/roles", handler.GetAllRoles(client))
 	r.POST("/add-role", handler.CreateRole(client))
+	r.POST("/delete-role", handler.DeleteRoleByName(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

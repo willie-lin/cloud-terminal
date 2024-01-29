@@ -1,8 +1,10 @@
 import React, {useState} from 'react';
-import {Button, Card, CardBody, CardHeader, Input, Typography} from "@material-tailwind/react";
+import {Button, Card, CardBody, Input, Typography} from "@material-tailwind/react";
 import { deleteRole } from "../../../api/api";
+import {useNavigate} from "react-router-dom";
 
 function DeleteRoleForm({ role, onDeleteRole, onClose }) {
+    const navigate = useNavigate();
     // 使用user的值来初始化你的状态
     const [name, setName] = useState(role ? role.name : '');
     async function handleSubmit(e) {
@@ -13,7 +15,9 @@ function DeleteRoleForm({ role, onDeleteRole, onClose }) {
                     name: name,
                 };
                 await deleteRole(data);
+                navigate("/")
                 onDeleteRole();
+
             } catch (error) {
                 console.error(error);
                 alert('An error occurred while deleting the role.');
