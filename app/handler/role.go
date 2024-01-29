@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"net/http"
 )
 
@@ -48,5 +49,41 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 			fmt.Printf("Created role with ID: %s\n", role.ID)
 		}
 		return c.JSON(http.StatusCreated, map[string]string{"message": "Roles created successfully"})
+	}
+}
+
+func DeleteRoleByName(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// RoleDTO
+		type RoleDTO struct {
+			Name string `json:"name"`
+		}
+
+		dto := new(RoleDTO)
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding role: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
+		ro, err := client.Role.Query().Where(role.NameEQ(dto.Name)).Only(context.Background())
+		if ent.IsNotFound(err) {
+			log.Printf("Role not found: %v", err)
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Role not found"})
+		}
+		if err != nil {
+			log.Printf("Error querying role: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role from database"})
+		}
+
+		err = client.Role.DeleteOne(ro).Exec(context.Background())
+		if ent.IsNotFound(err) {
+			log.Printf("Role not found: %v", err)
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Role not found"})
+		}
+		if err != nil {
+			log.Printf("Error deleting role: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error deleting role"})
+		}
+		return c.NoContent(http.StatusNoContent)
 	}
 }
