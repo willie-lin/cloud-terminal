@@ -96,7 +96,7 @@ function AddRoleForm({ onAddrole, onClose }) {
                                     className="mb-4"
                                 />
                             </div>
-                            <Tooltip content="Delete User" placement="top">
+                            <Tooltip content="Delete Role" placement="top">
                                 <IconButton variant="text"
                                             color="red"
                                             buttonType="filled"

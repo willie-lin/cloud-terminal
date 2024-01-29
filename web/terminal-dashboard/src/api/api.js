@@ -192,3 +192,13 @@ export const getAllRoles = async () => {
         console.error(error);
     }
 };
+
+export const deleteRole = async (data) => {
+    try {
+        const response = await api.post('/admin/delete-role', data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
