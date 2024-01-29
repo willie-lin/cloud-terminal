@@ -73,7 +73,7 @@ const TABLE_ROWS = [
     },
 ];
 
-function Permission() {
+function PermissionList() {
     return (
         <Card className="h-full w-full">
             <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -277,4 +277,4 @@ function Permission() {
     );
 }
 
-export default Permission;
+export default PermissionList;

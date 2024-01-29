@@ -38,7 +38,7 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 		}
 
 		for _, dto := range roles {
-			role, err := client.Role.Create().
+			ro, err := client.Role.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
 				Save(context.Background())
@@ -46,7 +46,7 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 				log.Printf("Error creating role: %v", err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create role"})
 			}
-			fmt.Printf("Created role with ID: %s\n", role.ID)
+			fmt.Printf("Created role with ID: %s\n", ro.ID)
 		}
 		return c.JSON(http.StatusCreated, map[string]string{"message": "Roles created successfully"})
 	}

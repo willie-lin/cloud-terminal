@@ -12,7 +12,7 @@ import TwoFactorAuthPage from "./dashboard/components/2FA/TwoFactorAuthPage";
 import ResetPassword from "./dashboard/pages/ResetPassword";
 import NotFoundPage from "./dashboard/pages/404";
 import RoleList from "./dashboard/components/role/RoleList";
-import Permission from "./dashboard/components/permission/Permission";
+import PermissionList from "./dashboard/components/permission/PermissionList";
 
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
@@ -44,7 +44,7 @@ const App = () => {
                     <Route path="dashboard" element={<HomePage email={email}/>}/>
 
                     <Route path="roles" element={<RoleList email={email}/>}/>
-                    <Route path="permissions" element={<Permission email={email}/>}/>
+                    <Route path="permissions" element={<PermissionList email={email}/>}/>
 
 
                     <Route path="userinfo" element={<UserInfo email={email}/>}/>
