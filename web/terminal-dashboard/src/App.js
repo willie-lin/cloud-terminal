@@ -7,7 +7,6 @@ import Register from "./dashboard/pages/Register";
 import Dashboard from "./layout/Dashboard";
 import UserInfo from "./dashboard/components/user/UserInfo";
 import HomePage from "./layout/HomePage";
-import EditUserInfo from "./dashboard/components/user/EditUserInfo";
 import TwoFactorAuthPage from "./dashboard/components/2FA/TwoFactorAuthPage";
 import ResetPassword from "./dashboard/pages/ResetPassword";
 import NotFoundPage from "./dashboard/pages/404";
