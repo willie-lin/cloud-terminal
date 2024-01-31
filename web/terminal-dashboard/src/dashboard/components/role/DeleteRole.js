@@ -3,7 +3,7 @@ import {Button, Card, CardBody, Input, Typography} from "@material-tailwind/reac
 import { deleteRole } from "../../../api/api";
 import {useNavigate} from "react-router-dom";
 
-function DeleteRoleForm({ role, onDeleteRole, onClose }) {
+function DeleteRole({ role, onDeleteRole, onClose }) {
     const navigate = useNavigate();
     // 使用user的值来初始化你的状态
     const [name, setName] = useState(role ? role.name : '');
@@ -29,7 +29,7 @@ function DeleteRoleForm({ role, onDeleteRole, onClose }) {
             <CardBody className="px-4 py-4">
                 <div className="flex justify-between items-center mb-2">
                     <Typography variant="h4" color="gray">
-                        Delete role
+                        Delete Role
                     </Typography>
                     <Button color="gray" buttonType="link" onClick={onClose}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
@@ -75,8 +75,7 @@ function DeleteRoleForm({ role, onDeleteRole, onClose }) {
                 </form>
             </CardBody>
         </Card>
-    )
-        ;
+    );
 }
 
-export default DeleteRoleForm;
+export default DeleteRole;

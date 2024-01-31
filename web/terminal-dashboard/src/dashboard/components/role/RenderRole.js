@@ -2,7 +2,7 @@ import {Chip, IconButton, Tooltip, Typography} from "@material-tailwind/react";
 import {PencilIcon, TrashIcon} from "@heroicons/react/16/solid";
 import React, {useState} from "react";
 import DeleteUserForm from "../user/DeleteUserForm";
-import DeleteRoleForm from "./DeleteRoleForm";
+import DeleteRole from "./DeleteRole";
 
 function RenderRole({ role, isLast }) {
     const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
@@ -92,7 +92,7 @@ function RenderRole({ role, isLast }) {
                                  closeDeleteRole();
                              }}}
                     >
-                        <DeleteRoleForm role={deleteRole} onDeleteRole={handleDeleteRole} onClose={closeDeleteRole}/>
+                        <DeleteRole role={deleteRole} onDeleteRole={handleDeleteRole} onClose={closeDeleteRole}/>
                     </div>
                 )}
             </td>
