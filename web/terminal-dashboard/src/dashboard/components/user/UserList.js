@@ -50,7 +50,7 @@ function UserList() {
         // 在这里，你应该根据sortField和sortDirection来更新你的数据
     };
 
-    const users = useFetchUsers();
+    const users = useFetchUsers() || [];
     const [page, setPage] = useState(1);
     const usersPerPage = 10;
     const totalPages = Math.ceil(users.length / usersPerPage);

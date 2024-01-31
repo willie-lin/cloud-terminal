@@ -9,7 +9,7 @@ import RenderRole from "./RenderRole";
 function RoleList() {
     const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
 
-    const roles = useFetchRoles()
+    const roles = useFetchRoles() || [];
 
     const [page, setPage] = useState(1);
     const rolesPerPage = 10;
