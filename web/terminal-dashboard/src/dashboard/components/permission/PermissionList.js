@@ -1,5 +1,4 @@
 import { PencilIcon } from "@heroicons/react/24/solid"
-
 import { useState } from "react";
 import {
     MagnifyingGlassIcon,
@@ -135,19 +134,19 @@ function PermissionList() {
                     </tbody>
                 </table>
             </CardBody>
-            {/*<CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">*/}
-            {/*    <Typography variant="small" color="blue-gray" className="font-normal mx-2">*/}
-            {/*        Page {page} of {totalPages}*/}
-            {/*    </Typography>*/}
-            {/*    <div className="flex gap-2">*/}
-            {/*        <Button variant="outlined" size="sm" onClick={handlePrevious}>*/}
-            {/*            Previous*/}
-            {/*        </Button>*/}
-            {/*        <Button variant="outlined" size="sm" onClick={handleNext}>*/}
-            {/*            Next*/}
-            {/*        </Button>*/}
-            {/*    </div>*/}
-            {/*</CardFooter>*/}
+            <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">
+                <Typography variant="small" color="blue-gray" className="font-normal mx-2">
+                    Page {page} of {totalPages}
+                </Typography>
+                <div className="flex gap-2">
+                    <Button variant="outlined" size="sm" onClick={handlePrevious}>
+                        Previous
+                    </Button>
+                    <Button variant="outlined" size="sm" onClick={handleNext}>
+                        Next
+                    </Button>
+                </div>
+            </CardFooter>
         </Card>
     );
 }
