@@ -1,17 +1,28 @@
 import {Button, Card, CardBody, IconButton, Input, Tooltip, Typography} from "@material-tailwind/react";
 import React, {useState} from "react";
 import {TrashIcon} from "@heroicons/react/16/solid";
-import {addRole} from "../../../api/api";
+import {addRole, checkEmail, checkRoleName} from "../../../api/api";
 
 
 function AddRole({ onAddrole, onClose }) {
 
+    const [nameError, setNameError] = useState('');
+
     const [roles, setRoles] = useState([{ name: '', description: '' }]);
 
-    const handleRoleChange = (index, field, value) => {
+    const handleRoleChange = async (index, field, value) => {
         const newRoles = [...roles];
         newRoles[index][field] = value;
         setRoles(newRoles);
+        if (field === 'name') {
+            try {
+                const date = { name: value };  // 创建一个包含名称的对象
+                const exists = await checkRoleName(date); // 等待函数完成
+                setNameError(exists ? 'Name already registered' : '');
+            } catch (error) {
+                console.error(error);
+            }
+        }
     };
     const handleAddRole = () => {
         setRoles([...roles, { name: '', description: '' }]);
@@ -77,6 +88,9 @@ function AddRole({ onAddrole, onClose }) {
                                     name="name"
                                     onChange={(e) => handleRoleChange(index, 'name', e.target.value)}
                                     className="mb-4"
+                                    // onChange={handleRoleNameChange}
+                                    // className="mb-4  w-full" // 添加边距
+                                    error={!!nameError}
                                 />
                             </div>
                             <div className="flex flex-col">

@@ -181,6 +181,13 @@ func main() {
 	r.GET("/roles", handler.GetAllRoles(client))
 	r.POST("/add-role", handler.CreateRole(client))
 	r.POST("/delete-role", handler.DeleteRoleByName(client))
+	r.POST("/check-role-name", handler.CheckRoleName(client))
+
+	// permission
+	r.GET("/permissions", handler.GetAllPermissions(client))
+	r.POST("/add-permission", handler.CreatePermission(client))
+	r.POST("/delete-permission", handler.DeletePermissionByName(client))
+	r.POST("/check-permission-name", handler.CheckPermissionName(client))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

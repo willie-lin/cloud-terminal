@@ -10,6 +10,27 @@ import (
 	"net/http"
 )
 
+func CheckRoleName(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		type RoleDTO struct {
+			Name string `json:"name"`
+		}
+
+		dto := new(RoleDTO)
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding role: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+		// 检查role是否已经存在
+		exists, err := client.Role.Query().Where(role.NameEQ(dto.Name)).Exist(context.Background())
+		if err != nil {
+			log.Printf("Error checking name: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error checking name from database"})
+		}
+		return c.JSON(http.StatusOK, map[string]bool{"exists": exists})
+	}
+}
+
 // GetAllRoles 获取所有role
 func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {

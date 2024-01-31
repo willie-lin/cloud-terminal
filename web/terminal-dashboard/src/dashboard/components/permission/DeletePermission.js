@@ -2,4 +2,4 @@
 function DeletePermission() {
 }
 
-export default DeletePermission
+export default DeletePermission;

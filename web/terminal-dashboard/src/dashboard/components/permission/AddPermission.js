@@ -1,20 +1,29 @@
-
 import {Button, Card, CardBody, IconButton, Input, Tooltip, Typography} from "@material-tailwind/react";
 import React, {useState} from "react";
 import {TrashIcon} from "@heroicons/react/16/solid";
-import {addPermission} from "../../../api/api";
+import {addPermission, checkPermissionName} from "../../../api/api";
 
 
 function AddPermission({ onAddPermission, onClose }) {
 
+    const [nameError, setNameError] = useState('');
     const [permissions, setPermissions] = useState([{ name: '', description: '' }]);
 
-    const handlePermissionChange = (index, field, value) => {
+    const handlePermissionChange = async (index, field, value) => {
         const newPermissions = [...permissions];
         newPermissions[index][field] = value;
         setPermissions(newPermissions);
-    };
 
+        if (field === 'name') {
+            try {
+                const date = {name: value};  // 创建一个包含名称的对象
+                const exists = await checkPermissionName(data);  // 等待函数完成
+                setNameError(exists ? 'Name already registered' : '');
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    };
 
     const handleAddPermission = () => {
         setPermissions([...permissions, { name: '', description: '' }]);
@@ -81,6 +90,7 @@ function AddPermission({ onAddPermission, onClose }) {
                                     name="name"
                                     onChange={(e) => handlePermissionChange(index, 'name', e.target.value)}
                                     className="mb-4"
+                                    error={!!nameError}
                                 />
                             </div>
                             <div className="flex flex-col">
@@ -98,6 +108,7 @@ function AddPermission({ onAddPermission, onClose }) {
                                     name="description"
                                     onChange={(e) => handlePermissionChange(index, 'description', e.target.value)}
                                     className="mb-4"
+
                                 />
                             </div>
                             <Tooltip content="Delete Role" placement="top">

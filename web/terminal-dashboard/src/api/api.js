@@ -173,6 +173,7 @@ export const deleteUser = async (data) => {
         console.error(error);
     }
 };
+// role
 
 // addRole
 export const addRole = async (data) => {
@@ -202,6 +203,17 @@ export const deleteRole = async (data) => {
     }
 };
 
+export const checkRoleName = async (data) => {
+    try {
+        const response = await api.post('/admin/check-role-name', data);
+        return response.data.exists;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// permission
+
 // addPermission
 export const addPermission = async (data) => {
     try {
@@ -216,6 +228,24 @@ export const getAllPermissions = async () => {
     try {
         const response = await api.get('/admin/permissions',);
         return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+export const deletePermission = async (data) => {
+    try {
+        const response = await api.post('/admin/delete-permission', data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+export const checkPermissionName = async (data) => {
+    try {
+        const response = await api.post('/admin/check-permission-name', data);
+        return response.data.exists;
     } catch (error) {
         console.error(error);
     }
