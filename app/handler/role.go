@@ -33,7 +33,7 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 		var roles []*RoleDTO
 
 		if err := c.Bind(&roles); err != nil {
-			log.Printf("Error binding user: %v", err)
+			log.Printf("Error binding role: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
