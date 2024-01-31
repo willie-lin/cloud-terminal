@@ -16,7 +16,7 @@ function AddPermission({ onAddPermission, onClose }) {
 
         if (field === 'name') {
             try {
-                const date = {name: value};  // 创建一个包含名称的对象
+                const data = {name: value};  // 创建一个包含名称的对象
                 const exists = await checkPermissionName(data);  // 等待函数完成
                 setNameError(exists ? 'Name already registered' : '');
             } catch (error) {
