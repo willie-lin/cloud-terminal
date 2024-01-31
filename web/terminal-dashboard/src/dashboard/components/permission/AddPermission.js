@@ -1,26 +1,28 @@
+
 import {Button, Card, CardBody, IconButton, Input, Tooltip, Typography} from "@material-tailwind/react";
 import React, {useState} from "react";
 import {TrashIcon} from "@heroicons/react/16/solid";
-import {addRole} from "../../../api/api";
 
 
-function AddRole({ onAddrole, onClose }) {
+function AddPermission({ onAddPermission, onClose }) {
 
-    const [roles, setRoles] = useState([{ name: '', description: '' }]);
+    const [permissions, setPermissions] = useState([{ name: '', description: '' }]);
 
-    const handleRoleChange = (index, field, value) => {
-        const newRoles = [...roles];
-        newRoles[index][field] = value;
-        setRoles(newRoles);
-    };
-    const handleAddRole = () => {
-        setRoles([...roles, { name: '', description: '' }]);
+    const handlePermissionChange = (index, field, value) => {
+        const newPermissions = [...permissions];
+        newPermissions[index][field] = value;
+        setPermissions(newPermissions);
     };
 
-    const handleRemoveRole = (index) => {
-        const newRoles = [...roles];
-        newRoles.splice(index, 1);
-        setRoles(newRoles);
+
+    const handleAddPermission = () => {
+        setPermissions([...permissions, { name: '', description: '' }]);
+    };
+
+    const handleRemovePermission = (index) => {
+        const newPermissions = [...permissions];
+        newPermissions.splice(index, 1);
+        setPermissions(newPermissions);
     };
 
 
@@ -28,18 +30,19 @@ function AddRole({ onAddrole, onClose }) {
         event.preventDefault();
         // console.log(roles);
         // 检查每个角色的'name'和'description'是否为空
-        for (let role of roles) {
-            if (!role.name.trim() || !role.description.trim()) {
-                console.error('Error: Role name and description cannot be empty');
-                return;  // 如果'name'或'description'为空，阻止提交
-            }
-        }
-        try {
-            await addRole(roles)
-            onAddrole(roles);
-        } catch (error) {
-            console.log(error)
-        }
+
+        // for (let permission of permissions) {
+        //     if (!permission.name.trim() || !permission.description.trim()) {
+        //         console.error('Error: Permission name and description cannot be empty');
+        //         return;  // 如果'name'或'description'为空，阻止提交
+        //     }
+        // }
+        // try {
+        //     // await addRole(roles)
+        //     onAddPermission(permissions);
+        // } catch (error) {
+        //     console.log(error)
+        // }
     };
 
     return (
@@ -47,7 +50,7 @@ function AddRole({ onAddrole, onClose }) {
             <CardBody className="px-4 py-8">
                 <div className="flex justify-between items-center mb-4">
                     <Typography variant="h4" color="gray">
-                        Create Role
+                        Create Permission
                     </Typography>
                     <Button color="gray" buttonType="link"   onClick={onClose}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
@@ -57,10 +60,10 @@ function AddRole({ onAddrole, onClose }) {
                     </Button>
                 </div>
                 <Typography variant="body2" color="blueGray" className="mb-4">
-                    Enter the data for the new role.
+                    Enter the data for the new permission.
                 </Typography>
                 <form onSubmit={handleSubmit}>
-                    {roles.map((role, index) => (
+                    {permissions.map((permission, index) => (
                         <div className="mb-1 flex gap-6 items-end" key={index}>
                             <div className="flex flex-col">
                                 <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
@@ -73,9 +76,9 @@ function AddRole({ onAddrole, onClose }) {
                                     color="lightBlue"
                                     size="regular"
                                     outline={true}
-                                    value={role.name}
+                                    value={permission.name}
                                     name="name"
-                                    onChange={(e) => handleRoleChange(index, 'name', e.target.value)}
+                                    onChange={(e) => handlePermissionChange(index, 'name', e.target.value)}
                                     className="mb-4"
                                 />
                             </div>
@@ -90,9 +93,9 @@ function AddRole({ onAddrole, onClose }) {
                                     color="lightBlue"
                                     size="regular"
                                     outline={true}
-                                    value={role.description}
+                                    value={permission.description}
                                     name="description"
-                                    onChange={(e) => handleRoleChange(index, 'description', e.target.value)}
+                                    onChange={(e) => handlePermissionChange(index, 'description', e.target.value)}
                                     className="mb-4"
                                 />
                             </div>
@@ -106,7 +109,7 @@ function AddRole({ onAddrole, onClose }) {
                                             iconOnly={true}
                                             ripple="light"
                                     // onClick={() => openDeleteUser(user)}
-                                            onClick={() => handleRemoveRole(index)}
+                                            onClick={() => handleRemovePermission(index)}
                                 >
                                     <TrashIcon className="h-4 w-4"/>
                                 </IconButton>
@@ -121,7 +124,7 @@ function AddRole({ onAddrole, onClose }) {
                         block={false}
                         iconOnly={false}
                         ripple="light"
-                        onClick={handleAddRole}
+                        onClick={handleAddPermission}
                     >
                         + Add additional role
                     </Button>
@@ -144,4 +147,4 @@ function AddRole({ onAddrole, onClose }) {
     )
 }
 
-export default AddRole;
+export default AddPermission;

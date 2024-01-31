@@ -1,4 +1,6 @@
-import { PencilIcon } from "@heroicons/react/24/solid";
+import { PencilIcon } from "@heroicons/react/24/solid"
+
+import { useState } from "react";
 import {
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
@@ -16,6 +18,7 @@ import {
     Input,
 } from "@material-tailwind/react";
 import {UserPlusIcon} from "@heroicons/react/16/solid";
+import AddPermission from "./AddPermission";
 
 const TABLE_HEAD = ["Transaction", "Amount", "Date", "Status", "Account", ""];
 
@@ -72,7 +75,23 @@ const TABLE_ROWS = [
     },
 ];
 
+
+
 function PermissionList() {
+    // 添加role
+    const [isAddPermissionOpen, setIsAddPermissionOpen] = useState(false);
+
+    const handleAddPermission = () => {
+        setIsAddPermissionOpen(false);
+    };
+
+    const openAddPermission = () => {
+        setIsAddPermissionOpen(true);
+    };
+
+    const closeAddPermission = () => {
+        setIsAddPermissionOpen(false);
+    };
     return (
         <Card className="h-full w-full">
             <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -95,10 +114,22 @@ function PermissionList() {
                         {/*<Button className="flex items-center gap-3" size="sm">*/}
                         {/*    <ArrowDownTrayIcon strokeWidth={2} className="h-4 w-4" /> Download*/}
                         {/*</Button>*/}
-                        <Button className="flex items-center gap-3" size="sm" >
+                        <Button className="flex items-center gap-3" size="sm" onClick={openAddPermission}>
                             <UserPlusIcon strokeWidth={2} className="h-4 w-4"/> Add Permission
                         </Button>
                     </div>
+                    {isAddPermissionOpen && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                             onClick={(e) => {
+                                 // 如果事件的目标是这个容器本身，那么关闭模态窗口
+                                 if (e.target === e.currentTarget) {
+                                     closeAddPermission();
+                                 }
+                             }}
+                        >
+                            <AddPermission onAddPermission={handleAddPermission} onClose={closeAddPermission}/>
+                        </div>
+                    )}
                 </div>
             </CardHeader>
             <CardBody className="overflow-scroll px-0">
