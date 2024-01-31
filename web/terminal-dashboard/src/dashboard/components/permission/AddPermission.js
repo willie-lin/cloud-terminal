@@ -2,6 +2,7 @@
 import {Button, Card, CardBody, IconButton, Input, Tooltip, Typography} from "@material-tailwind/react";
 import React, {useState} from "react";
 import {TrashIcon} from "@heroicons/react/16/solid";
+import {addPermission} from "../../../api/api";
 
 
 function AddPermission({ onAddPermission, onClose }) {
@@ -28,21 +29,21 @@ function AddPermission({ onAddPermission, onClose }) {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        // console.log(roles);
+        console.log(permissions);
         // 检查每个角色的'name'和'description'是否为空
 
-        // for (let permission of permissions) {
-        //     if (!permission.name.trim() || !permission.description.trim()) {
-        //         console.error('Error: Permission name and description cannot be empty');
-        //         return;  // 如果'name'或'description'为空，阻止提交
-        //     }
-        // }
-        // try {
-        //     // await addRole(roles)
-        //     onAddPermission(permissions);
-        // } catch (error) {
-        //     console.log(error)
-        // }
+        for (let permission of permissions) {
+            if (!permission.name.trim() || !permission.description.trim()) {
+                console.error('Error: Permission name and description cannot be empty');
+                return;  // 如果'name'或'description'为空，阻止提交
+            }
+        }
+        try {
+            await addPermission(permissions)
+            onAddPermission(permissions);
+        } catch (error) {
+            console.log(error)
+        }
     };
 
     return (

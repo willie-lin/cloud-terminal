@@ -19,8 +19,8 @@ import {
 } from "@material-tailwind/react";
 import {UserPlusIcon} from "@heroicons/react/16/solid";
 import AddPermission from "./AddPermission";
+import {useFetchPermissions} from "./PermissionHook";
 
-const TABLE_HEAD = ["Transaction", "Amount", "Date", "Status", "Account", ""];
 
 const TABLE_ROWS = [
     {
@@ -78,6 +78,35 @@ const TABLE_ROWS = [
 
 
 function PermissionList() {
+
+    const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
+
+
+    // const permissions = useFetchPermissions()
+    //
+    // const [page, setPage] = useState(1);
+    // const permissionsPerPage = 10;
+    // const totalPages = Math.ceil(permissions.length / permissionsPerPage);
+    //
+    // const indexOfLastPermission = page * permissionsPerPage;
+    // const indexOfFirstPermission = indexOfLastPermission - permissionsPerPage;
+    // let currentPermissions = permissions.slice(indexOfFirstPermission, indexOfLastPermission);
+    // if (!Array.isArray(currentPermissions)) {
+    //     currentPermissions = [];
+    // }
+    // const handlePrevious = () => {
+    //     if (page > 1) {
+    //         setPage(page - 1);
+    //     }
+    // };
+    // const handleNext = () => {
+    //     if (page < totalPages) {
+    //         setPage(page + 1);
+    //     }
+    // };
+
+
+
     // 添加role
     const [isAddPermissionOpen, setIsAddPermissionOpen] = useState(false);
 
@@ -272,37 +301,19 @@ function PermissionList() {
                     </tbody>
                 </table>
             </CardBody>
-            <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
-                <Button variant="outlined" size="sm">
-                    Previous
-                </Button>
-                <div className="flex items-center gap-2">
-                    <IconButton variant="outlined" size="sm">
-                        1
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        2
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        3
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        ...
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        8
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        9
-                    </IconButton>
-                    <IconButton variant="text" size="sm">
-                        10
-                    </IconButton>
-                </div>
-                <Button variant="outlined" size="sm">
-                    Next
-                </Button>
-            </CardFooter>
+            {/*<CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">*/}
+            {/*    <Typography variant="small" color="blue-gray" className="font-normal mx-2">*/}
+            {/*        Page {page} of {totalPages}*/}
+            {/*    </Typography>*/}
+            {/*    <div className="flex gap-2">*/}
+            {/*        <Button variant="outlined" size="sm" onClick={handlePrevious}>*/}
+            {/*            Previous*/}
+            {/*        </Button>*/}
+            {/*        <Button variant="outlined" size="sm" onClick={handleNext}>*/}
+            {/*            Next*/}
+            {/*        </Button>*/}
+            {/*    </div>*/}
+            {/*</CardFooter>*/}
         </Card>
     );
 }

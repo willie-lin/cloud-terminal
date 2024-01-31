@@ -202,3 +202,22 @@ export const deleteRole = async (data) => {
     }
 };
 
+// addPermission
+export const addPermission = async (data) => {
+    try {
+        const response = await api.post('/admin/add-permission', data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+export const getAllPermissions = async () => {
+    try {
+        const response = await api.get('/admin/permissions',);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+

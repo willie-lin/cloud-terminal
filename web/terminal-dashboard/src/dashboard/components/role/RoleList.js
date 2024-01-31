@@ -15,9 +15,9 @@ function RoleList() {
     const rolesPerPage = 10;
     const totalPages = Math.ceil(roles.length / rolesPerPage);
 
-    const indexOfLastUser = page * rolesPerPage;
-    const indexOfFirstUser = indexOfLastUser - rolesPerPage;
-    let currentRoles = roles.slice(indexOfFirstUser, indexOfLastUser);
+    const indexOfLastRole = page * rolesPerPage;
+    const indexOfFirstRole = indexOfLastRole - rolesPerPage;
+    let currentRoles = roles.slice(indexOfFirstRole, indexOfLastRole);
     if (!Array.isArray(currentRoles)) {
         currentRoles = [];
     }
@@ -31,6 +31,8 @@ function RoleList() {
             setPage(page + 1);
         }
     };
+
+
     // 添加role
     const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
 
