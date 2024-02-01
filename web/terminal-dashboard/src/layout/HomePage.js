@@ -1,5 +1,4 @@
 import UserList from "../dashboard/components/user/UserList";
-import DefaultPagination from "../dashboard/components/user/Pagination";
 
 function HomePage({ email }) {
     return (

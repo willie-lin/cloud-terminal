@@ -49,10 +49,8 @@ function UserInfo({ email }) {
             <CardHeader floated={false} className="h-50">
                 <div>
                     {userInfo && <Avatar src={ userInfo.avatar } alt="avatar" variant="rounded" size="xxl"/>}
-                    {/*<img src="https://docs.material-tailwind.com/img/team-3.jpg" alt="profile-picture"/>*/}
                 </div>
             </CardHeader>
-            {/*<CardBody className="text-center">*/}
             <CardBody className="text-left">
                 <Typography variant="h4" color="blue-gray" className="mb-2">
                     欢迎，{userInfo?.nickname}!
