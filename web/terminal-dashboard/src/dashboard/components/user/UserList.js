@@ -64,11 +64,29 @@ function UserList() {
         (user.email && user.email.includes(search)) ||
         (user.username && user.username.includes(search))
     );
+    // 添加新的状态
+    const [isViewAll, setIsViewAll] = useState(false);
 
-    let currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
-    if (!Array.isArray(currentUsers)) {
-        currentUsers = [];
+
+
+    // let currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+    // if (!Array.isArray(currentUsers)) {
+    //     currentUsers = [];
+    // }
+
+    // 更新 currentUsers 的定义
+    let currentUsers;
+    if (isViewAll) {
+        currentUsers = users;
+    } else {
+        currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
     }
+
+    // 在 "view all" 按钮的点击事件处理函数中
+    const handleViewAll = () => {
+        setIsViewAll(true);
+    };
+
     const handlePrevious = () => {
         if (page > 1) {
             setPage(page - 1);
@@ -113,7 +131,7 @@ function UserList() {
                             <Button className="flex items-center gap-3" size="sm">
                                 <ArrowDownTrayIcon strokeWidth={2} className="h-4 w-4" /> Download
                             </Button>
-                            <Button variant="outlined" size="sm">
+                            <Button variant="outlined" size="sm" onClick={handleViewAll}>
                                 view all
                             </Button>
                             <Button className="flex items-center gap-3" size="sm" onClick={openAddUser}>
@@ -182,19 +200,35 @@ function UserList() {
                         </table>
                     </div>
                 </CardBody>
-                <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">
-                    <Typography variant="small" color="blue-gray" className="font-normal mx-2">
-                        Page {page} of {totalPages}
-                    </Typography>
-                    <div className="flex gap-2">
-                        <Button variant="outlined" size="sm" onClick={handlePrevious}>
-                            Previous
-                        </Button>
-                        <Button variant="outlined" size="sm" onClick={handleNext}>
-                            Next
-                        </Button>
-                    </div>
-                </CardFooter>
+                {!isViewAll && (
+                    <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">
+                        <Typography variant="small" color="blue-gray" className="font-normal mx-2">
+                            Page {page} of {totalPages}
+                        </Typography>
+                        <div className="flex gap-2">
+                            <Button variant="outlined" size="sm" onClick={handlePrevious}>
+                                Previous
+                            </Button>
+                            <Button variant="outlined" size="sm" onClick={handleNext}>
+                                Next
+                            </Button>
+                        </div>
+                    </CardFooter>
+                )}
+
+                {/*<CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-0">*/}
+                {/*    <Typography variant="small" color="blue-gray" className="font-normal mx-2">*/}
+                {/*        Page {page} of {totalPages}*/}
+                {/*    </Typography>*/}
+                {/*    <div className="flex gap-2">*/}
+                {/*        <Button variant="outlined" size="sm" onClick={handlePrevious}>*/}
+                {/*            Previous*/}
+                {/*        </Button>*/}
+                {/*        <Button variant="outlined" size="sm" onClick={handleNext}>*/}
+                {/*            Next*/}
+                {/*        </Button>*/}
+                {/*    </div>*/}
+                {/*</CardFooter>*/}
             </Card>
 );
 }
