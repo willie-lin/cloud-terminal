@@ -86,9 +86,7 @@ function PermissionList() {
                                 icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                             />
                         </div>
-                        {/*<Button className="flex items-center gap-3" size="sm">*/}
-                        {/*    <ArrowDownTrayIcon strokeWidth={2} className="h-4 w-4" /> Download*/}
-                        {/*</Button>*/}
+
                         <Button className="flex items-center gap-3" size="sm" onClick={openAddPermission}>
                             <UserPlusIcon strokeWidth={2} className="h-4 w-4"/> Add Permission
                         </Button>
