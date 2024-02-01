@@ -139,6 +139,14 @@ function Sidebar({ email, onLogout }) {
                                     Permissions
                                 </Link>
                             </ListItem>
+                            <ListItem>
+                                <Link to="/authorization" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                    <ListItemPrefix>
+                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
+                                    </ListItemPrefix>
+                                    Authorization
+                                </Link>
+                            </ListItem>
                         </List>
                     </AccordionBody>
                 </Accordion>

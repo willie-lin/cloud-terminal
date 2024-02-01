@@ -8,7 +8,7 @@ import Footer from "./Footer";
 function Dashboard({ isLoggedIn, onLogout, email }) {
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen bg-white dark:bg-gray-800">
             <div className="w-64 bg-white shadow-lg fixed h-full z-10">
             <Sidebar onLogout={onLogout} email={email}/>
             </div>
