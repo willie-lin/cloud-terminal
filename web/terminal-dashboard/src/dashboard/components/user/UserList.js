@@ -15,6 +15,7 @@ import {useState} from "react";
 import UserRow from "./UserRow";
 import AddUserForm from "./AddUser";
 import {ArrowDownTrayIcon} from "@heroicons/react/24/outline";
+import { saveAs } from 'file-saver';
 
 function UserList() {
 
@@ -98,6 +99,40 @@ function UserList() {
         }
     };
 
+
+    // 创建一个函数来生成 CSV 文件的内容
+    const createCsvContent = (users) => {
+        // CSV 文件的头部
+        const header = ['ID', 'NICKNAME', 'USERNAME', 'EMAIL', 'PHONE', 'BIO', '2FA','STATUS', 'ONLINE', 'CREATED', 'UPDATED', 'LAST MODIFIED'];
+        // CSV 文件的数据
+        const data = users.map(user => [
+            user.id,
+            user.nickname,
+            user.username,
+            user.email,
+            user.phone,
+            user.bio,
+            user.totp_secret,
+            user.online,
+            user.enable_type,
+            user.created_at,
+            user.updated_at,
+            user.last_login_time,
+        ]);
+        // 将头部和数据合并，然后转换为 CSV 格式
+        return [header, ...data].map(row => row.join(',')).join('\n');
+    };
+
+// 创建一个函数来处理 "Download" 按钮的点击事件
+    const handleDownload = () => {
+        // 生成 CSV 文件的内容
+        const csvContent = createCsvContent(users);
+        // 创建一个 Blob 对象
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        // 使用 file-saver 库来保存文件
+        saveAs(blob, 'users.csv');
+    };
+
     // 添加用户
     const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
@@ -128,7 +163,7 @@ function UserList() {
                             </Typography>
                         </div>
                         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                            <Button className="flex items-center gap-3" size="sm">
+                            <Button className="flex items-center gap-3" size="sm" onClick={handleDownload}>
                                 <ArrowDownTrayIcon strokeWidth={2} className="h-4 w-4" /> Download
                             </Button>
                             <Button variant="outlined" size="sm" onClick={handleViewAll}>
