@@ -56,7 +56,7 @@ function UpdateUser({ user, onUpdateUser, onClose }) {
                     </Button>
                 </div>
                 <Typography variant="body2" color="blueGray" className="mb-2">
-                    Update the data for the user.
+                    Update the data for the User.
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-1 flex flex-col gap-3.5">

@@ -68,7 +68,6 @@ function ResetPasswordForm({ onResetPassword }) {
                     <Typography variant="h2" className="font-bold mb-4">Reset Password</Typography>
                     <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">Enter your email reset password to Sign In.</Typography>
                 </div>
-                {/*<form onSubmit="">*/}
                 <form onSubmit={handleSubmit}>
                     {step === 1 && (
                         <>

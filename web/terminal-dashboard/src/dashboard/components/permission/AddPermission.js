@@ -70,7 +70,7 @@ function AddPermission({ onAddPermission, onClose }) {
                     </Button>
                 </div>
                 <Typography variant="body2" color="blueGray" className="mb-4">
-                    Enter the data for the new permission.
+                    Enter the data for the new Permission.
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     {permissions.map((permission, index) => (

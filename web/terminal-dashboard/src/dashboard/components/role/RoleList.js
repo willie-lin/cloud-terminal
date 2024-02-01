@@ -54,10 +54,10 @@ function RoleList() {
                 <div className="mb-4 flex flex-col justify-between gap-8 md:flex-row md:items-center">
                     <div>
                         <Typography variant="h5" color="blue-gray">
-                            Roles
+                            Role List
                         </Typography>
                         <Typography color="gray" className="mt-1 font-normal">
-                            Define some some management roles.
+                            Define some some management Roles.
                         </Typography>
                     </div>
                     <div className="flex w-full shrink-0 gap-2 md:w-max">

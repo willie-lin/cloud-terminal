@@ -39,7 +39,7 @@ function DeleteRole({ role, onDeleteRole, onClose }) {
                     </Button>
                 </div>
                 <Typography variant="body2" color="blueGray" className="mb-2">
-                    Delete the data for the role.
+                    Delete the data for the Role.
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-1 flex flex-col gap-6">

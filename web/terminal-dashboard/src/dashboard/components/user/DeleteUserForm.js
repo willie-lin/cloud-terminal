@@ -41,7 +41,7 @@ function DeleteUserForm({ user, onDeleteUser, onClose }) {
                     </Button>
                 </div>
                 <Typography variant="body2" color="blueGray" className="mb-2">
-                    Delete the data for the user.
+                    Delete the data for the User.
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-1 flex flex-col gap-6">

@@ -39,7 +39,7 @@ function DeletePermission({permission, onDeletepermission, onClose}) {
                     </Button>
                 </div>
                 <Typography variant="body2" color="blueGray" className="mb-2">
-                    Delete the data for the permission.
+                    Delete the data for the Permission.
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-1 flex flex-col gap-6">

@@ -95,7 +95,7 @@ function EditUserInfo({ user, onEditUser,  onUserChange, onClose }) {
                         </Button>
                     </div>
                     <Typography variant="body2" color="blueGray" className="mb-2">
-                        Edit the data for the user.
+                        Edit the data for the User.
                     </Typography>
                     <form onSubmit={handleSubmit}>
                         <label>

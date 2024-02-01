@@ -68,7 +68,7 @@ function AddRole({ onAddrole, onClose }) {
                     </Button>
                 </div>
                 <Typography variant="body2" color="blueGray" className="mb-4">
-                    Enter the data for the new role.
+                    Enter the data for the new Role.
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     {roles.map((role, index) => (

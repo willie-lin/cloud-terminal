@@ -63,7 +63,7 @@ function AddUserForm({ onAddUser, onClose }) {
                         </Button>
                     </div>
                     <Typography variant="body2" color="blueGray" className="mb-4">
-                        Enter the data for the new user.
+                        Enter the data for the new User.
                     </Typography>
                     <form onSubmit={handleSubmit}>
                         <div className="mb-1 flex flex-col gap-6">
