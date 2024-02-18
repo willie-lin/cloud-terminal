@@ -5,7 +5,7 @@ go 1.22
 require (
 	entgo.io/ent v0.13.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/bykof/gostradamus v1.0.4
+	github.com/bykof/gostradamus v1.1.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goccy/go-json v0.7.1
 	github.com/gofrs/uuid v4.0.0+incompatible
@@ -38,6 +38,7 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/elastic/go-sysinfo v1.1.1 // indirect
 	github.com/elastic/go-windows v1.0.0 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
