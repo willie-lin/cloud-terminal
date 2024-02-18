@@ -24,8 +24,8 @@ require (
 	github.com/pquerna/otp v1.4.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/swaggo/echo-swagger v1.4.1
-	github.com/swaggo/swag v1.8.12
-	go.elastic.co/apm/module/apmechov4 v1.11.0
+	github.com/swaggo/swag v1.16.3
+	go.elastic.co/apm/module/apmechov4 v1.15.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.18.0
 )
@@ -39,6 +39,7 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/elastic/go-licenser v0.3.1 // indirect
 	github.com/elastic/go-sysinfo v1.1.1 // indirect
 	github.com/elastic/go-windows v1.0.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -52,6 +53,7 @@ require (
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
+	github.com/jcchavezs/porto v0.1.0 // indirect
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -67,11 +69,12 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
-	go.elastic.co/apm v1.11.0 // indirect
-	go.elastic.co/apm/module/apmhttp v1.11.0 // indirect
+	go.elastic.co/apm v1.15.0 // indirect
+	go.elastic.co/apm/module/apmhttp v1.15.0 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
+	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
