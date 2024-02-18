@@ -1,8 +1,6 @@
 module github.com/willie-lin/cloud-terminal
 
-go 1.21
-
-toolchain go1.21.5
+go 1.22
 
 require (
 	entgo.io/ent v0.12.5
