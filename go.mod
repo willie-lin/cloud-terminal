@@ -7,11 +7,11 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bykof/gostradamus v1.1.1
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/goccy/go-json v0.7.1
-	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/goccy/go-json v0.10.2
+	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.0
-	github.com/google/uuid v1.3.0
-	github.com/gorilla/sessions v1.2.1
+	github.com/google/uuid v1.6.0
+	github.com/gorilla/sessions v1.2.2
 	github.com/labstack/echo-contrib v0.15.0
 	github.com/labstack/echo-jwt/v4 v4.2.0
 	github.com/labstack/echo/v4 v4.11.4
@@ -49,7 +49,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
-	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
