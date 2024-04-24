@@ -25,7 +25,8 @@ builds:
       - "-X main.commit={{.Commit}}"
       - "-X main.date={{.Date}}"
 
-  - env:
+  - id: "another-build"  # Add a unique id here
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -36,6 +37,8 @@ builds:
       - amd64
       - arm64
       - arm
+
+
 
     goarm:
       - v6
