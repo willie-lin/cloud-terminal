@@ -1,6 +1,6 @@
-FROM golang:1.16 as build
+FROM golang:1.22 as build
 
-MAINTAINER Linjiezui "linjiezui@gmail.com"
+MAINTAINER Linjiezui "JieZui.Lin@gmail.com"
 
 # 容器环境变量添加，会覆盖默认的变量值
 ENV GO111MODULE=on
@@ -37,7 +37,7 @@ COPY --from=build /go/release/cloud-terminal /
 ENV HOST=0.0.0.0
 
 # Expose default port
-EXPOSE 2023 3306
+EXPOSE 80 443 3306
 # 启动服务
 CMD ["./cloud-terminal"]
 #ENTRYPOINT ["./app"]
