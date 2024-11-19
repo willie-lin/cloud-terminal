@@ -2,10 +2,8 @@ package api
 
 import (
 	"context"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
