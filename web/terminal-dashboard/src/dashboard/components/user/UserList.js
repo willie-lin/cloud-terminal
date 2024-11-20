@@ -151,9 +151,12 @@ function UserList() {
     };
 
     return (
-            <Card className="h-full w-full">
-                <CardHeader floated={true} shadow={false} className="rounded-none">
-                    <div className="flex items-center justify-between gap-4 mb-1">
+            // <Card className="h-full w-full">
+            //     <CardHeader floated={true} shadow={false} className="rounded-none">
+            //         <div className="flex items-center justify-between gap-4 mb-1">
+        <Card className="h-full w-full">
+            <CardHeader floated={false} shadow={false} className="rounded-none">
+                <div className="mb-4 flex flex-col justify-between gap-8 md:flex-row md:items-center">
                         <div>
                             <Typography variant="h4" color="blue-gray">
                                 Users List

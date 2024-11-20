@@ -13,6 +13,7 @@ import NotFoundPage from "./dashboard/pages/404";
 import RoleList from "./dashboard/components/role/RoleList";
 import PermissionList from "./dashboard/components/permission/PermissionList";
 import UserList from "./dashboard/components/user/UserList";
+import { ThemeProvider } from './layout/ThemeContext';
 
 export const AuthContext = React.createContext(null)
 
@@ -29,9 +30,6 @@ const App = () => {
         }
     }, []);
 
-
-    // const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
-    // const [email, setEmail] = useState(localStorage.getItem('email') || ''); // 修改这一行来从localStorage中恢复email
     const onLogin = (email, token) => {
         setEmail(email);
         localStorage.setItem('email', email); // 添加这一行来将email保存到localStorage中
@@ -46,33 +44,35 @@ const App = () => {
     };
     return (
         // 路由组件
-        <AuthContext.Provider value={{ isLoggedIn, email, onLogin, onLogout }}>
-            <Router>
-                {!isLoggedIn && <Navigation />}
-                <Routes>
-                    <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
-                    <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
-                    <Route path="/reset-password" element={!isLoggedIn ? <ResetPassword onResetPassword={onLogin} /> : <Navigate to="/dashboard" />} />
+        <ThemeProvider>
+            <AuthContext.Provider value={{ isLoggedIn, email, onLogin, onLogout }}>
+                <Router>
+                    {!isLoggedIn && <Navigation />}
+                    <Routes>
+                        <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
+                        <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
+                        <Route path="/reset-password" element={!isLoggedIn ? <ResetPassword onResetPassword={onLogin} /> : <Navigate to="/dashboard" />} />
 
-                    {/*<Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>*/}
+                        {/*<Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>*/}
 
-                    <Route
-                        path="/"
-                        element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
-                    >
-                        <Route path="dashboard" element={<HomePage email={email}/>}/>
-                        <Route path="users" element={<UserList email={email}/>}/>
-                        <Route path="roles" element={<RoleList email={email}/>}/>
-                        <Route path="permissions" element={<PermissionList email={email}/>}/>
-                        <Route path="userinfo" element={<UserInfo email={email}/>}/>
-                        <Route path="open-user-2fa" element={<TwoFactorAuthPage email={email} />}/>
-                        <Route path="/" element={<Navigate to="dashboard" />} />
-                    {/*<Route path="*" element={<NotFoundPage />} />*/}
-                    </Route>
-                    <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-            </Router>
-        </AuthContext.Provider>
+                        <Route
+                            path="/"
+                            element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
+                        >
+                            <Route path="dashboard" element={<HomePage email={email}/>}/>
+                            <Route path="users" element={<UserList email={email}/>}/>
+                            <Route path="roles" element={<RoleList email={email}/>}/>
+                            <Route path="permissions" element={<PermissionList email={email}/>}/>
+                            <Route path="userinfo" element={<UserInfo email={email}/>}/>
+                            <Route path="open-user-2fa" element={<TwoFactorAuthPage email={email} />}/>
+                            <Route path="/" element={<Navigate to="dashboard" />} />
+                            {/*<Route path="*" element={<NotFoundPage />} />*/}
+                        </Route>
+                        <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                </Router>
+            </AuthContext.Provider>
+        </ThemeProvider>
     );
 }
 export default App;
