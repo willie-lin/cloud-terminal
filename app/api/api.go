@@ -2,8 +2,11 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
@@ -134,6 +137,9 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 生成JWT
 		accessToken, err := utils.CreateAccessToken(us.Email, us.Username)
+		fmt.Println(111111)
+		fmt.Println(accessToken)
+		fmt.Println(2222222)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})

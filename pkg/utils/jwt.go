@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -8,11 +11,38 @@ import (
 	"time"
 )
 
+// 生成随机密钥的函数
+func generateRandomKey(length int) (string, error) {
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
 // JwtCustomClaims 在全局范围内定义你的jwtCustomClaims类型
 type JwtCustomClaims struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
+}
+
+// 在代码中直接定义密钥（使用随机密钥）
+var (
+	accessTokenSecret  string
+	refreshTokenSecret string
+)
+
+func init() {
+	var err error
+	accessTokenSecret, err = generateRandomKey(32) //32字节 = 256位
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate access token secret: %v", err))
+	}
+	refreshTokenSecret, err = generateRandomKey(32)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate refresh token secret: %v", err))
+	}
 }
 
 // CreateAccessToken 创建一个函数来生成JWT
@@ -26,7 +56,7 @@ func CreateAccessToken(email, username string) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte("secret"))
+	return token.SignedString([]byte(accessTokenSecret))
 }
 
 // ValidAccessTokenConfig valid access token
@@ -35,7 +65,7 @@ func ValidAccessTokenConfig() echojwt.Config {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(JwtCustomClaims)
 		},
-		SigningKey:  []byte("secret"),
+		SigningKey:  []byte(accessTokenSecret),
 		TokenLookup: "cookie:AccessToken",
 	}
 }
@@ -50,7 +80,7 @@ func CreateRefreshToken(email, username string) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte("refresh_secret"))
+	return token.SignedString([]byte(refreshTokenSecret))
 }
 
 // ValidateRefreshTokenConfig  创建一个函数来验证RefreshToken
@@ -59,7 +89,7 @@ func ValidateRefreshTokenConfig() echojwt.Config {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(JwtCustomClaims)
 		},
-		SigningKey:  []byte("refresh_secret"),
+		SigningKey:  []byte(refreshTokenSecret),
 		TokenLookup: "cookie:RefreshToken",
 	}
 }
@@ -112,15 +142,15 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 					})
 
 					// Send the HTTP status code
-					c.Response().WriteHeader(http.StatusOK)
-					return c.Redirect(http.StatusTemporaryRedirect, c.Request().URL.String())
+					//c.Response().WriteHeader(http.StatusOK)
+					//return c.Redirect(http.StatusTemporaryRedirect, c.Request().URL.String())
+					return c.JSON(http.StatusOK, map[string]string{"message": "Token refreshed successfully"})
 				}
 			} else {
 				// If the RefreshToken is invalid, return an error and prompt the user to log in again
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid refresh token, please log in again")
 			}
 		}
-
 		return next(c)
 	}
 }

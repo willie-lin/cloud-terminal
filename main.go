@@ -140,6 +140,7 @@ func main() {
 		XFrameOptions:         "SAMEORIGIN",
 		HSTSMaxAge:            3600,
 		ContentSecurityPolicy: "default-src 'self'",
+		//Secure: "max-age=31536000; includeSubDomains",
 	}))
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Skipper:      middleware.DefaultSkipper,

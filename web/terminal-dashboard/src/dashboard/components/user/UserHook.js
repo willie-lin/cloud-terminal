@@ -11,7 +11,6 @@ export const useFetchUsers = () => {
             .then(data => setUsers(data))
             .catch(error => console.error('Error:', error));
     }, []);
-
     return users;
 };
 // 自定义钩子函数，用于获取用户信息

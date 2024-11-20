@@ -74,6 +74,7 @@ export const getUserByEmail = async (email) => {
         const response = await api.post('/admin/user/email', { email },
         );
         return response.data;
+        return response.data.email
     } catch (error) {
         console.error(error);
     }
