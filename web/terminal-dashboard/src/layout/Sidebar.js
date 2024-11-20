@@ -49,7 +49,7 @@ function Sidebar({ email, onLogout }) {
                 </Typography>
             </div>
             {/*<div className="p-2">*/}
-            {/*    <Input icon={<MagnifyingGlassIcon className="h-5 w-5"/>} label="Search"/>*/}
+            {/*    <Input icon={<MagnifyingGlassIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>} label="Search"/>*/}
             {/*</div>*/}
             <List>
                 <Accordion
@@ -78,21 +78,24 @@ function Sidebar({ email, onLogout }) {
                     <AccordionBody className="py-1">
                         <List className="p-0">
                             <ListItem
-                                className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
                                 </ListItemPrefix>
                                 Analytics
                             </ListItem>
                             <ListItem
-                                className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
                                 </ListItemPrefix>
                                 Reporting
                             </ListItem>
                             <ListItem
-                                className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
                                 </ListItemPrefix>
@@ -125,7 +128,8 @@ function Sidebar({ email, onLogout }) {
                     <AccordionBody className="py-1">
                         <List className="p-0">
                             <ListItem
-                                className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <Link to="/users" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
@@ -143,7 +147,8 @@ function Sidebar({ email, onLogout }) {
                                 </Link>
                             </ListItem>
                             <ListItem
-                                className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <Link to="/permissions" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
@@ -152,7 +157,8 @@ function Sidebar({ email, onLogout }) {
                                 </Link>
                             </ListItem>
                             <ListItem
-                                className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <Link to="/authorization"
                                       style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                                     <ListItemPrefix>
@@ -197,8 +203,8 @@ function Sidebar({ email, onLogout }) {
 
                 <hr className={`my-2 ${isDarkMode ? 'border-gray-600' : 'border-blue-gray-50'}`}/>
                 <ListItem
-                    className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
-                >
+                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                     <ListItemPrefix>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                              stroke="currentColor" className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}>
@@ -210,7 +216,8 @@ function Sidebar({ email, onLogout }) {
                 </ListItem>
 
                 <ListItem
-                    className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}
                 >
                     <ListItemPrefix>
                         <InboxIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
@@ -222,7 +229,8 @@ function Sidebar({ email, onLogout }) {
                 </ListItem>
 
                 <ListItem
-                    className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}
                 >
                     <Link to="/userinfo" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                         <ListItemPrefix>
@@ -232,7 +240,8 @@ function Sidebar({ email, onLogout }) {
                 </ListItem>
 
                 <ListItem
-                    className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}
                 >
                     <Link to="/open-user-2fa" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                         <ListItemPrefix>
@@ -244,7 +253,8 @@ function Sidebar({ email, onLogout }) {
 
                 <ListItem
                     // className="hover:bg-blue-gray-100 transition-colors duration-200"
-                    className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
+                    className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}
                 >
                     <Link to="/login" style={{display: 'flex', alignItems: 'center', width: '100%'}} onClick={onLogout}>
                         <ListItemPrefix>
