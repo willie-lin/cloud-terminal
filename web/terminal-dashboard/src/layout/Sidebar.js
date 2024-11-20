@@ -1,10 +1,9 @@
 import {
-    Card,
     List,
     ListItem,
     ListItemPrefix,
     ListItemSuffix,
-    Chip, Typography, Input, Accordion, AccordionHeader, AccordionBody, Alert
+    Chip, Typography, Accordion, AccordionHeader, AccordionBody, Alert
 } from "@material-tailwind/react";
 import {
     PresentationChartBarIcon,
@@ -18,7 +17,6 @@ import {
     ChevronDownIcon,
     ChevronRightIcon,
     CubeTransparentIcon,
-    MagnifyingGlassIcon,
     UserIcon
 } from "@heroicons/react/16/solid";
 import { useTheme } from './ThemeContext';
