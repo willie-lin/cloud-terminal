@@ -5,8 +5,10 @@ import {useState} from "react";
 import DeleteUserForm from "./DeleteUserForm";
 
 
-function UserRow({ user, isLast }) {
-    const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";
+function UserRow({ user, isLast, isDarkMode }) {
+    // const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";
+    const classes = `p-2 ${isLast ? '' : `border-b ${isDarkMode ? 'border-gray-700' : 'border-blue-gray-50'}`}`;
+
 
     const [editingUser, setEditingUser] = useState(null);
     const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
@@ -39,10 +41,11 @@ function UserRow({ user, isLast }) {
 
     return (
         <>
-            <tr key={user.id}>
+            <tr key={user.id} className={isDarkMode ? 'text-gray-100' : 'text-gray-900'}>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.id}
                         </Typography>
                     </div>
@@ -52,12 +55,12 @@ function UserRow({ user, isLast }) {
                         {/* 这里可以添加Avatar组件 */}
                         <Avatar src={user.avatar} alt={user.nickname} size="sm"/>
                         <div className="flex flex-col">
-                            <Typography variant="small" color="blue-gray"
-                                        className="font-normal">
+                            {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                            <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                                 {user.nickname}
                             </Typography>
-                            <Typography variant="small" color="blue-gray"
-                                        className="font-normal">
+                            {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                            <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                                 {user.email}
                             </Typography>
                         </div>
@@ -65,35 +68,40 @@ function UserRow({ user, isLast }) {
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.username}
                         </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.email}
                         </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.phone}
                         </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.bio}
                         </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.totp_secret}
                         </Typography>
                     </div>
@@ -107,28 +115,32 @@ function UserRow({ user, isLast }) {
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.enable_type ? '启用' : '禁用'}
                         </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.created_at}
                         </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.updated_at}
                         </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
-                        <Typography variant="small" color="blue-gray" className="font-normal">
+                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.last_login_time}
                         </Typography>
                     </div>

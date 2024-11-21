@@ -15,3 +15,20 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+:root {
+  --background: theme('colors.gray.100');
+  --text-primary: theme('colors.gray.900');
+  --text-secondary: theme('colors.gray.600');
+}
+
+.dark {
+  --background: theme('colors.gray.900');
+  --text-primary: theme('colors.gray.100');
+  --text-secondary: theme('colors.gray.400');
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+}

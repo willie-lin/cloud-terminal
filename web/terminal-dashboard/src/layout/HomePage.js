@@ -3,13 +3,6 @@ import {useTheme} from "./ThemeContext";
 
 function HomePage({ email }) {
 
-    //     <div className="w-full">
-    //         <div>
-    //             <UserList/>
-    //         </div>
-    //     </div>
-    // );
-
     const { isDarkMode } = useTheme();
     return (
         <div className={`w-full ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>

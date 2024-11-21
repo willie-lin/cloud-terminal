@@ -5,18 +5,6 @@ import { useTheme } from './ThemeContext';
 import { MoonIcon, SunIcon } from '@heroicons/react/24/solid';
 
 function TopNavbar() {
-    // // 添加一个状态来追踪是否启用了夜间模式
-    // const [isDarkMode, setIsDarkMode] = useState(false);
-    //
-    // // 创建一个函数来处理按钮的点击事件
-    // const handleDarkModeToggle = () => {
-    //     setIsDarkMode(!isDarkMode);
-    //     if (!isDarkMode) {
-    //         document.documentElement.classList.add('dark');
-    //     } else {
-    //         document.documentElement.classList.remove('dark');
-    //     }
-    // };
     const { isDarkMode, toggleDarkMode } = useTheme();
     return (
         // <div className="flex justify-start items-center w-full p-2 ">
