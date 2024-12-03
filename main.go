@@ -44,6 +44,11 @@ func main() {
 	//log, _ := zap.NewDevelopment()
 	//log, _ := zap.NewProduction()
 	//log := zap.NewProductionEncoderConfig()
+
+	//authEnforcer, err := auth.NewEnforcer("auth_model.conf", "policy.csv")
+	//if err != nil {
+	//	log.Fatalf("failed to create auth enforcer: %v", err)
+	//}
 	e := echo.New()
 
 	// 使用重定向中间件将http连接重定向到https

@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -69,10 +68,10 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-type jwtCustomClaims struct {
-	Email string `json:"email"`
-	jwt.RegisteredClaims
-}
+//type jwtCustomClaims struct {
+//	Email string `json:"email"`
+//	jwt.RegisteredClaims
+//}
 
 // LoginUser 用户登陆
 func LoginUser(client *ent.Client) echo.HandlerFunc {
@@ -136,7 +135,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		//
 
 		// 生成JWT
-		accessToken, err := utils.CreateAccessToken(us.Email, us.Username)
+		accessToken, err := utils.CreateAccessToken(us.ID, us.Email, us.Username)
 		fmt.Println(111111)
 		fmt.Println(accessToken)
 		fmt.Println(2222222)
@@ -145,7 +144,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 		// 生成RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(us.Email, us.Username)
+		refreshToken, err := utils.CreateRefreshToken(us.ID, us.Email, us.Username)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})

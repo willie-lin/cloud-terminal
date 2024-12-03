@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -22,32 +23,34 @@ func generateRandomKey(length int) (string, error) {
 
 // JwtCustomClaims 在全局范围内定义你的jwtCustomClaims类型
 type JwtCustomClaims struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
+	UserID   uuid.UUID `json:"user_id"`
+	Email    string    `json:"email"`
+	Username string    `json:"username"`
 	jwt.RegisteredClaims
 }
 
 // 在代码中直接定义密钥（使用随机密钥）
 var (
-	accessTokenSecret  string
-	refreshTokenSecret string
+	AccessTokenSecret  string
+	RefreshTokenSecret string
 )
 
 func init() {
 	var err error
-	accessTokenSecret, err = generateRandomKey(32) //32字节 = 256位
+	AccessTokenSecret, err = generateRandomKey(32) //32字节 = 256位
 	if err != nil {
 		panic(fmt.Sprintf("Failed to generate access token secret: %v", err))
 	}
-	refreshTokenSecret, err = generateRandomKey(32)
+	RefreshTokenSecret, err = generateRandomKey(32)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to generate refresh token secret: %v", err))
 	}
 }
 
 // CreateAccessToken 创建一个函数来生成JWT
-func CreateAccessToken(email, username string) (string, error) {
+func CreateAccessToken(userID uuid.UUID, email, username string) (string, error) {
 	claims := &JwtCustomClaims{
+		UserID:   userID,
 		Email:    email,
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -56,7 +59,7 @@ func CreateAccessToken(email, username string) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(accessTokenSecret))
+	return token.SignedString([]byte(AccessTokenSecret))
 }
 
 // ValidAccessTokenConfig valid access token
@@ -65,14 +68,15 @@ func ValidAccessTokenConfig() echojwt.Config {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(JwtCustomClaims)
 		},
-		SigningKey:  []byte(accessTokenSecret),
+		SigningKey:  []byte(AccessTokenSecret),
 		TokenLookup: "cookie:AccessToken",
 	}
 }
 
 // CreateRefreshToken 创建一个函数来生成RefreshToken
-func CreateRefreshToken(email, username string) (string, error) {
+func CreateRefreshToken(userID uuid.UUID, email, username string) (string, error) {
 	claims := &JwtCustomClaims{
+		UserID:   userID,
 		Email:    email,
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -80,7 +84,7 @@ func CreateRefreshToken(email, username string) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(refreshTokenSecret))
+	return token.SignedString([]byte(RefreshTokenSecret))
 }
 
 // ValidateRefreshTokenConfig  创建一个函数来验证RefreshToken
@@ -89,7 +93,7 @@ func ValidateRefreshTokenConfig() echojwt.Config {
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(JwtCustomClaims)
 		},
-		SigningKey:  []byte(refreshTokenSecret),
+		SigningKey:  []byte(RefreshTokenSecret),
 		TokenLookup: "cookie:RefreshToken",
 	}
 }
@@ -125,7 +129,7 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(*JwtCustomClaims); ok {
 					// Use the RefreshToken's claims to generate a new AccessToken
-					newAccessToken, err := CreateAccessToken(claims.Email, claims.Username)
+					newAccessToken, err := CreateAccessToken(claims.UserID, claims.Email, claims.Username)
 					if err != nil {
 						return err
 					}
