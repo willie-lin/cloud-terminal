@@ -132,7 +132,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error updating last login time: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
-		//
 
 		// 生成JWT
 		accessToken, err := utils.CreateAccessToken(us.ID, us.Email, us.Username)

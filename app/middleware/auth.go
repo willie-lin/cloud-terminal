@@ -11,7 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//var jwtSecret = []byte("your-secret-key")
 // AuthMiddleware 检查 JWT 并从中提取用户信息
 
 func AuthMiddleware(client *ent.Client) echo.MiddlewareFunc {
