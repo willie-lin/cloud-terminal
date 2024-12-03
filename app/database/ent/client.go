@@ -17,11 +17,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/asset"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/assetgroup"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/usergroup"
 )
 
 // Client is the client that holds all ent builders.
@@ -31,16 +31,16 @@ type Client struct {
 	Schema *migrate.Schema
 	// Asset is the client for interacting with the Asset builders.
 	Asset *AssetClient
-	// AssetGroup is the client for interacting with the AssetGroup builders.
-	AssetGroup *AssetGroupClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
+	// Resource is the client for interacting with the Resource builders.
+	Resource *ResourceClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// Tenant is the client for interacting with the Tenant builders.
+	Tenant *TenantClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
-	// UserGroup is the client for interacting with the UserGroup builders.
-	UserGroup *UserGroupClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -53,11 +53,11 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Asset = NewAssetClient(c.config)
-	c.AssetGroup = NewAssetGroupClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
+	c.Resource = NewResourceClient(c.config)
 	c.Role = NewRoleClient(c.config)
+	c.Tenant = NewTenantClient(c.config)
 	c.User = NewUserClient(c.config)
-	c.UserGroup = NewUserGroupClient(c.config)
 }
 
 type (
@@ -151,11 +151,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:        ctx,
 		config:     cfg,
 		Asset:      NewAssetClient(cfg),
-		AssetGroup: NewAssetGroupClient(cfg),
 		Permission: NewPermissionClient(cfg),
+		Resource:   NewResourceClient(cfg),
 		Role:       NewRoleClient(cfg),
+		Tenant:     NewTenantClient(cfg),
 		User:       NewUserClient(cfg),
-		UserGroup:  NewUserGroupClient(cfg),
 	}, nil
 }
 
@@ -176,11 +176,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:        ctx,
 		config:     cfg,
 		Asset:      NewAssetClient(cfg),
-		AssetGroup: NewAssetGroupClient(cfg),
 		Permission: NewPermissionClient(cfg),
+		Resource:   NewResourceClient(cfg),
 		Role:       NewRoleClient(cfg),
+		Tenant:     NewTenantClient(cfg),
 		User:       NewUserClient(cfg),
-		UserGroup:  NewUserGroupClient(cfg),
 	}, nil
 }
 
@@ -210,7 +210,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Asset, c.AssetGroup, c.Permission, c.Role, c.User, c.UserGroup,
+		c.Asset, c.Permission, c.Resource, c.Role, c.Tenant, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -220,7 +220,7 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Asset, c.AssetGroup, c.Permission, c.Role, c.User, c.UserGroup,
+		c.Asset, c.Permission, c.Resource, c.Role, c.Tenant, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -231,16 +231,16 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *AssetMutation:
 		return c.Asset.mutate(ctx, m)
-	case *AssetGroupMutation:
-		return c.AssetGroup.mutate(ctx, m)
 	case *PermissionMutation:
 		return c.Permission.mutate(ctx, m)
+	case *ResourceMutation:
+		return c.Resource.mutate(ctx, m)
 	case *RoleMutation:
 		return c.Role.mutate(ctx, m)
+	case *TenantMutation:
+		return c.Tenant.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
-	case *UserGroupMutation:
-		return c.UserGroup.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -379,139 +379,6 @@ func (c *AssetClient) mutate(ctx context.Context, m *AssetMutation) (Value, erro
 	}
 }
 
-// AssetGroupClient is a client for the AssetGroup schema.
-type AssetGroupClient struct {
-	config
-}
-
-// NewAssetGroupClient returns a client for the AssetGroup from the given config.
-func NewAssetGroupClient(c config) *AssetGroupClient {
-	return &AssetGroupClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `assetgroup.Hooks(f(g(h())))`.
-func (c *AssetGroupClient) Use(hooks ...Hook) {
-	c.hooks.AssetGroup = append(c.hooks.AssetGroup, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `assetgroup.Intercept(f(g(h())))`.
-func (c *AssetGroupClient) Intercept(interceptors ...Interceptor) {
-	c.inters.AssetGroup = append(c.inters.AssetGroup, interceptors...)
-}
-
-// Create returns a builder for creating a AssetGroup entity.
-func (c *AssetGroupClient) Create() *AssetGroupCreate {
-	mutation := newAssetGroupMutation(c.config, OpCreate)
-	return &AssetGroupCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of AssetGroup entities.
-func (c *AssetGroupClient) CreateBulk(builders ...*AssetGroupCreate) *AssetGroupCreateBulk {
-	return &AssetGroupCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *AssetGroupClient) MapCreateBulk(slice any, setFunc func(*AssetGroupCreate, int)) *AssetGroupCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &AssetGroupCreateBulk{err: fmt.Errorf("calling to AssetGroupClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*AssetGroupCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &AssetGroupCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for AssetGroup.
-func (c *AssetGroupClient) Update() *AssetGroupUpdate {
-	mutation := newAssetGroupMutation(c.config, OpUpdate)
-	return &AssetGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *AssetGroupClient) UpdateOne(ag *AssetGroup) *AssetGroupUpdateOne {
-	mutation := newAssetGroupMutation(c.config, OpUpdateOne, withAssetGroup(ag))
-	return &AssetGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *AssetGroupClient) UpdateOneID(id int) *AssetGroupUpdateOne {
-	mutation := newAssetGroupMutation(c.config, OpUpdateOne, withAssetGroupID(id))
-	return &AssetGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for AssetGroup.
-func (c *AssetGroupClient) Delete() *AssetGroupDelete {
-	mutation := newAssetGroupMutation(c.config, OpDelete)
-	return &AssetGroupDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *AssetGroupClient) DeleteOne(ag *AssetGroup) *AssetGroupDeleteOne {
-	return c.DeleteOneID(ag.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *AssetGroupClient) DeleteOneID(id int) *AssetGroupDeleteOne {
-	builder := c.Delete().Where(assetgroup.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &AssetGroupDeleteOne{builder}
-}
-
-// Query returns a query builder for AssetGroup.
-func (c *AssetGroupClient) Query() *AssetGroupQuery {
-	return &AssetGroupQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeAssetGroup},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a AssetGroup entity by its id.
-func (c *AssetGroupClient) Get(ctx context.Context, id int) (*AssetGroup, error) {
-	return c.Query().Where(assetgroup.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *AssetGroupClient) GetX(ctx context.Context, id int) *AssetGroup {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *AssetGroupClient) Hooks() []Hook {
-	return c.hooks.AssetGroup
-}
-
-// Interceptors returns the client interceptors.
-func (c *AssetGroupClient) Interceptors() []Interceptor {
-	return c.inters.AssetGroup
-}
-
-func (c *AssetGroupClient) mutate(ctx context.Context, m *AssetGroupMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&AssetGroupCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&AssetGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&AssetGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&AssetGroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown AssetGroup mutation op: %q", m.Op())
-	}
-}
-
 // PermissionClient is a client for the Permission schema.
 type PermissionClient struct {
 	config
@@ -636,22 +503,6 @@ func (c *PermissionClient) QueryRoles(pe *Permission) *RoleQuery {
 	return query
 }
 
-// QueryUsers queries the users edge of a Permission.
-func (c *PermissionClient) QueryUsers(pe *Permission) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pe.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(permission.Table, permission.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, permission.UsersTable, permission.UsersColumn),
-		)
-		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *PermissionClient) Hooks() []Hook {
 	return c.hooks.Permission
@@ -674,6 +525,155 @@ func (c *PermissionClient) mutate(ctx context.Context, m *PermissionMutation) (V
 		return (&PermissionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Permission mutation op: %q", m.Op())
+	}
+}
+
+// ResourceClient is a client for the Resource schema.
+type ResourceClient struct {
+	config
+}
+
+// NewResourceClient returns a client for the Resource from the given config.
+func NewResourceClient(c config) *ResourceClient {
+	return &ResourceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resource.Hooks(f(g(h())))`.
+func (c *ResourceClient) Use(hooks ...Hook) {
+	c.hooks.Resource = append(c.hooks.Resource, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `resource.Intercept(f(g(h())))`.
+func (c *ResourceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Resource = append(c.inters.Resource, interceptors...)
+}
+
+// Create returns a builder for creating a Resource entity.
+func (c *ResourceClient) Create() *ResourceCreate {
+	mutation := newResourceMutation(c.config, OpCreate)
+	return &ResourceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Resource entities.
+func (c *ResourceClient) CreateBulk(builders ...*ResourceCreate) *ResourceCreateBulk {
+	return &ResourceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ResourceClient) MapCreateBulk(slice any, setFunc func(*ResourceCreate, int)) *ResourceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ResourceCreateBulk{err: fmt.Errorf("calling to ResourceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ResourceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ResourceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Resource.
+func (c *ResourceClient) Update() *ResourceUpdate {
+	mutation := newResourceMutation(c.config, OpUpdate)
+	return &ResourceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResourceClient) UpdateOne(r *Resource) *ResourceUpdateOne {
+	mutation := newResourceMutation(c.config, OpUpdateOne, withResource(r))
+	return &ResourceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResourceClient) UpdateOneID(id int) *ResourceUpdateOne {
+	mutation := newResourceMutation(c.config, OpUpdateOne, withResourceID(id))
+	return &ResourceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Resource.
+func (c *ResourceClient) Delete() *ResourceDelete {
+	mutation := newResourceMutation(c.config, OpDelete)
+	return &ResourceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ResourceClient) DeleteOne(r *Resource) *ResourceDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ResourceClient) DeleteOneID(id int) *ResourceDeleteOne {
+	builder := c.Delete().Where(resource.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResourceDeleteOne{builder}
+}
+
+// Query returns a query builder for Resource.
+func (c *ResourceClient) Query() *ResourceQuery {
+	return &ResourceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeResource},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Resource entity by its id.
+func (c *ResourceClient) Get(ctx context.Context, id int) (*Resource, error) {
+	return c.Query().Where(resource.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResourceClient) GetX(ctx context.Context, id int) *Resource {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTenant queries the tenant edge of a Resource.
+func (c *ResourceClient) QueryTenant(r *Resource) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resource.Table, resource.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, resource.TenantTable, resource.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ResourceClient) Hooks() []Hook {
+	return c.hooks.Resource
+}
+
+// Interceptors returns the client interceptors.
+func (c *ResourceClient) Interceptors() []Interceptor {
+	return c.inters.Resource
+}
+
+func (c *ResourceClient) mutate(ctx context.Context, m *ResourceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ResourceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ResourceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ResourceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ResourceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Resource mutation op: %q", m.Op())
 	}
 }
 
@@ -785,6 +785,22 @@ func (c *RoleClient) GetX(ctx context.Context, id uuid.UUID) *Role {
 	return obj
 }
 
+// QueryTenant queries the tenant edge of a Role.
+func (c *RoleClient) QueryTenant(r *Role) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.TenantTable, role.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUsers queries the users edge of a Role.
 func (c *RoleClient) QueryUsers(r *Role) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
@@ -839,6 +855,187 @@ func (c *RoleClient) mutate(ctx context.Context, m *RoleMutation) (Value, error)
 		return (&RoleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Role mutation op: %q", m.Op())
+	}
+}
+
+// TenantClient is a client for the Tenant schema.
+type TenantClient struct {
+	config
+}
+
+// NewTenantClient returns a client for the Tenant from the given config.
+func NewTenantClient(c config) *TenantClient {
+	return &TenantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tenant.Hooks(f(g(h())))`.
+func (c *TenantClient) Use(hooks ...Hook) {
+	c.hooks.Tenant = append(c.hooks.Tenant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tenant.Intercept(f(g(h())))`.
+func (c *TenantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Tenant = append(c.inters.Tenant, interceptors...)
+}
+
+// Create returns a builder for creating a Tenant entity.
+func (c *TenantClient) Create() *TenantCreate {
+	mutation := newTenantMutation(c.config, OpCreate)
+	return &TenantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Tenant entities.
+func (c *TenantClient) CreateBulk(builders ...*TenantCreate) *TenantCreateBulk {
+	return &TenantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TenantClient) MapCreateBulk(slice any, setFunc func(*TenantCreate, int)) *TenantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TenantCreateBulk{err: fmt.Errorf("calling to TenantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TenantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TenantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Tenant.
+func (c *TenantClient) Update() *TenantUpdate {
+	mutation := newTenantMutation(c.config, OpUpdate)
+	return &TenantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TenantClient) UpdateOne(t *Tenant) *TenantUpdateOne {
+	mutation := newTenantMutation(c.config, OpUpdateOne, withTenant(t))
+	return &TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TenantClient) UpdateOneID(id int) *TenantUpdateOne {
+	mutation := newTenantMutation(c.config, OpUpdateOne, withTenantID(id))
+	return &TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Tenant.
+func (c *TenantClient) Delete() *TenantDelete {
+	mutation := newTenantMutation(c.config, OpDelete)
+	return &TenantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TenantClient) DeleteOne(t *Tenant) *TenantDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TenantClient) DeleteOneID(id int) *TenantDeleteOne {
+	builder := c.Delete().Where(tenant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TenantDeleteOne{builder}
+}
+
+// Query returns a query builder for Tenant.
+func (c *TenantClient) Query() *TenantQuery {
+	return &TenantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTenant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Tenant entity by its id.
+func (c *TenantClient) Get(ctx context.Context, id int) (*Tenant, error) {
+	return c.Query().Where(tenant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TenantClient) GetX(ctx context.Context, id int) *Tenant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUsers queries the users edge of a Tenant.
+func (c *TenantClient) QueryUsers(t *Tenant) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.UsersTable, tenant.UsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRoles queries the roles edge of a Tenant.
+func (c *TenantClient) QueryRoles(t *Tenant) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.RolesTable, tenant.RolesColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryResources queries the resources edge of a Tenant.
+func (c *TenantClient) QueryResources(t *Tenant) *ResourceQuery {
+	query := (&ResourceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(resource.Table, resource.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ResourcesTable, tenant.ResourcesColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TenantClient) Hooks() []Hook {
+	return c.hooks.Tenant
+}
+
+// Interceptors returns the client interceptors.
+func (c *TenantClient) Interceptors() []Interceptor {
+	return c.inters.Tenant
+}
+
+func (c *TenantClient) mutate(ctx context.Context, m *TenantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TenantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TenantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TenantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Tenant mutation op: %q", m.Op())
 	}
 }
 
@@ -950,6 +1147,22 @@ func (c *UserClient) GetX(ctx context.Context, id uuid.UUID) *User {
 	return obj
 }
 
+// QueryTenant queries the tenant edge of a User.
+func (c *UserClient) QueryTenant(u *User) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.TenantTable, user.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryRoles queries the roles edge of a User.
 func (c *UserClient) QueryRoles(u *User) *RoleQuery {
 	query := (&RoleClient{config: c.config}).Query()
@@ -991,145 +1204,12 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
-// UserGroupClient is a client for the UserGroup schema.
-type UserGroupClient struct {
-	config
-}
-
-// NewUserGroupClient returns a client for the UserGroup from the given config.
-func NewUserGroupClient(c config) *UserGroupClient {
-	return &UserGroupClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `usergroup.Hooks(f(g(h())))`.
-func (c *UserGroupClient) Use(hooks ...Hook) {
-	c.hooks.UserGroup = append(c.hooks.UserGroup, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `usergroup.Intercept(f(g(h())))`.
-func (c *UserGroupClient) Intercept(interceptors ...Interceptor) {
-	c.inters.UserGroup = append(c.inters.UserGroup, interceptors...)
-}
-
-// Create returns a builder for creating a UserGroup entity.
-func (c *UserGroupClient) Create() *UserGroupCreate {
-	mutation := newUserGroupMutation(c.config, OpCreate)
-	return &UserGroupCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of UserGroup entities.
-func (c *UserGroupClient) CreateBulk(builders ...*UserGroupCreate) *UserGroupCreateBulk {
-	return &UserGroupCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *UserGroupClient) MapCreateBulk(slice any, setFunc func(*UserGroupCreate, int)) *UserGroupCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &UserGroupCreateBulk{err: fmt.Errorf("calling to UserGroupClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*UserGroupCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &UserGroupCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for UserGroup.
-func (c *UserGroupClient) Update() *UserGroupUpdate {
-	mutation := newUserGroupMutation(c.config, OpUpdate)
-	return &UserGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *UserGroupClient) UpdateOne(ug *UserGroup) *UserGroupUpdateOne {
-	mutation := newUserGroupMutation(c.config, OpUpdateOne, withUserGroup(ug))
-	return &UserGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *UserGroupClient) UpdateOneID(id uuid.UUID) *UserGroupUpdateOne {
-	mutation := newUserGroupMutation(c.config, OpUpdateOne, withUserGroupID(id))
-	return &UserGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for UserGroup.
-func (c *UserGroupClient) Delete() *UserGroupDelete {
-	mutation := newUserGroupMutation(c.config, OpDelete)
-	return &UserGroupDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *UserGroupClient) DeleteOne(ug *UserGroup) *UserGroupDeleteOne {
-	return c.DeleteOneID(ug.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UserGroupClient) DeleteOneID(id uuid.UUID) *UserGroupDeleteOne {
-	builder := c.Delete().Where(usergroup.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &UserGroupDeleteOne{builder}
-}
-
-// Query returns a query builder for UserGroup.
-func (c *UserGroupClient) Query() *UserGroupQuery {
-	return &UserGroupQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeUserGroup},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a UserGroup entity by its id.
-func (c *UserGroupClient) Get(ctx context.Context, id uuid.UUID) (*UserGroup, error) {
-	return c.Query().Where(usergroup.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *UserGroupClient) GetX(ctx context.Context, id uuid.UUID) *UserGroup {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *UserGroupClient) Hooks() []Hook {
-	return c.hooks.UserGroup
-}
-
-// Interceptors returns the client interceptors.
-func (c *UserGroupClient) Interceptors() []Interceptor {
-	return c.inters.UserGroup
-}
-
-func (c *UserGroupClient) mutate(ctx context.Context, m *UserGroupMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&UserGroupCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&UserGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&UserGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&UserGroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown UserGroup mutation op: %q", m.Op())
-	}
-}
-
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Asset, AssetGroup, Permission, Role, User, UserGroup []ent.Hook
+		Asset, Permission, Resource, Role, Tenant, User []ent.Hook
 	}
 	inters struct {
-		Asset, AssetGroup, Permission, Role, User, UserGroup []ent.Interceptor
+		Asset, Permission, Resource, Role, Tenant, User []ent.Interceptor
 	}
 )

@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -220,6 +221,25 @@ func (uu *UserUpdate) SetNillableLastLoginTime(t *time.Time) *UserUpdate {
 	return uu
 }
 
+// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
+func (uu *UserUpdate) SetTenantID(id int) *UserUpdate {
+	uu.mutation.SetTenantID(id)
+	return uu
+}
+
+// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableTenantID(id *int) *UserUpdate {
+	if id != nil {
+		uu = uu.SetTenantID(*id)
+	}
+	return uu
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (uu *UserUpdate) SetTenant(t *Tenant) *UserUpdate {
+	return uu.SetTenantID(t.ID)
+}
+
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (uu *UserUpdate) AddRoleIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.AddRoleIDs(ids...)
@@ -238,6 +258,12 @@ func (uu *UserUpdate) AddRoles(r ...*Role) *UserUpdate {
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (uu *UserUpdate) ClearTenant() *UserUpdate {
+	uu.mutation.ClearTenant()
+	return uu
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -389,6 +415,35 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
+	}
+	if uu.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -645,6 +700,25 @@ func (uuo *UserUpdateOne) SetNillableLastLoginTime(t *time.Time) *UserUpdateOne 
 	return uuo
 }
 
+// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
+func (uuo *UserUpdateOne) SetTenantID(id int) *UserUpdateOne {
+	uuo.mutation.SetTenantID(id)
+	return uuo
+}
+
+// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableTenantID(id *int) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetTenantID(*id)
+	}
+	return uuo
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (uuo *UserUpdateOne) SetTenant(t *Tenant) *UserUpdateOne {
+	return uuo.SetTenantID(t.ID)
+}
+
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (uuo *UserUpdateOne) AddRoleIDs(ids ...uuid.UUID) *UserUpdateOne {
 	uuo.mutation.AddRoleIDs(ids...)
@@ -663,6 +737,12 @@ func (uuo *UserUpdateOne) AddRoles(r ...*Role) *UserUpdateOne {
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (uuo *UserUpdateOne) ClearTenant() *UserUpdateOne {
+	uuo.mutation.ClearTenant()
+	return uuo
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -844,6 +924,35 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
+	}
+	if uuo.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uuo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{

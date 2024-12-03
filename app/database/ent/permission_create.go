@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
 // PermissionCreate is the builder for creating a Permission entity.
@@ -57,6 +56,18 @@ func (pc *PermissionCreate) SetName(s string) *PermissionCreate {
 	return pc
 }
 
+// SetAction sets the "action" field.
+func (pc *PermissionCreate) SetAction(s string) *PermissionCreate {
+	pc.mutation.SetAction(s)
+	return pc
+}
+
+// SetResourceType sets the "resource_type" field.
+func (pc *PermissionCreate) SetResourceType(s string) *PermissionCreate {
+	pc.mutation.SetResourceType(s)
+	return pc
+}
+
 // SetDescription sets the "description" field.
 func (pc *PermissionCreate) SetDescription(s string) *PermissionCreate {
 	pc.mutation.SetDescription(s)
@@ -90,21 +101,6 @@ func (pc *PermissionCreate) AddRoles(r ...*Role) *PermissionCreate {
 		ids[i] = r[i].ID
 	}
 	return pc.AddRoleIDs(ids...)
-}
-
-// AddUserIDs adds the "users" edge to the User entity by IDs.
-func (pc *PermissionCreate) AddUserIDs(ids ...uuid.UUID) *PermissionCreate {
-	pc.mutation.AddUserIDs(ids...)
-	return pc
-}
-
-// AddUsers adds the "users" edges to the User entity.
-func (pc *PermissionCreate) AddUsers(u ...*User) *PermissionCreate {
-	ids := make([]uuid.UUID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return pc.AddUserIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
@@ -167,6 +163,12 @@ func (pc *PermissionCreate) check() error {
 	if _, ok := pc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Permission.name"`)}
 	}
+	if _, ok := pc.mutation.Action(); !ok {
+		return &ValidationError{Name: "action", err: errors.New(`ent: missing required field "Permission.action"`)}
+	}
+	if _, ok := pc.mutation.ResourceType(); !ok {
+		return &ValidationError{Name: "resource_type", err: errors.New(`ent: missing required field "Permission.resource_type"`)}
+	}
 	if _, ok := pc.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Permission.description"`)}
 	}
@@ -217,6 +219,14 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
+	if value, ok := pc.mutation.Action(); ok {
+		_spec.SetField(permission.FieldAction, field.TypeString, value)
+		_node.Action = value
+	}
+	if value, ok := pc.mutation.ResourceType(); ok {
+		_spec.SetField(permission.FieldResourceType, field.TypeString, value)
+		_node.ResourceType = value
+	}
 	if value, ok := pc.mutation.Description(); ok {
 		_spec.SetField(permission.FieldDescription, field.TypeString, value)
 		_node.Description = value
@@ -230,22 +240,6 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := pc.mutation.UsersIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   permission.UsersTable,
-			Columns: []string{permission.UsersColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -14,16 +14,16 @@ type Tx struct {
 	config
 	// Asset is the client for interacting with the Asset builders.
 	Asset *AssetClient
-	// AssetGroup is the client for interacting with the AssetGroup builders.
-	AssetGroup *AssetGroupClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
+	// Resource is the client for interacting with the Resource builders.
+	Resource *ResourceClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// Tenant is the client for interacting with the Tenant builders.
+	Tenant *TenantClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
-	// UserGroup is the client for interacting with the UserGroup builders.
-	UserGroup *UserGroupClient
 
 	// lazily loaded.
 	client     *Client
@@ -156,11 +156,11 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Asset = NewAssetClient(tx.config)
-	tx.AssetGroup = NewAssetGroupClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
+	tx.Resource = NewResourceClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
+	tx.Tenant = NewTenantClient(tx.config)
 	tx.User = NewUserClient(tx.config)
-	tx.UserGroup = NewUserGroupClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

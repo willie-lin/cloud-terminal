@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -15,7 +16,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
 // PermissionQuery is the builder for querying Permission entities.
@@ -26,7 +26,6 @@ type PermissionQuery struct {
 	inters     []Interceptor
 	predicates []predicate.Permission
 	withRoles  *RoleQuery
-	withUsers  *UserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -85,32 +84,10 @@ func (pq *PermissionQuery) QueryRoles() *RoleQuery {
 	return query
 }
 
-// QueryUsers chains the current query on the "users" edge.
-func (pq *PermissionQuery) QueryUsers() *UserQuery {
-	query := (&UserClient{config: pq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := pq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(permission.Table, permission.FieldID, selector),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, permission.UsersTable, permission.UsersColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // First returns the first Permission entity from the query.
 // Returns a *NotFoundError when no Permission was found.
 func (pq *PermissionQuery) First(ctx context.Context) (*Permission, error) {
-	nodes, err := pq.Limit(1).All(setContextOp(ctx, pq.ctx, "First"))
+	nodes, err := pq.Limit(1).All(setContextOp(ctx, pq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +110,7 @@ func (pq *PermissionQuery) FirstX(ctx context.Context) *Permission {
 // Returns a *NotFoundError when no Permission ID was found.
 func (pq *PermissionQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = pq.Limit(1).IDs(setContextOp(ctx, pq.ctx, "FirstID")); err != nil {
+	if ids, err = pq.Limit(1).IDs(setContextOp(ctx, pq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -156,7 +133,7 @@ func (pq *PermissionQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Permission entity is found.
 // Returns a *NotFoundError when no Permission entities are found.
 func (pq *PermissionQuery) Only(ctx context.Context) (*Permission, error) {
-	nodes, err := pq.Limit(2).All(setContextOp(ctx, pq.ctx, "Only"))
+	nodes, err := pq.Limit(2).All(setContextOp(ctx, pq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +161,7 @@ func (pq *PermissionQuery) OnlyX(ctx context.Context) *Permission {
 // Returns a *NotFoundError when no entities are found.
 func (pq *PermissionQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = pq.Limit(2).IDs(setContextOp(ctx, pq.ctx, "OnlyID")); err != nil {
+	if ids, err = pq.Limit(2).IDs(setContextOp(ctx, pq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -209,7 +186,7 @@ func (pq *PermissionQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Permissions.
 func (pq *PermissionQuery) All(ctx context.Context) ([]*Permission, error) {
-	ctx = setContextOp(ctx, pq.ctx, "All")
+	ctx = setContextOp(ctx, pq.ctx, ent.OpQueryAll)
 	if err := pq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -231,7 +208,7 @@ func (pq *PermissionQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error)
 	if pq.ctx.Unique == nil && pq.path != nil {
 		pq.Unique(true)
 	}
-	ctx = setContextOp(ctx, pq.ctx, "IDs")
+	ctx = setContextOp(ctx, pq.ctx, ent.OpQueryIDs)
 	if err = pq.Select(permission.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -249,7 +226,7 @@ func (pq *PermissionQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (pq *PermissionQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, pq.ctx, "Count")
+	ctx = setContextOp(ctx, pq.ctx, ent.OpQueryCount)
 	if err := pq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -267,7 +244,7 @@ func (pq *PermissionQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (pq *PermissionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, pq.ctx, "Exist")
+	ctx = setContextOp(ctx, pq.ctx, ent.OpQueryExist)
 	switch _, err := pq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -300,7 +277,6 @@ func (pq *PermissionQuery) Clone() *PermissionQuery {
 		inters:     append([]Interceptor{}, pq.inters...),
 		predicates: append([]predicate.Permission{}, pq.predicates...),
 		withRoles:  pq.withRoles.Clone(),
-		withUsers:  pq.withUsers.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
@@ -315,17 +291,6 @@ func (pq *PermissionQuery) WithRoles(opts ...func(*RoleQuery)) *PermissionQuery 
 		opt(query)
 	}
 	pq.withRoles = query
-	return pq
-}
-
-// WithUsers tells the query-builder to eager-load the nodes that are connected to
-// the "users" edge. The optional arguments are used to configure the query builder of the edge.
-func (pq *PermissionQuery) WithUsers(opts ...func(*UserQuery)) *PermissionQuery {
-	query := (&UserClient{config: pq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	pq.withUsers = query
 	return pq
 }
 
@@ -407,9 +372,8 @@ func (pq *PermissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*P
 	var (
 		nodes       = []*Permission{}
 		_spec       = pq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [1]bool{
 			pq.withRoles != nil,
-			pq.withUsers != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -434,13 +398,6 @@ func (pq *PermissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*P
 		if err := pq.loadRoles(ctx, query, nodes,
 			func(n *Permission) { n.Edges.Roles = []*Role{} },
 			func(n *Permission, e *Role) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := pq.withUsers; query != nil {
-		if err := pq.loadUsers(ctx, query, nodes,
-			func(n *Permission) { n.Edges.Users = []*User{} },
-			func(n *Permission, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -505,37 +462,6 @@ func (pq *PermissionQuery) loadRoles(ctx context.Context, query *RoleQuery, node
 		for kn := range nodes {
 			assign(kn, n)
 		}
-	}
-	return nil
-}
-func (pq *PermissionQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*Permission, init func(*Permission), assign func(*Permission, *User)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Permission)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.User(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(permission.UsersColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.permission_users
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "permission_users" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "permission_users" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
 	}
 	return nil
 }
@@ -635,7 +561,7 @@ func (pgb *PermissionGroupBy) Aggregate(fns ...AggregateFunc) *PermissionGroupBy
 
 // Scan applies the selector query and scans the result into the given value.
 func (pgb *PermissionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, pgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, pgb.build.ctx, ent.OpQueryGroupBy)
 	if err := pgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -683,7 +609,7 @@ func (ps *PermissionSelect) Aggregate(fns ...AggregateFunc) *PermissionSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (ps *PermissionSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ps.ctx, "Select")
+	ctx = setContextOp(ctx, ps.ctx, ent.OpQuerySelect)
 	if err := ps.prepareQuery(ctx); err != nil {
 		return err
 	}

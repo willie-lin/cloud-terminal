@@ -43,6 +43,8 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
+		//edge.To("roles", Role.Type),
+		edge.From("tenant", Tenant.Type).Ref("users").Unique(),
 		edge.To("roles", Role.Type),
 	}
 }

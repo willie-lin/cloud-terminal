@@ -25,22 +25,14 @@ var (
 		Columns:    AssetsColumns,
 		PrimaryKey: []*schema.Column{AssetsColumns[0]},
 	}
-	// AssetGroupsColumns holds the columns for the "asset_groups" table.
-	AssetGroupsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-	}
-	// AssetGroupsTable holds the schema information for the "asset_groups" table.
-	AssetGroupsTable = &schema.Table{
-		Name:       "asset_groups",
-		Columns:    AssetGroupsColumns,
-		PrimaryKey: []*schema.Column{AssetGroupsColumns[0]},
-	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "action", Type: field.TypeString},
+		{Name: "resource_type", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
@@ -49,6 +41,29 @@ var (
 		Columns:    PermissionsColumns,
 		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
 	}
+	// ResourcesColumns holds the columns for the "resources" table.
+	ResourcesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "type", Type: field.TypeString},
+		{Name: "identifier", Type: field.TypeString},
+		{Name: "tenant_resources", Type: field.TypeInt, Nullable: true},
+	}
+	// ResourcesTable holds the schema information for the "resources" table.
+	ResourcesTable = &schema.Table{
+		Name:       "resources",
+		Columns:    ResourcesColumns,
+		PrimaryKey: []*schema.Column{ResourcesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resources_tenants_resources",
+				Columns:    []*schema.Column{ResourcesColumns[5]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
@@ -56,12 +71,35 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString},
+		{Name: "tenant_roles", Type: field.TypeInt, Nullable: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
 		Name:       "roles",
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "roles_tenants_roles",
+				Columns:    []*schema.Column{RolesColumns[5]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TenantsColumns holds the columns for the "tenants" table.
+	TenantsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString},
+	}
+	// TenantsTable holds the schema information for the "tenants" table.
+	TenantsTable = &schema.Table{
+		Name:       "tenants",
+		Columns:    TenantsColumns,
+		PrimaryKey: []*schema.Column{TenantsColumns[0]},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -79,7 +117,7 @@ var (
 		{Name: "online", Type: field.TypeBool, Default: true},
 		{Name: "enable_type", Type: field.TypeBool, Default: true},
 		{Name: "last_login_time", Type: field.TypeTime},
-		{Name: "permission_users", Type: field.TypeUUID, Nullable: true},
+		{Name: "tenant_users", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -88,9 +126,9 @@ var (
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "users_permissions_users",
+				Symbol:     "users_tenants_users",
 				Columns:    []*schema.Column{UsersColumns[14]},
-				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -101,17 +139,6 @@ var (
 				Columns: []*schema.Column{UsersColumns[6], UsersColumns[8]},
 			},
 		},
-	}
-	// UserGroupsColumns holds the columns for the "user_groups" table.
-	UserGroupsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "group_name", Type: field.TypeString},
-	}
-	// UserGroupsTable holds the schema information for the "user_groups" table.
-	UserGroupsTable = &schema.Table{
-		Name:       "user_groups",
-		Columns:    UserGroupsColumns,
-		PrimaryKey: []*schema.Column{UserGroupsColumns[0]},
 	}
 	// RolePermissionsColumns holds the columns for the "role_permissions" table.
 	RolePermissionsColumns = []*schema.Column{
@@ -166,11 +193,11 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AssetsTable,
-		AssetGroupsTable,
 		PermissionsTable,
+		ResourcesTable,
 		RolesTable,
+		TenantsTable,
 		UsersTable,
-		UserGroupsTable,
 		RolePermissionsTable,
 		UserRolesTable,
 	}
@@ -180,7 +207,9 @@ func init() {
 	AssetsTable.Annotation = &entsql.Annotation{
 		Table: "assets",
 	}
-	UsersTable.ForeignKeys[0].RefTable = PermissionsTable
+	ResourcesTable.ForeignKeys[0].RefTable = TenantsTable
+	RolesTable.ForeignKeys[0].RefTable = TenantsTable
+	UsersTable.ForeignKeys[0].RefTable = TenantsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable

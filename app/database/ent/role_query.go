@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -15,6 +16,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -25,8 +27,10 @@ type RoleQuery struct {
 	order           []role.OrderOption
 	inters          []Interceptor
 	predicates      []predicate.Role
+	withTenant      *TenantQuery
 	withUsers       *UserQuery
 	withPermissions *PermissionQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,6 +65,28 @@ func (rq *RoleQuery) Unique(unique bool) *RoleQuery {
 func (rq *RoleQuery) Order(o ...role.OrderOption) *RoleQuery {
 	rq.order = append(rq.order, o...)
 	return rq
+}
+
+// QueryTenant chains the current query on the "tenant" edge.
+func (rq *RoleQuery) QueryTenant() *TenantQuery {
+	query := (&TenantClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, selector),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.TenantTable, role.TenantColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryUsers chains the current query on the "users" edge.
@@ -110,7 +136,7 @@ func (rq *RoleQuery) QueryPermissions() *PermissionQuery {
 // First returns the first Role entity from the query.
 // Returns a *NotFoundError when no Role was found.
 func (rq *RoleQuery) First(ctx context.Context) (*Role, error) {
-	nodes, err := rq.Limit(1).All(setContextOp(ctx, rq.ctx, "First"))
+	nodes, err := rq.Limit(1).All(setContextOp(ctx, rq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +159,7 @@ func (rq *RoleQuery) FirstX(ctx context.Context) *Role {
 // Returns a *NotFoundError when no Role ID was found.
 func (rq *RoleQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = rq.Limit(1).IDs(setContextOp(ctx, rq.ctx, "FirstID")); err != nil {
+	if ids, err = rq.Limit(1).IDs(setContextOp(ctx, rq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -156,7 +182,7 @@ func (rq *RoleQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Role entity is found.
 // Returns a *NotFoundError when no Role entities are found.
 func (rq *RoleQuery) Only(ctx context.Context) (*Role, error) {
-	nodes, err := rq.Limit(2).All(setContextOp(ctx, rq.ctx, "Only"))
+	nodes, err := rq.Limit(2).All(setContextOp(ctx, rq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +210,7 @@ func (rq *RoleQuery) OnlyX(ctx context.Context) *Role {
 // Returns a *NotFoundError when no entities are found.
 func (rq *RoleQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = rq.Limit(2).IDs(setContextOp(ctx, rq.ctx, "OnlyID")); err != nil {
+	if ids, err = rq.Limit(2).IDs(setContextOp(ctx, rq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -209,7 +235,7 @@ func (rq *RoleQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Roles.
 func (rq *RoleQuery) All(ctx context.Context) ([]*Role, error) {
-	ctx = setContextOp(ctx, rq.ctx, "All")
+	ctx = setContextOp(ctx, rq.ctx, ent.OpQueryAll)
 	if err := rq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -231,7 +257,7 @@ func (rq *RoleQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if rq.ctx.Unique == nil && rq.path != nil {
 		rq.Unique(true)
 	}
-	ctx = setContextOp(ctx, rq.ctx, "IDs")
+	ctx = setContextOp(ctx, rq.ctx, ent.OpQueryIDs)
 	if err = rq.Select(role.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -249,7 +275,7 @@ func (rq *RoleQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (rq *RoleQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, rq.ctx, "Count")
+	ctx = setContextOp(ctx, rq.ctx, ent.OpQueryCount)
 	if err := rq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -267,7 +293,7 @@ func (rq *RoleQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (rq *RoleQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, rq.ctx, "Exist")
+	ctx = setContextOp(ctx, rq.ctx, ent.OpQueryExist)
 	switch _, err := rq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -299,12 +325,24 @@ func (rq *RoleQuery) Clone() *RoleQuery {
 		order:           append([]role.OrderOption{}, rq.order...),
 		inters:          append([]Interceptor{}, rq.inters...),
 		predicates:      append([]predicate.Role{}, rq.predicates...),
+		withTenant:      rq.withTenant.Clone(),
 		withUsers:       rq.withUsers.Clone(),
 		withPermissions: rq.withPermissions.Clone(),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
 	}
+}
+
+// WithTenant tells the query-builder to eager-load the nodes that are connected to
+// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RoleQuery) WithTenant(opts ...func(*TenantQuery)) *RoleQuery {
+	query := (&TenantClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withTenant = query
+	return rq
 }
 
 // WithUsers tells the query-builder to eager-load the nodes that are connected to
@@ -406,12 +444,20 @@ func (rq *RoleQuery) prepareQuery(ctx context.Context) error {
 func (rq *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, error) {
 	var (
 		nodes       = []*Role{}
+		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
+			rq.withTenant != nil,
 			rq.withUsers != nil,
 			rq.withPermissions != nil,
 		}
 	)
+	if rq.withTenant != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, role.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Role).scanValues(nil, columns)
 	}
@@ -430,6 +476,12 @@ func (rq *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := rq.withTenant; query != nil {
+		if err := rq.loadTenant(ctx, query, nodes, nil,
+			func(n *Role, e *Tenant) { n.Edges.Tenant = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := rq.withUsers; query != nil {
 		if err := rq.loadUsers(ctx, query, nodes,
 			func(n *Role) { n.Edges.Users = []*User{} },
@@ -447,6 +499,38 @@ func (rq *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 	return nodes, nil
 }
 
+func (rq *RoleQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*Role, init func(*Role), assign func(*Role, *Tenant)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Role)
+	for i := range nodes {
+		if nodes[i].tenant_roles == nil {
+			continue
+		}
+		fk := *nodes[i].tenant_roles
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(tenant.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "tenant_roles" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (rq *RoleQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*Role, init func(*Role), assign func(*Role, *User)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[uuid.UUID]*Role)
@@ -665,7 +749,7 @@ func (rgb *RoleGroupBy) Aggregate(fns ...AggregateFunc) *RoleGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (rgb *RoleGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, rgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, rgb.build.ctx, ent.OpQueryGroupBy)
 	if err := rgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -713,7 +797,7 @@ func (rs *RoleSelect) Aggregate(fns ...AggregateFunc) *RoleSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (rs *RoleSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, rs.ctx, "Select")
+	ctx = setContextOp(ctx, rs.ctx, ent.OpQuerySelect)
 	if err := rs.prepareQuery(ctx); err != nil {
 		return err
 	}

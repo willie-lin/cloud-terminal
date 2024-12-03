@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -192,6 +193,25 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 		uc.SetID(*u)
 	}
 	return uc
+}
+
+// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
+func (uc *UserCreate) SetTenantID(id int) *UserCreate {
+	uc.mutation.SetTenantID(id)
+	return uc
+}
+
+// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableTenantID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetTenantID(*id)
+	}
+	return uc
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (uc *UserCreate) SetTenant(t *Tenant) *UserCreate {
+	return uc.SetTenantID(t.ID)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -407,6 +427,23 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
 		_node.LastLoginTime = value
+	}
+	if nodes := uc.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.tenant_users = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

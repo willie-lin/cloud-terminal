@@ -13,11 +13,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/asset"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/assetgroup"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/usergroup"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -74,16 +74,16 @@ var (
 	columnCheck sql.ColumnCheck
 )
 
-// columnChecker checks if the column exists in the given table.
+// checkColumn checks if the column exists in the given table.
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			asset.Table:      asset.ValidColumn,
-			assetgroup.Table: assetgroup.ValidColumn,
 			permission.Table: permission.ValidColumn,
+			resource.Table:   resource.ValidColumn,
 			role.Table:       role.ValidColumn,
+			tenant.Table:     tenant.ValidColumn,
 			user.Table:       user.ValidColumn,
-			usergroup.Table:  usergroup.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)
