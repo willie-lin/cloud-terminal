@@ -46,10 +46,6 @@ func main() {
 	//log, _ := zap.NewProduction()
 	//log := zap.NewProductionEncoderConfig()
 
-	//authEnforcer, err := auth.NewEnforcer("auth_model.conf", "policy.csv")
-	//if err != nil {
-	//	log.Fatalf("failed to create auth enforcer: %v", err)
-	//}
 	e := echo.New()
 
 	// Enable tracing middleware
@@ -84,6 +80,86 @@ func main() {
 		AllowCredentials: true,
 		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 		MaxAge:           300,
+	}))
+
+	// 设置 Static 中间件
+	e.Static("/picture", "picture")
+
+	// 设置session中间件
+	//e.Use(utils.SessionMiddleware)
+
+	//fmt.Println("333333333333333333333")
+	e.Use(utils.SetCSRFToken)
+	//fmt.Println("4444444444444444444444")
+	//
+	//e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+	//	return func(c echo.Context) error {
+	//		fmt.Printf("请求方法: %s, 路径: %s\n", c.Request().Method, c.Request().URL.Path)
+	//		fmt.Printf("所有请求头: %+v\n", c.Request().Header)
+	//		fmt.Printf("所有cookie: %+v\n", c.Request().Cookies())
+	//		csrfToken := c.Request().Header.Get("X-CSRF-Token")
+	//		fmt.Printf("Header中的CSRF令牌: %s\n", csrfToken)
+	//		cookieToken, err := c.Cookie("_csrf")
+	//		if err == nil {
+	//			fmt.Printf("Cookie中的CSRF令牌: %s\n", cookieToken.Value)
+	//		} else {
+	//			fmt.Println("Cookie中没有CSRF令牌")
+	//		}
+	//		return next(c)
+	//	}
+	//})
+	//fmt.Println("5555555555555555555555555555")
+
+	// 使用 CSRF 中间件
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup:  "header:X-CSRF-Token,cookie:_csrf,form:_csrf,query:_csrf",
+		CookieName:   "_csrf",
+		CookiePath:   "/",
+		CookieDomain: "localhost",
+		//CookieDomain: "",
+		CookieSecure: true,
+		//CookieSecure:   false,
+		CookieHTTPOnly: true,
+		//CookieSameSite: http.SameSiteLaxMode,
+		CookieSameSite: http.SameSiteNoneMode,
+		CookieMaxAge:   3600,
+	}))
+
+	// 限制IP速率
+	e.Use(middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
+		Skipper: middleware.DefaultSkipper,
+		Store: middleware.NewRateLimiterMemoryStoreWithConfig(
+			middleware.RateLimiterMemoryStoreConfig{Rate: 10, Burst: 30, ExpiresIn: 3 * time.Minute},
+		),
+		IdentifierExtractor: func(ctx echo.Context) (string, error) {
+			id := ctx.RealIP()
+			return id, nil
+		},
+		ErrorHandler: func(context echo.Context, err error) error {
+			return context.JSON(http.StatusForbidden, nil)
+		},
+		DenyHandler: func(context echo.Context, identifier string, err error) error {
+			return context.JSON(http.StatusTooManyRequests, nil)
+		},
+	}))
+
+	//Secure 安全
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+		XSSProtection:         "1; mode=block",
+		ContentTypeNosniff:    "nosniff",
+		XFrameOptions:         "SAMEORIGIN",
+		HSTSMaxAge:            3600,
+		ContentSecurityPolicy: "default-src 'self'",
+		//Secure: "max-age=31536000; includeSubDomains",
+	}))
+
+	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Skipper:      middleware.DefaultSkipper,
+		ErrorMessage: "custom timeout error message returns to client",
+		OnTimeoutRouteErrorHandler: func(err error, c echo.Context) {
+			log.Print(c.Path())
+		},
+		Timeout: 30 * time.Second,
 	}))
 
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
@@ -124,87 +200,17 @@ func main() {
 
 	debugMode(err, client, ctx)
 
-	// 设置 Static 中间件
-	e.Static("/picture", "picture")
-	//fmt.Println("333333333333333333333")
-	e.Use(utils.SetCSRFToken)
-	//fmt.Println("4444444444444444444444")
-
-	//e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-	//	return func(c echo.Context) error {
-	//		fmt.Printf("请求方法: %s, 路径: %s\n", c.Request().Method, c.Request().URL.Path)
-	//		fmt.Printf("所有请求头: %+v\n", c.Request().Header)
-	//		fmt.Printf("所有cookie: %+v\n", c.Request().Cookies())
-	//		csrfToken := c.Request().Header.Get("X-CSRF-Token")
-	//		fmt.Printf("Header中的CSRF令牌: %s\n", csrfToken)
-	//		cookieToken, err := c.Cookie("_csrf")
-	//		if err == nil {
-	//			fmt.Printf("Cookie中的CSRF令牌: %s\n", cookieToken.Value)
-	//		} else {
-	//			fmt.Println("Cookie中没有CSRF令牌")
-	//		}
-	//		return next(c)
-	//	}
-	//})
-	//fmt.Println("5555555555555555555555555555")
-
-	// 使用 CSRF 中间件
-	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-		TokenLookup:  "header:X-CSRF-Token,cookie:_csrf,form:_csrf,query:_csrf",
-		CookieName:   "_csrf",
-		CookiePath:   "/",
-		CookieDomain: "localhost",
-		//CookieDomain: "",
-		CookieSecure: true,
-		//CookieSecure:   false,
-		CookieHTTPOnly: true,
-		//CookieSameSite: http.SameSiteLaxMode,
-		CookieSameSite: http.SameSiteNoneMode,
-		CookieMaxAge:   3600,
-	}))
-
-	// 限制IP速率
-	rateLimiterConfig := middleware.RateLimiterConfig{
-		Skipper: middleware.DefaultSkipper,
-		Store: middleware.NewRateLimiterMemoryStoreWithConfig(
-			middleware.RateLimiterMemoryStoreConfig{Rate: 10, Burst: 30, ExpiresIn: 3 * time.Minute},
-		),
-		IdentifierExtractor: func(ctx echo.Context) (string, error) {
-			id := ctx.RealIP()
-			return id, nil
-		},
-		ErrorHandler: func(context echo.Context, err error) error {
-			return context.JSON(http.StatusForbidden, nil)
-		},
-		DenyHandler: func(context echo.Context, identifier string, err error) error {
-			return context.JSON(http.StatusTooManyRequests, nil)
-		},
-	}
-	e.Use(middleware.RateLimiterWithConfig(rateLimiterConfig))
-
-	//Secure 安全
-	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
-		XSSProtection:         "1; mode=block",
-		ContentTypeNosniff:    "nosniff",
-		XFrameOptions:         "SAMEORIGIN",
-		HSTSMaxAge:            3600,
-		ContentSecurityPolicy: "default-src 'self'",
-		//Secure: "max-age=31536000; includeSubDomains",
-	}))
-
-	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
-		Skipper:      middleware.DefaultSkipper,
-		ErrorMessage: "custom timeout error message returns to client",
-		OnTimeoutRouteErrorHandler: func(err error, c echo.Context) {
-			log.Print(c.Path())
-		},
-		Timeout: 30 * time.Second,
-	}))
-
 	// 打开暂时会报错
 	//e.Use(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
 	//	RedirectCode: http.StatusMovedPermanently,
 	//}))
+
+	// Initialize Casbin enforcer
+	//enforcer, err := casbin.NewEnforcer("auth_model.conf", "policy.csv")
+	//ce := casbin.new
+	//
+	//// Use Casbin middleware
+	//e.Use(casbin.Middleware(enforcer))
 
 	e.Use(middleware.Gzip())
 
@@ -214,9 +220,13 @@ func main() {
 	// 使用JWT中间件
 	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
 
+	// 定义会话检查端点
+	//e.GET("/api/check-session", handler.CheckSession)
+
 	e.GET("/api/csrf-token", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	})
+
 	e.GET("/", handler.Hello(client))
 	e.GET("/ip", handler.RealIP())
 	e.POST("/api/check-email", api.CheckEmail(client))

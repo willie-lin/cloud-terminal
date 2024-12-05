@@ -134,7 +134,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
 
-		// 生成JWT
+		// 生成accessToken
 		accessToken, err := utils.CreateAccessToken(us.ID, us.Email, us.Username)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
@@ -179,7 +179,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 		sess.Options = &sessions.Options{
 			Path:     "/",
-			MaxAge:   86400 * 3, // 设置session的过期时间
+			MaxAge:   3600, // 设置session的过期时间
 			HttpOnly: true,
 		}
 		sess.Values["username"] = us.Username // 保存用户名到session

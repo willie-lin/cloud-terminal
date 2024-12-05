@@ -1,6 +1,6 @@
 // App.js
 import React, {useEffect, useState} from 'react';
-import {BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
+import {BrowserRouter as Router, Navigate, Route, Routes} from 'react-router-dom';
 import Navigation from "./layout/Navigation";
 import Login from "./dashboard/pages/Login";
 import Register from "./dashboard/pages/Register";
@@ -15,11 +15,14 @@ import PermissionList from "./dashboard/components/permission/PermissionList";
 import UserList from "./dashboard/components/user/UserList";
 import { ThemeProvider } from './layout/ThemeContext';
 
+
 export const AuthContext = React.createContext(null)
 
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [email, setEmail] = useState('');
+
+
 
     useEffect(() => {
         const token = localStorage.getItem('token');

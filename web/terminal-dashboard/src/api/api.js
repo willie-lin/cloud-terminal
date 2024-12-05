@@ -6,32 +6,43 @@ const api = axios.create({
     timeout: 1000,
 });
 
+// 请求拦截器
+api.interceptors.request.use(config => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+}, error => {
+    return Promise.reject(error);
+});
 
-// // 请求拦截器
-// api.interceptors.request.use(config => {
-//     const csrfToken = document.cookie.replace(/(?:(?:^|.*;\s*)_csrf\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-//     if (csrfToken) {
-//         config.headers['X-CSRF-Token'] = csrfToken;
+// 响应拦截器
+api.interceptors.response.use(response => {
+    return response;
+}, error => {
+    if (error.response && error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('email');
+        window.location.href = '/login';
+    }
+    return Promise.reject(error);
+});
+
+export default api;
+
+
+
+
+// export const checkSession = async () => {
+//     try {
+//         const response = await api.get('/api/check-session');
+//         console.log('Session check response:', response.data);
+//     } catch (error) {
+//         console.error('Session check error:', error);
 //     }
-//     return config;
-// }, error => {
-//     return Promise.reject(error);
-// });
-//
-// // 响应拦截器
-// api.interceptors.response.use(response => {
-//     const csrfToken = response.headers['x-csrf-token'];
-//     if (csrfToken) {
-//         document.cookie = `_csrf=${csrfToken}; path=/; secure; samesite=none`;
-//     }
-//     return response;
-// }, error => {
-//     return Promise.reject(error);
-// });
-//
-// export default api;
-//
-//
+// };
+
 
 // login
 export const login = async (data) => {
