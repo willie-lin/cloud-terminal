@@ -3,6 +3,7 @@ import React, {useEffect, useState} from 'react';
 import {check2FA, checkEmail, login} from "../../../api/api";
 import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
 import {Link, useNavigate} from "react-router-dom";
+import CryptoJS from 'crypto-js';
 
 function LoginForm({ onLogin }) {
     const [email, setEmail] = React.useState('');
@@ -17,7 +18,7 @@ function LoginForm({ onLogin }) {
         async function checkUser2FA() {
             if (email) { // 只有当 email 不为空时才发送请求
                 const response = await check2FA(email);
-                console.log(response); // 在控制台打印响应
+                // console.log(response); // 在控制台打印响应
                 // 根据响应设置 isConfirmed 的值
                 if (response && response.isConfirmed !== undefined) {
                     setIsConfirmed(response.isConfirmed);
@@ -32,14 +33,12 @@ function LoginForm({ onLogin }) {
         setEmail(email);
         try {
             const exists = await checkEmail(email);
-            // setEmailError(exists ? 'Email already registered' : '');
             setEmailError(exists ? '' : 'Email not registered');
         } catch (error) {
             console.error(error);
         }
     };
 
-    const CryptoJS = require("crypto-js");
     const handleSubmit = async (e) => {
         e.preventDefault();
         // 验证电子邮件和密码是否已填写
@@ -50,30 +49,49 @@ function LoginForm({ onLogin }) {
         try {
             // 对密码进行哈希处理
             const hashedPassword = CryptoJS.SHA256(password).toString();
-
             // 将OTP赋值给totp_Secret
             const data = {
                 email: email,
                 password: hashedPassword,
                 otp: otp
-
             }
-            await login(data); // 使用 login 函数
-            // console.log(data);
-            // console.log(data.token);
-            onLogin(email);
-            // 在登录成功后重定向到/dashboard
-            navigate('/dashboard'); // 登录后重定向到仪表盘
+            // await login(data); // 使用 login 函数
+            const response = await login(data);
+            // console.log('Login response:', response);
 
-
+            if (response && response.data) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('email', email);
+                // console.log('Stored email:', localStorage.getItem('email'));
+                onLogin(email);
+                navigate('/dashboard');
+            } else {
+                console.error('Login response is invalid:', response);
+                setLoginError('服务器响应无效');
+            }
         } catch (error) {
-            // setLoginError(error.message);
-            // console.error(error);
             console.error("Error during login:", error);
             setLoginError('用户名或密码错误或者OTP错误');
-            setTimeout(() => setLoginError(''), 1000); // 1秒后清除错误信息
+            setTimeout(() => setLoginError(''), 1000);
         }
     };
+
+    //         // console.log(data);
+    //         // console.log(data.token);
+    //         // 在存储之前，打印响应数据以确认数据
+    //         onLogin(email);
+    //         // 在登录成功后重定向到/dashboard
+    //         navigate('/dashboard'); // 登录后重定向到仪表盘
+    //
+    //
+    //     } catch (error) {
+    //         // setLoginError(error.message);
+    //         // console.error(error);
+    //         console.error("Error during login:", error);
+    //         setLoginError('用户名或密码错误或者OTP错误');
+    //         setTimeout(() => setLoginError(''), 1000); // 1秒后清除错误信息
+    //     }
+    // };
     return (
         <section className="m-8 flex gap-4">
             <div className="w-full lg:w-3/5 mt-24">

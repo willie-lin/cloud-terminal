@@ -1,26 +1,14 @@
 package utils
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"time"
 )
-
-// 生成随机密钥的函数
-func generateRandomKey(length int) (string, error) {
-	bytes := make([]byte, length)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes), nil
-}
 
 // JwtCustomClaims 在全局范围内定义你的jwtCustomClaims类型
 type JwtCustomClaims struct {
@@ -38,11 +26,11 @@ var (
 
 func init() {
 	var err error
-	AccessTokenSecret, err = generateRandomKey(32) //32字节 = 256位
+	AccessTokenSecret, err = GenerateRandomKey(32) //32字节 = 256位
 	if err != nil {
 		panic(fmt.Sprintf("Failed to generate access token secret: %v", err))
 	}
-	RefreshTokenSecret, err = generateRandomKey(32)
+	RefreshTokenSecret, err = GenerateRandomKey(32)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to generate refresh token secret: %v", err))
 	}
@@ -162,83 +150,46 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 
 //func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
 //	return func(c echo.Context) error {
-//		// 仅在实际请求（非预检请求）中生成 CSRF 令牌
 //		if c.Request().Method != http.MethodOptions {
 //			token := c.Get(middleware.DefaultCSRFConfig.ContextKey)
 //			if token == nil {
 //				var err error
-//				token, err = generateRandomKey(32)
+//				token, err = GenerateRandomKey(32)
 //				if err != nil {
 //					return echo.NewHTTPError(http.StatusInternalServerError, "生成 CSRF 令牌失败")
 //				}
 //			}
+//			fmt.Println("6666666666666666666666")
 //			csrfToken := token.(string)
-//
-//			// 打印生成的CSRF令牌，供调试使用
-//			fmt.Println("Generated CSRF Token: %s", csrfToken)
+//			fmt.Println("Generated CSRF Token:", csrfToken) // 调试输出
 //			cookie := &http.Cookie{
-//				Name:     "_csrf",
-//				Value:    csrfToken,
-//				Path:     "/",
-//				Domain:   c.Request().Host,
-//				Secure:   c.IsTLS(), // 在本地开发环境中可以设为 false
-//				HttpOnly: true,
-//				SameSite: http.SameSiteLaxMode,
-//				//SameSite: http.SameSiteStrictMode,
-//				MaxAge: 3600, // 1小时过期
+//				Name:   "_csrf",
+//				Value:  csrfToken,
+//				Path:   "/",
+//				Domain: c.Request().Host,
+//				//Domain: "localhost",
+//				//Secure:   c.IsTLS(),
+//				Secure:   true,
+//				HttpOnly: true, // 确保 HttpOnly 设置为 false 以允许前端访问
+//				//SameSite: http.SameSiteLaxMode,
+//				SameSite: http.SameSiteNoneMode,
+//				MaxAge:   3600,
 //			}
 //
 //			c.SetCookie(cookie)
-//
-//			// 同时在响应头中设置令牌
 //			c.Response().Header().Set("X-CSRF-Token", csrfToken)
 //			fmt.Printf("CSRF 令牌: %s\n", csrfToken)
+//
+//			// 打印所有响应头
+//			for name, values := range c.Response().Header() {
+//				for _, value := range values {
+//					fmt.Printf("%s: %s\n", name, value)
+//				}
+//			}
 //		}
+//		fmt.Println("777777777777777")
+//
 //		return next(c)
 //	}
 //}
-
-func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		if c.Request().Method != http.MethodOptions {
-			token := c.Get(middleware.DefaultCSRFConfig.ContextKey)
-			if token == nil {
-				var err error
-				token, err = generateRandomKey(32)
-				if err != nil {
-					return echo.NewHTTPError(http.StatusInternalServerError, "生成 CSRF 令牌失败")
-				}
-			}
-			fmt.Println("6666666666666666666666")
-			csrfToken := token.(string)
-			fmt.Println("Generated CSRF Token:", csrfToken) // 调试输出
-			cookie := &http.Cookie{
-				Name:  "_csrf",
-				Value: csrfToken,
-				Path:  "/",
-				//Domain: c.Request().Host,
-				Domain: "localhost",
-				//Secure:   c.IsTLS(),
-				Secure:   true,
-				HttpOnly: false, // 确保 HttpOnly 设置为 false 以允许前端访问
-				SameSite: http.SameSiteLaxMode,
-				//SameSite: http.SameSiteNoneMode,
-				MaxAge: 3600,
-			}
-
-			c.SetCookie(cookie)
-			c.Response().Header().Set("X-CSRF-Token", csrfToken)
-			fmt.Printf("CSRF 令牌: %s\n", csrfToken)
-
-			// 打印所有响应头
-			for name, values := range c.Response().Header() {
-				for _, value := range values {
-					fmt.Printf("%s: %s\n", name, value)
-				}
-			}
-		}
-		fmt.Println("777777777777777")
-
-		return next(c)
-	}
-}
+//

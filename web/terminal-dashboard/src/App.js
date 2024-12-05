@@ -24,6 +24,10 @@ const App = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         const storedEmail = localStorage.getItem('email');
+
+        // console.log('Token from localStorage:', token);
+        // console.log('Email from localStorage:', storedEmail);
+
         if (token && storedEmail) {
             setIsLoggedIn(true);
             setEmail(storedEmail);

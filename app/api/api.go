@@ -157,6 +157,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		accessTokenCookie.Value = accessToken
 		accessTokenCookie.Expires = time.Now().Add(24 * time.Hour)
 		accessTokenCookie.SameSite = http.SameSiteNoneMode
+		accessTokenCookie.Domain = c.Request().Host
 		accessTokenCookie.HttpOnly = true
 		accessTokenCookie.Secure = true
 		accessTokenCookie.Path = "/"
@@ -168,6 +169,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		refreshTokenCookie.Value = refreshToken
 		refreshTokenCookie.Expires = time.Now().Add(24 * time.Hour) // RefreshToken通常有更长的过期时间
 		refreshTokenCookie.SameSite = http.SameSiteNoneMode
+		refreshTokenCookie.Domain = c.Request().Host
 		refreshTokenCookie.HttpOnly = true
 		refreshTokenCookie.Secure = true
 		refreshTokenCookie.Path = "/"

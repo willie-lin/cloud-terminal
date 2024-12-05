@@ -1,75 +1,52 @@
 import axios from 'axios';
 
-// const getCSRFToken = () => {
-//     console.log("Current cookies:", document.cookie); // 打印当前所有 Cookie
-//     const csrfCookie = document.cookie.split('; ').find(row => row.startsWith('_csrf='));
-//     console.log("Found CSRF Cookie:", csrfCookie); // 打印找到的 CSRF Cookie
-//     return csrfCookie ? csrfCookie.split('=')[1] : null;
-// };
-
-//
-
 const api = axios.create({
-    // baseURL: 'http://0.0.0.0:2023',
     baseURL: 'https://127.0.0.1:443',
-    withCredentials: true,  // 添加这一行
-    // headers: { 'X-CSRF-Token': getCSRFToken()}, // 包含 CSRF 令牌
+    withCredentials: true,
     timeout: 1000,
-    // headers: {'Authorization': `Bearer ${document.cookie.replace(/(?:^|.*;\s*)AccessToken\s*=\s*([^;]*).*$|^.*$/, "$1")}`}
 });
 
-api.interceptors.response.use(response => {
-    console.log("Response headers:", response.headers); // 打印所有响应头
-    const csrfToken = response.headers['x-csrf-token'];
-    if (csrfToken) {
-        api.defaults.headers.common['X-CSRF-Token'] = csrfToken;
-    }
-    return response;
-});
 
+// // 请求拦截器
+// api.interceptors.request.use(config => {
+//     const csrfToken = document.cookie.replace(/(?:(?:^|.*;\s*)_csrf\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+//     if (csrfToken) {
+//         config.headers['X-CSRF-Token'] = csrfToken;
+//     }
+//     return config;
+// }, error => {
+//     return Promise.reject(error);
+// });
+//
+// // 响应拦截器
 // api.interceptors.response.use(response => {
-//     console.log("Response headers:", response.headers); // 打印所有响应头
 //     const csrfToken = response.headers['x-csrf-token'];
 //     if (csrfToken) {
-//         console.log("Received CSRF Token:", csrfToken);
-//         api.defaults.headers.common['X-CSRF-Token'] = csrfToken;
-//     } return response;
-//     }, error => {
-//     return Promise.reject(error);
-// });
-
-
-// api.interceptors.request.use(function (config) {
-//     const csrfToken = getCSRFToken();
-//     if (csrfToken) {
-//         console.log("Sending CSRF Token:", csrfToken);
-//         config.headers['X-CSRF-Token'] = csrfToken;
-//     } else {
-//         console.warn("CSRF Token not found");
+//         document.cookie = `_csrf=${csrfToken}; path=/; secure; samesite=none`;
 //     }
-//     config.headers['Content-Type'] = 'application/json';
-//     config.withCredentials = true; // 确保请求包含凭证
-//     return config;
-// }, function (error) {
+//     return response;
+// }, error => {
 //     return Promise.reject(error);
 // });
-
-
-
-
-
+//
+// export default api;
+//
+//
 
 // login
 export const login = async (data) => {
 
     try {
         const response = await api.post('/api/login', data);
+
         if (response.status === 403 || response.data === 'Invalid password' || response.data === 'Invalid-OTP') {
             throw new Error('用户名或密码错误');
         }
-        return response.data;
+        // return response.data;
+        return response;
     } catch (error) {
-        console.error(error);
+        // console.error(error);
+        console.error('Login API error:', error);
         throw error;
     }
 };
