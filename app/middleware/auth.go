@@ -2,10 +2,12 @@ package middleware
 
 import (
 	"context"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/willie-lin/cloud-terminal/app/authentication"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"net/http"
+	"strings"
 )
 
 // AuthMiddleware 检查 JWT 并从中提取用户信息
@@ -117,6 +119,31 @@ func AuthMiddleware(authEnforcer *authentication.Enforcer, client *ent.Client) e
 				return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
 			}
 
+			return next(c)
+		}
+	}
+}
+
+func JWTAuth() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			authHeader := c.Request().Header.Get("Authorization")
+			if authHeader == "" {
+				return echo.NewHTTPError(http.StatusUnauthorized, "Missing token")
+			}
+
+			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+				// 这里应该返回你的JWT密钥
+				return []byte("your-secret-key"), nil
+			})
+
+			if err != nil || !token.Valid {
+				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
+			}
+
+			claims := token.Claims.(jwt.MapClaims)
+			c.Set("user", claims["username"])
 			return next(c)
 		}
 	}

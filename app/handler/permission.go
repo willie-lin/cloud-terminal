@@ -10,11 +10,13 @@ import (
 	"net/http"
 )
 
+type PermissionDTO struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 func CheckPermissionName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		type PermissionDTO struct {
-			Name string `json:"name"`
-		}
 
 		dto := new(PermissionDTO)
 		if err := c.Bind(&dto); err != nil {
@@ -46,20 +48,16 @@ func GetAllPermissions(client *ent.Client) echo.HandlerFunc {
 // CreatePermission  创建permission
 func CreatePermission(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
-
-		type PermissionDTO struct {
-			Name        string `json:"name"`
-			Description string `json:"description"`
-		}
 		var permissions []*PermissionDTO
 
 		if err := c.Bind(&permissions); err != nil {
 			log.Printf("Error binding permission: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
+		createdPermissions := make([]*ent.Permission, 0, len(permissions))
 
 		for _, dto := range permissions {
-			ro, err := client.Permission.Create().
+			p, err := client.Permission.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
 				Save(context.Background())
@@ -67,7 +65,8 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 				log.Printf("Error creating permission: %v", err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create permission"})
 			}
-			fmt.Printf("Created permission with ID: %s\n", ro.ID)
+			fmt.Printf("Created permission with ID: %s\n", p.ID)
+			createdPermissions = append(createdPermissions, p)
 		}
 		return c.JSON(http.StatusCreated, map[string]string{"message": "Permission created successfully"})
 	}

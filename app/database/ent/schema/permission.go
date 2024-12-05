@@ -33,6 +33,9 @@ func (Permission) Fields() []ent.Field {
 // Edges of the Permission.
 func (Permission) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.From("tenant", Tenant.Type).
+			Ref("permissions").
+			Unique(),
 		edge.From("roles", Role.Type).Ref("permissions"),
 		// Add more edges here
 		//edge.To("users", User.Type),
