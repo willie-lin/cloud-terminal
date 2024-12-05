@@ -157,10 +157,10 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		fmt.Println(1111111)
-		fmt.Println(dto.Online)
-		fmt.Println(dto.EnableType)
-		fmt.Println(2222222)
+		//fmt.Println(1111111)
+		//fmt.Println(dto.Online)
+		//fmt.Println(dto.EnableType)
+		//fmt.Println(2222222)
 
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(context.Background())

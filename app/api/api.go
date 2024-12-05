@@ -137,9 +137,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 生成JWT
 		accessToken, err := utils.CreateAccessToken(us.ID, us.Email, us.Username)
-		fmt.Println(111111)
-		fmt.Println(accessToken)
-		fmt.Println(2222222)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
