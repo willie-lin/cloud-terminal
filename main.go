@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bykof/gostradamus"
 	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo-contrib/session"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -51,6 +52,10 @@ func main() {
 	//}
 	e := echo.New()
 
+	// Enable tracing middleware
+	c := jaegertracing.New(e, nil)
+	defer c.Close()
+
 	// 使用重定向中间件将http连接重定向到https
 	e.Pre(middleware.HTTPSRedirect())
 
@@ -71,7 +76,22 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
+
+	// CORS middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"https://localhost:3000"},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, "X-CSRF-Token"},
+		AllowCredentials: true,
+		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+	}))
+
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
+
+	e.Pre(middleware.MethodOverrideWithConfig(middleware.MethodOverrideConfig{
+		Getter: middleware.MethodFromForm("_method"),
+	}))
+
+	e.Use(middleware.Decompress())
 
 	client, err := config.NewClient()
 	fmt.Println(client)
@@ -106,18 +126,57 @@ func main() {
 	// 设置 Static 中间件
 	e.Static("/picture", "picture")
 
-	// CORS middleware
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"https://localhost:3000"},
-		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
-		AllowCredentials: true,
-		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
-	}))
-
-	//e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-	//	AllowOrigins: []string{"*"},
-	//	AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+	// 在所有请求前设置 CSRF 令牌
+	//e.Use(utils.SetCSRFToken)
+	//
+	//e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+	//	TokenLookup:    "header:X-CSRF-Token,form:_csrf",
+	//	CookieName:     "_csrf",
+	//	CookiePath:     "/",
+	//	CookieDomain:   "localhost",
+	//	CookieSecure:   false, // 在生产环境中设置为true
+	//	CookieHTTPOnly: true,
+	//	CookieSameSite: http.SameSiteLaxMode,
 	//}))
+
+	// 在所有请求前设置 CSRF 令牌
+	//e.Use(utils.SetCSRFToken)
+	//
+	//e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+	//	TokenLookup:    "header:X-CSRF-Token,form:_csrf",
+	//	CookieName:     "_csrf",
+	//	CookiePath:     "/",
+	//	CookieDomain:   "localhost",
+	//	CookieSecure:   false, // 在生产环境中设置为true
+	//	CookieHTTPOnly: true,
+	//	CookieSameSite: http.SameSiteLaxMode,
+	//}))
+
+	fmt.Println("333333333333333333333")
+	e.Use(utils.SetCSRFToken)
+	fmt.Println("4444444444444444444444")
+	// 打印接收到的 CSRF 令牌
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			csrfToken := c.Request().Header.Get("X-CSRF-Token")
+			fmt.Println("Received CSRF Token:", csrfToken) // 打印接收到的CSRF令牌
+			return next(c)
+		}
+	})
+	fmt.Println("5555555555555555555555555555")
+
+	// 使用 CSRF 中间件
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup:    "header:X-CSRF-Token,form:_csrf",
+		CookieName:     "_csrf",
+		CookiePath:     "/",
+		CookieDomain:   "localhost",
+		CookieSecure:   true,
+		CookieHTTPOnly: false,
+		CookieSameSite: http.SameSiteLaxMode,
+		//CookieSameSite: http.SameSiteNoneMode,
+		CookieMaxAge: 3600,
+	}))
 
 	// 限制IP速率
 	rateLimiterConfig := middleware.RateLimiterConfig{
@@ -147,6 +206,7 @@ func main() {
 		ContentSecurityPolicy: "default-src 'self'",
 		//Secure: "max-age=31536000; includeSubDomains",
 	}))
+
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Skipper:      middleware.DefaultSkipper,
 		ErrorMessage: "custom timeout error message returns to client",
@@ -155,6 +215,11 @@ func main() {
 		},
 		Timeout: 30 * time.Second,
 	}))
+
+	// 打开暂时会报错
+	//e.Use(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
+	//	RedirectCode: http.StatusMovedPermanently,
+	//}))
 
 	e.Use(middleware.Gzip())
 
@@ -168,6 +233,11 @@ func main() {
 	e.GET("/ip", handler.RealIP())
 	e.POST("/api/check-email", api.CheckEmail(client))
 	e.POST("/api/check-2FA", handler.Check2FA(client))
+	//e.POST("/api/check-2FA", handler.Check2FA(client), middleware.CSRFWithConfig(middleware.CSRFConfig{
+	//	Skipper: func(c echo.Context) bool {
+	//		return true // 跳过CSRF检查
+	//	},
+	//}))
 	e.POST("/api/login", api.LoginUser(client))
 	e.POST("/api/register", api.RegisterUser(client))
 	e.POST("/api/reset-password", api.ResetPassword(client))

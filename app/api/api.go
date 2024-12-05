@@ -40,6 +40,7 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 // RegisterUser 用户注册
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+
 		username := utils.GenerateUsername()
 		type UserDTO struct {
 			Email    string `json:"email"`
@@ -76,6 +77,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 // LoginUser 用户登陆
 func LoginUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+
 		type LoginDTO struct {
 			Email    string  `json:"email"`
 			Password string  `json:"password"`

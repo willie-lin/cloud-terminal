@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"time"
 )
@@ -140,9 +141,9 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 						Value:    newAccessToken,
 						Expires:  time.Now().Add(time.Hour * 1), // The cookie will expire in 1 hour
 						SameSite: http.SameSiteNoneMode,
-						HttpOnly: true, // The cookie is not accessible via JavaScript
-						Secure:   true, // The cookie is sent only over HTTPS
-						Path:     "/",  // The cookie is available within the entire domain
+						HttpOnly: false, // The cookie is not accessible via JavaScript
+						Secure:   true,  // The cookie is sent only over HTTPS
+						Path:     "/",   // The cookie is available within the entire domain
 					})
 
 					// Send the HTTP status code
@@ -155,6 +156,89 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid refresh token, please log in again")
 			}
 		}
+		return next(c)
+	}
+}
+
+//func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
+//	return func(c echo.Context) error {
+//		// 仅在实际请求（非预检请求）中生成 CSRF 令牌
+//		if c.Request().Method != http.MethodOptions {
+//			token := c.Get(middleware.DefaultCSRFConfig.ContextKey)
+//			if token == nil {
+//				var err error
+//				token, err = generateRandomKey(32)
+//				if err != nil {
+//					return echo.NewHTTPError(http.StatusInternalServerError, "生成 CSRF 令牌失败")
+//				}
+//			}
+//			csrfToken := token.(string)
+//
+//			// 打印生成的CSRF令牌，供调试使用
+//			fmt.Println("Generated CSRF Token: %s", csrfToken)
+//			cookie := &http.Cookie{
+//				Name:     "_csrf",
+//				Value:    csrfToken,
+//				Path:     "/",
+//				Domain:   c.Request().Host,
+//				Secure:   c.IsTLS(), // 在本地开发环境中可以设为 false
+//				HttpOnly: true,
+//				SameSite: http.SameSiteLaxMode,
+//				//SameSite: http.SameSiteStrictMode,
+//				MaxAge: 3600, // 1小时过期
+//			}
+//
+//			c.SetCookie(cookie)
+//
+//			// 同时在响应头中设置令牌
+//			c.Response().Header().Set("X-CSRF-Token", csrfToken)
+//			fmt.Printf("CSRF 令牌: %s\n", csrfToken)
+//		}
+//		return next(c)
+//	}
+//}
+
+func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if c.Request().Method != http.MethodOptions {
+			token := c.Get(middleware.DefaultCSRFConfig.ContextKey)
+			if token == nil {
+				var err error
+				token, err = generateRandomKey(32)
+				if err != nil {
+					return echo.NewHTTPError(http.StatusInternalServerError, "生成 CSRF 令牌失败")
+				}
+			}
+			fmt.Println("6666666666666666666666")
+			csrfToken := token.(string)
+			fmt.Println("Generated CSRF Token:", csrfToken) // 调试输出
+			cookie := &http.Cookie{
+				Name:  "_csrf",
+				Value: csrfToken,
+				Path:  "/",
+				//Domain: c.Request().Host,
+				Domain: "localhost",
+				//Secure:   c.IsTLS(),
+				Secure:   true,
+				HttpOnly: false, // 确保 HttpOnly 设置为 false 以允许前端访问
+				SameSite: http.SameSiteLaxMode,
+				//SameSite: http.SameSiteNoneMode,
+				MaxAge: 3600,
+			}
+
+			c.SetCookie(cookie)
+			c.Response().Header().Set("X-CSRF-Token", csrfToken)
+			fmt.Printf("CSRF 令牌: %s\n", csrfToken)
+
+			// 打印所有响应头
+			for name, values := range c.Response().Header() {
+				for _, value := range values {
+					fmt.Printf("%s: %s\n", name, value)
+				}
+			}
+		}
+		fmt.Println("777777777777777")
+
 		return next(c)
 	}
 }
