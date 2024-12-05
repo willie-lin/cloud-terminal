@@ -205,12 +205,13 @@ func main() {
 	//	RedirectCode: http.StatusMovedPermanently,
 	//}))
 
-	// Initialize Casbin enforcer
-	//enforcer, err := casbin.NewEnforcer("auth_model.conf", "policy.csv")
-	//ce := casbin.new
 	//
-	//// Use Casbin middleware
-	//e.Use(casbin.Middleware(enforcer))
+	//// 创建Casbin的Enforcer
+	//enforcer, err := casbin.NewEnforcer("path/to/casbin_auth_model.conf", "path/to/casbin_policy.csv")
+	//if err != nil {
+	//	log.Fatalf("Failed to create enforcer: %v", err)
+	//} // 使用自定义 Casbin 中间件
+	//e.Use(utils.CasbinMiddleware(enforcer))
 
 	e.Use(middleware.Gzip())
 
