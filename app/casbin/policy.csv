@@ -1,0 +1,5 @@
+p, admin, tenant1, /users, GET
+p, admin, tenant1, /users, POST
+p, user, tenant1, /users, GET
+g, alice, admin, tenant1
+g, bob, user, tenant1
