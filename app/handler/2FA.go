@@ -12,14 +12,17 @@ import (
 	"net/http"
 )
 
+// FaDTO 2FaDTO
+type FaDTO struct {
+	Email  string  `json:"email"`
+	OTP    *string `json:"otp,omitempty"`
+	Secret string  `json:"secret"`
+}
+
 func Enable2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// EmailDTO
-		type UserDTO struct {
-			Email string `json:"email"`
-		}
 
-		dto := new(UserDTO)
+		dto := new(FaDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
@@ -48,14 +51,7 @@ func Enable2FA(client *ent.Client) echo.HandlerFunc {
 
 func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// EmailDTO
-		type UserDTO struct {
-			Email  string  `json:"email"`
-			OTP    *string `json:"otp,omitempty"`
-			Secret string  `json:"secret"`
-		}
-
-		dto := new(UserDTO)
+		dto := new(FaDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
@@ -97,11 +93,8 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 
 func Check2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		type UserDTO struct {
-			Email string `json:"email"`
-		}
 
-		dto := new(UserDTO)
+		dto := new(FaDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})

@@ -10,6 +10,11 @@ import (
 	"net/http"
 )
 
+type RoleDTO struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 func CheckRoleName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		type RoleDTO struct {
@@ -47,10 +52,6 @@ func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 func CreateRole(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
 
-		type RoleDTO struct {
-			Name        string `json:"name"`
-			Description string `json:"description"`
-		}
 		var roles []*RoleDTO
 
 		if err := c.Bind(&roles); err != nil {
@@ -75,11 +76,6 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 
 func DeleteRoleByName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// RoleDTO
-		type RoleDTO struct {
-			Name string `json:"name"`
-		}
-
 		dto := new(RoleDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding role: %v", err)

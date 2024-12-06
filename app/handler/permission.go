@@ -74,10 +74,6 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 
 func DeletePermissionByName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// RoleDTO
-		type PermissionDTO struct {
-			Name string `json:"name"`
-		}
 
 		dto := new(PermissionDTO)
 		if err := c.Bind(&dto); err != nil {

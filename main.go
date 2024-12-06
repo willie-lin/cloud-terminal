@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
+	"github.com/casbin/casbin/v2"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo-contrib/session"
@@ -72,6 +73,7 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
+	e.Use(middleware.Gzip())
 
 	// CORS middleware
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -205,15 +207,14 @@ func main() {
 	//	RedirectCode: http.StatusMovedPermanently,
 	//}))
 
-	//
-	//// 创建Casbin的Enforcer
-	//enforcer, err := casbin.NewEnforcer("path/to/casbin_auth_model.conf", "path/to/casbin_policy.csv")
-	//if err != nil {
-	//	log.Fatalf("Failed to create enforcer: %v", err)
-	//} // 使用自定义 Casbin 中间件
-	//e.Use(utils.CasbinMiddleware(enforcer))
+	// 初始化Casbin enforcer
+	enforcer, err := casbin.NewEnforcer("../app/casbin/auth_model.conf", "../app/casbin/policy.csv")
+	if err != nil {
+		log.Fatalf("创建casbin enforcer失败: %v", err)
+	}
 
-	e.Use(middleware.Gzip())
+	// 初始化处理器
+	policyHandler := handler.NewPolicyHandler(enforcer)
 
 	// 定义一个受保护的路由组
 	r := e.Group("/admin")

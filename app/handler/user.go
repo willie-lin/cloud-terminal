@@ -18,18 +18,21 @@ import (
 	"time"
 )
 
+type UserDTO struct {
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	Online     bool   `json:"online"`
+	EnableType bool   `json:"enable_type"`
+}
+
+type EmailDTO struct {
+	Email string `json:"email"`
+}
+
 // CreateUser 创建一个新用户
 func CreateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
 		username := utils.GenerateUsername()
-
-		type UserDTO struct {
-			Email      string `json:"email"`
-			Password   string `json:"password"`
-			Online     bool   `json:"online"`
-			EnableType bool   `json:"enable_type"`
-		}
-
 		dto := new(UserDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
@@ -73,10 +76,6 @@ func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 // GetUserByUsername 根据用户名查找
 func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// DTO
-		type UserDTO struct {
-			Username string `json:"username"`
-		}
 		dto := new(UserDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
@@ -99,10 +98,6 @@ func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 // GetUserByEmail 根据邮箱查找用户
 func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// EmailDTO
-		type EmailDTO struct {
-			Email string `json:"email"`
-		}
 		// user response
 		type UserResponse struct {
 			Avatar   string `json:"avatar"`

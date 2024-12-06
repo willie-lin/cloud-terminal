@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"context"
+	"github.com/casbin/casbin/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/willie-lin/cloud-terminal/app/authentication"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"net/http"
 	"strings"
@@ -101,29 +101,6 @@ func PermissionMiddleware(permission string) echo.MiddlewareFunc {
 
 //
 
-func AuthMiddleware(authEnforcer *authentication.Enforcer, client *ent.Client) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			user := c.Get("user").(*ent.User)
-			tenant, err := user.QueryTenant().Only(c.Request().Context())
-			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch user tenant")
-			}
-
-			allowed, err := authEnforcer.Enforce(user.Username, tenant.Name, c.Path(), c.Request().Method)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to check permissions")
-			}
-
-			if !allowed {
-				return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
-			}
-
-			return next(c)
-		}
-	}
-}
-
 func JWTAuth() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -144,6 +121,26 @@ func JWTAuth() echo.MiddlewareFunc {
 
 			claims := token.Claims.(jwt.MapClaims)
 			c.Set("user", claims["username"])
+			return next(c)
+		}
+	}
+}
+
+func Authorize(enforcer *casbin.Enforcer) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			user := c.Get("user").(string)     // Assume user is set in context after authentication
+			domain := c.Get("domain").(string) // Assume domain is set in context
+			path := c.Request().URL.Path
+			method := c.Request().Method
+
+			allowed, err := enforcer.Enforce(user, domain, path, method)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "Error checking permissions")
+			}
+			if !allowed {
+				return echo.NewHTTPError(http.StatusForbidden, "Permission denied")
+			}
 			return next(c)
 		}
 	}
