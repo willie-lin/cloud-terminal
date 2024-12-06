@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
-	"github.com/casbin/casbin/v2"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo-contrib/session"
@@ -208,13 +207,12 @@ func main() {
 	//}))
 
 	// 初始化Casbin enforcer
-	enforcer, err := casbin.NewEnforcer("../app/casbin/auth_model.conf", "../app/casbin/policy.csv")
-	if err != nil {
-		log.Fatalf("创建casbin enforcer失败: %v", err)
-	}
+	// enforcer, err := casbin.NewEnforcer("../app/casbin/auth_model.conf", "../app/casbin/policy.csv")
+	//if err != nil {
+	//	log.Fatalf("创建casbin enforcer失败: %v", err)
+	//}
 
 	// 初始化处理器
-	policyHandler := handler.NewPolicyHandler(enforcer)
 
 	// 定义一个受保护的路由组
 	r := e.Group("/admin")
