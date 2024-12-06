@@ -1,16 +1,18 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://127.0.0.1:443',
+    baseURL: 'https://localhost:443',
     withCredentials: true,
     timeout: 1000,
 });
 
+
 // 请求拦截器
 api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
+    const token = document.cookie.split('; ').find(row => row.startsWith('AccessToken='));
     if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
+        const tokenValue = token.split('=')[1];
+        config.headers['Authorization'] = `Bearer ${tokenValue}`;
     }
     return config;
 }, error => {
@@ -20,11 +22,27 @@ api.interceptors.request.use(config => {
 // 响应拦截器
 api.interceptors.response.use(response => {
     return response;
-}, error => {
+}, async error => {
     if (error.response && error.response.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('email');
-        window.location.href = '/login';
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+            try {
+                const response = await api.post('/api/refresh-token', { refreshToken });
+                const { newAccessToken } = response.data;
+
+                // 设置新的访问令牌在HttpOnly Cookie中
+                document.cookie = `AccessToken=${newAccessToken}; SameSite=None; Secure; HttpOnly; Path=/;`;
+
+                // 重试原始请求
+                error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                return axios(error.config);
+            } catch (refreshError) {
+                localStorage.removeItem('refreshToken');
+                window.location.href = '/login';
+            }
+        } else {
+            window.location.href = '/login';
+        }
     }
     return Promise.reject(error);
 });
@@ -34,26 +52,43 @@ export default api;
 
 
 
-// export const checkSession = async () => {
-//     try {
-//         const response = await api.get('/api/check-session');
-//         console.log('Session check response:', response.data);
-//     } catch (error) {
-//         console.error('Session check error:', error);
-//     }
-// };
 
+
+
+
+// // 请求拦截器
+// api.interceptors.request.use(config => {
+//     const token = localStorage.getItem('token');
+//     if (token) {
+//         config.headers['Authorization'] = `Bearer ${token}`;
+//     }
+//     return config;
+//     }, error => {
+//     return Promise.reject(error);
+// });
+// // 响应拦截器
+// api.interceptors.response.use(response => {
+//     return response;
+//     }, error => {
+//     if (error.response && error.response.status === 401) {
+//         localStorage.removeItem('token');
+//         localStorage.removeItem('email');
+//         window.location.href = '/login';
+//     } return Promise.reject(error);
+// });
+// export default api;
 
 // login
 export const login = async (data) => {
-
     try {
         const response = await api.post('/api/login', data);
 
         if (response.status === 403 || response.data === 'Invalid password' || response.data === 'Invalid-OTP') {
             throw new Error('用户名或密码错误');
         }
-        // return response.data;
+        const { refreshToken } = response.data;
+        localStorage.setItem('refreshToken', refreshToken);
+        // console.log('Refresh token stored:', refreshToken);
         return response;
     } catch (error) {
         // console.error(error);
@@ -61,6 +96,20 @@ export const login = async (data) => {
         throw error;
     }
 };
+
+
+// 退出登录函数
+export const logout = async () => {
+    try {
+        return await api.post('/api/logout');
+    } catch (error) {
+        console.error('Logout API error:', error);
+        throw error;
+    }
+};
+
+
+
 
 // register
 export const register = async (data) => {
@@ -112,6 +161,7 @@ export const getUserByEmail = async (email) => {
         const response = await api.post('/admin/user/email', { email },
         );
         return response.data;
+
         // return response.data.email
     } catch (error) {
         console.error(error);

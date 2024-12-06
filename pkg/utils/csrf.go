@@ -27,7 +27,10 @@ func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
 				}
 			}
 
-			csrfToken := token.(string)
+			csrfToken, ok := token.(string)
+			if !ok {
+				csrfToken = token.(string)
+			}
 			cookie := &http.Cookie{
 				Name:     "_csrf",
 				Value:    csrfToken,

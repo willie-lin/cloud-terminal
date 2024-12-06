@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // PermissionCreate is the builder for creating a Permission entity.
@@ -86,6 +87,25 @@ func (pc *PermissionCreate) SetNillableID(u *uuid.UUID) *PermissionCreate {
 		pc.SetID(*u)
 	}
 	return pc
+}
+
+// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
+func (pc *PermissionCreate) SetTenantID(id int) *PermissionCreate {
+	pc.mutation.SetTenantID(id)
+	return pc
+}
+
+// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
+func (pc *PermissionCreate) SetNillableTenantID(id *int) *PermissionCreate {
+	if id != nil {
+		pc = pc.SetTenantID(*id)
+	}
+	return pc
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (pc *PermissionCreate) SetTenant(t *Tenant) *PermissionCreate {
+	return pc.SetTenantID(t.ID)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -230,6 +250,23 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.Description(); ok {
 		_spec.SetField(permission.FieldDescription, field.TypeString, value)
 		_node.Description = value
+	}
+	if nodes := pc.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   permission.TenantTable,
+			Columns: []string{permission.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.tenant_permissions = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := pc.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

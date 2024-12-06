@@ -689,6 +689,8 @@ type PermissionMutation struct {
 	resource_type *string
 	description   *string
 	clearedFields map[string]struct{}
+	tenant        *int
+	clearedtenant bool
 	roles         map[uuid.UUID]struct{}
 	removedroles  map[uuid.UUID]struct{}
 	clearedroles  bool
@@ -1017,6 +1019,45 @@ func (m *PermissionMutation) ResetDescription() {
 	m.description = nil
 }
 
+// SetTenantID sets the "tenant" edge to the Tenant entity by id.
+func (m *PermissionMutation) SetTenantID(id int) {
+	m.tenant = &id
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (m *PermissionMutation) ClearTenant() {
+	m.clearedtenant = true
+}
+
+// TenantCleared reports if the "tenant" edge to the Tenant entity was cleared.
+func (m *PermissionMutation) TenantCleared() bool {
+	return m.clearedtenant
+}
+
+// TenantID returns the "tenant" edge ID in the mutation.
+func (m *PermissionMutation) TenantID() (id int, exists bool) {
+	if m.tenant != nil {
+		return *m.tenant, true
+	}
+	return
+}
+
+// TenantIDs returns the "tenant" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TenantID instead. It exists only for internal usage by the builders.
+func (m *PermissionMutation) TenantIDs() (ids []int) {
+	if id := m.tenant; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetTenant resets all changes to the "tenant" edge.
+func (m *PermissionMutation) ResetTenant() {
+	m.tenant = nil
+	m.clearedtenant = false
+}
+
 // AddRoleIDs adds the "roles" edge to the Role entity by ids.
 func (m *PermissionMutation) AddRoleIDs(ids ...uuid.UUID) {
 	if m.roles == nil {
@@ -1289,7 +1330,10 @@ func (m *PermissionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *PermissionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.tenant != nil {
+		edges = append(edges, permission.EdgeTenant)
+	}
 	if m.roles != nil {
 		edges = append(edges, permission.EdgeRoles)
 	}
@@ -1300,6 +1344,10 @@ func (m *PermissionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *PermissionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case permission.EdgeTenant:
+		if id := m.tenant; id != nil {
+			return []ent.Value{*id}
+		}
 	case permission.EdgeRoles:
 		ids := make([]ent.Value, 0, len(m.roles))
 		for id := range m.roles {
@@ -1312,7 +1360,7 @@ func (m *PermissionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PermissionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedroles != nil {
 		edges = append(edges, permission.EdgeRoles)
 	}
@@ -1335,7 +1383,10 @@ func (m *PermissionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *PermissionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.clearedtenant {
+		edges = append(edges, permission.EdgeTenant)
+	}
 	if m.clearedroles {
 		edges = append(edges, permission.EdgeRoles)
 	}
@@ -1346,6 +1397,8 @@ func (m *PermissionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *PermissionMutation) EdgeCleared(name string) bool {
 	switch name {
+	case permission.EdgeTenant:
+		return m.clearedtenant
 	case permission.EdgeRoles:
 		return m.clearedroles
 	}
@@ -1356,6 +1409,9 @@ func (m *PermissionMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *PermissionMutation) ClearEdge(name string) error {
 	switch name {
+	case permission.EdgeTenant:
+		m.ClearTenant()
+		return nil
 	}
 	return fmt.Errorf("unknown Permission unique edge %s", name)
 }
@@ -1364,6 +1420,9 @@ func (m *PermissionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *PermissionMutation) ResetEdge(name string) error {
 	switch name {
+	case permission.EdgeTenant:
+		m.ResetTenant()
+		return nil
 	case permission.EdgeRoles:
 		m.ResetRoles()
 		return nil
@@ -2658,26 +2717,29 @@ func (m *RoleMutation) ResetEdge(name string) error {
 // TenantMutation represents an operation that mutates the Tenant nodes in the graph.
 type TenantMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int
-	created_at       *time.Time
-	updated_at       *time.Time
-	name             *string
-	description      *string
-	clearedFields    map[string]struct{}
-	users            map[uuid.UUID]struct{}
-	removedusers     map[uuid.UUID]struct{}
-	clearedusers     bool
-	roles            map[uuid.UUID]struct{}
-	removedroles     map[uuid.UUID]struct{}
-	clearedroles     bool
-	resources        map[int]struct{}
-	removedresources map[int]struct{}
-	clearedresources bool
-	done             bool
-	oldValue         func(context.Context) (*Tenant, error)
-	predicates       []predicate.Tenant
+	op                 Op
+	typ                string
+	id                 *int
+	created_at         *time.Time
+	updated_at         *time.Time
+	name               *string
+	description        *string
+	clearedFields      map[string]struct{}
+	permissions        map[uuid.UUID]struct{}
+	removedpermissions map[uuid.UUID]struct{}
+	clearedpermissions bool
+	users              map[uuid.UUID]struct{}
+	removedusers       map[uuid.UUID]struct{}
+	clearedusers       bool
+	roles              map[uuid.UUID]struct{}
+	removedroles       map[uuid.UUID]struct{}
+	clearedroles       bool
+	resources          map[int]struct{}
+	removedresources   map[int]struct{}
+	clearedresources   bool
+	done               bool
+	oldValue           func(context.Context) (*Tenant, error)
+	predicates         []predicate.Tenant
 }
 
 var _ ent.Mutation = (*TenantMutation)(nil)
@@ -2920,6 +2982,60 @@ func (m *TenantMutation) OldDescription(ctx context.Context) (v string, err erro
 // ResetDescription resets all changes to the "description" field.
 func (m *TenantMutation) ResetDescription() {
 	m.description = nil
+}
+
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by ids.
+func (m *TenantMutation) AddPermissionIDs(ids ...uuid.UUID) {
+	if m.permissions == nil {
+		m.permissions = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.permissions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPermissions clears the "permissions" edge to the Permission entity.
+func (m *TenantMutation) ClearPermissions() {
+	m.clearedpermissions = true
+}
+
+// PermissionsCleared reports if the "permissions" edge to the Permission entity was cleared.
+func (m *TenantMutation) PermissionsCleared() bool {
+	return m.clearedpermissions
+}
+
+// RemovePermissionIDs removes the "permissions" edge to the Permission entity by IDs.
+func (m *TenantMutation) RemovePermissionIDs(ids ...uuid.UUID) {
+	if m.removedpermissions == nil {
+		m.removedpermissions = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.permissions, ids[i])
+		m.removedpermissions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPermissions returns the removed IDs of the "permissions" edge to the Permission entity.
+func (m *TenantMutation) RemovedPermissionsIDs() (ids []uuid.UUID) {
+	for id := range m.removedpermissions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PermissionsIDs returns the "permissions" edge IDs in the mutation.
+func (m *TenantMutation) PermissionsIDs() (ids []uuid.UUID) {
+	for id := range m.permissions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPermissions resets all changes to the "permissions" edge.
+func (m *TenantMutation) ResetPermissions() {
+	m.permissions = nil
+	m.clearedpermissions = false
+	m.removedpermissions = nil
 }
 
 // AddUserIDs adds the "users" edge to the User entity by ids.
@@ -3268,7 +3384,10 @@ func (m *TenantMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TenantMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.permissions != nil {
+		edges = append(edges, tenant.EdgePermissions)
+	}
 	if m.users != nil {
 		edges = append(edges, tenant.EdgeUsers)
 	}
@@ -3285,6 +3404,12 @@ func (m *TenantMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *TenantMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case tenant.EdgePermissions:
+		ids := make([]ent.Value, 0, len(m.permissions))
+		for id := range m.permissions {
+			ids = append(ids, id)
+		}
+		return ids
 	case tenant.EdgeUsers:
 		ids := make([]ent.Value, 0, len(m.users))
 		for id := range m.users {
@@ -3309,7 +3434,10 @@ func (m *TenantMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TenantMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.removedpermissions != nil {
+		edges = append(edges, tenant.EdgePermissions)
+	}
 	if m.removedusers != nil {
 		edges = append(edges, tenant.EdgeUsers)
 	}
@@ -3326,6 +3454,12 @@ func (m *TenantMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *TenantMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case tenant.EdgePermissions:
+		ids := make([]ent.Value, 0, len(m.removedpermissions))
+		for id := range m.removedpermissions {
+			ids = append(ids, id)
+		}
+		return ids
 	case tenant.EdgeUsers:
 		ids := make([]ent.Value, 0, len(m.removedusers))
 		for id := range m.removedusers {
@@ -3350,7 +3484,10 @@ func (m *TenantMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TenantMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.clearedpermissions {
+		edges = append(edges, tenant.EdgePermissions)
+	}
 	if m.clearedusers {
 		edges = append(edges, tenant.EdgeUsers)
 	}
@@ -3367,6 +3504,8 @@ func (m *TenantMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *TenantMutation) EdgeCleared(name string) bool {
 	switch name {
+	case tenant.EdgePermissions:
+		return m.clearedpermissions
 	case tenant.EdgeUsers:
 		return m.clearedusers
 	case tenant.EdgeRoles:
@@ -3389,6 +3528,9 @@ func (m *TenantMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *TenantMutation) ResetEdge(name string) error {
 	switch name {
+	case tenant.EdgePermissions:
+		m.ResetPermissions()
+		return nil
 	case tenant.EdgeUsers:
 		m.ResetUsers()
 		return nil

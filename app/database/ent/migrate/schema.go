@@ -34,12 +34,21 @@ var (
 		{Name: "action", Type: field.TypeString},
 		{Name: "resource_type", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
+		{Name: "tenant_permissions", Type: field.TypeInt, Nullable: true},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
 	PermissionsTable = &schema.Table{
 		Name:       "permissions",
 		Columns:    PermissionsColumns,
 		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "permissions_tenants_permissions",
+				Columns:    []*schema.Column{PermissionsColumns[7]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// ResourcesColumns holds the columns for the "resources" table.
 	ResourcesColumns = []*schema.Column{
@@ -207,6 +216,7 @@ func init() {
 	AssetsTable.Annotation = &entsql.Annotation{
 		Table: "assets",
 	}
+	PermissionsTable.ForeignKeys[0].RefTable = TenantsTable
 	ResourcesTable.ForeignKeys[0].RefTable = TenantsTable
 	RolesTable.ForeignKeys[0].RefTable = TenantsTable
 	UsersTable.ForeignKeys[0].RefTable = TenantsTable

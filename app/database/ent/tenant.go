@@ -33,6 +33,8 @@ type Tenant struct {
 
 // TenantEdges holds the relations/edges for other nodes in the graph.
 type TenantEdges struct {
+	// Permissions holds the value of the permissions edge.
+	Permissions []*Permission `json:"permissions,omitempty"`
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
 	// Roles holds the value of the roles edge.
@@ -41,13 +43,22 @@ type TenantEdges struct {
 	Resources []*Resource `json:"resources,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
+}
+
+// PermissionsOrErr returns the Permissions value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) PermissionsOrErr() ([]*Permission, error) {
+	if e.loadedTypes[0] {
+		return e.Permissions, nil
+	}
+	return nil, &NotLoadedError{edge: "permissions"}
 }
 
 // UsersOrErr returns the Users value or an error if the edge
 // was not loaded in eager-loading.
 func (e TenantEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Users, nil
 	}
 	return nil, &NotLoadedError{edge: "users"}
@@ -56,7 +67,7 @@ func (e TenantEdges) UsersOrErr() ([]*User, error) {
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e TenantEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -65,7 +76,7 @@ func (e TenantEdges) RolesOrErr() ([]*Role, error) {
 // ResourcesOrErr returns the Resources value or an error if the edge
 // was not loaded in eager-loading.
 func (e TenantEdges) ResourcesOrErr() ([]*Resource, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Resources, nil
 	}
 	return nil, &NotLoadedError{edge: "resources"}
@@ -138,6 +149,11 @@ func (t *Tenant) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (t *Tenant) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
+}
+
+// QueryPermissions queries the "permissions" edge of the Tenant entity.
+func (t *Tenant) QueryPermissions() *PermissionQuery {
+	return NewTenantClient(t.config).QueryPermissions(t)
 }
 
 // QueryUsers queries the "users" edge of the Tenant entity.

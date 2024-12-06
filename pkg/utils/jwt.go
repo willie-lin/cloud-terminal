@@ -36,14 +36,13 @@ func init() {
 	}
 }
 
-// CreateAccessToken 创建一个函数来生成JWT
+// CreateAccessToken 创建JWT访问令牌
 func CreateAccessToken(userID uuid.UUID, email, username string) (string, error) {
 	claims := &JwtCustomClaims{
 		UserID:   userID,
 		Email:    email,
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			//ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 		},
 	}
@@ -51,7 +50,7 @@ func CreateAccessToken(userID uuid.UUID, email, username string) (string, error)
 	return token.SignedString([]byte(AccessTokenSecret))
 }
 
-// ValidAccessTokenConfig valid access token
+// ValidAccessTokenConfig 配置有效的访问令牌
 func ValidAccessTokenConfig() echojwt.Config {
 	return echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
@@ -62,7 +61,7 @@ func ValidAccessTokenConfig() echojwt.Config {
 	}
 }
 
-// CreateRefreshToken 创建一个函数来生成RefreshToken
+// CreateRefreshToken 创建刷新令牌
 func CreateRefreshToken(userID uuid.UUID, email, username string) (string, error) {
 	claims := &JwtCustomClaims{
 		UserID:   userID,
@@ -76,7 +75,7 @@ func CreateRefreshToken(userID uuid.UUID, email, username string) (string, error
 	return token.SignedString([]byte(RefreshTokenSecret))
 }
 
-// ValidateRefreshTokenConfig  创建一个函数来验证RefreshToken
+// ValidateRefreshTokenConfig 验证刷新令牌
 func ValidateRefreshTokenConfig() echojwt.Config {
 	return echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
@@ -87,29 +86,27 @@ func ValidateRefreshTokenConfig() echojwt.Config {
 	}
 }
 
-// CheckAccessToken Middleware for checking the AccessToken in the cookie
+// CheckAccessToken 中间件用于检查访问令牌
 func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		accessToken, err := c.Cookie("AccessToken")
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "missing access token")
 		}
-
-		// Validate the AccessToken
+		// 验证访问令牌
 		config := ValidAccessTokenConfig()
 		token, err := jwt.ParseWithClaims(accessToken.Value, config.NewClaimsFunc(c), func(token *jwt.Token) (interface{}, error) {
 			return config.SigningKey, nil
 		})
 
 		if err != nil || !token.Valid {
-			// If the AccessToken is invalid, use the RefreshToken to generate a new AccessToken
+			// 如果访问令牌无效，使用刷新令牌生成新的访问令牌
 			refreshToken, err := c.Cookie("RefreshToken")
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "missing refresh token")
 			}
 
-			// Validate the RefreshToken
+			// 验证刷新令牌
 			config = ValidateRefreshTokenConfig()
 			token, err = jwt.ParseWithClaims(refreshToken.Value, config.NewClaimsFunc(c), func(token *jwt.Token) (interface{}, error) {
 				return config.SigningKey, nil
@@ -117,26 +114,21 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(*JwtCustomClaims); ok {
-					// Use the RefreshToken's claims to generate a new AccessToken
+					// 使用刷新令牌的声明生成新的访问令牌
 					newAccessToken, err := CreateAccessToken(claims.UserID, claims.Email, claims.Username)
 					if err != nil {
 						return err
 					}
-
-					// Set the new AccessToken in the cookie
+					// 将新的访问令牌设置在Cookie中
 					c.SetCookie(&http.Cookie{
 						Name:     "AccessToken",
 						Value:    newAccessToken,
 						Expires:  time.Now().Add(time.Hour * 1), // The cookie will expire in 1 hour
 						SameSite: http.SameSiteNoneMode,
-						HttpOnly: false, // The cookie is not accessible via JavaScript
-						Secure:   true,  // The cookie is sent only over HTTPS
-						Path:     "/",   // The cookie is available within the entire domain
+						HttpOnly: true, // The cookie is not accessible via JavaScript
+						Secure:   true, // The cookie is sent only over HTTPS
+						Path:     "/",  // The cookie is available within the entire domain
 					})
-
-					// Send the HTTP status code
-					//c.Response().WriteHeader(http.StatusOK)
-					//return c.Redirect(http.StatusTemporaryRedirect, c.Request().URL.String())
 					return c.JSON(http.StatusOK, map[string]string{"message": "Token refreshed successfully"})
 				}
 			} else {

@@ -27,10 +27,19 @@ const (
 	FieldResourceType = "resource_type"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// EdgeTenant holds the string denoting the tenant edge name in mutations.
+	EdgeTenant = "tenant"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
 	EdgeRoles = "roles"
 	// Table holds the table name of the permission in the database.
 	Table = "permissions"
+	// TenantTable is the table that holds the tenant relation/edge.
+	TenantTable = "permissions"
+	// TenantInverseTable is the table name for the Tenant entity.
+	// It exists in this package in order to avoid circular dependency with the "tenant" package.
+	TenantInverseTable = "tenants"
+	// TenantColumn is the table column denoting the tenant relation/edge.
+	TenantColumn = "tenant_permissions"
 	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
 	RolesTable = "role_permissions"
 	// RolesInverseTable is the table name for the Role entity.
@@ -49,6 +58,12 @@ var Columns = []string{
 	FieldDescription,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "permissions"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"tenant_permissions",
+}
+
 var (
 	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
 	// primary key for the roles relation (M2M).
@@ -59,6 +74,11 @@ var (
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -114,6 +134,13 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
+// ByTenantField orders the results by tenant field.
+func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByRolesCount orders the results by roles count.
 func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -126,6 +153,13 @@ func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newTenantStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TenantInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+	)
 }
 func newRolesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

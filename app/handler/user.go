@@ -23,12 +23,12 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
 		username := utils.GenerateUsername()
 
-		//type UserDTO struct {
-		//	Email      string `json:"email"`
-		//	Password   string `json:"password"`
-		//	Online     bool   `json:"online"`
-		//	EnableType bool   `json:"enable_type"`
-		//}
+		type UserDTO struct {
+			Email      string `json:"email"`
+			Password   string `json:"password"`
+			Online     bool   `json:"online"`
+			EnableType bool   `json:"enable_type"`
+		}
 
 		dto := new(UserDTO)
 		if err := c.Bind(&dto); err != nil {

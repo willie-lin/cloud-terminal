@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
@@ -62,6 +63,21 @@ func (tc *TenantCreate) SetName(s string) *TenantCreate {
 func (tc *TenantCreate) SetDescription(s string) *TenantCreate {
 	tc.mutation.SetDescription(s)
 	return tc
+}
+
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
+func (tc *TenantCreate) AddPermissionIDs(ids ...uuid.UUID) *TenantCreate {
+	tc.mutation.AddPermissionIDs(ids...)
+	return tc
+}
+
+// AddPermissions adds the "permissions" edges to the Permission entity.
+func (tc *TenantCreate) AddPermissions(p ...*Permission) *TenantCreate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return tc.AddPermissionIDs(ids...)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -209,6 +225,22 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Description(); ok {
 		_spec.SetField(tenant.FieldDescription, field.TypeString, value)
 		_node.Description = value
+	}
+	if nodes := tc.mutation.PermissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := tc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

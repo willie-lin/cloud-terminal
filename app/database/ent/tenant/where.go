@@ -285,6 +285,29 @@ func DescriptionContainsFold(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldContainsFold(FieldDescription, v))
 }
 
+// HasPermissions applies the HasEdge predicate on the "permissions" edge.
+func HasPermissions() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PermissionsTable, PermissionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPermissionsWith applies the HasEdge predicate on the "permissions" edge with a given conditions (other predicates).
+func HasPermissionsWith(preds ...predicate.Permission) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newPermissionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasUsers applies the HasEdge predicate on the "users" edge.
 func HasUsers() predicate.Tenant {
 	return predicate.Tenant(func(s *sql.Selector) {

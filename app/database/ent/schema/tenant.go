@@ -28,6 +28,7 @@ func (Tenant) Fields() []ent.Field {
 // Edges of the Tenant.
 func (Tenant) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.To("permissions", Permission.Type),
 		edge.To("users", User.Type),
 		edge.To("roles", Role.Type),
 		edge.To("resources", Resource.Type),

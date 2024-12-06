@@ -14,6 +14,7 @@ import RoleList from "./dashboard/components/role/RoleList";
 import PermissionList from "./dashboard/components/permission/PermissionList";
 import UserList from "./dashboard/components/user/UserList";
 import { ThemeProvider } from './layout/ThemeContext';
+import {logout} from "./api/api";
 
 
 export const AuthContext = React.createContext(null)
@@ -23,32 +24,41 @@ const App = () => {
     const [email, setEmail] = useState('');
 
 
-
     useEffect(() => {
-        const token = localStorage.getItem('token');
         const storedEmail = localStorage.getItem('email');
+        const refreshToken = localStorage.getItem('refreshToken');
 
-        // console.log('Token from localStorage:', token);
-        // console.log('Email from localStorage:', storedEmail);
-
-        if (token && storedEmail) {
+        if (refreshToken && storedEmail) {
             setIsLoggedIn(true);
             setEmail(storedEmail);
         }
     }, []);
 
-    const onLogin = (email, token) => {
+
+    const onLogin = (email, refreshToken) => {
         setEmail(email);
         localStorage.setItem('email', email); // 添加这一行来将email保存到localStorage中
-        localStorage.setItem('token', token);
+        localStorage.setItem('refreshToken', refreshToken);
         setIsLoggedIn(true);
     };
-    const onLogout = () => {
+    const onLogout = async () => {
+        try {
+        await logout(); // 调用API.js中的退出登录函数
         setIsLoggedIn(false);
         setEmail('');
         localStorage.removeItem('email'); // 添加这一行来从localStorage中删除email
-        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login'; // 重定向到登录页面
+            } catch (error) {
+            console.error('Logout error:', error);
+        }
     };
+
+
+// 在组件中使用 onLogout 方法
+//     <button onClick={onLogout}>Logout</button>
+
+
     return (
         // 路由组件
         <ThemeProvider>

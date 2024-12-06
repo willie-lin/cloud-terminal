@@ -487,6 +487,22 @@ func (c *PermissionClient) GetX(ctx context.Context, id uuid.UUID) *Permission {
 	return obj
 }
 
+// QueryTenant queries the tenant edge of a Permission.
+func (c *PermissionClient) QueryTenant(pe *Permission) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pe.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(permission.Table, permission.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, permission.TenantTable, permission.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryRoles queries the roles edge of a Permission.
 func (c *PermissionClient) QueryRoles(pe *Permission) *RoleQuery {
 	query := (&RoleClient{config: c.config}).Query()
@@ -964,6 +980,22 @@ func (c *TenantClient) GetX(ctx context.Context, id int) *Tenant {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryPermissions queries the permissions edge of a Tenant.
+func (c *TenantClient) QueryPermissions(t *Tenant) *PermissionQuery {
+	query := (&PermissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(permission.Table, permission.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.PermissionsTable, tenant.PermissionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // QueryUsers queries the users edge of a Tenant.

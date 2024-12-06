@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
+	"github.com/casbin/casbin/v2"
+	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"github.com/labstack/echo-contrib/session"
@@ -17,6 +19,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/handler"
 	"github.com/willie-lin/cloud-terminal/app/logger"
+	"github.com/willie-lin/cloud-terminal/app/middlewares"
 	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"go.elastic.co/apm/module/apmechov4"
@@ -80,14 +83,17 @@ func main() {
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, "X-CSRF-Token"},
 		AllowCredentials: true,
 		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
-		MaxAge:           300,
+		//MaxAge:           300,
 	}))
 
+	// 设置CSP头
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{ContentSecurityPolicy: "default-src 'self'; script-src 'self' https://trusted-scripts.com; object-src 'none'; frame-ancestors 'none';"}))
 	// 设置 Static 中间件
 	e.Static("/picture", "picture")
 
 	// 设置session中间件
-	//e.Use(utils.SessionMiddleware)
+	e.Use(session.Middleware(sessions.NewCookieStore(securecookie.GenerateRandomKey(64))))
+	//e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 
 	//fmt.Println("333333333333333333333")
 	e.Use(utils.SetCSRFToken)
@@ -163,8 +169,6 @@ func main() {
 		Timeout: 30 * time.Second,
 	}))
 
-	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
-
 	e.Pre(middleware.MethodOverrideWithConfig(middleware.MethodOverrideConfig{
 		Getter: middleware.MethodFromForm("_method"),
 	}))
@@ -206,22 +210,13 @@ func main() {
 	//	RedirectCode: http.StatusMovedPermanently,
 	//}))
 
-	// 初始化Casbin enforcer
-	// enforcer, err := casbin.NewEnforcer("../app/casbin/auth_model.conf", "../app/casbin/policy.csv")
-	//if err != nil {
-	//	log.Fatalf("创建casbin enforcer失败: %v", err)
-	//}
+	//初始化Casbin enforcer
+	enforcer, err := casbin.NewEnforcer("./app/casbin/auth_model.conf", "./app/casbin/policy.csv")
+	if err != nil {
+		log.Fatalf("创建casbin enforcer失败: %v", err)
+	}
 
 	// 初始化处理器
-
-	// 定义一个受保护的路由组
-	r := e.Group("/admin")
-	r.Use(utils.CheckAccessToken)
-	// 使用JWT中间件
-	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
-
-	// 定义会话检查端点
-	//e.GET("/api/check-session", handler.CheckSession)
 
 	e.GET("/api/csrf-token", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
@@ -237,8 +232,20 @@ func main() {
 	//	},
 	//}))
 	e.POST("/api/login", api.LoginUser(client))
+	e.POST("/api/logout", api.LogoutUser())
 	e.POST("/api/register", api.RegisterUser(client))
 	e.POST("/api/reset-password", api.ResetPassword(client))
+
+	// 定义一个受保护的路由组
+	r := e.Group("/admin")
+	r.Use(utils.CheckAccessToken)
+	// 使用JWT中间件
+	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
+	// 在路由组中使用
+	//r.Use(utils.EnhancedJWTMiddleware)
+
+	// 定义会话检查端点
+	//e.GET("/api/check-session", handler.CheckSession)
 
 	// 需要token认证
 	r.POST("/enable-2fa", handler.Enable2FA(client))
@@ -246,6 +253,7 @@ func main() {
 	r.POST("/uploads", handler.UploadFile())
 	r.GET("/users", handler.GetAllUsers(client))
 	r.POST("/edit-userinfo", handler.UpdateUserInfo(client))
+	//r.POST("/user/email", handler.GetUserByEmail(client), middlewares.Authorize(enforcer))
 	r.POST("/user/email", handler.GetUserByEmail(client))
 	r.POST("/add-user", handler.CreateUser(client))
 	r.POST("/update-user", handler.UpdateUser(client))
@@ -253,15 +261,23 @@ func main() {
 
 	// role
 	r.GET("/roles", handler.GetAllRoles(client))
-	r.POST("/add-role", handler.CreateRole(client))
-	r.POST("/delete-role", handler.DeleteRoleByName(client))
+	r.POST("/add-role", handler.CreateRole(client), middlewares.Authorize(enforcer))
+	r.POST("/delete-role", handler.DeleteRoleByName(client), middlewares.Authorize(enforcer))
 	r.POST("/check-role-name", handler.CheckRoleName(client))
 
 	// permission
 	r.GET("/permissions", handler.GetAllPermissions(client))
-	r.POST("/add-permission", handler.CreatePermission(client))
-	r.POST("/delete-permission", handler.DeletePermissionByName(client))
+	r.POST("/add-permission", handler.CreatePermission(client), middlewares.Authorize(enforcer))
+	r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewares.Authorize(enforcer))
 	r.POST("/check-permission-name", handler.CheckPermissionName(client))
+
+	//
+	e.POST("/tenants", handler.CreateTenant(client), middlewares.Authorize(enforcer))
+	e.GET("/tenants/:id", handler.GetTenantByName(client), middlewares.Authorize(enforcer))
+
+	e.POST("/policies", handler.AddPolicy(enforcer), middlewares.Authorize(enforcer))
+	e.DELETE("/policies", handler.RemovePolicy(enforcer), middlewares.Authorize(enforcer))
+	e.GET("/policies", handler.GetAllPolicies(enforcer), middlewares.Authorize(enforcer))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

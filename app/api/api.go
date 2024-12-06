@@ -189,7 +189,13 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving session"})
 		}
 
-		return c.JSON(http.StatusOK, map[string]string{"message": "Login successful"})
+		// 如果认证成功，设置用户和租户信息到上下文
+		c.Set("user", "alice")
+		c.Set("tenant", "tenant1")
+
+		//return c.JSON(http.StatusOK, map[string]string{"message": "Login successful"})
+		return c.JSON(http.StatusOK, map[string]string{"message": "Login successful", "refreshToken": refreshToken})
+
 	}
 }
 
@@ -230,5 +236,60 @@ func ResetPassword(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating password in database"})
 		}
 		return c.JSON(http.StatusOK, map[string]string{"message": "Password reset successful, please log in again."})
+	}
+}
+
+func LogoutUser() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// 删除访问令牌Cookie
+		accessTokenCookie := &http.Cookie{
+			Name:     "AccessToken",
+			Value:    "",
+			Expires:  time.Now().Add(-1 * time.Hour),
+			SameSite: http.SameSiteNoneMode,
+			HttpOnly: true,
+			Secure:   true,
+			Path:     "/",
+		}
+		c.SetCookie(accessTokenCookie)
+
+		// 删除刷新令牌Cookie
+		refreshTokenCookie := &http.Cookie{
+			Name:     "RefreshToken",
+			Value:    "",
+			Expires:  time.Now().Add(-1 * time.Hour),
+			SameSite: http.SameSiteNoneMode,
+			HttpOnly: true,
+			Secure:   true,
+			Path:     "/",
+		}
+		c.SetCookie(refreshTokenCookie)
+
+		// 删除Session Cookie
+		sessionCookie := &http.Cookie{
+			Name:     "session",
+			Value:    "",
+			Expires:  time.Now().Add(-1 * time.Hour),
+			SameSite: http.SameSiteNoneMode,
+			HttpOnly: true,
+			Secure:   true,
+			Path:     "/",
+		}
+		c.SetCookie(sessionCookie)
+
+		// 删除CSRF Cookie
+		csrfCookie := &http.Cookie{
+			Name:     "_csrf",
+			Value:    "",
+			Expires:  time.Now().Add(-1 * time.Hour),
+			SameSite: http.SameSiteNoneMode,
+			HttpOnly: true,
+			Secure:   true,
+			Path:     "/",
+		}
+		c.SetCookie(csrfCookie)
+
+		// 返回登出成功的响应
+		return c.JSON(http.StatusOK, map[string]string{"message": "Logout successful"})
 	}
 }
