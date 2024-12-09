@@ -22,6 +22,7 @@ func (Resource) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("type"),
 		field.String("identifier"),
+		field.String("description").Optional(),
 	}
 }
 

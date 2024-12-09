@@ -19,7 +19,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/handler"
 	"github.com/willie-lin/cloud-terminal/app/logger"
-	"github.com/willie-lin/cloud-terminal/app/middlewares"
+	"github.com/willie-lin/cloud-terminal/app/middlewarers"
 	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"go.elastic.co/apm/module/apmechov4"
@@ -200,6 +200,9 @@ func main() {
 
 	debugMode(err, client, ctx)
 
+	// 迁移租户
+	//database.AssignDefaultTenant(client)
+
 	// 打开暂时会报错
 	//e.Use(middleware.AddTrailingSlashWithConfig(middleware.TrailingSlashConfig{
 	//	RedirectCode: http.StatusMovedPermanently,
@@ -231,8 +234,6 @@ func main() {
 	r.Use(utils.CheckAccessToken)
 	// 使用JWT中间件
 	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
-	// 在路由组中使用
-	//r.Use(utils.EnhancedJWTMiddleware)
 
 	// 定义会话检查端点
 	//e.GET("/api/check-session", handler.CheckSession)
@@ -242,32 +243,33 @@ func main() {
 	r.POST("/confirm-2FA", handler.Confirm2FA(client))
 	r.POST("/uploads", handler.UploadFile())
 	r.GET("/users", handler.GetAllUsers(client))
-	r.POST("/edit-userinfo", handler.UpdateUserInfo(client))
-	//r.POST("/user/email", handler.GetUserByEmail(client), middlewares.Authorize(enforcer))
 	r.POST("/user/email", handler.GetUserByEmail(client))
+	r.POST("/edit-userinfo", handler.UpdateUserInfo(client))
+	//r.POST("/user/email", handler.GetUserByEmail(client), middlewarers.Authorize(enforcer))
+
 	r.POST("/add-user", handler.CreateUser(client))
 	r.POST("/update-user", handler.UpdateUser(client))
 	r.POST("/delete-user", handler.DeleteUserByUsername(client))
 
 	// role
 	r.GET("/roles", handler.GetAllRoles(client))
-	r.POST("/add-role", handler.CreateRole(client), middlewares.Authorize(enforcer))
-	r.POST("/delete-role", handler.DeleteRoleByName(client), middlewares.Authorize(enforcer))
+	r.POST("/add-role", handler.CreateRole(client), middlewarers.Authorize(enforcer))
+	r.POST("/delete-role", handler.DeleteRoleByName(client), middlewarers.Authorize(enforcer))
 	r.POST("/check-role-name", handler.CheckRoleName(client))
 
 	// permission
 	r.GET("/permissions", handler.GetAllPermissions(client))
-	r.POST("/add-permission", handler.CreatePermission(client), middlewares.Authorize(enforcer))
-	r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewares.Authorize(enforcer))
+	r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
+	r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewarers.Authorize(enforcer))
 	r.POST("/check-permission-name", handler.CheckPermissionName(client))
 
 	//
-	e.POST("/tenants", handler.CreateTenant(client), middlewares.Authorize(enforcer))
-	e.GET("/tenants/:id", handler.GetTenantByName(client), middlewares.Authorize(enforcer))
+	e.POST("/tenants", handler.CreateTenant(client), middlewarers.Authorize(enforcer))
+	e.GET("/tenants/:id", handler.GetTenantByName(client), middlewarers.Authorize(enforcer))
 
-	e.POST("/policies", handler.AddPolicy(enforcer), middlewares.Authorize(enforcer))
-	e.DELETE("/policies", handler.RemovePolicy(enforcer), middlewares.Authorize(enforcer))
-	e.GET("/policies", handler.GetAllPolicies(enforcer), middlewares.Authorize(enforcer))
+	e.POST("/policies", handler.AddPolicy(enforcer), middlewarers.Authorize(enforcer))
+	e.DELETE("/policies", handler.RemovePolicy(enforcer), middlewarers.Authorize(enforcer))
+	e.GET("/policies", handler.GetAllPolicies(enforcer), middlewarers.Authorize(enforcer))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

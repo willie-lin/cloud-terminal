@@ -99,6 +99,8 @@ func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 // GetUserByEmail 根据邮箱查找用户
 func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+
+		fmt.Println("1111111111")
 		// EmailDTO
 		type EmailDTO struct {
 			Email string `json:"email"`
@@ -112,13 +114,35 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 			Phone    string `json:"phone"`
 			Bio      string `json:"bio"`
 		}
+
+		fmt.Println("222222222222")
+		// 获取当前登录用户的邮箱
+		//loggedInUserEmail := c.Get("email").(string)
+		// 获取当前登录用户的邮箱
+		//loggedInUser, ok := c.Get("user").(*ent.User)
+		//if !ok {
+		//	return c.JSON(http.StatusUnauthorized, map[string]string{"error": "User not authenticated"})
+		//}
+		//loggedInUserEmail := loggedInUser.Email
+		//fmt.Println(loggedInUserEmail)
+		fmt.Println("666666666")
+
 		dto := new(EmailDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
+		fmt.Println("3333333333")
+		// 检查请求的邮箱是否与登录用户的邮箱匹配
+		//if dto.Email != loggedInUserEmail {
+		//	log.Printf("未授权的访问尝试: 请求邮箱 %s, 登录用户邮箱 %s", dto.Email, loggedInUserEmail)
+		//	fmt.Printf("未授权的访问尝试: 请求邮箱 %s, 登录用户邮箱 %s\n", dto.Email, loggedInUserEmail)
+		//	return c.JSON(http.StatusForbidden, map[string]string{"error": "没有权限访问其他用户的信息"})
+		//}
+		fmt.Println("4444444444")
 
-		ue, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
+		ctx := c.Request().Context()
+		ue, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(ctx)
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -127,6 +151,7 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
+		fmt.Println("5555555555")
 		// Map the user entity to the response struct
 		response := &UserResponse{
 			Avatar:   ue.Avatar,
@@ -296,7 +321,6 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		fmt.Println(dto.Avatar)
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
 		if ent.IsNotFound(err) {
@@ -307,15 +331,32 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
+		fmt.Println(ua)
+
+		// 设置更新字段
+		update := client.User.UpdateOne(ua)
+		if dto.Nickname != "" {
+			update.SetNickname(dto.Nickname)
+		}
+		if dto.Avatar != "" {
+			update.SetAvatar(dto.Avatar)
+		}
+		if dto.Phone != "" {
+			update.SetPhone(dto.Phone)
+		}
+		if dto.Bio != "" {
+			update.SetBio(dto.Bio)
+		}
 
 		// 更新用户信息
-		_, err = client.User.
-			UpdateOne(ua).
-			SetNickname(dto.Nickname).
-			SetAvatar(dto.Avatar).
-			SetPhone(dto.Phone).
-			SetBio(dto.Bio).
-			Save(context.Background())
+		//_, err = client.User.
+		//	UpdateOne(ua).
+		//	SetNickname(dto.Nickname).
+		//	SetAvatar(dto.Avatar).
+		//	SetPhone(dto.Phone).
+		//	SetBio(dto.Bio).
+		//	Save(context.Background())
+		_, err = update.Save(context.Background())
 		if err != nil {
 			log.Printf("Error updating user info: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating user info in database"})

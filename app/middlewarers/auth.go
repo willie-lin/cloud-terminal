@@ -1,4 +1,4 @@
-package middlewares
+package middlewarers
 
 import (
 	"context"
@@ -196,3 +196,25 @@ func Authorize(enforcer *casbin.Enforcer) echo.MiddlewareFunc {
 		}
 	}
 }
+
+//func Authorize(enforcer *casbin.Enforcer, client *ent.Client) echo.MiddlewareFunc {
+//	return func(next echo.HandlerFunc) echo.HandlerFunc {
+//		return func(c echo.Context) error {
+//			user := c.Get("user").(*ent.User)
+//			tenant := c.Get("tenant").(*ent.Tenant)
+//			path := c.Request().URL.Path
+//			method := c.Request().Method
+//
+//			// 检查用户是否有权限访问该资源
+//			allowed, err := enforcer.Enforce(user.Username, tenant.Name, path, method)
+//			if err != nil {
+//				return echo.NewHTTPError(http.StatusInternalServerError, "授权检查失败")
+//			}
+//			if !allowed {
+//				return echo.NewHTTPError(http.StatusForbidden, "没有权限访问该资源")
+//			}
+//
+//			return next(c)
+//		}
+//	}
+//}

@@ -21,16 +21,16 @@ func (Tenant) Mixin() []ent.Mixin {
 func (Tenant) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").Unique(),
-		field.String("description"),
+		field.String("description").Optional(),
 	}
 }
 
 // Edges of the Tenant.
 func (Tenant) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("permissions", Permission.Type),
 		edge.To("users", User.Type),
 		edge.To("roles", Role.Type),
 		edge.To("resources", Resource.Type),
+		edge.To("permissions", Permission.Type),
 	}
 }

@@ -26,16 +26,14 @@ func (Permission) Fields() []ent.Field {
 		field.String("name").Unique(),
 		field.String("action"),
 		field.String("resource_type"),
-		field.String("description"),
+		field.String("description").Optional(),
 	}
 }
 
 // Edges of the Permission.
 func (Permission) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("tenant", Tenant.Type).
-			Ref("permissions").
-			Unique(),
+		edge.From("tenant", Tenant.Type).Ref("permissions").Unique(),
 		edge.From("roles", Role.Type).Ref("permissions"),
 		// Add more edges here
 		//edge.To("users", User.Type),

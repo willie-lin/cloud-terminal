@@ -51,6 +51,11 @@ function UserInfo({ email }) {
                     {userInfo && <Avatar src={ userInfo.avatar } alt="avatar" variant="rounded" size="xxl"/>}
                 </div>
             </CardHeader>
+            {/*<CardHeader floated={false} className="h-50 flex items-center justify-center">*/}
+            {/*    <div>*/}
+            {/*        {userInfo && <Avatar src={userInfo.avatar} alt="avatar" variant="rounded" size="xxl"/>}*/}
+            {/*    </div>*/}
+            {/*</CardHeader>*/}
             <CardBody className="text-left">
                 <Typography variant="h4" color="blue-gray" className="mb-2">
                     欢迎，{userInfo?.nickname}!
