@@ -15,6 +15,7 @@ type JwtCustomClaims struct {
 	UserID   uuid.UUID `json:"user_id"`
 	Email    string    `json:"email"`
 	Username string    `json:"username"`
+	TenantID uuid.UUID `json:"tenant_id"`
 	jwt.RegisteredClaims
 }
 
@@ -37,11 +38,12 @@ func init() {
 }
 
 // CreateAccessToken 创建JWT访问令牌
-func CreateAccessToken(userID uuid.UUID, email, username string) (string, error) {
+func CreateAccessToken(userID, tenantID uuid.UUID, email, username string) (string, error) {
 	claims := &JwtCustomClaims{
 		UserID:   userID,
 		Email:    email,
 		Username: username,
+		TenantID: tenantID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 		},
@@ -62,11 +64,12 @@ func ValidAccessTokenConfig() echojwt.Config {
 }
 
 // CreateRefreshToken 创建刷新令牌
-func CreateRefreshToken(userID uuid.UUID, email, username string) (string, error) {
+func CreateRefreshToken(userID, tenantID uuid.UUID, email, username string) (string, error) {
 	claims := &JwtCustomClaims{
 		UserID:   userID,
 		Email:    email,
 		Username: username,
+		TenantID: tenantID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 144)),
 		},
@@ -115,7 +118,7 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(*JwtCustomClaims); ok {
 					// 使用刷新令牌的声明生成新的访问令牌
-					newAccessToken, err := CreateAccessToken(claims.UserID, claims.Email, claims.Username)
+					newAccessToken, err := CreateAccessToken(claims.UserID, claims.TenantID, claims.Email, claims.Username)
 					if err != nil {
 						return err
 					}
@@ -135,6 +138,10 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 				// If the RefreshToken is invalid, return an error and prompt the user to log in again
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid refresh token, please log in again")
 			}
+		}
+		// 提取租户ID并设置到请求上下文中
+		if claims, ok := token.Claims.(*JwtCustomClaims); ok && token.Valid {
+			c.Set("tenant_id", claims.TenantID)
 		}
 		return next(c)
 	}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -137,7 +138,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		//fmt.Println(dto.OTP)
-		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
+		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).WithTenant().Only(context.Background())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -181,20 +182,30 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
 
-		// 生成accessToken
-		accessToken, err := utils.CreateAccessToken(us.ID, us.Email, us.Username)
+		// 查询租户信息，通过边查询获取用户关联的租户
+		tenant, err := us.QueryTenant().Only(context.Background())
+		if err != nil {
+			log.Printf("Error finding tenant: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error finding tenant"})
+		}
+
+		fmt.Println("11111111111")
+		fmt.Println(tenant)
+		fmt.Println("22222222222")
+
+		// 生成包含租户信息的accessToken
+		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Username, us.Email)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
-		// 生成RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(us.ID, us.Email, us.Username)
+		// 生成包含租户信息的RefreshToken
+		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, us.Username, us.Email)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})
 		}
 		// 将token保存在HTTP-only的cookie中，并设置相关的属性
-		// 创建一个cookie来保存AccessToken
 		accessTokenCookie := new(http.Cookie)
 		accessTokenCookie.Name = "AccessToken"
 		accessTokenCookie.Value = accessToken
@@ -237,8 +248,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 如果认证成功，设置用户和租户信息到上下文
-		c.Set("user", "alice")
-		c.Set("tenant", "tenant1")
+		c.Set("user", us)
+		c.Set("tenant", tenant)
 
 		//return c.JSON(http.StatusOK, map[string]string{"message": "Login successful"})
 		return c.JSON(http.StatusOK, map[string]string{"message": "Login successful", "refreshToken": refreshToken})
