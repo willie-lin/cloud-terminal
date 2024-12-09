@@ -224,6 +224,8 @@ func main() {
 	e.GET("/ip", handler.RealIP())
 	e.POST("/api/check-email", api.CheckEmail(client))
 	e.POST("/api/check-2FA", handler.Check2FA(client))
+	e.POST("/api/check-tenant-name", handler.CheckTenantName(client))
+
 	e.POST("/api/login", api.LoginUser(client))
 	e.POST("/api/logout", api.LogoutUser())
 	e.POST("/api/register", api.RegisterUser(client))

@@ -10,6 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
@@ -61,14 +63,42 @@ func (rc *ResourceCreate) SetIdentifier(s string) *ResourceCreate {
 	return rc
 }
 
+// SetDescription sets the "description" field.
+func (rc *ResourceCreate) SetDescription(s string) *ResourceCreate {
+	rc.mutation.SetDescription(s)
+	return rc
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (rc *ResourceCreate) SetNillableDescription(s *string) *ResourceCreate {
+	if s != nil {
+		rc.SetDescription(*s)
+	}
+	return rc
+}
+
+// SetID sets the "id" field.
+func (rc *ResourceCreate) SetID(u uuid.UUID) *ResourceCreate {
+	rc.mutation.SetID(u)
+	return rc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (rc *ResourceCreate) SetNillableID(u *uuid.UUID) *ResourceCreate {
+	if u != nil {
+		rc.SetID(*u)
+	}
+	return rc
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (rc *ResourceCreate) SetTenantID(id int) *ResourceCreate {
+func (rc *ResourceCreate) SetTenantID(id uuid.UUID) *ResourceCreate {
 	rc.mutation.SetTenantID(id)
 	return rc
 }
 
 // SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (rc *ResourceCreate) SetNillableTenantID(id *int) *ResourceCreate {
+func (rc *ResourceCreate) SetNillableTenantID(id *uuid.UUID) *ResourceCreate {
 	if id != nil {
 		rc = rc.SetTenantID(*id)
 	}
@@ -78,6 +108,21 @@ func (rc *ResourceCreate) SetNillableTenantID(id *int) *ResourceCreate {
 // SetTenant sets the "tenant" edge to the Tenant entity.
 func (rc *ResourceCreate) SetTenant(t *Tenant) *ResourceCreate {
 	return rc.SetTenantID(t.ID)
+}
+
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
+func (rc *ResourceCreate) AddPermissionIDs(ids ...uuid.UUID) *ResourceCreate {
+	rc.mutation.AddPermissionIDs(ids...)
+	return rc
+}
+
+// AddPermissions adds the "permissions" edges to the Permission entity.
+func (rc *ResourceCreate) AddPermissions(p ...*Permission) *ResourceCreate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return rc.AddPermissionIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -123,6 +168,10 @@ func (rc *ResourceCreate) defaults() {
 		v := resource.DefaultUpdatedAt()
 		rc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := rc.mutation.ID(); !ok {
+		v := resource.DefaultID()
+		rc.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -153,8 +202,13 @@ func (rc *ResourceCreate) sqlSave(ctx context.Context) (*Resource, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	rc.mutation.id = &_node.ID
 	rc.mutation.done = true
 	return _node, nil
@@ -163,8 +217,12 @@ func (rc *ResourceCreate) sqlSave(ctx context.Context) (*Resource, error) {
 func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Resource{config: rc.config}
-		_spec = sqlgraph.NewCreateSpec(resource.Table, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(resource.Table, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID))
 	)
+	if id, ok := rc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
 	if value, ok := rc.mutation.CreatedAt(); ok {
 		_spec.SetField(resource.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -181,6 +239,10 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldIdentifier, field.TypeString, value)
 		_node.Identifier = value
 	}
+	if value, ok := rc.mutation.Description(); ok {
+		_spec.SetField(resource.FieldDescription, field.TypeString, value)
+		_node.Description = value
+	}
 	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -189,13 +251,29 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 			Columns: []string{resource.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.tenant_resources = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.PermissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PermissionsTable,
+			Columns: resource.PermissionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -246,10 +324,6 @@ func (rcb *ResourceCreateBulk) Save(ctx context.Context) ([]*Resource, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

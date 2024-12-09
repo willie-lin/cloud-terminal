@@ -143,6 +143,17 @@ export const checkEmail = async (email) => {
     }
 };
 
+export const checkOrganizationName = async (organization) => {
+    try {
+        const response = await api.post('/api/check-tenant-name', {organization});
+        return response.data.exists;
+    } catch (error) {
+        console.error(error);
+    }
+
+}
+
+
 // api/users getAllUsers
 export const getAllUsers = async () => {
     try {
@@ -339,4 +350,5 @@ export const checkPermissionName = async (data) => {
         console.error(error);
     }
 };
+
 

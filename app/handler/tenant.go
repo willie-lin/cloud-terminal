@@ -89,3 +89,24 @@ func DeleteTenantName(client *ent.Client) echo.HandlerFunc {
 	}
 
 }
+
+func CheckTenantName(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		type TenantDTO struct {
+			Name string `json:"name"`
+		}
+
+		dto := new(TenantDTO)
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding tenant: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+		// 检查tenant是否已经存在
+		exists, err := client.Tenant.Query().Where(tenant.NameEQ(dto.Name)).Exist(context.Background())
+		if err != nil {
+			log.Printf("Error checking tenant: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error checking tenant from database"})
+		}
+		return c.JSON(http.StatusOK, map[string]bool{"exists": exists})
+	}
+}

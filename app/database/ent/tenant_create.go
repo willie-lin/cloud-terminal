@@ -65,19 +65,26 @@ func (tc *TenantCreate) SetDescription(s string) *TenantCreate {
 	return tc
 }
 
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (tc *TenantCreate) AddPermissionIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddPermissionIDs(ids...)
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableDescription(s *string) *TenantCreate {
+	if s != nil {
+		tc.SetDescription(*s)
+	}
 	return tc
 }
 
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (tc *TenantCreate) AddPermissions(p ...*Permission) *TenantCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetID sets the "id" field.
+func (tc *TenantCreate) SetID(u uuid.UUID) *TenantCreate {
+	tc.mutation.SetID(u)
+	return tc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableID(u *uuid.UUID) *TenantCreate {
+	if u != nil {
+		tc.SetID(*u)
 	}
-	return tc.AddPermissionIDs(ids...)
+	return tc
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -111,18 +118,33 @@ func (tc *TenantCreate) AddRoles(r ...*Role) *TenantCreate {
 }
 
 // AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
-func (tc *TenantCreate) AddResourceIDs(ids ...int) *TenantCreate {
+func (tc *TenantCreate) AddResourceIDs(ids ...uuid.UUID) *TenantCreate {
 	tc.mutation.AddResourceIDs(ids...)
 	return tc
 }
 
 // AddResources adds the "resources" edges to the Resource entity.
 func (tc *TenantCreate) AddResources(r ...*Resource) *TenantCreate {
-	ids := make([]int, len(r))
+	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
 	return tc.AddResourceIDs(ids...)
+}
+
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
+func (tc *TenantCreate) AddPermissionIDs(ids ...uuid.UUID) *TenantCreate {
+	tc.mutation.AddPermissionIDs(ids...)
+	return tc
+}
+
+// AddPermissions adds the "permissions" edges to the Permission entity.
+func (tc *TenantCreate) AddPermissions(p ...*Permission) *TenantCreate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return tc.AddPermissionIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -168,6 +190,10 @@ func (tc *TenantCreate) defaults() {
 		v := tenant.DefaultUpdatedAt()
 		tc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := tc.mutation.ID(); !ok {
+		v := tenant.DefaultID()
+		tc.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -180,9 +206,6 @@ func (tc *TenantCreate) check() error {
 	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Tenant.name"`)}
-	}
-	if _, ok := tc.mutation.Description(); !ok {
-		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Tenant.description"`)}
 	}
 	return nil
 }
@@ -198,8 +221,13 @@ func (tc *TenantCreate) sqlSave(ctx context.Context) (*Tenant, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	tc.mutation.id = &_node.ID
 	tc.mutation.done = true
 	return _node, nil
@@ -208,8 +236,12 @@ func (tc *TenantCreate) sqlSave(ctx context.Context) (*Tenant, error) {
 func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Tenant{config: tc.config}
-		_spec = sqlgraph.NewCreateSpec(tenant.Table, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(tenant.Table, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID))
 	)
+	if id, ok := tc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
 	if value, ok := tc.mutation.CreatedAt(); ok {
 		_spec.SetField(tenant.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -225,22 +257,6 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Description(); ok {
 		_spec.SetField(tenant.FieldDescription, field.TypeString, value)
 		_node.Description = value
-	}
-	if nodes := tc.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := tc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -282,7 +298,23 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 			Columns: []string{tenant.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.PermissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -338,10 +370,6 @@ func (tcb *TenantCreateBulk) Save(ctx context.Context) ([]*Tenant, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
@@ -16,7 +17,7 @@ import (
 type Tenant struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -33,32 +34,23 @@ type Tenant struct {
 
 // TenantEdges holds the relations/edges for other nodes in the graph.
 type TenantEdges struct {
-	// Permissions holds the value of the permissions edge.
-	Permissions []*Permission `json:"permissions,omitempty"`
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
 	// Resources holds the value of the resources edge.
 	Resources []*Resource `json:"resources,omitempty"`
+	// Permissions holds the value of the permissions edge.
+	Permissions []*Permission `json:"permissions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [4]bool
 }
 
-// PermissionsOrErr returns the Permissions value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) PermissionsOrErr() ([]*Permission, error) {
-	if e.loadedTypes[0] {
-		return e.Permissions, nil
-	}
-	return nil, &NotLoadedError{edge: "permissions"}
-}
-
 // UsersOrErr returns the Users value or an error if the edge
 // was not loaded in eager-loading.
 func (e TenantEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		return e.Users, nil
 	}
 	return nil, &NotLoadedError{edge: "users"}
@@ -67,7 +59,7 @@ func (e TenantEdges) UsersOrErr() ([]*User, error) {
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e TenantEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -76,10 +68,19 @@ func (e TenantEdges) RolesOrErr() ([]*Role, error) {
 // ResourcesOrErr returns the Resources value or an error if the edge
 // was not loaded in eager-loading.
 func (e TenantEdges) ResourcesOrErr() ([]*Resource, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Resources, nil
 	}
 	return nil, &NotLoadedError{edge: "resources"}
+}
+
+// PermissionsOrErr returns the Permissions value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) PermissionsOrErr() ([]*Permission, error) {
+	if e.loadedTypes[3] {
+		return e.Permissions, nil
+	}
+	return nil, &NotLoadedError{edge: "permissions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -87,12 +88,12 @@ func (*Tenant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tenant.FieldID:
-			values[i] = new(sql.NullInt64)
 		case tenant.FieldName, tenant.FieldDescription:
 			values[i] = new(sql.NullString)
 		case tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case tenant.FieldID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -109,11 +110,11 @@ func (t *Tenant) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case tenant.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				t.ID = *value
 			}
-			t.ID = int(value.Int64)
 		case tenant.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -151,11 +152,6 @@ func (t *Tenant) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
 }
 
-// QueryPermissions queries the "permissions" edge of the Tenant entity.
-func (t *Tenant) QueryPermissions() *PermissionQuery {
-	return NewTenantClient(t.config).QueryPermissions(t)
-}
-
 // QueryUsers queries the "users" edge of the Tenant entity.
 func (t *Tenant) QueryUsers() *UserQuery {
 	return NewTenantClient(t.config).QueryUsers(t)
@@ -169,6 +165,11 @@ func (t *Tenant) QueryRoles() *RoleQuery {
 // QueryResources queries the "resources" edge of the Tenant entity.
 func (t *Tenant) QueryResources() *ResourceQuery {
 	return NewTenantClient(t.config).QueryResources(t)
+}
+
+// QueryPermissions queries the "permissions" edge of the Tenant entity.
+func (t *Tenant) QueryPermissions() *PermissionQuery {
+	return NewTenantClient(t.config).QueryPermissions(t)
 }
 
 // Update returns a builder for updating this Tenant.

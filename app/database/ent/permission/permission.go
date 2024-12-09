@@ -31,6 +31,8 @@ const (
 	EdgeTenant = "tenant"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
 	EdgeRoles = "roles"
+	// EdgeResource holds the string denoting the resource edge name in mutations.
+	EdgeResource = "resource"
 	// Table holds the table name of the permission in the database.
 	Table = "permissions"
 	// TenantTable is the table that holds the tenant relation/edge.
@@ -45,6 +47,11 @@ const (
 	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RolesInverseTable = "roles"
+	// ResourceTable is the table that holds the resource relation/edge. The primary key declared below.
+	ResourceTable = "resource_permissions"
+	// ResourceInverseTable is the table name for the Resource entity.
+	// It exists in this package in order to avoid circular dependency with the "resource" package.
+	ResourceInverseTable = "resources"
 )
 
 // Columns holds all SQL columns for permission fields.
@@ -68,6 +75,9 @@ var (
 	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
 	// primary key for the roles relation (M2M).
 	RolesPrimaryKey = []string{"role_id", "permission_id"}
+	// ResourcePrimaryKey and ResourceColumn2 are the table columns denoting the
+	// primary key for the resource relation (M2M).
+	ResourcePrimaryKey = []string{"resource_id", "permission_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -154,6 +164,20 @@ func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByResourceCount orders the results by resource count.
+func ByResourceCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newResourceStep(), opts...)
+	}
+}
+
+// ByResource orders the results by resource terms.
+func ByResource(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newResourceStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTenantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -166,5 +190,12 @@ func newRolesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RolesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, RolesTable, RolesPrimaryKey...),
+	)
+}
+func newResourceStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ResourceInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ResourceTable, ResourcePrimaryKey...),
 	)
 }

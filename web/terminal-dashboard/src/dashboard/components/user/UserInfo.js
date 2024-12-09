@@ -1,5 +1,5 @@
 // 用户信息组件
-import {useEffect, useState} from "react";
+import { useState } from "react";
 import {
     Avatar, Button,
     Card,
@@ -10,7 +10,7 @@ import {
 import {useCurrentTime, useFetchUserInfo} from "./UserHook";
 import {
     MdEmail,
-    MdOutlineAccessTimeFilled, MdOutlinePhoneAndroid, MdOutlinePhoneIphone, MdSmartphone
+    MdOutlineAccessTimeFilled, MdOutlinePhoneIphone
 } from "react-icons/md";
 import {FaAudioDescription, FaUser} from "react-icons/fa";
 import EditUserInfo from "./EditUserInfo";

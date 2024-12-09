@@ -1,6 +1,6 @@
 // RegisterForm.js
 import React, { useState } from 'react';
-import {checkEmail, register} from "../../../api/api";
+import {checkEmail, checkOrganizationName, register} from "../../../api/api";
 import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
 import {Link} from "react-router-dom";
 
@@ -8,6 +8,8 @@ function RegisterForm({ onRegister }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [organization, setOrganization] = useState('');
+    const [organizationError, setOrganizationError] = useState('')
     const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
     const [passwordError, setPasswordError] = useState(''); // 添加一个新的状态来保存密码错误信息
     const [registerError, setRegisterError] = useState(''); // 添加一个新的状态来保存密码错误信息
@@ -23,11 +25,36 @@ function RegisterForm({ onRegister }) {
         }
     };
 
+
+
+    const handleOrganizationNameChange = async (e) => {
+        const organization = e.target.value;
+        setOrganization(organization)
+        try {
+            const exists = await checkOrganizationName(organization);
+            setOrganizationError(exists ? 'Organization already registered' : '');
+        } catch (error) {
+            console.error(error)
+        }
+    };
+
+    // const handleEmailChange = (e) => setEmail(e.target.value);
+    // const handlePasswordChange = (e) => setPassword(e.target.value);
+    // const handleConfirmPasswordChange = (e) => setConfirmPassword(e.target.value);
+    // const handleOrganizationNameChange = (e) => setOrganizationName(e.target.value);
+
+
     const CryptoJS = require("crypto-js");
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // 验证组织名称是否填写
+        // if (!organization || !password) {
+        //     setRegisterError('请填写所有必填字段');
+        //     setTimeout(() => setRegisterError(''), 1000); // 1秒后清除错误信息
+        //     return;
+        // }
         // 验证电子邮件和密码是否已填写
-        if (!email || !password) {
+        if (!email || !password || !organization) {
             setRegisterError('请填写所有必填字段');
             setTimeout(() => setRegisterError(''), 1000); // 1秒后清除错误信息
             return;
@@ -44,12 +71,16 @@ function RegisterForm({ onRegister }) {
             const data = {
                 email: email,
                 password: hashedPassword,
+                tenant_name: organization, // 将租户名称包含在请求数据中
+
             }
            await register(data); // 使用 register 函数
             // console.log(data);
             onRegister(email);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
+            setRegisterError("Registration failed");
+            setTimeout(() => setRegisterError(''), 1000);
         }
     };
 
@@ -66,7 +97,22 @@ function RegisterForm({ onRegister }) {
                 <form onSubmit={handleSubmit} className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
                     <div className="mb-1 flex flex-col gap-6">
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                            Your email
+                            Your Organization
+                        </Typography>
+                        <Input
+                            variant="outlined"
+                            label="Organization Name"
+                            size="lg"
+                            type="text"
+                            color="lightBlue"
+                            outline={true}
+                            // placeholder="Email"
+                            value={organization}
+                            onChange={ handleOrganizationNameChange }
+                            error={!!organizationError}
+                        />
+                        <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                            Your Email
                         </Typography>
                         <Input
                             variant="outlined"
@@ -80,6 +126,16 @@ function RegisterForm({ onRegister }) {
                             onChange={ handleEmailChange }
                             error={!!emailError}
                         />
+                        {/*{organizationError && (*/}
+                        {/*    <Alert color="red" className="mb-4">*/}
+                        {/*        <div className="flex items-center justify-between">*/}
+                        {/*            <div className="flex items-center">*/}
+                        {/*                <i className="fas fa-info-circle mr-2"></i>*/}
+                        {/*                <span className="text-sm">{organizationError}</span>*/}
+                        {/*            </div>*/}
+                        {/*        </div>*/}
+                        {/*    </Alert>*/}
+                        {/*)}*/}
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                             Password
                         </Typography>

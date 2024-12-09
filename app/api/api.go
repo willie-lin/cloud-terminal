@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"net/http"
@@ -42,8 +43,9 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 
 		username := utils.GenerateUsername()
 		type UserDTO struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
+			Email      string `json:"email"`
+			Password   string `json:"password"`
+			TenantName string `json:"tenant_name"` // 新增租户名称字段
 		}
 
 		dto := new(UserDTO)
@@ -52,17 +54,62 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		// 使用你的方法来创建密码的哈希值
+		// 创建密码的哈希值
 		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
 		if err != nil {
 			log.Printf("Error hashing password: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		us, err := client.User.Create().SetEmail(dto.Email).SetUsername(username).SetPassword(string(hashedPassword)).Save(context.Background())
+		// 创建新租户
+		tenant, err := client.Tenant.Create().SetName(dto.TenantName).Save(context.Background())
+		if err != nil {
+			log.Printf("Error creating tenant: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating tenant in database"})
+		}
+
+		// 创建用户并设置为租户的超级管理员
+		us, err := client.User.Create().
+			SetEmail(dto.Email).
+			SetUsername(username).
+			SetPassword(string(hashedPassword)).
+			SetTenantID(tenant.ID).
+			Save(context.Background())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
+		}
+		// 检查超级管理员角色是否存在，如果不存在则创建
+		superAdminRole, err := client.Role.Query().Where(role.NameEQ("SuperAdmin")).Only(context.Background())
+		if err != nil {
+			if ent.IsNotFound(err) {
+				// 如果超级管理员角色不存在，则创建它
+				superAdminRole, err = client.Role.Create().SetName("SuperAdmin").SetDescription("超级管理员角色").Save(context.Background())
+				if err != nil {
+					log.Printf("Error creating super admin role: %v", err)
+					return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating super admin role"})
+				}
+			} else {
+				log.Printf("Error fetching super admin role: %v", err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching super admin role"})
+			}
+		}
+
+		//// 创建超级管理员角色（假设超级管理员角色已经存在）
+		//superAdminRole, err := client.Role.Query().
+		//	Where(role.NameEQ("SuperAdmin")).
+		//	Only(context.Background())
+		//if err != nil {
+		//	log.Printf("Error fetching super admin role: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching super admin role"})
+		//}
+		// 将用户关联到超级管理员角色
+		err = client.User.UpdateOne(us).
+			AddRoles(superAdminRole).
+			Exec(context.Background())
+		if err != nil {
+			log.Printf("Error assigning super admin role to user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning super admin role"})
 		}
 		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
 	}

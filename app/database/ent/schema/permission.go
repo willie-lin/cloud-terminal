@@ -35,6 +35,7 @@ func (Permission) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("tenant", Tenant.Type).Ref("permissions").Unique(),
 		edge.From("roles", Role.Type).Ref("permissions"),
+		edge.From("resource", Resource.Type).Ref("permissions"), // 新增的资源关系
 		// Add more edges here
 		//edge.To("users", User.Type),
 	}

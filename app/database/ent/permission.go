@@ -34,7 +34,7 @@ type Permission struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PermissionQuery when eager-loading is set.
 	Edges              PermissionEdges `json:"edges"`
-	tenant_permissions *int
+	tenant_permissions *uuid.UUID
 	selectValues       sql.SelectValues
 }
 
@@ -44,9 +44,11 @@ type PermissionEdges struct {
 	Tenant *Tenant `json:"tenant,omitempty"`
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
+	// Resource holds the value of the resource edge.
+	Resource []*Resource `json:"resource,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -69,6 +71,15 @@ func (e PermissionEdges) RolesOrErr() ([]*Role, error) {
 	return nil, &NotLoadedError{edge: "roles"}
 }
 
+// ResourceOrErr returns the Resource value or an error if the edge
+// was not loaded in eager-loading.
+func (e PermissionEdges) ResourceOrErr() ([]*Resource, error) {
+	if e.loadedTypes[2] {
+		return e.Resource, nil
+	}
+	return nil, &NotLoadedError{edge: "resource"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Permission) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -81,7 +92,7 @@ func (*Permission) scanValues(columns []string) ([]any, error) {
 		case permission.FieldID:
 			values[i] = new(uuid.UUID)
 		case permission.ForeignKeys[0]: // tenant_permissions
-			values[i] = new(sql.NullInt64)
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -140,11 +151,11 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 				pe.Description = value.String
 			}
 		case permission.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field tenant_permissions", value)
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_permissions", values[i])
 			} else if value.Valid {
-				pe.tenant_permissions = new(int)
-				*pe.tenant_permissions = int(value.Int64)
+				pe.tenant_permissions = new(uuid.UUID)
+				*pe.tenant_permissions = *value.S.(*uuid.UUID)
 			}
 		default:
 			pe.selectValues.Set(columns[i], values[i])
@@ -167,6 +178,11 @@ func (pe *Permission) QueryTenant() *TenantQuery {
 // QueryRoles queries the "roles" edge of the Permission entity.
 func (pe *Permission) QueryRoles() *RoleQuery {
 	return NewPermissionClient(pe.config).QueryRoles(pe)
+}
+
+// QueryResource queries the "resource" edge of the Permission entity.
+func (pe *Permission) QueryResource() *ResourceQuery {
+	return NewPermissionClient(pe.config).QueryResource(pe)
 }
 
 // Update returns a builder for updating this Permission.

@@ -196,13 +196,13 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (uc *UserCreate) SetTenantID(id int) *UserCreate {
+func (uc *UserCreate) SetTenantID(id uuid.UUID) *UserCreate {
 	uc.mutation.SetTenantID(id)
 	return uc
 }
 
 // SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (uc *UserCreate) SetNillableTenantID(id *int) *UserCreate {
+func (uc *UserCreate) SetNillableTenantID(id *uuid.UUID) *UserCreate {
 	if id != nil {
 		uc = uc.SetTenantID(*id)
 	}
@@ -436,7 +436,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Columns: []string{user.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

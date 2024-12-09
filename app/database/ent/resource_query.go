@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -11,6 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
@@ -19,12 +22,13 @@ import (
 // ResourceQuery is the builder for querying Resource entities.
 type ResourceQuery struct {
 	config
-	ctx        *QueryContext
-	order      []resource.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Resource
-	withTenant *TenantQuery
-	withFKs    bool
+	ctx             *QueryContext
+	order           []resource.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.Resource
+	withTenant      *TenantQuery
+	withPermissions *PermissionQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -83,6 +87,28 @@ func (rq *ResourceQuery) QueryTenant() *TenantQuery {
 	return query
 }
 
+// QueryPermissions chains the current query on the "permissions" edge.
+func (rq *ResourceQuery) QueryPermissions() *PermissionQuery {
+	query := (&PermissionClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resource.Table, resource.FieldID, selector),
+			sqlgraph.To(permission.Table, permission.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, resource.PermissionsTable, resource.PermissionsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Resource entity from the query.
 // Returns a *NotFoundError when no Resource was found.
 func (rq *ResourceQuery) First(ctx context.Context) (*Resource, error) {
@@ -107,8 +133,8 @@ func (rq *ResourceQuery) FirstX(ctx context.Context) *Resource {
 
 // FirstID returns the first Resource ID from the query.
 // Returns a *NotFoundError when no Resource ID was found.
-func (rq *ResourceQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (rq *ResourceQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = rq.Limit(1).IDs(setContextOp(ctx, rq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -120,7 +146,7 @@ func (rq *ResourceQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (rq *ResourceQuery) FirstIDX(ctx context.Context) int {
+func (rq *ResourceQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := rq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +184,8 @@ func (rq *ResourceQuery) OnlyX(ctx context.Context) *Resource {
 // OnlyID is like Only, but returns the only Resource ID in the query.
 // Returns a *NotSingularError when more than one Resource ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (rq *ResourceQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (rq *ResourceQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = rq.Limit(2).IDs(setContextOp(ctx, rq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -175,7 +201,7 @@ func (rq *ResourceQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (rq *ResourceQuery) OnlyIDX(ctx context.Context) int {
+func (rq *ResourceQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := rq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +229,7 @@ func (rq *ResourceQuery) AllX(ctx context.Context) []*Resource {
 }
 
 // IDs executes the query and returns a list of Resource IDs.
-func (rq *ResourceQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (rq *ResourceQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if rq.ctx.Unique == nil && rq.path != nil {
 		rq.Unique(true)
 	}
@@ -215,7 +241,7 @@ func (rq *ResourceQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (rq *ResourceQuery) IDsX(ctx context.Context) []int {
+func (rq *ResourceQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := rq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -270,12 +296,13 @@ func (rq *ResourceQuery) Clone() *ResourceQuery {
 		return nil
 	}
 	return &ResourceQuery{
-		config:     rq.config,
-		ctx:        rq.ctx.Clone(),
-		order:      append([]resource.OrderOption{}, rq.order...),
-		inters:     append([]Interceptor{}, rq.inters...),
-		predicates: append([]predicate.Resource{}, rq.predicates...),
-		withTenant: rq.withTenant.Clone(),
+		config:          rq.config,
+		ctx:             rq.ctx.Clone(),
+		order:           append([]resource.OrderOption{}, rq.order...),
+		inters:          append([]Interceptor{}, rq.inters...),
+		predicates:      append([]predicate.Resource{}, rq.predicates...),
+		withTenant:      rq.withTenant.Clone(),
+		withPermissions: rq.withPermissions.Clone(),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
@@ -290,6 +317,17 @@ func (rq *ResourceQuery) WithTenant(opts ...func(*TenantQuery)) *ResourceQuery {
 		opt(query)
 	}
 	rq.withTenant = query
+	return rq
+}
+
+// WithPermissions tells the query-builder to eager-load the nodes that are connected to
+// the "permissions" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ResourceQuery) WithPermissions(opts ...func(*PermissionQuery)) *ResourceQuery {
+	query := (&PermissionClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withPermissions = query
 	return rq
 }
 
@@ -372,8 +410,9 @@ func (rq *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 		nodes       = []*Resource{}
 		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			rq.withTenant != nil,
+			rq.withPermissions != nil,
 		}
 	)
 	if rq.withTenant != nil {
@@ -406,12 +445,19 @@ func (rq *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 			return nil, err
 		}
 	}
+	if query := rq.withPermissions; query != nil {
+		if err := rq.loadPermissions(ctx, query, nodes,
+			func(n *Resource) { n.Edges.Permissions = []*Permission{} },
+			func(n *Resource, e *Permission) { n.Edges.Permissions = append(n.Edges.Permissions, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
 func (rq *ResourceQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Tenant)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*Resource)
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Resource)
 	for i := range nodes {
 		if nodes[i].tenant_resources == nil {
 			continue
@@ -441,6 +487,67 @@ func (rq *ResourceQuery) loadTenant(ctx context.Context, query *TenantQuery, nod
 	}
 	return nil
 }
+func (rq *ResourceQuery) loadPermissions(ctx context.Context, query *PermissionQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Permission)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Resource)
+	nids := make(map[uuid.UUID]map[*Resource]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(resource.PermissionsTable)
+		s.Join(joinT).On(s.C(permission.FieldID), joinT.C(resource.PermissionsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(resource.PermissionsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(resource.PermissionsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Resource]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Permission](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "permissions" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
 
 func (rq *ResourceQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := rq.querySpec()
@@ -452,7 +559,7 @@ func (rq *ResourceQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (rq *ResourceQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(resource.Table, resource.Columns, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(resource.Table, resource.Columns, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID))
 	_spec.From = rq.sql
 	if unique := rq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

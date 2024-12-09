@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
@@ -75,6 +76,14 @@ func (pc *PermissionCreate) SetDescription(s string) *PermissionCreate {
 	return pc
 }
 
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (pc *PermissionCreate) SetNillableDescription(s *string) *PermissionCreate {
+	if s != nil {
+		pc.SetDescription(*s)
+	}
+	return pc
+}
+
 // SetID sets the "id" field.
 func (pc *PermissionCreate) SetID(u uuid.UUID) *PermissionCreate {
 	pc.mutation.SetID(u)
@@ -90,13 +99,13 @@ func (pc *PermissionCreate) SetNillableID(u *uuid.UUID) *PermissionCreate {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (pc *PermissionCreate) SetTenantID(id int) *PermissionCreate {
+func (pc *PermissionCreate) SetTenantID(id uuid.UUID) *PermissionCreate {
 	pc.mutation.SetTenantID(id)
 	return pc
 }
 
 // SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (pc *PermissionCreate) SetNillableTenantID(id *int) *PermissionCreate {
+func (pc *PermissionCreate) SetNillableTenantID(id *uuid.UUID) *PermissionCreate {
 	if id != nil {
 		pc = pc.SetTenantID(*id)
 	}
@@ -121,6 +130,21 @@ func (pc *PermissionCreate) AddRoles(r ...*Role) *PermissionCreate {
 		ids[i] = r[i].ID
 	}
 	return pc.AddRoleIDs(ids...)
+}
+
+// AddResourceIDs adds the "resource" edge to the Resource entity by IDs.
+func (pc *PermissionCreate) AddResourceIDs(ids ...uuid.UUID) *PermissionCreate {
+	pc.mutation.AddResourceIDs(ids...)
+	return pc
+}
+
+// AddResource adds the "resource" edges to the Resource entity.
+func (pc *PermissionCreate) AddResource(r ...*Resource) *PermissionCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return pc.AddResourceIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
@@ -189,9 +213,6 @@ func (pc *PermissionCreate) check() error {
 	if _, ok := pc.mutation.ResourceType(); !ok {
 		return &ValidationError{Name: "resource_type", err: errors.New(`ent: missing required field "Permission.resource_type"`)}
 	}
-	if _, ok := pc.mutation.Description(); !ok {
-		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Permission.description"`)}
-	}
 	return nil
 }
 
@@ -259,7 +280,7 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 			Columns: []string{permission.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -277,6 +298,22 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.ResourceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   permission.ResourceTable,
+			Columns: permission.ResourcePrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

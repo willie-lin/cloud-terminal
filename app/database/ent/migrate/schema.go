@@ -33,8 +33,8 @@ var (
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "action", Type: field.TypeString},
 		{Name: "resource_type", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString},
-		{Name: "tenant_permissions", Type: field.TypeInt, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_permissions", Type: field.TypeUUID, Nullable: true},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
 	PermissionsTable = &schema.Table{
@@ -52,12 +52,14 @@ var (
 	}
 	// ResourcesColumns holds the columns for the "resources" table.
 	ResourcesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "type", Type: field.TypeString},
 		{Name: "identifier", Type: field.TypeString},
-		{Name: "tenant_resources", Type: field.TypeInt, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "role_resources", Type: field.TypeUUID, Nullable: true},
+		{Name: "tenant_resources", Type: field.TypeUUID, Nullable: true},
 	}
 	// ResourcesTable holds the schema information for the "resources" table.
 	ResourcesTable = &schema.Table{
@@ -66,8 +68,14 @@ var (
 		PrimaryKey: []*schema.Column{ResourcesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
+				Symbol:     "resources_roles_resources",
+				Columns:    []*schema.Column{ResourcesColumns[6]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
 				Symbol:     "resources_tenants_resources",
-				Columns:    []*schema.Column{ResourcesColumns[5]},
+				Columns:    []*schema.Column{ResourcesColumns[7]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -79,8 +87,8 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
-		{Name: "description", Type: field.TypeString},
-		{Name: "tenant_roles", Type: field.TypeInt, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_roles", Type: field.TypeUUID, Nullable: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
@@ -98,11 +106,11 @@ var (
 	}
 	// TenantsColumns holds the columns for the "tenants" table.
 	TenantsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
-		{Name: "description", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
 	}
 	// TenantsTable holds the schema information for the "tenants" table.
 	TenantsTable = &schema.Table{
@@ -126,7 +134,7 @@ var (
 		{Name: "online", Type: field.TypeBool, Default: true},
 		{Name: "enable_type", Type: field.TypeBool, Default: true},
 		{Name: "last_login_time", Type: field.TypeTime},
-		{Name: "tenant_users", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_users", Type: field.TypeUUID, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -146,6 +154,31 @@ var (
 				Name:    "user_username_email",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[6], UsersColumns[8]},
+			},
+		},
+	}
+	// ResourcePermissionsColumns holds the columns for the "resource_permissions" table.
+	ResourcePermissionsColumns = []*schema.Column{
+		{Name: "resource_id", Type: field.TypeUUID},
+		{Name: "permission_id", Type: field.TypeUUID},
+	}
+	// ResourcePermissionsTable holds the schema information for the "resource_permissions" table.
+	ResourcePermissionsTable = &schema.Table{
+		Name:       "resource_permissions",
+		Columns:    ResourcePermissionsColumns,
+		PrimaryKey: []*schema.Column{ResourcePermissionsColumns[0], ResourcePermissionsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resource_permissions_resource_id",
+				Columns:    []*schema.Column{ResourcePermissionsColumns[0]},
+				RefColumns: []*schema.Column{ResourcesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "resource_permissions_permission_id",
+				Columns:    []*schema.Column{ResourcePermissionsColumns[1]},
+				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -207,6 +240,7 @@ var (
 		RolesTable,
 		TenantsTable,
 		UsersTable,
+		ResourcePermissionsTable,
 		RolePermissionsTable,
 		UserRolesTable,
 	}
@@ -217,9 +251,12 @@ func init() {
 		Table: "assets",
 	}
 	PermissionsTable.ForeignKeys[0].RefTable = TenantsTable
-	ResourcesTable.ForeignKeys[0].RefTable = TenantsTable
+	ResourcesTable.ForeignKeys[0].RefTable = RolesTable
+	ResourcesTable.ForeignKeys[1].RefTable = TenantsTable
 	RolesTable.ForeignKeys[0].RefTable = TenantsTable
 	UsersTable.ForeignKeys[0].RefTable = TenantsTable
+	ResourcePermissionsTable.ForeignKeys[0].RefTable = ResourcesTable
+	ResourcePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable

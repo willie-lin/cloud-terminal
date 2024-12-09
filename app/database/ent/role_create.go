@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
@@ -64,6 +65,14 @@ func (rc *RoleCreate) SetDescription(s string) *RoleCreate {
 	return rc
 }
 
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (rc *RoleCreate) SetNillableDescription(s *string) *RoleCreate {
+	if s != nil {
+		rc.SetDescription(*s)
+	}
+	return rc
+}
+
 // SetID sets the "id" field.
 func (rc *RoleCreate) SetID(u uuid.UUID) *RoleCreate {
 	rc.mutation.SetID(u)
@@ -79,13 +88,13 @@ func (rc *RoleCreate) SetNillableID(u *uuid.UUID) *RoleCreate {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (rc *RoleCreate) SetTenantID(id int) *RoleCreate {
+func (rc *RoleCreate) SetTenantID(id uuid.UUID) *RoleCreate {
 	rc.mutation.SetTenantID(id)
 	return rc
 }
 
 // SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (rc *RoleCreate) SetNillableTenantID(id *int) *RoleCreate {
+func (rc *RoleCreate) SetNillableTenantID(id *uuid.UUID) *RoleCreate {
 	if id != nil {
 		rc = rc.SetTenantID(*id)
 	}
@@ -125,6 +134,21 @@ func (rc *RoleCreate) AddPermissions(p ...*Permission) *RoleCreate {
 		ids[i] = p[i].ID
 	}
 	return rc.AddPermissionIDs(ids...)
+}
+
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (rc *RoleCreate) AddResourceIDs(ids ...uuid.UUID) *RoleCreate {
+	rc.mutation.AddResourceIDs(ids...)
+	return rc
+}
+
+// AddResources adds the "resources" edges to the Resource entity.
+func (rc *RoleCreate) AddResources(r ...*Resource) *RoleCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return rc.AddResourceIDs(ids...)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -187,9 +211,6 @@ func (rc *RoleCreate) check() error {
 	if _, ok := rc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Role.name"`)}
 	}
-	if _, ok := rc.mutation.Description(); !ok {
-		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Role.description"`)}
-	}
 	return nil
 }
 
@@ -249,7 +270,7 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Columns: []string{role.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -283,6 +304,22 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.ResourcesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.ResourcesTable,
+			Columns: []string{role.ResourcesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

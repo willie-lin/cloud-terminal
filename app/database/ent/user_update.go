@@ -222,13 +222,13 @@ func (uu *UserUpdate) SetNillableLastLoginTime(t *time.Time) *UserUpdate {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (uu *UserUpdate) SetTenantID(id int) *UserUpdate {
+func (uu *UserUpdate) SetTenantID(id uuid.UUID) *UserUpdate {
 	uu.mutation.SetTenantID(id)
 	return uu
 }
 
 // SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (uu *UserUpdate) SetNillableTenantID(id *int) *UserUpdate {
+func (uu *UserUpdate) SetNillableTenantID(id *uuid.UUID) *UserUpdate {
 	if id != nil {
 		uu = uu.SetTenantID(*id)
 	}
@@ -424,7 +424,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{user.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -437,7 +437,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{user.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -701,13 +701,13 @@ func (uuo *UserUpdateOne) SetNillableLastLoginTime(t *time.Time) *UserUpdateOne 
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (uuo *UserUpdateOne) SetTenantID(id int) *UserUpdateOne {
+func (uuo *UserUpdateOne) SetTenantID(id uuid.UUID) *UserUpdateOne {
 	uuo.mutation.SetTenantID(id)
 	return uuo
 }
 
 // SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableTenantID(id *int) *UserUpdateOne {
+func (uuo *UserUpdateOne) SetNillableTenantID(id *uuid.UUID) *UserUpdateOne {
 	if id != nil {
 		uuo = uuo.SetTenantID(*id)
 	}
@@ -933,7 +933,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: []string{user.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -946,7 +946,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: []string{user.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
