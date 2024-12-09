@@ -44,11 +44,6 @@ const versionFile = "/app/VERSION"
 // @BasePath /v2
 func main() {
 
-	//utils.InitLogger()
-	//log, _ := zap.NewDevelopment()
-	//log, _ := zap.NewProduction()
-	//log := zap.NewProductionEncoderConfig()
-
 	e := echo.New()
 
 	// Enable tracing middleware
@@ -226,11 +221,6 @@ func main() {
 	e.GET("/ip", handler.RealIP())
 	e.POST("/api/check-email", api.CheckEmail(client))
 	e.POST("/api/check-2FA", handler.Check2FA(client))
-	//e.POST("/api/check-2FA", handler.Check2FA(client), middleware.CSRFWithConfig(middleware.CSRFConfig{
-	//	Skipper: func(c echo.Context) bool {
-	//		return true // 跳过CSRF检查
-	//	},
-	//}))
 	e.POST("/api/login", api.LoginUser(client))
 	e.POST("/api/logout", api.LogoutUser())
 	e.POST("/api/register", api.RegisterUser(client))
@@ -286,8 +276,5 @@ func main() {
 	}()
 
 	e.Logger.Fatal(e.StartTLS(":443", "./cert/cert.pem", "./cert/key.pem"))
-
-	//e.Logger.Fatal(e.StartAutoTLS(":443"))
-	//e.Logger.Fatal(e.Start(":2023"))
 
 }
