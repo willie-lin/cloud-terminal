@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -188,10 +187,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error finding tenant: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error finding tenant"})
 		}
-
-		fmt.Println("11111111111")
-		fmt.Println(tenant)
-		fmt.Println("22222222222")
 
 		// 生成包含租户信息的accessToken
 		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Username, us.Email)

@@ -3,10 +3,12 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"net/http"
 )
 
@@ -40,6 +42,19 @@ func CheckRoleName(client *ent.Client) echo.HandlerFunc {
 func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		roles, err := client.Role.Query().All(context.Background())
+		if err != nil {
+			log.Printf("Error querying roles: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
+		}
+		return c.JSON(http.StatusOK, roles)
+	}
+}
+
+func GetAllRolesByUser(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// 从请求上下文中获取租户ID
+		userID := c.Get("user_id").(uuid.UUID)
+		roles, err := client.Role.Query().Where(role.HasUsersWith(user.ID(userID))).All(context.Background())
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})

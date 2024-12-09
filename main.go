@@ -114,15 +114,12 @@ func main() {
 
 	// 使用 CSRF 中间件
 	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-		TokenLookup:  "header:X-CSRF-Token,cookie:_csrf,form:_csrf,query:_csrf",
-		CookieName:   "_csrf",
-		CookiePath:   "/",
-		CookieDomain: "localhost",
-		//CookieDomain: "",
-		CookieSecure: true,
-		//CookieSecure:   false,
+		TokenLookup:    "header:X-CSRF-Token,cookie:_csrf,form:_csrf,query:_csrf",
+		CookieName:     "_csrf",
+		CookiePath:     "/",
+		CookieDomain:   "localhost",
+		CookieSecure:   true,
 		CookieHTTPOnly: true,
-		//CookieSameSite: http.SameSiteLaxMode,
 		CookieSameSite: http.SameSiteNoneMode,
 		CookieMaxAge:   3600,
 	}))
@@ -255,7 +252,8 @@ func main() {
 	r.POST("/delete-user", handler.DeleteUserByUsername(client))
 
 	// role
-	r.GET("/roles", handler.GetAllRoles(client))
+	//r.GET("/roles", handler.GetAllRoles(client))
+	r.GET("/roles", handler.GetAllRolesByUser(client))
 	r.POST("/add-role", handler.CreateRole(client), middlewarers.Authorize(enforcer))
 	r.POST("/delete-role", handler.DeleteRoleByName(client), middlewarers.Authorize(enforcer))
 	r.POST("/check-role-name", handler.CheckRoleName(client))

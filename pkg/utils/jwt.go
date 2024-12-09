@@ -141,6 +141,7 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		// 提取租户ID并设置到请求上下文中
 		if claims, ok := token.Claims.(*JwtCustomClaims); ok && token.Valid {
+			c.Set("user_id", claims.UserID)
 			c.Set("tenant_id", claims.TenantID)
 		}
 		return next(c)
