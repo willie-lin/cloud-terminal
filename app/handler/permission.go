@@ -3,10 +3,12 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"net/http"
 )
 
@@ -40,6 +42,20 @@ func GetAllPermissions(client *ent.Client) echo.HandlerFunc {
 		if err != nil {
 			log.Printf("Error querying permissions: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying permissions from database"})
+		}
+		return c.JSON(http.StatusOK, permissions)
+	}
+}
+
+func GetAllPermissionsByTenant(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// 从请求上下文中获取租户ID
+		//userID := c.Get("user_id").(uuid.UUID)
+		tenantID := c.Get("tenant_id").(uuid.UUID)
+		permissions, err := client.Permission.Query().Where(permission.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
+		if err != nil {
+			log.Printf("Error querying roles: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
 		}
 		return c.JSON(http.StatusOK, permissions)
 	}

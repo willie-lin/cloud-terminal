@@ -44,12 +44,16 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
+		// 从请求上下文中获取租户ID
+		tenantID := c.Get("tenant_id").(uuid.UUID)
+
 		us, err := client.User.Create().
 			SetEmail(dto.Email).
 			SetUsername(username).
 			SetPassword(string(hashedPassword)).
 			SetOnline(dto.Online).
 			SetEnableType(dto.EnableType).
+			SetTenantID(tenantID). // 关联到租户
 			Save(context.Background())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
@@ -77,7 +81,7 @@ func GetALLUserByTenant(client *ent.Client) echo.HandlerFunc {
 		// 从请求上下文中获取租户ID
 		tenantID := c.Get("tenant_id").(uuid.UUID)
 
-		users, err := client.User.Query().Where(user.HasTenantWith(tenant.ID(tenantID))).All(context.Background())
+		users, err := client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
 		if err != nil {
 			log.Printf("Error querying users: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})

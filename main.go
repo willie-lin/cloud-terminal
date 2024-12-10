@@ -253,13 +253,15 @@ func main() {
 
 	// role
 	//r.GET("/roles", handler.GetAllRoles(client))
-	r.GET("/roles", handler.GetAllRolesByUser(client))
-	r.POST("/add-role", handler.CreateRole(client), middlewarers.Authorize(enforcer))
+	r.GET("/roles", handler.GetAllRolesByTenant(client))
+	//r.POST("/add-role", handler.CreateRole(client), middlewarers.Authorize(enforcer))
+	r.POST("/add-role", handler.CreateRole(client))
 	r.POST("/delete-role", handler.DeleteRoleByName(client), middlewarers.Authorize(enforcer))
 	r.POST("/check-role-name", handler.CheckRoleName(client))
 
 	// permission
-	r.GET("/permissions", handler.GetAllPermissions(client))
+	//r.GET("/permissions", handler.GetAllPermissions(client))
+	r.GET("/permissions", handler.GetAllPermissionsByTenant(client))
 	r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
 	r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewarers.Authorize(enforcer))
 	r.POST("/check-permission-name", handler.CheckPermissionName(client))

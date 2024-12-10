@@ -8,14 +8,9 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"net/http"
 )
-
-type RoleDTO struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
 
 func CheckRoleName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -50,11 +45,13 @@ func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-func GetAllRolesByUser(client *ent.Client) echo.HandlerFunc {
+func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 从请求上下文中获取租户ID
-		userID := c.Get("user_id").(uuid.UUID)
-		roles, err := client.Role.Query().Where(role.HasUsersWith(user.ID(userID))).All(context.Background())
+		//userID := c.Get("user_id").(uuid.UUID)
+		tenantID := c.Get("tenant_id").(uuid.UUID)
+
+		roles, err := client.Role.Query().Where(role.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
@@ -63,34 +60,83 @@ func GetAllRolesByUser(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
+//// CreateRole 创建一个新角色
+//func CreateRole(client *ent.Client) echo.HandlerFunc {
+//	return func(c echo.Context) error {
+//		type RoleDTO struct {
+//			Name        string `json:"name"`
+//			Description string `json:"description"`
+//			TenantID    string `json:"tenant_id"` // 关联租户的ID
+//		}
+//
+//		dto := new(RoleDTO)
+//		if err := c.Bind(&dto); err != nil {
+//			log.Printf("Error binding role: %v", err)
+//			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+//		}
+//
+//		tenantID, err := uuid.Parse(dto.TenantID)
+//		if err != nil {
+//			log.Printf("Invalid tenant ID: %v", err)
+//			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid tenant ID"})
+//		}
+//
+//		role, err := client.Role.Create().
+//			SetName(dto.Name).
+//			SetDescription(dto.Description).
+//			SetTenantID(tenantID).
+//			Save(context.Background())
+//		if err != nil {
+//			log.Printf("Error creating role: %v", err)
+//			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating role in database"})
+//		}
+//
+//		return c.JSON(http.StatusCreated, map[string]string{"roleID": role.ID.String()})
+//	}
+//}
+
 // CreateRole 创建role
 func CreateRole(client *ent.Client) echo.HandlerFunc {
-	return func(c echo.Context) (err error) {
+	return func(c echo.Context) error {
+		type RoleDTO struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			TenantID    string `json:"tenant_id"` // 新增租户ID字段
+		}
 
-		var roles []*RoleDTO
-
+		var roles []RoleDTO
 		if err := c.Bind(&roles); err != nil {
 			log.Printf("Error binding role: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
 		for _, dto := range roles {
-			ro, err := client.Role.Create().
+			// 从请求上下文中获取租户ID
+			tenantID := c.Get("tenant_id").(uuid.UUID)
+
+			role, err := client.Role.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
+				SetTenantID(tenantID). // 关联到租户
 				Save(context.Background())
 			if err != nil {
 				log.Printf("Error creating role: %v", err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create role"})
 			}
-			fmt.Printf("Created role with ID: %s\n", ro.ID)
+			fmt.Printf("Created role with ID: %s\n", role.ID)
+			return c.JSON(http.StatusCreated, role)
 		}
+
 		return c.JSON(http.StatusCreated, map[string]string{"message": "Roles created successfully"})
 	}
 }
 
 func DeleteRoleByName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		type RoleDTO struct {
+			Name string `json:"name"`
+		}
+
 		dto := new(RoleDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding role: %v", err)

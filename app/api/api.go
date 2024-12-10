@@ -84,7 +84,11 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		if err != nil {
 			if ent.IsNotFound(err) {
 				// 如果超级管理员角色不存在，则创建它
-				superAdminRole, err = client.Role.Create().SetName("SuperAdmin").SetDescription("超级管理员角色").Save(context.Background())
+				superAdminRole, err = client.Role.Create().
+					SetName("SuperAdmin").
+					SetDescription("超级管理员角色").
+					SetTenant(tenant). // 关联到租户
+					Save(context.Background())
 				if err != nil {
 					log.Printf("Error creating super admin role: %v", err)
 					return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating super admin role"})
@@ -95,15 +99,6 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			}
 		}
 
-		//// 创建超级管理员角色（假设超级管理员角色已经存在）
-		//superAdminRole, err := client.Role.Query().
-		//	Where(role.NameEQ("SuperAdmin")).
-		//	Only(context.Background())
-		//if err != nil {
-		//	log.Printf("Error fetching super admin role: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching super admin role"})
-		//}
-		// 将用户关联到超级管理员角色
 		err = client.User.UpdateOne(us).
 			AddRoles(superAdminRole).
 			Exec(context.Background())

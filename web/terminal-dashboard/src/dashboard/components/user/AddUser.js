@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {Alert, Button, Card, CardBody, CardHeader, Input, Select, Typography, Option} from "@material-tailwind/react";
 import {addUser, checkEmail} from "../../../api/api";
 import CryptoJS from "crypto-js";
+import {useNavigate} from "react-router-dom";
 
 function AddUserForm({ onAddUser, onClose }) {
     const [addUserError, setAddUserError] = useState('');
@@ -10,6 +11,8 @@ function AddUserForm({ onAddUser, onClose }) {
     const [email, setEmail] = useState('');
     const [enableType, setEnableType] = useState('');
     const [onlineStatus, setOnlineStatus] = useState('');
+
+    const navigate = useNavigate();
     const handleEmailChange = async (e) => {
         const email = e.target.value;
         setEmail(email);
@@ -22,7 +25,7 @@ function AddUserForm({ onAddUser, onClose }) {
     };
 
 
-    const CryptoJS = require("crypto-js");
+    // const CryptoJS = require("crypto-js");
     const handleSubmit = async (e) => {
         e.preventDefault();
         // 验证电子邮件和密码是否已填写
@@ -43,6 +46,7 @@ function AddUserForm({ onAddUser, onClose }) {
             await addUser(data); // 使用 register 函数
             // console.log(datas);
             onAddUser(email);
+            navigate("/")
         } catch (error) {
             console.error(error);
         }
