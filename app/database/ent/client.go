@@ -16,7 +16,6 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/asset"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
@@ -29,8 +28,6 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// Asset is the client for interacting with the Asset builders.
-	Asset *AssetClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// Resource is the client for interacting with the Resource builders.
@@ -52,7 +49,6 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
-	c.Asset = NewAssetClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
 	c.Resource = NewResourceClient(c.config)
 	c.Role = NewRoleClient(c.config)
@@ -150,7 +146,6 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:        ctx,
 		config:     cfg,
-		Asset:      NewAssetClient(cfg),
 		Permission: NewPermissionClient(cfg),
 		Resource:   NewResourceClient(cfg),
 		Role:       NewRoleClient(cfg),
@@ -175,7 +170,6 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:        ctx,
 		config:     cfg,
-		Asset:      NewAssetClient(cfg),
 		Permission: NewPermissionClient(cfg),
 		Resource:   NewResourceClient(cfg),
 		Role:       NewRoleClient(cfg),
@@ -187,7 +181,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Asset.
+//		Permission.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -209,28 +203,26 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	for _, n := range []interface{ Use(...Hook) }{
-		c.Asset, c.Permission, c.Resource, c.Role, c.Tenant, c.User,
-	} {
-		n.Use(hooks...)
-	}
+	c.Permission.Use(hooks...)
+	c.Resource.Use(hooks...)
+	c.Role.Use(hooks...)
+	c.Tenant.Use(hooks...)
+	c.User.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Asset, c.Permission, c.Resource, c.Role, c.Tenant, c.User,
-	} {
-		n.Intercept(interceptors...)
-	}
+	c.Permission.Intercept(interceptors...)
+	c.Resource.Intercept(interceptors...)
+	c.Role.Intercept(interceptors...)
+	c.Tenant.Intercept(interceptors...)
+	c.User.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
-	case *AssetMutation:
-		return c.Asset.mutate(ctx, m)
 	case *PermissionMutation:
 		return c.Permission.mutate(ctx, m)
 	case *ResourceMutation:
@@ -243,139 +235,6 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
-	}
-}
-
-// AssetClient is a client for the Asset schema.
-type AssetClient struct {
-	config
-}
-
-// NewAssetClient returns a client for the Asset from the given config.
-func NewAssetClient(c config) *AssetClient {
-	return &AssetClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `asset.Hooks(f(g(h())))`.
-func (c *AssetClient) Use(hooks ...Hook) {
-	c.hooks.Asset = append(c.hooks.Asset, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `asset.Intercept(f(g(h())))`.
-func (c *AssetClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Asset = append(c.inters.Asset, interceptors...)
-}
-
-// Create returns a builder for creating a Asset entity.
-func (c *AssetClient) Create() *AssetCreate {
-	mutation := newAssetMutation(c.config, OpCreate)
-	return &AssetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Asset entities.
-func (c *AssetClient) CreateBulk(builders ...*AssetCreate) *AssetCreateBulk {
-	return &AssetCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *AssetClient) MapCreateBulk(slice any, setFunc func(*AssetCreate, int)) *AssetCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &AssetCreateBulk{err: fmt.Errorf("calling to AssetClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*AssetCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &AssetCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Asset.
-func (c *AssetClient) Update() *AssetUpdate {
-	mutation := newAssetMutation(c.config, OpUpdate)
-	return &AssetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *AssetClient) UpdateOne(a *Asset) *AssetUpdateOne {
-	mutation := newAssetMutation(c.config, OpUpdateOne, withAsset(a))
-	return &AssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *AssetClient) UpdateOneID(id uuid.UUID) *AssetUpdateOne {
-	mutation := newAssetMutation(c.config, OpUpdateOne, withAssetID(id))
-	return &AssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Asset.
-func (c *AssetClient) Delete() *AssetDelete {
-	mutation := newAssetMutation(c.config, OpDelete)
-	return &AssetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *AssetClient) DeleteOne(a *Asset) *AssetDeleteOne {
-	return c.DeleteOneID(a.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *AssetClient) DeleteOneID(id uuid.UUID) *AssetDeleteOne {
-	builder := c.Delete().Where(asset.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &AssetDeleteOne{builder}
-}
-
-// Query returns a query builder for Asset.
-func (c *AssetClient) Query() *AssetQuery {
-	return &AssetQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeAsset},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Asset entity by its id.
-func (c *AssetClient) Get(ctx context.Context, id uuid.UUID) (*Asset, error) {
-	return c.Query().Where(asset.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *AssetClient) GetX(ctx context.Context, id uuid.UUID) *Asset {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *AssetClient) Hooks() []Hook {
-	return c.hooks.Asset
-}
-
-// Interceptors returns the client interceptors.
-func (c *AssetClient) Interceptors() []Interceptor {
-	return c.inters.Asset
-}
-
-func (c *AssetClient) mutate(ctx context.Context, m *AssetMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&AssetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&AssetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&AssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&AssetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Asset mutation op: %q", m.Op())
 	}
 }
 
@@ -537,7 +396,8 @@ func (c *PermissionClient) QueryResource(pe *Permission) *ResourceQuery {
 
 // Hooks returns the client hooks.
 func (c *PermissionClient) Hooks() []Hook {
-	return c.hooks.Permission
+	hooks := c.hooks.Permission
+	return append(hooks[:len(hooks):len(hooks)], permission.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -702,7 +562,8 @@ func (c *ResourceClient) QueryPermissions(r *Resource) *PermissionQuery {
 
 // Hooks returns the client hooks.
 func (c *ResourceClient) Hooks() []Hook {
-	return c.hooks.Resource
+	hooks := c.hooks.Resource
+	return append(hooks[:len(hooks):len(hooks)], resource.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -899,7 +760,8 @@ func (c *RoleClient) QueryResources(r *Role) *ResourceQuery {
 
 // Hooks returns the client hooks.
 func (c *RoleClient) Hooks() []Hook {
-	return c.hooks.Role
+	hooks := c.hooks.Role
+	return append(hooks[:len(hooks):len(hooks)], role.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -1096,7 +958,8 @@ func (c *TenantClient) QueryPermissions(t *Tenant) *PermissionQuery {
 
 // Hooks returns the client hooks.
 func (c *TenantClient) Hooks() []Hook {
-	return c.hooks.Tenant
+	hooks := c.hooks.Tenant
+	return append(hooks[:len(hooks):len(hooks)], tenant.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -1261,7 +1124,8 @@ func (c *UserClient) QueryRoles(u *User) *RoleQuery {
 
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
-	return c.hooks.User
+	hooks := c.hooks.User
+	return append(hooks[:len(hooks):len(hooks)], user.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -1287,9 +1151,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Asset, Permission, Resource, Role, Tenant, User []ent.Hook
+		Permission, Resource, Role, Tenant, User []ent.Hook
 	}
 	inters struct {
-		Asset, Permission, Resource, Role, Tenant, User []ent.Interceptor
+		Permission, Resource, Role, Tenant, User []ent.Interceptor
 	}
 )

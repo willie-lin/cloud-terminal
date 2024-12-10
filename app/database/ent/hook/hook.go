@@ -9,18 +9,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 )
 
-// The AssetFunc type is an adapter to allow the use of ordinary
-// function as Asset mutator.
-type AssetFunc func(context.Context, *ent.AssetMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f AssetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.AssetMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssetMutation", m)
-}
-
 // The PermissionFunc type is an adapter to allow the use of ordinary
 // function as Permission mutator.
 type PermissionFunc func(context.Context, *ent.PermissionMutation) (ent.Value, error)

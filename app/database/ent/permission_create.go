@@ -154,7 +154,9 @@ func (pc *PermissionCreate) Mutation() *PermissionMutation {
 
 // Save creates the Permission in the database.
 func (pc *PermissionCreate) Save(ctx context.Context) (*Permission, error) {
-	pc.defaults()
+	if err := pc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, pc.sqlSave, pc.mutation, pc.hooks)
 }
 
@@ -181,19 +183,29 @@ func (pc *PermissionCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (pc *PermissionCreate) defaults() {
+func (pc *PermissionCreate) defaults() error {
 	if _, ok := pc.mutation.CreatedAt(); !ok {
+		if permission.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized permission.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := permission.DefaultCreatedAt()
 		pc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := pc.mutation.UpdatedAt(); !ok {
+		if permission.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized permission.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := permission.DefaultUpdatedAt()
 		pc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := pc.mutation.ID(); !ok {
+		if permission.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized permission.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := permission.DefaultID()
 		pc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -206,6 +218,11 @@ func (pc *PermissionCreate) check() error {
 	}
 	if _, ok := pc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Permission.name"`)}
+	}
+	if v, ok := pc.mutation.Name(); ok {
+		if err := permission.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Permission.name": %w`, err)}
+		}
 	}
 	if _, ok := pc.mutation.Action(); !ok {
 		return &ValidationError{Name: "action", err: errors.New(`ent: missing required field "Permission.action"`)}

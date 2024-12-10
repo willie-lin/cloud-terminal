@@ -132,7 +132,9 @@ func (rc *ResourceCreate) Mutation() *ResourceMutation {
 
 // Save creates the Resource in the database.
 func (rc *ResourceCreate) Save(ctx context.Context) (*Resource, error) {
-	rc.defaults()
+	if err := rc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, rc.sqlSave, rc.mutation, rc.hooks)
 }
 
@@ -159,19 +161,29 @@ func (rc *ResourceCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (rc *ResourceCreate) defaults() {
+func (rc *ResourceCreate) defaults() error {
 	if _, ok := rc.mutation.CreatedAt(); !ok {
+		if resource.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized resource.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := resource.DefaultCreatedAt()
 		rc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := rc.mutation.UpdatedAt(); !ok {
+		if resource.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized resource.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := resource.DefaultUpdatedAt()
 		rc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := rc.mutation.ID(); !ok {
+		if resource.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized resource.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := resource.DefaultID()
 		rc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -185,8 +197,18 @@ func (rc *ResourceCreate) check() error {
 	if _, ok := rc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Resource.type"`)}
 	}
+	if v, ok := rc.mutation.GetType(); ok {
+		if err := resource.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
+		}
+	}
 	if _, ok := rc.mutation.Identifier(); !ok {
 		return &ValidationError{Name: "identifier", err: errors.New(`ent: missing required field "Resource.identifier"`)}
+	}
+	if v, ok := rc.mutation.Identifier(); ok {
+		if err := resource.IdentifierValidator(v); err != nil {
+			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "Resource.identifier": %w`, err)}
+		}
 	}
 	return nil
 }

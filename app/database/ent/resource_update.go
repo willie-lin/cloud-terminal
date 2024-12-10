@@ -153,7 +153,9 @@ func (ru *ResourceUpdate) RemovePermissions(p ...*Permission) *ResourceUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (ru *ResourceUpdate) Save(ctx context.Context) (int, error) {
-	ru.defaults()
+	if err := ru.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, ru.sqlSave, ru.mutation, ru.hooks)
 }
 
@@ -180,14 +182,36 @@ func (ru *ResourceUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (ru *ResourceUpdate) defaults() {
+func (ru *ResourceUpdate) defaults() error {
 	if _, ok := ru.mutation.UpdatedAt(); !ok {
+		if resource.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized resource.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := resource.UpdateDefaultUpdatedAt()
 		ru.mutation.SetUpdatedAt(v)
 	}
+	return nil
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (ru *ResourceUpdate) check() error {
+	if v, ok := ru.mutation.GetType(); ok {
+		if err := resource.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
+		}
+	}
+	if v, ok := ru.mutation.Identifier(); ok {
+		if err := resource.IdentifierValidator(v); err != nil {
+			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "Resource.identifier": %w`, err)}
+		}
+	}
+	return nil
 }
 
 func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := ru.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(resource.Table, resource.Columns, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID))
 	if ps := ru.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -440,7 +464,9 @@ func (ruo *ResourceUpdateOne) Select(field string, fields ...string) *ResourceUp
 
 // Save executes the query and returns the updated Resource entity.
 func (ruo *ResourceUpdateOne) Save(ctx context.Context) (*Resource, error) {
-	ruo.defaults()
+	if err := ruo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, ruo.sqlSave, ruo.mutation, ruo.hooks)
 }
 
@@ -467,14 +493,36 @@ func (ruo *ResourceUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (ruo *ResourceUpdateOne) defaults() {
+func (ruo *ResourceUpdateOne) defaults() error {
 	if _, ok := ruo.mutation.UpdatedAt(); !ok {
+		if resource.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized resource.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := resource.UpdateDefaultUpdatedAt()
 		ruo.mutation.SetUpdatedAt(v)
 	}
+	return nil
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (ruo *ResourceUpdateOne) check() error {
+	if v, ok := ruo.mutation.GetType(); ok {
+		if err := resource.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
+		}
+	}
+	if v, ok := ruo.mutation.Identifier(); ok {
+		if err := resource.IdentifierValidator(v); err != nil {
+			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "Resource.identifier": %w`, err)}
+		}
+	}
+	return nil
 }
 
 func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err error) {
+	if err := ruo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(resource.Table, resource.Columns, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID))
 	id, ok := ruo.mutation.ID()
 	if !ok {

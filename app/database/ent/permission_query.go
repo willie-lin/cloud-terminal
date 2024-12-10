@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"math"
 
@@ -437,6 +438,12 @@ func (pq *PermissionQuery) prepareQuery(ctx context.Context) error {
 			return err
 		}
 		pq.sql = prev
+	}
+	if permission.Policy == nil {
+		return errors.New("ent: uninitialized permission.Policy (forgotten import ent/runtime?)")
+	}
+	if err := permission.Policy.EvalQuery(ctx, pq); err != nil {
+		return err
 	}
 	return nil
 }

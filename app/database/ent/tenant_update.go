@@ -224,7 +224,9 @@ func (tu *TenantUpdate) RemovePermissions(p ...*Permission) *TenantUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (tu *TenantUpdate) Save(ctx context.Context) (int, error) {
-	tu.defaults()
+	if err := tu.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, tu.sqlSave, tu.mutation, tu.hooks)
 }
 
@@ -251,14 +253,31 @@ func (tu *TenantUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (tu *TenantUpdate) defaults() {
+func (tu *TenantUpdate) defaults() error {
 	if _, ok := tu.mutation.UpdatedAt(); !ok {
+		if tenant.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.UpdateDefaultUpdatedAt()
 		tu.mutation.SetUpdatedAt(v)
 	}
+	return nil
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (tu *TenantUpdate) check() error {
+	if v, ok := tu.mutation.Name(); ok {
+		if err := tenant.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tenant.name": %w`, err)}
+		}
+	}
+	return nil
 }
 
 func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := tu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID))
 	if ps := tu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -683,7 +702,9 @@ func (tuo *TenantUpdateOne) Select(field string, fields ...string) *TenantUpdate
 
 // Save executes the query and returns the updated Tenant entity.
 func (tuo *TenantUpdateOne) Save(ctx context.Context) (*Tenant, error) {
-	tuo.defaults()
+	if err := tuo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, tuo.sqlSave, tuo.mutation, tuo.hooks)
 }
 
@@ -710,14 +731,31 @@ func (tuo *TenantUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (tuo *TenantUpdateOne) defaults() {
+func (tuo *TenantUpdateOne) defaults() error {
 	if _, ok := tuo.mutation.UpdatedAt(); !ok {
+		if tenant.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.UpdateDefaultUpdatedAt()
 		tuo.mutation.SetUpdatedAt(v)
 	}
+	return nil
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (tuo *TenantUpdateOne) check() error {
+	if v, ok := tuo.mutation.Name(); ok {
+		if err := tenant.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tenant.name": %w`, err)}
+		}
+	}
+	return nil
 }
 
 func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err error) {
+	if err := tuo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID))
 	id, ok := tuo.mutation.ID()
 	if !ok {

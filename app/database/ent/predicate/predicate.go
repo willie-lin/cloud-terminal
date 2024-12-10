@@ -6,9 +6,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// Asset is the predicate function for asset builders.
-type Asset func(*sql.Selector)
-
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)
 

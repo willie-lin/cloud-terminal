@@ -154,7 +154,9 @@ func (tc *TenantCreate) Mutation() *TenantMutation {
 
 // Save creates the Tenant in the database.
 func (tc *TenantCreate) Save(ctx context.Context) (*Tenant, error) {
-	tc.defaults()
+	if err := tc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, tc.sqlSave, tc.mutation, tc.hooks)
 }
 
@@ -181,19 +183,29 @@ func (tc *TenantCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (tc *TenantCreate) defaults() {
+func (tc *TenantCreate) defaults() error {
 	if _, ok := tc.mutation.CreatedAt(); !ok {
+		if tenant.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultCreatedAt()
 		tc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := tc.mutation.UpdatedAt(); !ok {
+		if tenant.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultUpdatedAt()
 		tc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
+		if tenant.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultID()
 		tc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -206,6 +218,11 @@ func (tc *TenantCreate) check() error {
 	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Tenant.name"`)}
+	}
+	if v, ok := tc.mutation.Name(); ok {
+		if err := tenant.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tenant.name": %w`, err)}
+		}
 	}
 	return nil
 }

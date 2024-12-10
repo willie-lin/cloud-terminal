@@ -204,7 +204,9 @@ func (pu *PermissionUpdate) RemoveResource(r ...*Resource) *PermissionUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *PermissionUpdate) Save(ctx context.Context) (int, error) {
-	pu.defaults()
+	if err := pu.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
 }
 
@@ -231,14 +233,31 @@ func (pu *PermissionUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (pu *PermissionUpdate) defaults() {
+func (pu *PermissionUpdate) defaults() error {
 	if _, ok := pu.mutation.UpdatedAt(); !ok {
+		if permission.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized permission.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := permission.UpdateDefaultUpdatedAt()
 		pu.mutation.SetUpdatedAt(v)
 	}
+	return nil
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (pu *PermissionUpdate) check() error {
+	if v, ok := pu.mutation.Name(); ok {
+		if err := permission.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Permission.name": %w`, err)}
+		}
+	}
+	return nil
 }
 
 func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := pu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(permission.Table, permission.Columns, sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID))
 	if ps := pu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -589,7 +608,9 @@ func (puo *PermissionUpdateOne) Select(field string, fields ...string) *Permissi
 
 // Save executes the query and returns the updated Permission entity.
 func (puo *PermissionUpdateOne) Save(ctx context.Context) (*Permission, error) {
-	puo.defaults()
+	if err := puo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
 }
 
@@ -616,14 +637,31 @@ func (puo *PermissionUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (puo *PermissionUpdateOne) defaults() {
+func (puo *PermissionUpdateOne) defaults() error {
 	if _, ok := puo.mutation.UpdatedAt(); !ok {
+		if permission.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized permission.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := permission.UpdateDefaultUpdatedAt()
 		puo.mutation.SetUpdatedAt(v)
 	}
+	return nil
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (puo *PermissionUpdateOne) check() error {
+	if v, ok := puo.mutation.Name(); ok {
+		if err := permission.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Permission.name": %w`, err)}
+		}
+	}
+	return nil
 }
 
 func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission, err error) {
+	if err := puo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(permission.Table, permission.Columns, sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID))
 	id, ok := puo.mutation.ID()
 	if !ok {
