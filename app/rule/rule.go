@@ -28,16 +28,16 @@ func AllowIfAdmin() privacy.QueryMutationRule {
 	})
 }
 
-// AllowIfRole is a rule that returns Allow decision if the viewer has a specific role.
-func AllowIfRole(roleName string) privacy.QueryMutationRule {
-	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
-		view := viewer.FromContext(ctx)
-		if view.HasRole(roleName) {
-			return privacy.Allow
-		}
-		return privacy.Skip
-	})
-}
+//// AllowIfRole is a rule that returns Allow decision if the viewer has a specific role.
+//func AllowIfRole(roleName string) privacy.QueryMutationRule {
+//	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
+//		view := viewer.FromContext(ctx)
+//		if view.HasRole(roleName) {
+//			return privacy.Allow
+//		}
+//		return privacy.Skip
+//	})
+//}
 
 // AllowIfOwner is a rule that returns Allow decision if the viewer is the owner of the entity.
 func AllowIfOwner() privacy.QueryMutationRule {

@@ -2,12 +2,14 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -27,8 +29,13 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		// 检查邮箱是否已经存在
-		exists, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Exist(context.Background())
+		fmt.Println(dto.Email)
+		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
+		//ctx := privacy.DecisionContext(context.Background(), privacy.Skip)
+		//exists, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Exist(ctx)
+		exists, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Exist(ctx)
+		fmt.Println(exists)
+
 		if err != nil {
 			log.Printf("Error checking email: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error checking email from database"})
@@ -183,14 +190,21 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error finding tenant"})
 		}
 
+		// 获取用户的第一个角色ID
+		role, err := us.QueryRoles().First(context.Background())
+		if err != nil {
+			log.Printf("Error querying roles: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})
+		}
+
 		// 生成包含租户信息的accessToken
-		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Username, us.Email)
+		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, role.ID, us.Username, us.Email)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 		// 生成包含租户信息的RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, us.Username, us.Email)
+		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, role.ID, us.Username, us.Email)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
-	"github.com/casbin/casbin/v2"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/jaegertracing"
@@ -17,9 +16,9 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/api"
 	"github.com/willie-lin/cloud-terminal/app/config"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	_ "github.com/willie-lin/cloud-terminal/app/database/ent/runtime"
 	"github.com/willie-lin/cloud-terminal/app/handler"
 	"github.com/willie-lin/cloud-terminal/app/logger"
-	"github.com/willie-lin/cloud-terminal/app/middlewarers"
 	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"go.elastic.co/apm/module/apmechov4"
@@ -88,9 +87,8 @@ func main() {
 
 	// 设置session中间件
 	e.Use(session.Middleware(sessions.NewCookieStore(securecookie.GenerateRandomKey(64))))
-	//e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 
-	//fmt.Println("333333333333333333333")
+	// 设置 CSRF 令牌
 	e.Use(utils.SetCSRFToken)
 	//fmt.Println("4444444444444444444444")
 	//
@@ -187,15 +185,8 @@ func main() {
 		}
 	}(client)
 	ctx := context.Background()
-
-	//autoMigration := database.AutoMigration
-	autoMigration := config.AutoMigration
-	autoMigration(client, ctx)
-
-	//debugMode := database.DebugMode
-	debugMode := config.DebugMode
-
-	debugMode(err, client, ctx)
+	config.AutoMigration(client, ctx)
+	config.DebugMode(err, client, ctx)
 
 	// 迁移租户
 	//database.AssignDefaultTenant(client)
@@ -206,13 +197,15 @@ func main() {
 	//}))
 
 	//初始化Casbin enforcer
-	enforcer, err := casbin.NewEnforcer("./app/casbin/auth_model.conf", "./app/casbin/policy.csv")
-	if err != nil {
-		log.Fatalf("创建casbin enforcer失败: %v", err)
-	}
+	//enforcer, err := casbin.NewEnforcer("./app/casbin/auth_model.conf", "./app/casbin/policy.csv")
+	//if err != nil {
+	//	log.Fatalf("创建casbin enforcer失败: %v", err)
+	//}
 
 	// 初始化处理器
+	// Viewer 中间件应在所有请求处理之前应用
 
+	// 在所有路由之前应用中间件
 	e.GET("/api/csrf-token", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	})
@@ -228,10 +221,15 @@ func main() {
 	e.POST("/api/register", api.RegisterUser(client))
 	e.POST("/api/reset-password", api.ResetPassword(client))
 
+	// Viewer 中间件应在所有请求处理之前应用
+	//e.Use(utils.WithViewer)
+
 	// 定义一个受保护的路由组
 	r := e.Group("/admin")
+	r.Use(utils.WithViewer)
 	r.Use(utils.CheckAccessToken)
-	// 使用JWT中间件
+
+	//e.Use(utils.WithViewer)
 	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
 
 	// 定义会话检查端点
@@ -256,23 +254,28 @@ func main() {
 	r.GET("/roles", handler.GetAllRolesByTenant(client))
 	//r.POST("/add-role", handler.CreateRole(client), middlewarers.Authorize(enforcer))
 	r.POST("/add-role", handler.CreateRole(client))
-	r.POST("/delete-role", handler.DeleteRoleByName(client), middlewarers.Authorize(enforcer))
+	//r.POST("/delete-role", handler.DeleteRoleByName(client), middlewarers.Authorize(enforcer))
+	r.POST("/delete-role", handler.DeleteRoleByName(client))
 	r.POST("/check-role-name", handler.CheckRoleName(client))
 
 	// permission
 	//r.GET("/permissions", handler.GetAllPermissions(client))
 	r.GET("/permissions", handler.GetAllPermissionsByTenant(client))
-	r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
-	r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewarers.Authorize(enforcer))
+	//r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
+	r.POST("/add-permission", handler.CreatePermission(client))
+	//r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewarers.Authorize(enforcer))
+	r.POST("/delete-permission", handler.DeletePermissionByName(client))
 	r.POST("/check-permission-name", handler.CheckPermissionName(client))
 
 	//
-	e.POST("/tenants", handler.CreateTenant(client), middlewarers.Authorize(enforcer))
-	e.GET("/tenants/:id", handler.GetTenantByName(client), middlewarers.Authorize(enforcer))
+	//e.POST("/tenants", handler.CreateTenant(client), middlewarers.Authorize(enforcer))
+	e.POST("/tenants", handler.CreateTenant(client))
+	//e.GET("/tenants/:id", handler.GetTenantByName(client), middlewarers.Authorize(enforcer))
+	e.GET("/tenants/:id", handler.GetTenantByName(client))
 
-	e.POST("/policies", handler.AddPolicy(enforcer), middlewarers.Authorize(enforcer))
-	e.DELETE("/policies", handler.RemovePolicy(enforcer), middlewarers.Authorize(enforcer))
-	e.GET("/policies", handler.GetAllPolicies(enforcer), middlewarers.Authorize(enforcer))
+	//e.POST("/policies", handler.AddPolicy(enforcer), middlewarers.Authorize(enforcer))
+	//e.DELETE("/policies", handler.RemovePolicy(enforcer), middlewarers.Authorize(enforcer))
+	//e.GET("/policies", handler.GetAllPolicies(enforcer), middlewarers.Authorize(enforcer))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

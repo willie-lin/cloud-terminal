@@ -7,7 +7,6 @@ import (
 	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
-	"github.com/willie-lin/cloud-terminal/app/rule"
 )
 
 // Resource holds the schema definition for the Resource entity.
@@ -50,19 +49,22 @@ func (Resource) Indexes() []ent.Index {
 // Policy defines the privacy policy of the Role.
 func (Resource) Policy() ent.Policy {
 	return privacy.Policy{
-		Mutation: privacy.MutationPolicy{
-			rule.DenyIfNoViewer(),
-			rule.AllowIfAdmin(),                 // 允许管理员进行操作
-			rule.AllowIfOwner(),                 // 允许资源拥有者进行修改
-			rule.AllowIfRole("ResourceManager"), // 允许特定角色进行修改
-			rule.AllowIfTenantMember(),          // 允许同一租户成员进行操作
-			privacy.AlwaysDenyRule(),
-		},
 		Query: privacy.QueryPolicy{
-			rule.AllowIfAdmin(),        // 允许管理员进行查询
-			rule.AllowIfOwner(),        // 允许资源拥有者进行查询
-			rule.AllowIfTenantMember(), // 允许同一租户成员进行查询
-			privacy.AlwaysDenyRule(),
+			//rule.AllowEmailCheck(),
+			//rule.AllowIfAdmin(),            // 允许管理员进行查询
+			//rule.AllowIfOwner(),            // 允许用户查询自己的资料
+			//rule.AllowIfRole("SuperAdmin"), // 允许超级管理员进行查询
+			//rule.AllowIfTenantMember(),     // 允许同一租户成员进行查询
+			privacy.AlwaysAllowRule(),
+			//privacy.AlwaysDenyRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			//rule.DenyIfNoViewer(),
+			//rule.AllowIfAdmin(),            // 允许管理员进行操作
+			//rule.AllowIfOwner(),            // 允许用户修改自己的资料
+			//rule.AllowIfRole("SuperAdmin"), // 允许超级管理员进行操作
+			//privacy.AlwaysDenyRule(),
+			privacy.AlwaysAllowRule(),
 		},
 	}
 }
