@@ -42,13 +42,13 @@ func WithViewer(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Printf("Invalid token claims")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token claims"})
 		}
-		fmt.Printf("Token claims: Email=%s, UserID=%s, TenantID=%s, RoleID=%s\n", claims.Email, claims.UserID, claims.TenantID, claims.RoleID)
+		fmt.Printf("Token claims: Email=%s, UserID=%s, TenantID=%s, RoleID=%s\n", claims.Email, claims.UserID, claims.TenantID, claims.RoleName)
 
 		view := &viewer.Viewer{
 			UserID:   claims.UserID,
 			TenantID: claims.TenantID,
-			RoleID:   claims.RoleID,
-			Admin:    claims.RoleID.String() == "admin" || claims.RoleID.String() == "superAdmin",
+			//RoleID:   claims.RoleID,
+			//Admin:    claims.RoleID.String() == "admin" || claims.RoleID.String() == "superAdmin",
 		}
 
 		ctx := viewer.NewContext(c.Request().Context(), view)

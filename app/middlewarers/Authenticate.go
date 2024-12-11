@@ -38,7 +38,7 @@ func AuthenticateAndAuthorize(next echo.HandlerFunc) echo.HandlerFunc {
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(*utils.JwtCustomClaims); ok {
 					// 使用刷新令牌的声明生成新的访问令牌
-					newAccessToken, err := utils.CreateAccessToken(claims.UserID, claims.TenantID, claims.RoleID, claims.Email, claims.Username)
+					newAccessToken, err := utils.CreateAccessToken(claims.UserID, claims.TenantID, claims.Email, claims.Username, claims.RoleName)
 					if err != nil {
 						return err
 					}
@@ -64,7 +64,8 @@ func AuthenticateAndAuthorize(next echo.HandlerFunc) echo.HandlerFunc {
 			v := &viewer.Viewer{
 				TenantID: claims.TenantID,
 				UserID:   claims.UserID,
-				RoleID:   claims.RoleID,
+				RoleName: claims.RoleName,
+				//RoleID:   claims.RoleID,
 			}
 			ctx := viewer.NewContext(c.Request().Context(), v)
 			c.SetRequest(c.Request().WithContext(ctx))

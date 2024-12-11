@@ -8,8 +8,8 @@ import (
 type Viewer struct {
 	UserID   uuid.UUID
 	TenantID uuid.UUID
-	RoleID   uuid.UUID
-	Admin    bool
+	//RoleID   uuid.UUID
+	RoleName string // 使用切片存储多个角色
 }
 
 type viewerKey struct{}

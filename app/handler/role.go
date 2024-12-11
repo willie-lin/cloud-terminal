@@ -58,8 +58,7 @@ func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
 		tenantID := v.TenantID
-		fmt.Printf("Queried tenant ID: %s\n", tenantID)
-
+		//log.Printf("Queried tenant ID: %s", tenantID)
 		roles, err := client.Role.Query().Where(role.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)

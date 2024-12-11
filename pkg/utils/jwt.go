@@ -18,7 +18,8 @@ type JwtCustomClaims struct {
 	Email    string    `json:"email"`
 	Username string    `json:"username"`
 	TenantID uuid.UUID `json:"tenant_id"`
-	RoleID   uuid.UUID `json:"role_id"`
+	RoleName string    `json:"role_name"` // 存储单个角色的名称
+	//RoleID   uuid.UUID `json:"role_id"`
 
 	jwt.RegisteredClaims
 }
@@ -42,13 +43,14 @@ func init() {
 }
 
 // CreateAccessToken 创建JWT访问令牌
-func CreateAccessToken(userID, tenantID, roleID uuid.UUID, email, username string) (string, error) {
+func CreateAccessToken(userID, tenantID uuid.UUID, email, username, roleName string) (string, error) {
 	claims := &JwtCustomClaims{
 		UserID:   userID,
 		Email:    email,
 		Username: username,
 		TenantID: tenantID,
-		RoleID:   roleID,
+		RoleName: roleName,
+		//RoleID:   roleID,
 
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
@@ -70,13 +72,14 @@ func ValidAccessTokenConfig() echojwt.Config {
 }
 
 // CreateRefreshToken 创建刷新令牌
-func CreateRefreshToken(userID, tenantID, roleID uuid.UUID, email, username string) (string, error) {
+func CreateRefreshToken(userID, tenantID uuid.UUID, email, username, roleName string) (string, error) {
 	claims := &JwtCustomClaims{
 		UserID:   userID,
 		Email:    email,
 		Username: username,
 		TenantID: tenantID,
-		RoleID:   roleID,
+		RoleName: roleName,
+		//RoleID:   roleID,
 
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 144)),
@@ -126,7 +129,7 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(*JwtCustomClaims); ok {
 					// 使用刷新令牌的声明生成新的访问令牌
-					newAccessToken, err := CreateAccessToken(claims.UserID, claims.TenantID, claims.RoleID, claims.Email, claims.Username)
+					newAccessToken, err := CreateAccessToken(claims.UserID, claims.TenantID, claims.Email, claims.Username, claims.RoleName)
 					if err != nil {
 						return err
 					}
@@ -151,7 +154,7 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 		if claims, ok := token.Claims.(*JwtCustomClaims); ok && token.Valid {
 			c.Set("user_id", claims.UserID)
 			c.Set("tenant_id", claims.TenantID)
-			c.Set("role_id", claims.RoleID)
+			//c.Set("role_id", claims.RoleID)
 		}
 		return next(c)
 	}

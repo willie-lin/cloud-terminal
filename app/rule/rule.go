@@ -62,3 +62,19 @@ func AllowIfTenantMember() privacy.QueryMutationRule {
 		return privacy.Skip
 	})
 }
+
+//// DenyIfNotTenant DenyIfNotTenant 检查当前用户是否属于查询的租户
+//var DenyIfNotTenant privacy.QueryRule = privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
+//	viewer := viewer.FromContext(ctx)
+//	if viewer == nil {
+//		return privacy.Denyf("Viewer not found in context")
+//	}
+//	tenantID := viewer.TenantID
+//	q.Where(entql.FieldEQ("tenant_id", tenantID))
+//	return privacy.Skip
+//})
+//
+//// TenantPolicy 为租户查询设置隐私策略
+//var TenantPolicy = privacy.QueryPolicy{
+//	DenyIfNotTenant,
+//}
