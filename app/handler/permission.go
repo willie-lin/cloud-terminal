@@ -3,12 +3,12 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
 )
 
@@ -51,7 +51,15 @@ func GetAllPermissionsByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 从请求上下文中获取租户ID
 		//userID := c.Get("user_id").(uuid.UUID)
-		tenantID := c.Get("tenant_id").(uuid.UUID)
+		//tenantID := c.Get("tenant_id").(uuid.UUID)
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			log.Printf("No viewer found in context")
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
+		}
+		tenantID := v.TenantID
+		fmt.Printf("Queried tenant ID: %s\n", tenantID)
+
 		permissions, err := client.Permission.Query().Where(permission.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)

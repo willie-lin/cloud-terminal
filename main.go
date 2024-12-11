@@ -19,6 +19,7 @@ import (
 	_ "github.com/willie-lin/cloud-terminal/app/database/ent/runtime"
 	"github.com/willie-lin/cloud-terminal/app/handler"
 	"github.com/willie-lin/cloud-terminal/app/logger"
+	"github.com/willie-lin/cloud-terminal/app/middlewarers"
 	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"go.elastic.co/apm/module/apmechov4"
@@ -226,8 +227,9 @@ func main() {
 
 	// 定义一个受保护的路由组
 	r := e.Group("/admin")
-	r.Use(utils.WithViewer)
-	r.Use(utils.CheckAccessToken)
+	r.Use(middlewarers.AuthenticateAndAuthorize)
+	//r.Use(utils.WithViewer)
+	//r.Use(utils.CheckAccessToken)
 
 	//e.Use(utils.WithViewer)
 	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
