@@ -18,21 +18,12 @@ var (
 		{Name: "resource_type", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "is_disabled", Type: field.TypeBool, Default: false},
-		{Name: "tenant_permissions", Type: field.TypeUUID, Nullable: true},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
 	PermissionsTable = &schema.Table{
 		Name:       "permissions",
 		Columns:    PermissionsColumns,
 		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "permissions_tenants_permissions",
-				Columns:    []*schema.Column{PermissionsColumns[8]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "permission_name",
@@ -51,21 +42,12 @@ var (
 		{Name: "value", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "is_disabled", Type: field.TypeBool, Default: false},
-		{Name: "tenant_resources", Type: field.TypeUUID, Nullable: true},
 	}
 	// ResourcesTable holds the schema information for the "resources" table.
 	ResourcesTable = &schema.Table{
 		Name:       "resources",
 		Columns:    ResourcesColumns,
 		PrimaryKey: []*schema.Column{ResourcesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "resources_tenants_resources",
-				Columns:    []*schema.Column{ResourcesColumns[8]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "resource_name",
@@ -82,21 +64,12 @@ var (
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "is_disabled", Type: field.TypeBool, Default: false},
-		{Name: "tenant_roles", Type: field.TypeUUID, Nullable: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
 		Name:       "roles",
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "roles_tenants_roles",
-				Columns:    []*schema.Column{RolesColumns[6]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "role_name",
@@ -259,9 +232,6 @@ var (
 )
 
 func init() {
-	PermissionsTable.ForeignKeys[0].RefTable = TenantsTable
-	ResourcesTable.ForeignKeys[0].RefTable = TenantsTable
-	RolesTable.ForeignKeys[0].RefTable = TenantsTable
 	UsersTable.ForeignKeys[0].RefTable = TenantsTable
 	ResourcePermissionsTable.ForeignKeys[0].RefTable = ResourcesTable
 	ResourcePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable

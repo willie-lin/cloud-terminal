@@ -35,7 +35,8 @@ func (Resource) Fields() []ent.Field {
 // Edges of the Resource.
 func (Resource) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("tenant", Tenant.Type).Ref("resources").Unique(),
+		//edge.From("tenant", Tenant.Type).Ref("resources").Unique(),
+		//edge.From("permissions", Permission.Type).Ref("resources"),
 		edge.To("permissions", Permission.Type),
 	}
 }

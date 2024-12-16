@@ -30,31 +30,22 @@ const (
 	FieldDescription = "description"
 	// FieldIsDisabled holds the string denoting the is_disabled field in the database.
 	FieldIsDisabled = "is_disabled"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
 	EdgeRoles = "roles"
-	// EdgeResource holds the string denoting the resource edge name in mutations.
-	EdgeResource = "resource"
+	// EdgeResources holds the string denoting the resources edge name in mutations.
+	EdgeResources = "resources"
 	// Table holds the table name of the permission in the database.
 	Table = "permissions"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "permissions"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_permissions"
 	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
 	RolesTable = "role_permissions"
 	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RolesInverseTable = "roles"
-	// ResourceTable is the table that holds the resource relation/edge. The primary key declared below.
-	ResourceTable = "resource_permissions"
-	// ResourceInverseTable is the table name for the Resource entity.
+	// ResourcesTable is the table that holds the resources relation/edge. The primary key declared below.
+	ResourcesTable = "resource_permissions"
+	// ResourcesInverseTable is the table name for the Resource entity.
 	// It exists in this package in order to avoid circular dependency with the "resource" package.
-	ResourceInverseTable = "resources"
+	ResourcesInverseTable = "resources"
 )
 
 // Columns holds all SQL columns for permission fields.
@@ -69,30 +60,19 @@ var Columns = []string{
 	FieldIsDisabled,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "permissions"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"tenant_permissions",
-}
-
 var (
 	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
 	// primary key for the roles relation (M2M).
 	RolesPrimaryKey = []string{"role_id", "permission_id"}
-	// ResourcePrimaryKey and ResourceColumn2 are the table columns denoting the
-	// primary key for the resource relation (M2M).
-	ResourcePrimaryKey = []string{"resource_id", "permission_id"}
+	// ResourcesPrimaryKey and ResourcesColumn2 are the table columns denoting the
+	// primary key for the resources relation (M2M).
+	ResourcesPrimaryKey = []string{"resource_id", "permission_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -159,13 +139,6 @@ func ByIsDisabled(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsDisabled, opts...).ToFunc()
 }
 
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-
 // ByRolesCount orders the results by roles count.
 func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -180,25 +153,18 @@ func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByResourceCount orders the results by resource count.
-func ByResourceCount(opts ...sql.OrderTermOption) OrderOption {
+// ByResourcesCount orders the results by resources count.
+func ByResourcesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newResourceStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newResourcesStep(), opts...)
 	}
 }
 
-// ByResource orders the results by resource terms.
-func ByResource(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByResources orders the results by resources terms.
+func ByResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newResourceStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
 }
 func newRolesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
@@ -207,10 +173,10 @@ func newRolesStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, true, RolesTable, RolesPrimaryKey...),
 	)
 }
-func newResourceStep() *sqlgraph.Step {
+func newResourcesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ResourceInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, ResourceTable, ResourcePrimaryKey...),
+		sqlgraph.To(ResourcesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ResourcesTable, ResourcesPrimaryKey...),
 	)
 }

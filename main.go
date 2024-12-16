@@ -196,6 +196,11 @@ func main() {
 		log.Fatalf("failed to initialize global permissions: %v", err)
 	}
 
+	// 初始化默认角色
+	if err = api.InitializeTenantRolesAndPermissions(client); err != nil {
+		log.Fatalf("Error initializing tenant roles and permissions: %v", err)
+	}
+
 	// 迁移租户
 	//database.AssignDefaultTenant(client)
 

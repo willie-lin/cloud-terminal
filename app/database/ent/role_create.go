@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -98,25 +97,6 @@ func (rc *RoleCreate) SetNillableID(u *uuid.UUID) *RoleCreate {
 		rc.SetID(*u)
 	}
 	return rc
-}
-
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (rc *RoleCreate) SetTenantID(id uuid.UUID) *RoleCreate {
-	rc.mutation.SetTenantID(id)
-	return rc
-}
-
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (rc *RoleCreate) SetNillableTenantID(id *uuid.UUID) *RoleCreate {
-	if id != nil {
-		rc = rc.SetTenantID(*id)
-	}
-	return rc
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (rc *RoleCreate) SetTenant(t *Tenant) *RoleCreate {
-	return rc.SetTenantID(t.ID)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -287,23 +267,6 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 	if value, ok := rc.mutation.IsDisabled(); ok {
 		_spec.SetField(role.FieldIsDisabled, field.TypeBool, value)
 		_node.IsDisabled = value
-	}
-	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   role.TenantTable,
-			Columns: []string{role.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.tenant_roles = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

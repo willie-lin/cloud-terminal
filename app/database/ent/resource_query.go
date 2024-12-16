@@ -17,7 +17,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // ResourceQuery is the builder for querying Resource entities.
@@ -27,9 +26,7 @@ type ResourceQuery struct {
 	order           []resource.OrderOption
 	inters          []Interceptor
 	predicates      []predicate.Resource
-	withTenant      *TenantQuery
 	withPermissions *PermissionQuery
-	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -64,28 +61,6 @@ func (rq *ResourceQuery) Unique(unique bool) *ResourceQuery {
 func (rq *ResourceQuery) Order(o ...resource.OrderOption) *ResourceQuery {
 	rq.order = append(rq.order, o...)
 	return rq
-}
-
-// QueryTenant chains the current query on the "tenant" edge.
-func (rq *ResourceQuery) QueryTenant() *TenantQuery {
-	query := (&TenantClient{config: rq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := rq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := rq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(resource.Table, resource.FieldID, selector),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, resource.TenantTable, resource.TenantColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // QueryPermissions chains the current query on the "permissions" edge.
@@ -302,23 +277,11 @@ func (rq *ResourceQuery) Clone() *ResourceQuery {
 		order:           append([]resource.OrderOption{}, rq.order...),
 		inters:          append([]Interceptor{}, rq.inters...),
 		predicates:      append([]predicate.Resource{}, rq.predicates...),
-		withTenant:      rq.withTenant.Clone(),
 		withPermissions: rq.withPermissions.Clone(),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
 	}
-}
-
-// WithTenant tells the query-builder to eager-load the nodes that are connected to
-// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
-func (rq *ResourceQuery) WithTenant(opts ...func(*TenantQuery)) *ResourceQuery {
-	query := (&TenantClient{config: rq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	rq.withTenant = query
-	return rq
 }
 
 // WithPermissions tells the query-builder to eager-load the nodes that are connected to
@@ -415,19 +378,11 @@ func (rq *ResourceQuery) prepareQuery(ctx context.Context) error {
 func (rq *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resource, error) {
 	var (
 		nodes       = []*Resource{}
-		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
-		loadedTypes = [2]bool{
-			rq.withTenant != nil,
+		loadedTypes = [1]bool{
 			rq.withPermissions != nil,
 		}
 	)
-	if rq.withTenant != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, resource.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Resource).scanValues(nil, columns)
 	}
@@ -446,12 +401,6 @@ func (rq *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := rq.withTenant; query != nil {
-		if err := rq.loadTenant(ctx, query, nodes, nil,
-			func(n *Resource, e *Tenant) { n.Edges.Tenant = e }); err != nil {
-			return nil, err
-		}
-	}
 	if query := rq.withPermissions; query != nil {
 		if err := rq.loadPermissions(ctx, query, nodes,
 			func(n *Resource) { n.Edges.Permissions = []*Permission{} },
@@ -462,38 +411,6 @@ func (rq *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 	return nodes, nil
 }
 
-func (rq *ResourceQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Tenant)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Resource)
-	for i := range nodes {
-		if nodes[i].tenant_resources == nil {
-			continue
-		}
-		fk := *nodes[i].tenant_resources
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(tenant.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "tenant_resources" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
 func (rq *ResourceQuery) loadPermissions(ctx context.Context, query *PermissionQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Permission)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[uuid.UUID]*Resource)

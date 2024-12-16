@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // ResourceCreate is the builder for creating a Resource entity.
@@ -109,25 +108,6 @@ func (rc *ResourceCreate) SetNillableID(u *uuid.UUID) *ResourceCreate {
 		rc.SetID(*u)
 	}
 	return rc
-}
-
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (rc *ResourceCreate) SetTenantID(id uuid.UUID) *ResourceCreate {
-	rc.mutation.SetTenantID(id)
-	return rc
-}
-
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (rc *ResourceCreate) SetNillableTenantID(id *uuid.UUID) *ResourceCreate {
-	if id != nil {
-		rc = rc.SetTenantID(*id)
-	}
-	return rc
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (rc *ResourceCreate) SetTenant(t *Tenant) *ResourceCreate {
-	return rc.SetTenantID(t.ID)
 }
 
 // AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
@@ -307,23 +287,6 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 	if value, ok := rc.mutation.IsDisabled(); ok {
 		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
 		_node.IsDisabled = value
-	}
-	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   resource.TenantTable,
-			Columns: []string{resource.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.tenant_resources = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.PermissionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

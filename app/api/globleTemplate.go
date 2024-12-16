@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 )
 
 type PermissionTemplate struct {
@@ -40,12 +40,12 @@ var defaultRoleTemplates = []RoleTemplate{
 
 func InitializeGlobalPermissions(client *ent.Client) error {
 	for _, p := range defaultPermissions {
-		log.Printf("Checking permission: %s - %s", p.Name, p.ResourceType)
+		//log.Printf("Checking permission: %s - %s", p.Name, p.ResourceType)
 		_, err := client.Permission.Query().
 			Where(permission.NameEQ(p.Name)).
 			Only(context.Background())
 		if ent.IsNotFound(err) {
-			log.Printf("Permission not found, creating: %s", p.Name)
+			//log.Printf("Permission not found, creating: %s", p.Name)
 			_, err = client.Permission.Create().
 				SetName(p.Name).
 				SetDescription(p.Description).
@@ -60,11 +60,11 @@ func InitializeGlobalPermissions(client *ent.Client) error {
 			return fmt.Errorf("failed to query permission %s: %w", p.Name, err)
 		}
 	}
-
+	log.Printf("Global permissions initialized successfully")
 	return nil
 }
 
-func InitializeTenantRolesAndPermissions(client *ent.Client, tenantID uuid.UUID) error {
+func InitializeTenantRolesAndPermissions(client *ent.Client) error {
 	// 获取所有权限
 	allPermissions, err := client.Permission.Query().All(context.Background())
 	if err != nil {
@@ -73,16 +73,24 @@ func InitializeTenantRolesAndPermissions(client *ent.Client, tenantID uuid.UUID)
 	log.Printf("Fetched %d permissions", len(allPermissions))
 
 	for _, template := range defaultRoleTemplates {
-		log.Printf("Creating role: %s", template.Name)
-		role, err := client.Role.Create().
-			SetName(template.Name).
-			SetDescription(template.Description).
-			SetTenantID(tenantID).
-			Save(context.Background())
-		if err != nil {
-			return fmt.Errorf("failed to create role %s: %w", template.Name, err)
+		// 检查角色是否已经存在
+		role, err := client.Role.Query().
+			Where(role.NameEQ(template.Name)).
+			Only(context.Background())
+		if ent.IsNotFound(err) {
+			log.Printf("Creating role: %s", template.Name)
+			newRole, err := client.Role.Create().
+				SetName(template.Name).
+				SetDescription(template.Description).
+				//AddTenantIDs(tenantID).
+				Save(context.Background())
+			if err != nil {
+				return fmt.Errorf("failed to create role %s: %w", template.Name, err)
+			}
+			log.Printf("Created role: %s", newRole.Name)
+		} else if err != nil {
+			return fmt.Errorf("failed to query role %s: %w", template.Name, err)
 		}
-		log.Printf("Created role: %s", role.Name)
 
 		if template.Name == "Admin" {
 			// 管理员角色拥有所有权限

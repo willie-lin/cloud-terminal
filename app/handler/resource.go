@@ -35,7 +35,7 @@ func CreateResource(client *ent.Client) echo.HandlerFunc {
 			SetType(dto.Type).
 			SetValue(dto.Value).
 			SetDescription(dto.Description).
-			SetTenantID(v.TenantID). // 关联到当前租户
+			//SetTenantID(v.TenantID). // 关联到当前租户
 			Save(context.Background())
 		if err != nil {
 			log.Printf("Error creating resource: %v", err)

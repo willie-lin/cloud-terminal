@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
@@ -76,7 +75,7 @@ func GetAllRolesByUserByTenant(client *ent.Client) echo.HandlerFunc {
 		roles, err := client.User.Query().
 			Where(user.IDEQ(userID)).
 			QueryRoles().
-			Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
+			//Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
 			All(context.Background())
 		if err != nil {
 			log.Printf("Error querying roles for user %s in tenant %s: %v", userID, tenantID, err)
@@ -93,7 +92,7 @@ func GetAllRolesByUserByTenant(client *ent.Client) echo.HandlerFunc {
 		// 如果是管理员，查询所有角色
 		if isAdmin {
 			roles, err = client.Role.Query().
-				Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
+				//Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
 				All(context.Background())
 			if err != nil {
 				log.Printf("Error querying all roles for tenant %s: %v", tenantID, err)
@@ -165,7 +164,8 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 			r, err := client.Role.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
-				SetTenantID(v.TenantID). // 关联到租户
+				//SetTenantID(v.TenantID). // 关联到租户
+				//AddTenantIDs(v.TenantID).
 				AddPermissionIDs(dto.PermissionIDs...).
 				Save(context.Background())
 			if err != nil {

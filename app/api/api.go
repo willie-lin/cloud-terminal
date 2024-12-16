@@ -83,9 +83,9 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
 		}
 
-		if err := InitializeTenantRolesAndPermissions(client, tenant.ID); err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error initializing roles and permissions for tenant"})
-		}
+		//if err := InitializeTenantRolesAndPermissions(client, tenant.ID); err != nil {
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error initializing roles and permissions for tenant"})
+		//}
 		//// 初始化租户的默认角色和权限，如果它们还不存在
 		//if err := InitializeTenantRolesAndPermissions(client, tenant.ID); err != nil {
 		//	log.Printf("Error initializing roles and permissions for tenant: %v", err)
@@ -128,10 +128,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching admin role"})
 		//}
 
-		err = client.User.UpdateOne(us).
-			AddRoles(adminRole).
-			Exec(context.Background())
-		if err != nil {
+		if err = client.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
 			log.Printf("Error assigning super admin role to user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning super admin role"})
 		}

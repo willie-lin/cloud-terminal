@@ -381,29 +381,6 @@ func IsDisabledNEQ(v bool) predicate.Permission {
 	return predicate.Permission(sql.FieldNEQ(FieldIsDisabled, v))
 }
 
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.Permission {
-	return predicate.Permission(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.Permission {
-	return predicate.Permission(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasRoles applies the HasEdge predicate on the "roles" edge.
 func HasRoles() predicate.Permission {
 	return predicate.Permission(func(s *sql.Selector) {
@@ -427,21 +404,21 @@ func HasRolesWith(preds ...predicate.Role) predicate.Permission {
 	})
 }
 
-// HasResource applies the HasEdge predicate on the "resource" edge.
-func HasResource() predicate.Permission {
+// HasResources applies the HasEdge predicate on the "resources" edge.
+func HasResources() predicate.Permission {
 	return predicate.Permission(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ResourceTable, ResourcePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, ResourcesTable, ResourcesPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasResourceWith applies the HasEdge predicate on the "resource" edge with a given conditions (other predicates).
-func HasResourceWith(preds ...predicate.Resource) predicate.Permission {
+// HasResourcesWith applies the HasEdge predicate on the "resources" edge with a given conditions (other predicates).
+func HasResourcesWith(preds ...predicate.Resource) predicate.Permission {
 	return predicate.Permission(func(s *sql.Selector) {
-		step := newResourceStep()
+		step := newResourcesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

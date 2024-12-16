@@ -8,8 +8,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
@@ -67,7 +65,7 @@ func GetAllPermissionsByUserByTenant(client *ent.Client) echo.HandlerFunc {
 			Where(user.IDEQ(userID)).
 			QueryRoles().
 			WithPermissions().
-			Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
+			//Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
 			All(context.Background())
 		if err != nil {
 			log.Printf("Error querying roles for user %s in tenant %s: %v", userID, tenantID, err)
@@ -111,7 +109,7 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 			p, err := client.Permission.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
-				SetTenantID(v.TenantID).            // 关联到当前租户
+				//SetTenantID(v.TenantID).            // 关联到当前租户
 				AddResourceIDs(dto.ResourceIDs...). // 可选的资源ID
 				Save(context.Background())
 			if err != nil {
