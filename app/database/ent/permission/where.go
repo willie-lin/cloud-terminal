@@ -71,11 +71,6 @@ func Name(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldEQ(FieldName, v))
 }
 
-// Action applies equality check predicate on the "action" field. It's identical to ActionEQ.
-func Action(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldAction, v))
-}
-
 // ResourceType applies equality check predicate on the "resource_type" field. It's identical to ResourceTypeEQ.
 func ResourceType(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldEQ(FieldResourceType, v))
@@ -84,6 +79,11 @@ func ResourceType(v string) predicate.Permission {
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldEQ(FieldDescription, v))
+}
+
+// IsDisabled applies equality check predicate on the "is_disabled" field. It's identical to IsDisabledEQ.
+func IsDisabled(v bool) predicate.Permission {
+	return predicate.Permission(sql.FieldEQ(FieldIsDisabled, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -231,71 +231,6 @@ func NameContainsFold(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldContainsFold(FieldName, v))
 }
 
-// ActionEQ applies the EQ predicate on the "action" field.
-func ActionEQ(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldAction, v))
-}
-
-// ActionNEQ applies the NEQ predicate on the "action" field.
-func ActionNEQ(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldNEQ(FieldAction, v))
-}
-
-// ActionIn applies the In predicate on the "action" field.
-func ActionIn(vs ...string) predicate.Permission {
-	return predicate.Permission(sql.FieldIn(FieldAction, vs...))
-}
-
-// ActionNotIn applies the NotIn predicate on the "action" field.
-func ActionNotIn(vs ...string) predicate.Permission {
-	return predicate.Permission(sql.FieldNotIn(FieldAction, vs...))
-}
-
-// ActionGT applies the GT predicate on the "action" field.
-func ActionGT(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldGT(FieldAction, v))
-}
-
-// ActionGTE applies the GTE predicate on the "action" field.
-func ActionGTE(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldGTE(FieldAction, v))
-}
-
-// ActionLT applies the LT predicate on the "action" field.
-func ActionLT(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldLT(FieldAction, v))
-}
-
-// ActionLTE applies the LTE predicate on the "action" field.
-func ActionLTE(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldLTE(FieldAction, v))
-}
-
-// ActionContains applies the Contains predicate on the "action" field.
-func ActionContains(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldContains(FieldAction, v))
-}
-
-// ActionHasPrefix applies the HasPrefix predicate on the "action" field.
-func ActionHasPrefix(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldHasPrefix(FieldAction, v))
-}
-
-// ActionHasSuffix applies the HasSuffix predicate on the "action" field.
-func ActionHasSuffix(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldHasSuffix(FieldAction, v))
-}
-
-// ActionEqualFold applies the EqualFold predicate on the "action" field.
-func ActionEqualFold(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEqualFold(FieldAction, v))
-}
-
-// ActionContainsFold applies the ContainsFold predicate on the "action" field.
-func ActionContainsFold(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldContainsFold(FieldAction, v))
-}
-
 // ResourceTypeEQ applies the EQ predicate on the "resource_type" field.
 func ResourceTypeEQ(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldEQ(FieldResourceType, v))
@@ -434,6 +369,16 @@ func DescriptionEqualFold(v string) predicate.Permission {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.Permission {
 	return predicate.Permission(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// IsDisabledEQ applies the EQ predicate on the "is_disabled" field.
+func IsDisabledEQ(v bool) predicate.Permission {
+	return predicate.Permission(sql.FieldEQ(FieldIsDisabled, v))
+}
+
+// IsDisabledNEQ applies the NEQ predicate on the "is_disabled" field.
+func IsDisabledNEQ(v bool) predicate.Permission {
+	return predicate.Permission(sql.FieldNEQ(FieldIsDisabled, v))
 }
 
 // HasTenant applies the HasEdge predicate on the "tenant" edge.

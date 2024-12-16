@@ -24,9 +24,11 @@ func (Resource) Mixin() []ent.Mixin {
 func (Resource) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
-		field.String("type").NotEmpty(),
-		field.String("identifier").NotEmpty(),
-		field.String("description").Optional(),
+		field.String("name").Unique().NotEmpty(), // 资源的名称，例如"Database1"
+		field.String("type").NotEmpty(),          // 资源类型，例如"Database", "File", "IP"
+		field.String("value").NotEmpty(),         // 资源的具体值，例如数据库连接字符串，文件路径，IP地址
+		field.String("description").Optional(),   // 资源的描述
+		field.Bool("is_disabled").Default(false), // 标记角色是否被禁用
 	}
 }
 
@@ -41,8 +43,7 @@ func (Resource) Edges() []ent.Edge {
 // Indexes of the Resource.
 func (Resource) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("type"),
-		index.Fields("identifier").Unique(),
+		index.Fields("name").Unique(),
 	}
 }
 

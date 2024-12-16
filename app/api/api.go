@@ -82,28 +82,54 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error creating user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
 		}
-		// 检查超级管理员角色是否存在，如果不存在则创建
-		superAdminRole, err := client.Role.Query().Where(role.NameEQ("SuperAdmin")).Only(context.Background())
-		if err != nil {
-			if ent.IsNotFound(err) {
-				// 如果超级管理员角色不存在，则创建它
-				superAdminRole, err = client.Role.Create().
-					SetName("SuperAdmin").
-					SetDescription("超级管理员角色").
-					SetTenant(tenant). // 关联到租户
-					Save(context.Background())
-				if err != nil {
-					log.Printf("Error creating super admin role: %v", err)
-					return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating super admin role"})
-				}
-			} else {
-				log.Printf("Error fetching super admin role: %v", err)
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching super admin role"})
-			}
+
+		if err := InitializeTenantRolesAndPermissions(client, tenant.ID); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error initializing roles and permissions for tenant"})
 		}
+		//// 初始化租户的默认角色和权限，如果它们还不存在
+		//if err := InitializeTenantRolesAndPermissions(client, tenant.ID); err != nil {
+		//	log.Printf("Error initializing roles and permissions for tenant: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error initializing roles and permissions for tenant"})
+		//}
+
+		//检查管理员角色是否存在，如果不存在则创建
+		adminRole, err := client.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching admin role"})
+		}
+		//if err != nil {
+		//	if ent.IsNotFound(err) {
+		//		// 如果超级管理员角色不存在，则创建它
+		//		adminRole, err = client.Role.Create().
+		//			SetName("Admin").
+		//			SetDescription("管理员角色").
+		//			SetTenant(tenant). // 关联到租户
+		//			Save(context.Background())
+		//		if err != nil {
+		//			log.Printf("Error creating super admin role: %v", err)
+		//			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating super admin role"})
+		//		}
+		//	} else {
+		//		log.Printf("Error fetching super admin role: %v", err)
+		//		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching super admin role"})
+		//	}
+		//}
+
+		// 查找管理员角色
+		//adminRole, err := client.Role.Query().Where(role.NameEQ("Admin"), role.HasTenantWith(tenant.IDEQ(tenant.ID))).Only(context.Background())
+		//if err != nil {
+		//	log.Printf("Error fetching admin role: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching admin role"})
+		//}
+		// 查找租户的管理员角色
+		//adminRole, err := client.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
+		//if err != nil {
+		//	log.Printf("Error fetching admin role: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching admin role"})
+		//}
 
 		err = client.User.UpdateOne(us).
-			AddRoles(superAdminRole).
+			AddRoles(adminRole).
 			Exec(context.Background())
 		if err != nil {
 			log.Printf("Error assigning super admin role to user: %v", err)
@@ -198,13 +224,13 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(role.Description)
 
 		// 生成包含租户信息的accessToken
-		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, role.Name, us.Username, us.Email)
+		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Email, us.Username, role.Name)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 		// 生成包含租户信息的RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, role.Name, us.Username, us.Email)
+		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, us.Email, us.Username, role.Name)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})

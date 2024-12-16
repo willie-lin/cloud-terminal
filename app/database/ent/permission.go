@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -25,12 +26,14 @@ type Permission struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// Action holds the value of the "action" field.
-	Action string `json:"action,omitempty"`
+	// Actions holds the value of the "actions" field.
+	Actions []string `json:"actions,omitempty"`
 	// ResourceType holds the value of the "resource_type" field.
 	ResourceType string `json:"resource_type,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// IsDisabled holds the value of the "is_disabled" field.
+	IsDisabled bool `json:"is_disabled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PermissionQuery when eager-loading is set.
 	Edges              PermissionEdges `json:"edges"`
@@ -85,7 +88,11 @@ func (*Permission) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case permission.FieldName, permission.FieldAction, permission.FieldResourceType, permission.FieldDescription:
+		case permission.FieldActions:
+			values[i] = new([]byte)
+		case permission.FieldIsDisabled:
+			values[i] = new(sql.NullBool)
+		case permission.FieldName, permission.FieldResourceType, permission.FieldDescription:
 			values[i] = new(sql.NullString)
 		case permission.FieldCreatedAt, permission.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -132,11 +139,13 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pe.Name = value.String
 			}
-		case permission.FieldAction:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field action", values[i])
-			} else if value.Valid {
-				pe.Action = value.String
+		case permission.FieldActions:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field actions", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &pe.Actions); err != nil {
+					return fmt.Errorf("unmarshal field actions: %w", err)
+				}
 			}
 		case permission.FieldResourceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -149,6 +158,12 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				pe.Description = value.String
+			}
+		case permission.FieldIsDisabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_disabled", values[i])
+			} else if value.Valid {
+				pe.IsDisabled = value.Bool
 			}
 		case permission.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -217,14 +232,17 @@ func (pe *Permission) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(pe.Name)
 	builder.WriteString(", ")
-	builder.WriteString("action=")
-	builder.WriteString(pe.Action)
+	builder.WriteString("actions=")
+	builder.WriteString(fmt.Sprintf("%v", pe.Actions))
 	builder.WriteString(", ")
 	builder.WriteString("resource_type=")
 	builder.WriteString(pe.ResourceType)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(pe.Description)
+	builder.WriteString(", ")
+	builder.WriteString("is_disabled=")
+	builder.WriteString(fmt.Sprintf("%v", pe.IsDisabled))
 	builder.WriteByte(')')
 	return builder.String()
 }

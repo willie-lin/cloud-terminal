@@ -14,9 +14,10 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
-		{Name: "action", Type: field.TypeString},
+		{Name: "actions", Type: field.TypeJSON},
 		{Name: "resource_type", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "is_disabled", Type: field.TypeBool, Default: false},
 		{Name: "tenant_permissions", Type: field.TypeUUID, Nullable: true},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
@@ -27,7 +28,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "permissions_tenants_permissions",
-				Columns:    []*schema.Column{PermissionsColumns[7]},
+				Columns:    []*schema.Column{PermissionsColumns[8]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -45,10 +46,11 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeString},
-		{Name: "identifier", Type: field.TypeString},
+		{Name: "value", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "role_resources", Type: field.TypeUUID, Nullable: true},
+		{Name: "is_disabled", Type: field.TypeBool, Default: false},
 		{Name: "tenant_resources", Type: field.TypeUUID, Nullable: true},
 	}
 	// ResourcesTable holds the schema information for the "resources" table.
@@ -58,28 +60,17 @@ var (
 		PrimaryKey: []*schema.Column{ResourcesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "resources_roles_resources",
-				Columns:    []*schema.Column{ResourcesColumns[6]},
-				RefColumns: []*schema.Column{RolesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
 				Symbol:     "resources_tenants_resources",
-				Columns:    []*schema.Column{ResourcesColumns[7]},
+				Columns:    []*schema.Column{ResourcesColumns[8]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "resource_type",
-				Unique:  false,
-				Columns: []*schema.Column{ResourcesColumns[3]},
-			},
-			{
-				Name:    "resource_identifier",
+				Name:    "resource_name",
 				Unique:  true,
-				Columns: []*schema.Column{ResourcesColumns[4]},
+				Columns: []*schema.Column{ResourcesColumns[3]},
 			},
 		},
 	}
@@ -90,6 +81,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "is_disabled", Type: field.TypeBool, Default: false},
 		{Name: "tenant_roles", Type: field.TypeUUID, Nullable: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
@@ -100,7 +92,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "roles_tenants_roles",
-				Columns:    []*schema.Column{RolesColumns[5]},
+				Columns:    []*schema.Column{RolesColumns[6]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -268,8 +260,7 @@ var (
 
 func init() {
 	PermissionsTable.ForeignKeys[0].RefTable = TenantsTable
-	ResourcesTable.ForeignKeys[0].RefTable = RolesTable
-	ResourcesTable.ForeignKeys[1].RefTable = TenantsTable
+	ResourcesTable.ForeignKeys[0].RefTable = TenantsTable
 	RolesTable.ForeignKeys[0].RefTable = TenantsTable
 	UsersTable.ForeignKeys[0].RefTable = TenantsTable
 	ResourcePermissionsTable.ForeignKeys[0].RefTable = ResourcesTable

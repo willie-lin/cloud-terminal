@@ -37,6 +37,20 @@ func (ru *ResourceUpdate) SetUpdatedAt(t time.Time) *ResourceUpdate {
 	return ru
 }
 
+// SetName sets the "name" field.
+func (ru *ResourceUpdate) SetName(s string) *ResourceUpdate {
+	ru.mutation.SetName(s)
+	return ru
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (ru *ResourceUpdate) SetNillableName(s *string) *ResourceUpdate {
+	if s != nil {
+		ru.SetName(*s)
+	}
+	return ru
+}
+
 // SetType sets the "type" field.
 func (ru *ResourceUpdate) SetType(s string) *ResourceUpdate {
 	ru.mutation.SetType(s)
@@ -51,16 +65,16 @@ func (ru *ResourceUpdate) SetNillableType(s *string) *ResourceUpdate {
 	return ru
 }
 
-// SetIdentifier sets the "identifier" field.
-func (ru *ResourceUpdate) SetIdentifier(s string) *ResourceUpdate {
-	ru.mutation.SetIdentifier(s)
+// SetValue sets the "value" field.
+func (ru *ResourceUpdate) SetValue(s string) *ResourceUpdate {
+	ru.mutation.SetValue(s)
 	return ru
 }
 
-// SetNillableIdentifier sets the "identifier" field if the given value is not nil.
-func (ru *ResourceUpdate) SetNillableIdentifier(s *string) *ResourceUpdate {
+// SetNillableValue sets the "value" field if the given value is not nil.
+func (ru *ResourceUpdate) SetNillableValue(s *string) *ResourceUpdate {
 	if s != nil {
-		ru.SetIdentifier(*s)
+		ru.SetValue(*s)
 	}
 	return ru
 }
@@ -82,6 +96,20 @@ func (ru *ResourceUpdate) SetNillableDescription(s *string) *ResourceUpdate {
 // ClearDescription clears the value of the "description" field.
 func (ru *ResourceUpdate) ClearDescription() *ResourceUpdate {
 	ru.mutation.ClearDescription()
+	return ru
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (ru *ResourceUpdate) SetIsDisabled(b bool) *ResourceUpdate {
+	ru.mutation.SetIsDisabled(b)
+	return ru
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (ru *ResourceUpdate) SetNillableIsDisabled(b *bool) *ResourceUpdate {
+	if b != nil {
+		ru.SetIsDisabled(*b)
+	}
 	return ru
 }
 
@@ -195,14 +223,19 @@ func (ru *ResourceUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (ru *ResourceUpdate) check() error {
+	if v, ok := ru.mutation.Name(); ok {
+		if err := resource.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Resource.name": %w`, err)}
+		}
+	}
 	if v, ok := ru.mutation.GetType(); ok {
 		if err := resource.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if v, ok := ru.mutation.Identifier(); ok {
-		if err := resource.IdentifierValidator(v); err != nil {
-			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "Resource.identifier": %w`, err)}
+	if v, ok := ru.mutation.Value(); ok {
+		if err := resource.ValueValidator(v); err != nil {
+			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "Resource.value": %w`, err)}
 		}
 	}
 	return nil
@@ -223,17 +256,23 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.UpdatedAt(); ok {
 		_spec.SetField(resource.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ru.mutation.Name(); ok {
+		_spec.SetField(resource.FieldName, field.TypeString, value)
+	}
 	if value, ok := ru.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 	}
-	if value, ok := ru.mutation.Identifier(); ok {
-		_spec.SetField(resource.FieldIdentifier, field.TypeString, value)
+	if value, ok := ru.mutation.Value(); ok {
+		_spec.SetField(resource.FieldValue, field.TypeString, value)
 	}
 	if value, ok := ru.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
 	}
 	if ru.mutation.DescriptionCleared() {
 		_spec.ClearField(resource.FieldDescription, field.TypeString)
+	}
+	if value, ok := ru.mutation.IsDisabled(); ok {
+		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
 	}
 	if ru.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -335,6 +374,20 @@ func (ruo *ResourceUpdateOne) SetUpdatedAt(t time.Time) *ResourceUpdateOne {
 	return ruo
 }
 
+// SetName sets the "name" field.
+func (ruo *ResourceUpdateOne) SetName(s string) *ResourceUpdateOne {
+	ruo.mutation.SetName(s)
+	return ruo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (ruo *ResourceUpdateOne) SetNillableName(s *string) *ResourceUpdateOne {
+	if s != nil {
+		ruo.SetName(*s)
+	}
+	return ruo
+}
+
 // SetType sets the "type" field.
 func (ruo *ResourceUpdateOne) SetType(s string) *ResourceUpdateOne {
 	ruo.mutation.SetType(s)
@@ -349,16 +402,16 @@ func (ruo *ResourceUpdateOne) SetNillableType(s *string) *ResourceUpdateOne {
 	return ruo
 }
 
-// SetIdentifier sets the "identifier" field.
-func (ruo *ResourceUpdateOne) SetIdentifier(s string) *ResourceUpdateOne {
-	ruo.mutation.SetIdentifier(s)
+// SetValue sets the "value" field.
+func (ruo *ResourceUpdateOne) SetValue(s string) *ResourceUpdateOne {
+	ruo.mutation.SetValue(s)
 	return ruo
 }
 
-// SetNillableIdentifier sets the "identifier" field if the given value is not nil.
-func (ruo *ResourceUpdateOne) SetNillableIdentifier(s *string) *ResourceUpdateOne {
+// SetNillableValue sets the "value" field if the given value is not nil.
+func (ruo *ResourceUpdateOne) SetNillableValue(s *string) *ResourceUpdateOne {
 	if s != nil {
-		ruo.SetIdentifier(*s)
+		ruo.SetValue(*s)
 	}
 	return ruo
 }
@@ -380,6 +433,20 @@ func (ruo *ResourceUpdateOne) SetNillableDescription(s *string) *ResourceUpdateO
 // ClearDescription clears the value of the "description" field.
 func (ruo *ResourceUpdateOne) ClearDescription() *ResourceUpdateOne {
 	ruo.mutation.ClearDescription()
+	return ruo
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (ruo *ResourceUpdateOne) SetIsDisabled(b bool) *ResourceUpdateOne {
+	ruo.mutation.SetIsDisabled(b)
+	return ruo
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (ruo *ResourceUpdateOne) SetNillableIsDisabled(b *bool) *ResourceUpdateOne {
+	if b != nil {
+		ruo.SetIsDisabled(*b)
+	}
 	return ruo
 }
 
@@ -506,14 +573,19 @@ func (ruo *ResourceUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (ruo *ResourceUpdateOne) check() error {
+	if v, ok := ruo.mutation.Name(); ok {
+		if err := resource.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Resource.name": %w`, err)}
+		}
+	}
 	if v, ok := ruo.mutation.GetType(); ok {
 		if err := resource.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if v, ok := ruo.mutation.Identifier(); ok {
-		if err := resource.IdentifierValidator(v); err != nil {
-			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "Resource.identifier": %w`, err)}
+	if v, ok := ruo.mutation.Value(); ok {
+		if err := resource.ValueValidator(v); err != nil {
+			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "Resource.value": %w`, err)}
 		}
 	}
 	return nil
@@ -551,17 +623,23 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 	if value, ok := ruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(resource.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ruo.mutation.Name(); ok {
+		_spec.SetField(resource.FieldName, field.TypeString, value)
+	}
 	if value, ok := ruo.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 	}
-	if value, ok := ruo.mutation.Identifier(); ok {
-		_spec.SetField(resource.FieldIdentifier, field.TypeString, value)
+	if value, ok := ruo.mutation.Value(); ok {
+		_spec.SetField(resource.FieldValue, field.TypeString, value)
 	}
 	if value, ok := ruo.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
 	}
 	if ruo.mutation.DescriptionCleared() {
 		_spec.ClearField(resource.FieldDescription, field.TypeString)
+	}
+	if value, ok := ruo.mutation.IsDisabled(); ok {
+		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
 	}
 	if ruo.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{

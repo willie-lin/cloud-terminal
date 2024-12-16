@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
@@ -52,17 +53,15 @@ func (pu *PermissionUpdate) SetNillableName(s *string) *PermissionUpdate {
 	return pu
 }
 
-// SetAction sets the "action" field.
-func (pu *PermissionUpdate) SetAction(s string) *PermissionUpdate {
-	pu.mutation.SetAction(s)
+// SetActions sets the "actions" field.
+func (pu *PermissionUpdate) SetActions(s []string) *PermissionUpdate {
+	pu.mutation.SetActions(s)
 	return pu
 }
 
-// SetNillableAction sets the "action" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableAction(s *string) *PermissionUpdate {
-	if s != nil {
-		pu.SetAction(*s)
-	}
+// AppendActions appends s to the "actions" field.
+func (pu *PermissionUpdate) AppendActions(s []string) *PermissionUpdate {
+	pu.mutation.AppendActions(s)
 	return pu
 }
 
@@ -97,6 +96,20 @@ func (pu *PermissionUpdate) SetNillableDescription(s *string) *PermissionUpdate 
 // ClearDescription clears the value of the "description" field.
 func (pu *PermissionUpdate) ClearDescription() *PermissionUpdate {
 	pu.mutation.ClearDescription()
+	return pu
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (pu *PermissionUpdate) SetIsDisabled(b bool) *PermissionUpdate {
+	pu.mutation.SetIsDisabled(b)
+	return pu
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (pu *PermissionUpdate) SetNillableIsDisabled(b *bool) *PermissionUpdate {
+	if b != nil {
+		pu.SetIsDisabled(*b)
+	}
 	return pu
 }
 
@@ -272,8 +285,13 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.Name(); ok {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.Action(); ok {
-		_spec.SetField(permission.FieldAction, field.TypeString, value)
+	if value, ok := pu.mutation.Actions(); ok {
+		_spec.SetField(permission.FieldActions, field.TypeJSON, value)
+	}
+	if value, ok := pu.mutation.AppendedActions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, permission.FieldActions, value)
+		})
 	}
 	if value, ok := pu.mutation.ResourceType(); ok {
 		_spec.SetField(permission.FieldResourceType, field.TypeString, value)
@@ -283,6 +301,9 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.DescriptionCleared() {
 		_spec.ClearField(permission.FieldDescription, field.TypeString)
+	}
+	if value, ok := pu.mutation.IsDisabled(); ok {
+		_spec.SetField(permission.FieldIsDisabled, field.TypeBool, value)
 	}
 	if pu.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -443,17 +464,15 @@ func (puo *PermissionUpdateOne) SetNillableName(s *string) *PermissionUpdateOne 
 	return puo
 }
 
-// SetAction sets the "action" field.
-func (puo *PermissionUpdateOne) SetAction(s string) *PermissionUpdateOne {
-	puo.mutation.SetAction(s)
+// SetActions sets the "actions" field.
+func (puo *PermissionUpdateOne) SetActions(s []string) *PermissionUpdateOne {
+	puo.mutation.SetActions(s)
 	return puo
 }
 
-// SetNillableAction sets the "action" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableAction(s *string) *PermissionUpdateOne {
-	if s != nil {
-		puo.SetAction(*s)
-	}
+// AppendActions appends s to the "actions" field.
+func (puo *PermissionUpdateOne) AppendActions(s []string) *PermissionUpdateOne {
+	puo.mutation.AppendActions(s)
 	return puo
 }
 
@@ -488,6 +507,20 @@ func (puo *PermissionUpdateOne) SetNillableDescription(s *string) *PermissionUpd
 // ClearDescription clears the value of the "description" field.
 func (puo *PermissionUpdateOne) ClearDescription() *PermissionUpdateOne {
 	puo.mutation.ClearDescription()
+	return puo
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (puo *PermissionUpdateOne) SetIsDisabled(b bool) *PermissionUpdateOne {
+	puo.mutation.SetIsDisabled(b)
+	return puo
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (puo *PermissionUpdateOne) SetNillableIsDisabled(b *bool) *PermissionUpdateOne {
+	if b != nil {
+		puo.SetIsDisabled(*b)
+	}
 	return puo
 }
 
@@ -693,8 +726,13 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 	if value, ok := puo.mutation.Name(); ok {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.Action(); ok {
-		_spec.SetField(permission.FieldAction, field.TypeString, value)
+	if value, ok := puo.mutation.Actions(); ok {
+		_spec.SetField(permission.FieldActions, field.TypeJSON, value)
+	}
+	if value, ok := puo.mutation.AppendedActions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, permission.FieldActions, value)
+		})
 	}
 	if value, ok := puo.mutation.ResourceType(); ok {
 		_spec.SetField(permission.FieldResourceType, field.TypeString, value)
@@ -704,6 +742,9 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 	}
 	if puo.mutation.DescriptionCleared() {
 		_spec.ClearField(permission.FieldDescription, field.TypeString)
+	}
+	if value, ok := puo.mutation.IsDisabled(); ok {
+		_spec.SetField(permission.FieldIsDisabled, field.TypeBool, value)
 	}
 	if puo.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{

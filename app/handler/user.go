@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
@@ -23,13 +24,27 @@ import (
 // CreateUser 创建一个新用户
 func CreateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
-		username := utils.GenerateUsername()
+		// 从请求上下文中获取租户ID,
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			log.Printf("No viewer found in context or not authorized")
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+
+		roleName := strings.ToLower(v.RoleName)
+		fmt.Println(roleName)
+		if roleName != "superadmin" && roleName != "admin" {
+			log.Printf("User is not authorized")
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
 
 		type UserDTO struct {
 			Email      string `json:"email"`
 			Password   string `json:"password"`
 			Online     bool   `json:"online"`
 			EnableType bool   `json:"enable_type"`
+			//RoleID     uuid.UUID `json:"roleID"`
+			//RoleName string `json:"role_name"`
 		}
 
 		dto := new(UserDTO)
@@ -45,16 +60,33 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		// 从请求上下文中获取租户ID
-		tenantID := c.Get("tenant_id").(uuid.UUID)
+		const defaultRoleName = "user"
 
+		// 检查是否存在默认角色，不存在则创建
+		role, err := client.Role.Query().Where(role.NameEQ(defaultRoleName)).Only(context.Background())
+		if ent.IsNotFound(err) {
+			role, err = client.Role.Create().
+				SetName(defaultRoleName).
+				Save(context.Background())
+			if err != nil {
+				log.Printf("Error creating default role: %v", err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create default role"})
+			}
+		} else if err != nil {
+			log.Printf("Error querying default role: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to query default role"})
+		}
+
+		// 创建用户并分配默认角色
 		us, err := client.User.Create().
 			SetEmail(dto.Email).
-			SetUsername(username).
+			SetUsername(utils.GenerateUsername()).
 			SetPassword(string(hashedPassword)).
 			SetOnline(dto.Online).
 			SetEnableType(dto.EnableType).
-			SetTenantID(tenantID). // 关联到租户
+			SetTenantID(v.TenantID). // 关联到租户
+			AddRoles(role).
+			//SetRolesID(dto.RoleID).
 			Save(context.Background())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
@@ -417,5 +449,52 @@ func UpdateUserByUUID(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, "Error updating user")
 		}
 		return c.JSON(http.StatusOK, user)
+	}
+}
+
+// AssignRoleToUser 创建一个单独的 API 来为用户分配角色：
+func AssignRoleToUser(client *ent.Client) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil || strings.ToLower(v.RoleName) != "superadmin" && strings.ToLower(v.RoleName) != "admin" {
+			log.Printf("No viewer found in context or not authorized")
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+
+		type AssignRoleDTO struct {
+			UserID uuid.UUID `json:"user_id"`
+			RoleID uuid.UUID `json:"role_id"`
+		}
+
+		var dto AssignRoleDTO
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding role assignment: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
+		// 检查用户是否存在
+		user, err := client.User.Get(context.Background(), dto.UserID)
+		if err != nil {
+			log.Printf("User not found: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "User not found"})
+		}
+
+		// 检查角色是否存在
+		role, err := client.Role.Query().Where(role.IDEQ(dto.RoleID)).Only(context.Background())
+		if err != nil {
+			log.Printf("Role not found: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Role not found"})
+		}
+
+		// 关联用户和角色
+		err = client.User.UpdateOne(user).
+			AddRoles(role).
+			Exec(context.Background())
+		if err != nil {
+			log.Printf("Error assigning role to user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to assign role to user"})
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{"message": "Role assigned to user successfully"})
 	}
 }

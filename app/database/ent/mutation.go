@@ -45,9 +45,11 @@ type PermissionMutation struct {
 	created_at      *time.Time
 	updated_at      *time.Time
 	name            *string
-	action          *string
+	actions         *[]string
+	appendactions   []string
 	resource_type   *string
 	description     *string
+	is_disabled     *bool
 	clearedFields   map[string]struct{}
 	tenant          *uuid.UUID
 	clearedtenant   bool
@@ -274,40 +276,55 @@ func (m *PermissionMutation) ResetName() {
 	m.name = nil
 }
 
-// SetAction sets the "action" field.
-func (m *PermissionMutation) SetAction(s string) {
-	m.action = &s
+// SetActions sets the "actions" field.
+func (m *PermissionMutation) SetActions(s []string) {
+	m.actions = &s
+	m.appendactions = nil
 }
 
-// Action returns the value of the "action" field in the mutation.
-func (m *PermissionMutation) Action() (r string, exists bool) {
-	v := m.action
+// Actions returns the value of the "actions" field in the mutation.
+func (m *PermissionMutation) Actions() (r []string, exists bool) {
+	v := m.actions
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldAction returns the old "action" field's value of the Permission entity.
+// OldActions returns the old "actions" field's value of the Permission entity.
 // If the Permission object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PermissionMutation) OldAction(ctx context.Context) (v string, err error) {
+func (m *PermissionMutation) OldActions(ctx context.Context) (v []string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAction is only allowed on UpdateOne operations")
+		return v, errors.New("OldActions is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAction requires an ID field in the mutation")
+		return v, errors.New("OldActions requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAction: %w", err)
+		return v, fmt.Errorf("querying old value for OldActions: %w", err)
 	}
-	return oldValue.Action, nil
+	return oldValue.Actions, nil
 }
 
-// ResetAction resets all changes to the "action" field.
-func (m *PermissionMutation) ResetAction() {
-	m.action = nil
+// AppendActions adds s to the "actions" field.
+func (m *PermissionMutation) AppendActions(s []string) {
+	m.appendactions = append(m.appendactions, s...)
+}
+
+// AppendedActions returns the list of values that were appended to the "actions" field in this mutation.
+func (m *PermissionMutation) AppendedActions() ([]string, bool) {
+	if len(m.appendactions) == 0 {
+		return nil, false
+	}
+	return m.appendactions, true
+}
+
+// ResetActions resets all changes to the "actions" field.
+func (m *PermissionMutation) ResetActions() {
+	m.actions = nil
+	m.appendactions = nil
 }
 
 // SetResourceType sets the "resource_type" field.
@@ -393,6 +410,42 @@ func (m *PermissionMutation) DescriptionCleared() bool {
 func (m *PermissionMutation) ResetDescription() {
 	m.description = nil
 	delete(m.clearedFields, permission.FieldDescription)
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (m *PermissionMutation) SetIsDisabled(b bool) {
+	m.is_disabled = &b
+}
+
+// IsDisabled returns the value of the "is_disabled" field in the mutation.
+func (m *PermissionMutation) IsDisabled() (r bool, exists bool) {
+	v := m.is_disabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDisabled returns the old "is_disabled" field's value of the Permission entity.
+// If the Permission object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PermissionMutation) OldIsDisabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDisabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDisabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDisabled: %w", err)
+	}
+	return oldValue.IsDisabled, nil
+}
+
+// ResetIsDisabled resets all changes to the "is_disabled" field.
+func (m *PermissionMutation) ResetIsDisabled() {
+	m.is_disabled = nil
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by id.
@@ -576,7 +629,7 @@ func (m *PermissionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PermissionMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.created_at != nil {
 		fields = append(fields, permission.FieldCreatedAt)
 	}
@@ -586,14 +639,17 @@ func (m *PermissionMutation) Fields() []string {
 	if m.name != nil {
 		fields = append(fields, permission.FieldName)
 	}
-	if m.action != nil {
-		fields = append(fields, permission.FieldAction)
+	if m.actions != nil {
+		fields = append(fields, permission.FieldActions)
 	}
 	if m.resource_type != nil {
 		fields = append(fields, permission.FieldResourceType)
 	}
 	if m.description != nil {
 		fields = append(fields, permission.FieldDescription)
+	}
+	if m.is_disabled != nil {
+		fields = append(fields, permission.FieldIsDisabled)
 	}
 	return fields
 }
@@ -609,12 +665,14 @@ func (m *PermissionMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdatedAt()
 	case permission.FieldName:
 		return m.Name()
-	case permission.FieldAction:
-		return m.Action()
+	case permission.FieldActions:
+		return m.Actions()
 	case permission.FieldResourceType:
 		return m.ResourceType()
 	case permission.FieldDescription:
 		return m.Description()
+	case permission.FieldIsDisabled:
+		return m.IsDisabled()
 	}
 	return nil, false
 }
@@ -630,12 +688,14 @@ func (m *PermissionMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldUpdatedAt(ctx)
 	case permission.FieldName:
 		return m.OldName(ctx)
-	case permission.FieldAction:
-		return m.OldAction(ctx)
+	case permission.FieldActions:
+		return m.OldActions(ctx)
 	case permission.FieldResourceType:
 		return m.OldResourceType(ctx)
 	case permission.FieldDescription:
 		return m.OldDescription(ctx)
+	case permission.FieldIsDisabled:
+		return m.OldIsDisabled(ctx)
 	}
 	return nil, fmt.Errorf("unknown Permission field %s", name)
 }
@@ -666,12 +726,12 @@ func (m *PermissionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case permission.FieldAction:
-		v, ok := value.(string)
+	case permission.FieldActions:
+		v, ok := value.([]string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetAction(v)
+		m.SetActions(v)
 		return nil
 	case permission.FieldResourceType:
 		v, ok := value.(string)
@@ -686,6 +746,13 @@ func (m *PermissionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
+		return nil
+	case permission.FieldIsDisabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDisabled(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Permission field %s", name)
@@ -754,14 +821,17 @@ func (m *PermissionMutation) ResetField(name string) error {
 	case permission.FieldName:
 		m.ResetName()
 		return nil
-	case permission.FieldAction:
-		m.ResetAction()
+	case permission.FieldActions:
+		m.ResetActions()
 		return nil
 	case permission.FieldResourceType:
 		m.ResetResourceType()
 		return nil
 	case permission.FieldDescription:
 		m.ResetDescription()
+		return nil
+	case permission.FieldIsDisabled:
+		m.ResetIsDisabled()
 		return nil
 	}
 	return fmt.Errorf("unknown Permission field %s", name)
@@ -903,9 +973,11 @@ type ResourceMutation struct {
 	id                 *uuid.UUID
 	created_at         *time.Time
 	updated_at         *time.Time
+	name               *string
 	_type              *string
-	identifier         *string
+	value              *string
 	description        *string
+	is_disabled        *bool
 	clearedFields      map[string]struct{}
 	tenant             *uuid.UUID
 	clearedtenant      bool
@@ -1093,6 +1165,42 @@ func (m *ResourceMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetName sets the "name" field.
+func (m *ResourceMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ResourceMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Resource entity.
+// If the Resource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ResourceMutation) ResetName() {
+	m.name = nil
+}
+
 // SetType sets the "type" field.
 func (m *ResourceMutation) SetType(s string) {
 	m._type = &s
@@ -1129,40 +1237,40 @@ func (m *ResourceMutation) ResetType() {
 	m._type = nil
 }
 
-// SetIdentifier sets the "identifier" field.
-func (m *ResourceMutation) SetIdentifier(s string) {
-	m.identifier = &s
+// SetValue sets the "value" field.
+func (m *ResourceMutation) SetValue(s string) {
+	m.value = &s
 }
 
-// Identifier returns the value of the "identifier" field in the mutation.
-func (m *ResourceMutation) Identifier() (r string, exists bool) {
-	v := m.identifier
+// Value returns the value of the "value" field in the mutation.
+func (m *ResourceMutation) Value() (r string, exists bool) {
+	v := m.value
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldIdentifier returns the old "identifier" field's value of the Resource entity.
+// OldValue returns the old "value" field's value of the Resource entity.
 // If the Resource object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResourceMutation) OldIdentifier(ctx context.Context) (v string, err error) {
+func (m *ResourceMutation) OldValue(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIdentifier is only allowed on UpdateOne operations")
+		return v, errors.New("OldValue is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIdentifier requires an ID field in the mutation")
+		return v, errors.New("OldValue requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIdentifier: %w", err)
+		return v, fmt.Errorf("querying old value for OldValue: %w", err)
 	}
-	return oldValue.Identifier, nil
+	return oldValue.Value, nil
 }
 
-// ResetIdentifier resets all changes to the "identifier" field.
-func (m *ResourceMutation) ResetIdentifier() {
-	m.identifier = nil
+// ResetValue resets all changes to the "value" field.
+func (m *ResourceMutation) ResetValue() {
+	m.value = nil
 }
 
 // SetDescription sets the "description" field.
@@ -1212,6 +1320,42 @@ func (m *ResourceMutation) DescriptionCleared() bool {
 func (m *ResourceMutation) ResetDescription() {
 	m.description = nil
 	delete(m.clearedFields, resource.FieldDescription)
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (m *ResourceMutation) SetIsDisabled(b bool) {
+	m.is_disabled = &b
+}
+
+// IsDisabled returns the value of the "is_disabled" field in the mutation.
+func (m *ResourceMutation) IsDisabled() (r bool, exists bool) {
+	v := m.is_disabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDisabled returns the old "is_disabled" field's value of the Resource entity.
+// If the Resource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceMutation) OldIsDisabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDisabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDisabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDisabled: %w", err)
+	}
+	return oldValue.IsDisabled, nil
+}
+
+// ResetIsDisabled resets all changes to the "is_disabled" field.
+func (m *ResourceMutation) ResetIsDisabled() {
+	m.is_disabled = nil
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by id.
@@ -1341,21 +1485,27 @@ func (m *ResourceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ResourceMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 7)
 	if m.created_at != nil {
 		fields = append(fields, resource.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, resource.FieldUpdatedAt)
 	}
+	if m.name != nil {
+		fields = append(fields, resource.FieldName)
+	}
 	if m._type != nil {
 		fields = append(fields, resource.FieldType)
 	}
-	if m.identifier != nil {
-		fields = append(fields, resource.FieldIdentifier)
+	if m.value != nil {
+		fields = append(fields, resource.FieldValue)
 	}
 	if m.description != nil {
 		fields = append(fields, resource.FieldDescription)
+	}
+	if m.is_disabled != nil {
+		fields = append(fields, resource.FieldIsDisabled)
 	}
 	return fields
 }
@@ -1369,12 +1519,16 @@ func (m *ResourceMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case resource.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case resource.FieldName:
+		return m.Name()
 	case resource.FieldType:
 		return m.GetType()
-	case resource.FieldIdentifier:
-		return m.Identifier()
+	case resource.FieldValue:
+		return m.Value()
 	case resource.FieldDescription:
 		return m.Description()
+	case resource.FieldIsDisabled:
+		return m.IsDisabled()
 	}
 	return nil, false
 }
@@ -1388,12 +1542,16 @@ func (m *ResourceMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldCreatedAt(ctx)
 	case resource.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case resource.FieldName:
+		return m.OldName(ctx)
 	case resource.FieldType:
 		return m.OldType(ctx)
-	case resource.FieldIdentifier:
-		return m.OldIdentifier(ctx)
+	case resource.FieldValue:
+		return m.OldValue(ctx)
 	case resource.FieldDescription:
 		return m.OldDescription(ctx)
+	case resource.FieldIsDisabled:
+		return m.OldIsDisabled(ctx)
 	}
 	return nil, fmt.Errorf("unknown Resource field %s", name)
 }
@@ -1417,6 +1575,13 @@ func (m *ResourceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case resource.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
 	case resource.FieldType:
 		v, ok := value.(string)
 		if !ok {
@@ -1424,12 +1589,12 @@ func (m *ResourceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetType(v)
 		return nil
-	case resource.FieldIdentifier:
+	case resource.FieldValue:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetIdentifier(v)
+		m.SetValue(v)
 		return nil
 	case resource.FieldDescription:
 		v, ok := value.(string)
@@ -1437,6 +1602,13 @@ func (m *ResourceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
+		return nil
+	case resource.FieldIsDisabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDisabled(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Resource field %s", name)
@@ -1502,14 +1674,20 @@ func (m *ResourceMutation) ResetField(name string) error {
 	case resource.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case resource.FieldName:
+		m.ResetName()
+		return nil
 	case resource.FieldType:
 		m.ResetType()
 		return nil
-	case resource.FieldIdentifier:
-		m.ResetIdentifier()
+	case resource.FieldValue:
+		m.ResetValue()
 		return nil
 	case resource.FieldDescription:
 		m.ResetDescription()
+		return nil
+	case resource.FieldIsDisabled:
+		m.ResetIsDisabled()
 		return nil
 	}
 	return fmt.Errorf("unknown Resource field %s", name)
@@ -1627,6 +1805,7 @@ type RoleMutation struct {
 	updated_at         *time.Time
 	name               *string
 	description        *string
+	is_disabled        *bool
 	clearedFields      map[string]struct{}
 	tenant             *uuid.UUID
 	clearedtenant      bool
@@ -1636,9 +1815,6 @@ type RoleMutation struct {
 	permissions        map[uuid.UUID]struct{}
 	removedpermissions map[uuid.UUID]struct{}
 	clearedpermissions bool
-	resources          map[uuid.UUID]struct{}
-	removedresources   map[uuid.UUID]struct{}
-	clearedresources   bool
 	done               bool
 	oldValue           func(context.Context) (*Role, error)
 	predicates         []predicate.Role
@@ -1905,6 +2081,42 @@ func (m *RoleMutation) ResetDescription() {
 	delete(m.clearedFields, role.FieldDescription)
 }
 
+// SetIsDisabled sets the "is_disabled" field.
+func (m *RoleMutation) SetIsDisabled(b bool) {
+	m.is_disabled = &b
+}
+
+// IsDisabled returns the value of the "is_disabled" field in the mutation.
+func (m *RoleMutation) IsDisabled() (r bool, exists bool) {
+	v := m.is_disabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDisabled returns the old "is_disabled" field's value of the Role entity.
+// If the Role object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RoleMutation) OldIsDisabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDisabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDisabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDisabled: %w", err)
+	}
+	return oldValue.IsDisabled, nil
+}
+
+// ResetIsDisabled resets all changes to the "is_disabled" field.
+func (m *RoleMutation) ResetIsDisabled() {
+	m.is_disabled = nil
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by id.
 func (m *RoleMutation) SetTenantID(id uuid.UUID) {
 	m.tenant = &id
@@ -2052,60 +2264,6 @@ func (m *RoleMutation) ResetPermissions() {
 	m.removedpermissions = nil
 }
 
-// AddResourceIDs adds the "resources" edge to the Resource entity by ids.
-func (m *RoleMutation) AddResourceIDs(ids ...uuid.UUID) {
-	if m.resources == nil {
-		m.resources = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.resources[ids[i]] = struct{}{}
-	}
-}
-
-// ClearResources clears the "resources" edge to the Resource entity.
-func (m *RoleMutation) ClearResources() {
-	m.clearedresources = true
-}
-
-// ResourcesCleared reports if the "resources" edge to the Resource entity was cleared.
-func (m *RoleMutation) ResourcesCleared() bool {
-	return m.clearedresources
-}
-
-// RemoveResourceIDs removes the "resources" edge to the Resource entity by IDs.
-func (m *RoleMutation) RemoveResourceIDs(ids ...uuid.UUID) {
-	if m.removedresources == nil {
-		m.removedresources = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.resources, ids[i])
-		m.removedresources[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedResources returns the removed IDs of the "resources" edge to the Resource entity.
-func (m *RoleMutation) RemovedResourcesIDs() (ids []uuid.UUID) {
-	for id := range m.removedresources {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResourcesIDs returns the "resources" edge IDs in the mutation.
-func (m *RoleMutation) ResourcesIDs() (ids []uuid.UUID) {
-	for id := range m.resources {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetResources resets all changes to the "resources" edge.
-func (m *RoleMutation) ResetResources() {
-	m.resources = nil
-	m.clearedresources = false
-	m.removedresources = nil
-}
-
 // Where appends a list predicates to the RoleMutation builder.
 func (m *RoleMutation) Where(ps ...predicate.Role) {
 	m.predicates = append(m.predicates, ps...)
@@ -2140,7 +2298,7 @@ func (m *RoleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RoleMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, role.FieldCreatedAt)
 	}
@@ -2152,6 +2310,9 @@ func (m *RoleMutation) Fields() []string {
 	}
 	if m.description != nil {
 		fields = append(fields, role.FieldDescription)
+	}
+	if m.is_disabled != nil {
+		fields = append(fields, role.FieldIsDisabled)
 	}
 	return fields
 }
@@ -2169,6 +2330,8 @@ func (m *RoleMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case role.FieldDescription:
 		return m.Description()
+	case role.FieldIsDisabled:
+		return m.IsDisabled()
 	}
 	return nil, false
 }
@@ -2186,6 +2349,8 @@ func (m *RoleMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldName(ctx)
 	case role.FieldDescription:
 		return m.OldDescription(ctx)
+	case role.FieldIsDisabled:
+		return m.OldIsDisabled(ctx)
 	}
 	return nil, fmt.Errorf("unknown Role field %s", name)
 }
@@ -2222,6 +2387,13 @@ func (m *RoleMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
+		return nil
+	case role.FieldIsDisabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDisabled(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Role field %s", name)
@@ -2293,13 +2465,16 @@ func (m *RoleMutation) ResetField(name string) error {
 	case role.FieldDescription:
 		m.ResetDescription()
 		return nil
+	case role.FieldIsDisabled:
+		m.ResetIsDisabled()
+		return nil
 	}
 	return fmt.Errorf("unknown Role field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RoleMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.tenant != nil {
 		edges = append(edges, role.EdgeTenant)
 	}
@@ -2308,9 +2483,6 @@ func (m *RoleMutation) AddedEdges() []string {
 	}
 	if m.permissions != nil {
 		edges = append(edges, role.EdgePermissions)
-	}
-	if m.resources != nil {
-		edges = append(edges, role.EdgeResources)
 	}
 	return edges
 }
@@ -2335,27 +2507,18 @@ func (m *RoleMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case role.EdgeResources:
-		ids := make([]ent.Value, 0, len(m.resources))
-		for id := range m.resources {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RoleMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.removedusers != nil {
 		edges = append(edges, role.EdgeUsers)
 	}
 	if m.removedpermissions != nil {
 		edges = append(edges, role.EdgePermissions)
-	}
-	if m.removedresources != nil {
-		edges = append(edges, role.EdgeResources)
 	}
 	return edges
 }
@@ -2376,19 +2539,13 @@ func (m *RoleMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case role.EdgeResources:
-		ids := make([]ent.Value, 0, len(m.removedresources))
-		for id := range m.removedresources {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RoleMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.clearedtenant {
 		edges = append(edges, role.EdgeTenant)
 	}
@@ -2397,9 +2554,6 @@ func (m *RoleMutation) ClearedEdges() []string {
 	}
 	if m.clearedpermissions {
 		edges = append(edges, role.EdgePermissions)
-	}
-	if m.clearedresources {
-		edges = append(edges, role.EdgeResources)
 	}
 	return edges
 }
@@ -2414,8 +2568,6 @@ func (m *RoleMutation) EdgeCleared(name string) bool {
 		return m.clearedusers
 	case role.EdgePermissions:
 		return m.clearedpermissions
-	case role.EdgeResources:
-		return m.clearedresources
 	}
 	return false
 }
@@ -2443,9 +2595,6 @@ func (m *RoleMutation) ResetEdge(name string) error {
 		return nil
 	case role.EdgePermissions:
 		m.ResetPermissions()
-		return nil
-	case role.EdgeResources:
-		m.ResetResources()
 		return nil
 	}
 	return fmt.Errorf("unknown Role edge %s", name)

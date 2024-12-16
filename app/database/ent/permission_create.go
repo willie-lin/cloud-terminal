@@ -58,9 +58,9 @@ func (pc *PermissionCreate) SetName(s string) *PermissionCreate {
 	return pc
 }
 
-// SetAction sets the "action" field.
-func (pc *PermissionCreate) SetAction(s string) *PermissionCreate {
-	pc.mutation.SetAction(s)
+// SetActions sets the "actions" field.
+func (pc *PermissionCreate) SetActions(s []string) *PermissionCreate {
+	pc.mutation.SetActions(s)
 	return pc
 }
 
@@ -80,6 +80,20 @@ func (pc *PermissionCreate) SetDescription(s string) *PermissionCreate {
 func (pc *PermissionCreate) SetNillableDescription(s *string) *PermissionCreate {
 	if s != nil {
 		pc.SetDescription(*s)
+	}
+	return pc
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (pc *PermissionCreate) SetIsDisabled(b bool) *PermissionCreate {
+	pc.mutation.SetIsDisabled(b)
+	return pc
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (pc *PermissionCreate) SetNillableIsDisabled(b *bool) *PermissionCreate {
+	if b != nil {
+		pc.SetIsDisabled(*b)
 	}
 	return pc
 }
@@ -198,6 +212,10 @@ func (pc *PermissionCreate) defaults() error {
 		v := permission.DefaultUpdatedAt()
 		pc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := pc.mutation.IsDisabled(); !ok {
+		v := permission.DefaultIsDisabled
+		pc.mutation.SetIsDisabled(v)
+	}
 	if _, ok := pc.mutation.ID(); !ok {
 		if permission.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized permission.DefaultID (forgotten import ent/runtime?)")
@@ -224,11 +242,14 @@ func (pc *PermissionCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Permission.name": %w`, err)}
 		}
 	}
-	if _, ok := pc.mutation.Action(); !ok {
-		return &ValidationError{Name: "action", err: errors.New(`ent: missing required field "Permission.action"`)}
+	if _, ok := pc.mutation.Actions(); !ok {
+		return &ValidationError{Name: "actions", err: errors.New(`ent: missing required field "Permission.actions"`)}
 	}
 	if _, ok := pc.mutation.ResourceType(); !ok {
 		return &ValidationError{Name: "resource_type", err: errors.New(`ent: missing required field "Permission.resource_type"`)}
+	}
+	if _, ok := pc.mutation.IsDisabled(); !ok {
+		return &ValidationError{Name: "is_disabled", err: errors.New(`ent: missing required field "Permission.is_disabled"`)}
 	}
 	return nil
 }
@@ -277,9 +298,9 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := pc.mutation.Action(); ok {
-		_spec.SetField(permission.FieldAction, field.TypeString, value)
-		_node.Action = value
+	if value, ok := pc.mutation.Actions(); ok {
+		_spec.SetField(permission.FieldActions, field.TypeJSON, value)
+		_node.Actions = value
 	}
 	if value, ok := pc.mutation.ResourceType(); ok {
 		_spec.SetField(permission.FieldResourceType, field.TypeString, value)
@@ -288,6 +309,10 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.Description(); ok {
 		_spec.SetField(permission.FieldDescription, field.TypeString, value)
 		_node.Description = value
+	}
+	if value, ok := pc.mutation.IsDisabled(); ok {
+		_spec.SetField(permission.FieldIsDisabled, field.TypeBool, value)
+		_node.IsDisabled = value
 	}
 	if nodes := pc.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

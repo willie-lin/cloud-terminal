@@ -18,15 +18,15 @@ func DenyIfNoViewer() privacy.QueryMutationRule {
 }
 
 // AllowIfAdmin is a rule that returns Allow decision if the viewer is admin.
-func AllowIfAdmin() privacy.QueryMutationRule {
-	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
-		view := viewer.FromContext(ctx)
-		if view.Admin {
-			return privacy.Allow
-		}
-		return privacy.Skip
-	})
-}
+//func AllowIfAdmin() privacy.QueryMutationRule {
+//	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
+//		view := viewer.FromContext(ctx)
+//		if view.Admin {
+//			return privacy.Allow
+//		}
+//		return privacy.Skip
+//	})
+//}
 
 //// AllowIfRole is a rule that returns Allow decision if the viewer has a specific role.
 //func AllowIfRole(roleName string) privacy.QueryMutationRule {

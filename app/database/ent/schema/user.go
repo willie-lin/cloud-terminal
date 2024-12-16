@@ -46,7 +46,8 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		//edge.To("roles", Role.Type),
 		edge.From("tenant", Tenant.Type).Ref("users").Unique(),
-		edge.To("roles", Role.Type),
+		//edge.To("roles", Role.Type).Unique(), // 确保一个用户只有一个角色
+		edge.To("roles", Role.Type), // 确保一个用户有多个角色
 	}
 }
 

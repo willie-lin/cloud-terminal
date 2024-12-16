@@ -186,8 +186,15 @@ func main() {
 		}
 	}(client)
 	ctx := context.Background()
+
+	// 运行自动迁移工具
 	config.AutoMigration(client, ctx)
+	fmt.Println("config auto migration")
 	config.DebugMode(err, client, ctx)
+	// 初始化全局权限
+	if err := api.InitializeGlobalPermissions(client); err != nil {
+		log.Fatalf("failed to initialize global permissions: %v", err)
+	}
 
 	// 迁移租户
 	//database.AssignDefaultTenant(client)
@@ -253,7 +260,7 @@ func main() {
 
 	// role
 	//r.GET("/roles", handler.GetAllRoles(client))
-	r.GET("/roles", handler.GetAllRolesByTenant(client))
+	r.GET("/roles", handler.GetAllRolesByUserByTenant(client))
 	//r.POST("/add-role", handler.CreateRole(client), middlewarers.Authorize(enforcer))
 	r.POST("/add-role", handler.CreateRole(client))
 	//r.POST("/delete-role", handler.DeleteRoleByName(client), middlewarers.Authorize(enforcer))
@@ -262,7 +269,7 @@ func main() {
 
 	// permission
 	//r.GET("/permissions", handler.GetAllPermissions(client))
-	r.GET("/permissions", handler.GetAllPermissionsByTenant(client))
+	r.GET("/permissions", handler.GetAllPermissionsByUserByTenant(client))
 	//r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
 	r.POST("/add-permission", handler.CreatePermission(client))
 	//r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewarers.Authorize(enforcer))

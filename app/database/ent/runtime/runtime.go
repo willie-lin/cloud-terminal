@@ -50,6 +50,10 @@ func init() {
 	permissionDescName := permissionFields[1].Descriptor()
 	// permission.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	permission.NameValidator = permissionDescName.Validators[0].(func(string) error)
+	// permissionDescIsDisabled is the schema descriptor for is_disabled field.
+	permissionDescIsDisabled := permissionFields[5].Descriptor()
+	// permission.DefaultIsDisabled holds the default value on creation for the is_disabled field.
+	permission.DefaultIsDisabled = permissionDescIsDisabled.Default.(bool)
 	// permissionDescID is the schema descriptor for id field.
 	permissionDescID := permissionFields[0].Descriptor()
 	// permission.DefaultID holds the default value on creation for the id field.
@@ -78,14 +82,22 @@ func init() {
 	resource.DefaultUpdatedAt = resourceDescUpdatedAt.Default.(func() time.Time)
 	// resource.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	resource.UpdateDefaultUpdatedAt = resourceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resourceDescName is the schema descriptor for name field.
+	resourceDescName := resourceFields[1].Descriptor()
+	// resource.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	resource.NameValidator = resourceDescName.Validators[0].(func(string) error)
 	// resourceDescType is the schema descriptor for type field.
-	resourceDescType := resourceFields[1].Descriptor()
+	resourceDescType := resourceFields[2].Descriptor()
 	// resource.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	resource.TypeValidator = resourceDescType.Validators[0].(func(string) error)
-	// resourceDescIdentifier is the schema descriptor for identifier field.
-	resourceDescIdentifier := resourceFields[2].Descriptor()
-	// resource.IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	resource.IdentifierValidator = resourceDescIdentifier.Validators[0].(func(string) error)
+	// resourceDescValue is the schema descriptor for value field.
+	resourceDescValue := resourceFields[3].Descriptor()
+	// resource.ValueValidator is a validator for the "value" field. It is called by the builders before save.
+	resource.ValueValidator = resourceDescValue.Validators[0].(func(string) error)
+	// resourceDescIsDisabled is the schema descriptor for is_disabled field.
+	resourceDescIsDisabled := resourceFields[5].Descriptor()
+	// resource.DefaultIsDisabled holds the default value on creation for the is_disabled field.
+	resource.DefaultIsDisabled = resourceDescIsDisabled.Default.(bool)
 	// resourceDescID is the schema descriptor for id field.
 	resourceDescID := resourceFields[0].Descriptor()
 	// resource.DefaultID holds the default value on creation for the id field.
@@ -118,6 +130,10 @@ func init() {
 	roleDescName := roleFields[1].Descriptor()
 	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	role.NameValidator = roleDescName.Validators[0].(func(string) error)
+	// roleDescIsDisabled is the schema descriptor for is_disabled field.
+	roleDescIsDisabled := roleFields[3].Descriptor()
+	// role.DefaultIsDisabled holds the default value on creation for the is_disabled field.
+	role.DefaultIsDisabled = roleDescIsDisabled.Default.(bool)
 	// roleDescID is the schema descriptor for id field.
 	roleDescID := roleFields[0].Descriptor()
 	// role.DefaultID holds the default value on creation for the id field.

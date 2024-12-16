@@ -23,16 +23,19 @@ type Resource struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
-	// Identifier holds the value of the "identifier" field.
-	Identifier string `json:"identifier,omitempty"`
+	// Value holds the value of the "value" field.
+	Value string `json:"value,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// IsDisabled holds the value of the "is_disabled" field.
+	IsDisabled bool `json:"is_disabled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ResourceQuery when eager-loading is set.
 	Edges            ResourceEdges `json:"edges"`
-	role_resources   *uuid.UUID
 	tenant_resources *uuid.UUID
 	selectValues     sql.SelectValues
 }
@@ -73,15 +76,15 @@ func (*Resource) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resource.FieldType, resource.FieldIdentifier, resource.FieldDescription:
+		case resource.FieldIsDisabled:
+			values[i] = new(sql.NullBool)
+		case resource.FieldName, resource.FieldType, resource.FieldValue, resource.FieldDescription:
 			values[i] = new(sql.NullString)
 		case resource.FieldCreatedAt, resource.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case resource.FieldID:
 			values[i] = new(uuid.UUID)
-		case resource.ForeignKeys[0]: // role_resources
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case resource.ForeignKeys[1]: // tenant_resources
+		case resource.ForeignKeys[0]: // tenant_resources
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -116,17 +119,23 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.UpdatedAt = value.Time
 			}
+		case resource.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				r.Name = value.String
+			}
 		case resource.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
 				r.Type = value.String
 			}
-		case resource.FieldIdentifier:
+		case resource.FieldValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field identifier", values[i])
+				return fmt.Errorf("unexpected type %T for field value", values[i])
 			} else if value.Valid {
-				r.Identifier = value.String
+				r.Value = value.String
 			}
 		case resource.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -134,14 +143,13 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Description = value.String
 			}
-		case resource.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field role_resources", values[i])
+		case resource.FieldIsDisabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_disabled", values[i])
 			} else if value.Valid {
-				r.role_resources = new(uuid.UUID)
-				*r.role_resources = *value.S.(*uuid.UUID)
+				r.IsDisabled = value.Bool
 			}
-		case resource.ForeignKeys[1]:
+		case resource.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_resources", values[i])
 			} else if value.Valid {
@@ -155,9 +163,9 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the Resource.
+// GetValue returns the ent.Value that was dynamically selected and assigned to the Resource.
 // This includes values selected through modifiers, order, etc.
-func (r *Resource) Value(name string) (ent.Value, error) {
+func (r *Resource) GetValue(name string) (ent.Value, error) {
 	return r.selectValues.Get(name)
 }
 
@@ -200,14 +208,20 @@ func (r *Resource) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(r.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("name=")
+	builder.WriteString(r.Name)
+	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(r.Type)
 	builder.WriteString(", ")
-	builder.WriteString("identifier=")
-	builder.WriteString(r.Identifier)
+	builder.WriteString("value=")
+	builder.WriteString(r.Value)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(r.Description)
+	builder.WriteString(", ")
+	builder.WriteString("is_disabled=")
+	builder.WriteString(fmt.Sprintf("%v", r.IsDisabled))
 	builder.WriteByte(')')
 	return builder.String()
 }

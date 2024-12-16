@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
@@ -69,6 +68,20 @@ func (rc *RoleCreate) SetDescription(s string) *RoleCreate {
 func (rc *RoleCreate) SetNillableDescription(s *string) *RoleCreate {
 	if s != nil {
 		rc.SetDescription(*s)
+	}
+	return rc
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (rc *RoleCreate) SetIsDisabled(b bool) *RoleCreate {
+	rc.mutation.SetIsDisabled(b)
+	return rc
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (rc *RoleCreate) SetNillableIsDisabled(b *bool) *RoleCreate {
+	if b != nil {
+		rc.SetIsDisabled(*b)
 	}
 	return rc
 }
@@ -136,21 +149,6 @@ func (rc *RoleCreate) AddPermissions(p ...*Permission) *RoleCreate {
 	return rc.AddPermissionIDs(ids...)
 }
 
-// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
-func (rc *RoleCreate) AddResourceIDs(ids ...uuid.UUID) *RoleCreate {
-	rc.mutation.AddResourceIDs(ids...)
-	return rc
-}
-
-// AddResources adds the "resources" edges to the Resource entity.
-func (rc *RoleCreate) AddResources(r ...*Resource) *RoleCreate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return rc.AddResourceIDs(ids...)
-}
-
 // Mutation returns the RoleMutation object of the builder.
 func (rc *RoleCreate) Mutation() *RoleMutation {
 	return rc.mutation
@@ -202,6 +200,10 @@ func (rc *RoleCreate) defaults() error {
 		v := role.DefaultUpdatedAt()
 		rc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := rc.mutation.IsDisabled(); !ok {
+		v := role.DefaultIsDisabled
+		rc.mutation.SetIsDisabled(v)
+	}
 	if _, ok := rc.mutation.ID(); !ok {
 		if role.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized role.DefaultID (forgotten import ent/runtime?)")
@@ -227,6 +229,9 @@ func (rc *RoleCreate) check() error {
 		if err := role.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Role.name": %w`, err)}
 		}
+	}
+	if _, ok := rc.mutation.IsDisabled(); !ok {
+		return &ValidationError{Name: "is_disabled", err: errors.New(`ent: missing required field "Role.is_disabled"`)}
 	}
 	return nil
 }
@@ -279,6 +284,10 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		_spec.SetField(role.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
+	if value, ok := rc.mutation.IsDisabled(); ok {
+		_spec.SetField(role.FieldIsDisabled, field.TypeBool, value)
+		_node.IsDisabled = value
+	}
 	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -321,22 +330,6 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := rc.mutation.ResourcesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.ResourcesTable,
-			Columns: []string{role.ResourcesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

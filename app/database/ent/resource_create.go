@@ -51,15 +51,21 @@ func (rc *ResourceCreate) SetNillableUpdatedAt(t *time.Time) *ResourceCreate {
 	return rc
 }
 
+// SetName sets the "name" field.
+func (rc *ResourceCreate) SetName(s string) *ResourceCreate {
+	rc.mutation.SetName(s)
+	return rc
+}
+
 // SetType sets the "type" field.
 func (rc *ResourceCreate) SetType(s string) *ResourceCreate {
 	rc.mutation.SetType(s)
 	return rc
 }
 
-// SetIdentifier sets the "identifier" field.
-func (rc *ResourceCreate) SetIdentifier(s string) *ResourceCreate {
-	rc.mutation.SetIdentifier(s)
+// SetValue sets the "value" field.
+func (rc *ResourceCreate) SetValue(s string) *ResourceCreate {
+	rc.mutation.SetValue(s)
 	return rc
 }
 
@@ -73,6 +79,20 @@ func (rc *ResourceCreate) SetDescription(s string) *ResourceCreate {
 func (rc *ResourceCreate) SetNillableDescription(s *string) *ResourceCreate {
 	if s != nil {
 		rc.SetDescription(*s)
+	}
+	return rc
+}
+
+// SetIsDisabled sets the "is_disabled" field.
+func (rc *ResourceCreate) SetIsDisabled(b bool) *ResourceCreate {
+	rc.mutation.SetIsDisabled(b)
+	return rc
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (rc *ResourceCreate) SetNillableIsDisabled(b *bool) *ResourceCreate {
+	if b != nil {
+		rc.SetIsDisabled(*b)
 	}
 	return rc
 }
@@ -176,6 +196,10 @@ func (rc *ResourceCreate) defaults() error {
 		v := resource.DefaultUpdatedAt()
 		rc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := rc.mutation.IsDisabled(); !ok {
+		v := resource.DefaultIsDisabled
+		rc.mutation.SetIsDisabled(v)
+	}
 	if _, ok := rc.mutation.ID(); !ok {
 		if resource.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized resource.DefaultID (forgotten import ent/runtime?)")
@@ -194,6 +218,14 @@ func (rc *ResourceCreate) check() error {
 	if _, ok := rc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Resource.updated_at"`)}
 	}
+	if _, ok := rc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Resource.name"`)}
+	}
+	if v, ok := rc.mutation.Name(); ok {
+		if err := resource.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Resource.name": %w`, err)}
+		}
+	}
 	if _, ok := rc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Resource.type"`)}
 	}
@@ -202,13 +234,16 @@ func (rc *ResourceCreate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if _, ok := rc.mutation.Identifier(); !ok {
-		return &ValidationError{Name: "identifier", err: errors.New(`ent: missing required field "Resource.identifier"`)}
+	if _, ok := rc.mutation.Value(); !ok {
+		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "Resource.value"`)}
 	}
-	if v, ok := rc.mutation.Identifier(); ok {
-		if err := resource.IdentifierValidator(v); err != nil {
-			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "Resource.identifier": %w`, err)}
+	if v, ok := rc.mutation.Value(); ok {
+		if err := resource.ValueValidator(v); err != nil {
+			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "Resource.value": %w`, err)}
 		}
+	}
+	if _, ok := rc.mutation.IsDisabled(); !ok {
+		return &ValidationError{Name: "is_disabled", err: errors.New(`ent: missing required field "Resource.is_disabled"`)}
 	}
 	return nil
 }
@@ -253,17 +288,25 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := rc.mutation.Name(); ok {
+		_spec.SetField(resource.FieldName, field.TypeString, value)
+		_node.Name = value
+	}
 	if value, ok := rc.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := rc.mutation.Identifier(); ok {
-		_spec.SetField(resource.FieldIdentifier, field.TypeString, value)
-		_node.Identifier = value
+	if value, ok := rc.mutation.Value(); ok {
+		_spec.SetField(resource.FieldValue, field.TypeString, value)
+		_node.Value = value
 	}
 	if value, ok := rc.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
 		_node.Description = value
+	}
+	if value, ok := rc.mutation.IsDisabled(); ok {
+		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
+		_node.IsDisabled = value
 	}
 	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

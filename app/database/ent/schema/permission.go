@@ -26,9 +26,10 @@ func (Permission) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique().NotEmpty(),
-		field.String("action"),
+		field.Strings("actions"),
 		field.String("resource_type"),
 		field.String("description").Optional(),
+		field.Bool("is_disabled").Default(false), // 标记角色是否被禁用
 	}
 }
 

@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
@@ -73,6 +72,20 @@ func (ru *RoleUpdate) ClearDescription() *RoleUpdate {
 	return ru
 }
 
+// SetIsDisabled sets the "is_disabled" field.
+func (ru *RoleUpdate) SetIsDisabled(b bool) *RoleUpdate {
+	ru.mutation.SetIsDisabled(b)
+	return ru
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (ru *RoleUpdate) SetNillableIsDisabled(b *bool) *RoleUpdate {
+	if b != nil {
+		ru.SetIsDisabled(*b)
+	}
+	return ru
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
 func (ru *RoleUpdate) SetTenantID(id uuid.UUID) *RoleUpdate {
 	ru.mutation.SetTenantID(id)
@@ -120,21 +133,6 @@ func (ru *RoleUpdate) AddPermissions(p ...*Permission) *RoleUpdate {
 		ids[i] = p[i].ID
 	}
 	return ru.AddPermissionIDs(ids...)
-}
-
-// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
-func (ru *RoleUpdate) AddResourceIDs(ids ...uuid.UUID) *RoleUpdate {
-	ru.mutation.AddResourceIDs(ids...)
-	return ru
-}
-
-// AddResources adds the "resources" edges to the Resource entity.
-func (ru *RoleUpdate) AddResources(r ...*Resource) *RoleUpdate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return ru.AddResourceIDs(ids...)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -188,27 +186,6 @@ func (ru *RoleUpdate) RemovePermissions(p ...*Permission) *RoleUpdate {
 		ids[i] = p[i].ID
 	}
 	return ru.RemovePermissionIDs(ids...)
-}
-
-// ClearResources clears all "resources" edges to the Resource entity.
-func (ru *RoleUpdate) ClearResources() *RoleUpdate {
-	ru.mutation.ClearResources()
-	return ru
-}
-
-// RemoveResourceIDs removes the "resources" edge to Resource entities by IDs.
-func (ru *RoleUpdate) RemoveResourceIDs(ids ...uuid.UUID) *RoleUpdate {
-	ru.mutation.RemoveResourceIDs(ids...)
-	return ru
-}
-
-// RemoveResources removes "resources" edges to Resource entities.
-func (ru *RoleUpdate) RemoveResources(r ...*Resource) *RoleUpdate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return ru.RemoveResourceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -286,6 +263,9 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ru.mutation.DescriptionCleared() {
 		_spec.ClearField(role.FieldDescription, field.TypeString)
+	}
+	if value, ok := ru.mutation.IsDisabled(); ok {
+		_spec.SetField(role.FieldIsDisabled, field.TypeBool, value)
 	}
 	if ru.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -406,51 +386,6 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if ru.mutation.ResourcesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.ResourcesTable,
-			Columns: []string{role.ResourcesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !ru.mutation.ResourcesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.ResourcesTable,
-			Columns: []string{role.ResourcesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.ResourcesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.ResourcesTable,
-			Columns: []string{role.ResourcesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{role.Label}
@@ -511,6 +446,20 @@ func (ruo *RoleUpdateOne) ClearDescription() *RoleUpdateOne {
 	return ruo
 }
 
+// SetIsDisabled sets the "is_disabled" field.
+func (ruo *RoleUpdateOne) SetIsDisabled(b bool) *RoleUpdateOne {
+	ruo.mutation.SetIsDisabled(b)
+	return ruo
+}
+
+// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
+func (ruo *RoleUpdateOne) SetNillableIsDisabled(b *bool) *RoleUpdateOne {
+	if b != nil {
+		ruo.SetIsDisabled(*b)
+	}
+	return ruo
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
 func (ruo *RoleUpdateOne) SetTenantID(id uuid.UUID) *RoleUpdateOne {
 	ruo.mutation.SetTenantID(id)
@@ -558,21 +507,6 @@ func (ruo *RoleUpdateOne) AddPermissions(p ...*Permission) *RoleUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return ruo.AddPermissionIDs(ids...)
-}
-
-// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
-func (ruo *RoleUpdateOne) AddResourceIDs(ids ...uuid.UUID) *RoleUpdateOne {
-	ruo.mutation.AddResourceIDs(ids...)
-	return ruo
-}
-
-// AddResources adds the "resources" edges to the Resource entity.
-func (ruo *RoleUpdateOne) AddResources(r ...*Resource) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return ruo.AddResourceIDs(ids...)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -626,27 +560,6 @@ func (ruo *RoleUpdateOne) RemovePermissions(p ...*Permission) *RoleUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return ruo.RemovePermissionIDs(ids...)
-}
-
-// ClearResources clears all "resources" edges to the Resource entity.
-func (ruo *RoleUpdateOne) ClearResources() *RoleUpdateOne {
-	ruo.mutation.ClearResources()
-	return ruo
-}
-
-// RemoveResourceIDs removes the "resources" edge to Resource entities by IDs.
-func (ruo *RoleUpdateOne) RemoveResourceIDs(ids ...uuid.UUID) *RoleUpdateOne {
-	ruo.mutation.RemoveResourceIDs(ids...)
-	return ruo
-}
-
-// RemoveResources removes "resources" edges to Resource entities.
-func (ruo *RoleUpdateOne) RemoveResources(r ...*Resource) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return ruo.RemoveResourceIDs(ids...)
 }
 
 // Where appends a list predicates to the RoleUpdate builder.
@@ -754,6 +667,9 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 	}
 	if ruo.mutation.DescriptionCleared() {
 		_spec.ClearField(role.FieldDescription, field.TypeString)
+	}
+	if value, ok := ruo.mutation.IsDisabled(); ok {
+		_spec.SetField(role.FieldIsDisabled, field.TypeBool, value)
 	}
 	if ruo.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -867,51 +783,6 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ruo.mutation.ResourcesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.ResourcesTable,
-			Columns: []string{role.ResourcesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !ruo.mutation.ResourcesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.ResourcesTable,
-			Columns: []string{role.ResourcesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.ResourcesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.ResourcesTable,
-			Columns: []string{role.ResourcesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

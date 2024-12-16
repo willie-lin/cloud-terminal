@@ -3,18 +3,22 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
 )
 
 type PermissionDTO struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	ResourceIDs []uuid.UUID `json:"resource_ids"` // 可选的资源ID
 }
 
 func CheckPermissionName(client *ent.Client) echo.HandlerFunc {
@@ -47,23 +51,42 @@ func GetAllPermissions(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-func GetAllPermissionsByTenant(client *ent.Client) echo.HandlerFunc {
+func GetAllPermissionsByUserByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 从请求上下文中获取租户ID
-		//userID := c.Get("user_id").(uuid.UUID)
-		//tenantID := c.Get("tenant_id").(uuid.UUID)
 		v := viewer.FromContext(c.Request().Context())
 		if v == nil {
 			log.Printf("No viewer found in context")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
+		userID := v.UserID
 		tenantID := v.TenantID
-		//fmt.Printf("Queried tenant ID: %s\n", tenantID)
-		permissions, err := client.Permission.Query().Where(permission.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
+
+		// 查询用户的所有角色
+		roles, err := client.User.Query().
+			Where(user.IDEQ(userID)).
+			QueryRoles().
+			WithPermissions().
+			Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
+			All(context.Background())
 		if err != nil {
-			log.Printf("Error querying roles: %v", err)
+			log.Printf("Error querying roles for user %s in tenant %s: %v", userID, tenantID, err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
 		}
+
+		// 收集所有权限
+		var permissions []*ent.Permission
+		permissionSet := make(map[string]bool)
+		for _, role := range roles {
+			for _, perm := range role.Edges.Permissions {
+				if !permissionSet[perm.ID.String()] {
+					permissions = append(permissions, perm)
+					permissionSet[perm.ID.String()] = true
+				}
+			}
+		}
+
+		log.Printf("Permissions for user %s in tenant %s: %v", userID, tenantID, permissions)
 		return c.JSON(http.StatusOK, permissions)
 	}
 }
@@ -71,8 +94,13 @@ func GetAllPermissionsByTenant(client *ent.Client) echo.HandlerFunc {
 // CreatePermission  创建permission
 func CreatePermission(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
-		var permissions []*PermissionDTO
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil || v.RoleName != "Tenant Admin" {
+			log.Printf("No viewer found in context or not authorized")
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
 
+		var permissions []*PermissionDTO
 		if err := c.Bind(&permissions); err != nil {
 			log.Printf("Error binding permission: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
@@ -83,6 +111,8 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 			p, err := client.Permission.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
+				SetTenantID(v.TenantID).            // 关联到当前租户
+				AddResourceIDs(dto.ResourceIDs...). // 可选的资源ID
 				Save(context.Background())
 			if err != nil {
 				log.Printf("Error creating permission: %v", err)
@@ -91,6 +121,7 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 			fmt.Printf("Created permission with ID: %s\n", p.ID)
 			createdPermissions = append(createdPermissions, p)
 		}
+		fmt.Println(createdPermissions)
 		return c.JSON(http.StatusCreated, map[string]string{"message": "Permission created successfully"})
 	}
 }

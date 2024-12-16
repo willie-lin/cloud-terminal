@@ -22,12 +22,14 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldAction holds the string denoting the action field in the database.
-	FieldAction = "action"
+	// FieldActions holds the string denoting the actions field in the database.
+	FieldActions = "actions"
 	// FieldResourceType holds the string denoting the resource_type field in the database.
 	FieldResourceType = "resource_type"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldIsDisabled holds the string denoting the is_disabled field in the database.
+	FieldIsDisabled = "is_disabled"
 	// EdgeTenant holds the string denoting the tenant edge name in mutations.
 	EdgeTenant = "tenant"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
@@ -61,9 +63,10 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldName,
-	FieldAction,
+	FieldActions,
 	FieldResourceType,
 	FieldDescription,
+	FieldIsDisabled,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "permissions"
@@ -112,6 +115,8 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultIsDisabled holds the default value on creation for the "is_disabled" field.
+	DefaultIsDisabled bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -139,11 +144,6 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByAction orders the results by the action field.
-func ByAction(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAction, opts...).ToFunc()
-}
-
 // ByResourceType orders the results by the resource_type field.
 func ByResourceType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResourceType, opts...).ToFunc()
@@ -152,6 +152,11 @@ func ByResourceType(opts ...sql.OrderTermOption) OrderOption {
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByIsDisabled orders the results by the is_disabled field.
+func ByIsDisabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsDisabled, opts...).ToFunc()
 }
 
 // ByTenantField orders the results by tenant field.

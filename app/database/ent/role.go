@@ -27,6 +27,8 @@ type Role struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// IsDisabled holds the value of the "is_disabled" field.
+	IsDisabled bool `json:"is_disabled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoleQuery when eager-loading is set.
 	Edges        RoleEdges `json:"edges"`
@@ -42,11 +44,9 @@ type RoleEdges struct {
 	Users []*User `json:"users,omitempty"`
 	// Permissions holds the value of the permissions edge.
 	Permissions []*Permission `json:"permissions,omitempty"`
-	// Resources holds the value of the resources edge.
-	Resources []*Resource `json:"resources,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -78,20 +78,13 @@ func (e RoleEdges) PermissionsOrErr() ([]*Permission, error) {
 	return nil, &NotLoadedError{edge: "permissions"}
 }
 
-// ResourcesOrErr returns the Resources value or an error if the edge
-// was not loaded in eager-loading.
-func (e RoleEdges) ResourcesOrErr() ([]*Resource, error) {
-	if e.loadedTypes[3] {
-		return e.Resources, nil
-	}
-	return nil, &NotLoadedError{edge: "resources"}
-}
-
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Role) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case role.FieldIsDisabled:
+			values[i] = new(sql.NullBool)
 		case role.FieldName, role.FieldDescription:
 			values[i] = new(sql.NullString)
 		case role.FieldCreatedAt, role.FieldUpdatedAt:
@@ -145,6 +138,12 @@ func (r *Role) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Description = value.String
 			}
+		case role.FieldIsDisabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_disabled", values[i])
+			} else if value.Valid {
+				r.IsDisabled = value.Bool
+			}
 		case role.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_roles", values[i])
@@ -178,11 +177,6 @@ func (r *Role) QueryUsers() *UserQuery {
 // QueryPermissions queries the "permissions" edge of the Role entity.
 func (r *Role) QueryPermissions() *PermissionQuery {
 	return NewRoleClient(r.config).QueryPermissions(r)
-}
-
-// QueryResources queries the "resources" edge of the Role entity.
-func (r *Role) QueryResources() *ResourceQuery {
-	return NewRoleClient(r.config).QueryResources(r)
 }
 
 // Update returns a builder for updating this Role.
@@ -219,6 +213,9 @@ func (r *Role) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(r.Description)
+	builder.WriteString(", ")
+	builder.WriteString("is_disabled=")
+	builder.WriteString(fmt.Sprintf("%v", r.IsDisabled))
 	builder.WriteByte(')')
 	return builder.String()
 }

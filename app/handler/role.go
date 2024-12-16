@@ -9,15 +9,19 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
 )
 
+type RoleDTO struct {
+	Name          string      `json:"name"`
+	Description   string      `json:"description"`
+	PermissionIDs []uuid.UUID `json:"permission_ids"`
+}
+
 func CheckRoleName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		type RoleDTO struct {
-			Name string `json:"name"`
-		}
 
 		dto := new(RoleDTO)
 		if err := c.Bind(&dto); err != nil {
@@ -46,7 +50,7 @@ func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
+func GetAllRolesByUserByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 从请求上下文中获取租户ID
 		//userID := c.Get("user_id").(uuid.UUID)
@@ -57,13 +61,46 @@ func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
 			log.Printf("No viewer found in context")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
+		//tenantID := v.TenantID
+		////log.Printf("Queried tenant ID: %s", tenantID)
+		//roles, err := client.Role.Query().Where(role.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
+		//if err != nil {
+		//	log.Printf("Error querying roles: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
+		//}
+		userID := v.UserID
 		tenantID := v.TenantID
-		//log.Printf("Queried tenant ID: %s", tenantID)
-		roles, err := client.Role.Query().Where(role.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
+
+		// 判断当前用户是否是管理员
+		isAdmin := false
+		roles, err := client.User.Query().
+			Where(user.IDEQ(userID)).
+			QueryRoles().
+			Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
+			All(context.Background())
 		if err != nil {
-			log.Printf("Error querying roles: %v", err)
+			log.Printf("Error querying roles for user %s in tenant %s: %v", userID, tenantID, err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
 		}
+
+		for _, r := range roles {
+			if r.Name == "Admin" {
+				isAdmin = true
+				break
+			}
+		}
+
+		// 如果是管理员，查询所有角色
+		if isAdmin {
+			roles, err = client.Role.Query().
+				Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
+				All(context.Background())
+			if err != nil {
+				log.Printf("Error querying all roles for tenant %s: %v", tenantID, err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
+			}
+		}
+		log.Printf("Roles for user %s in tenant %s: %v", userID, tenantID, roles)
 		return c.JSON(http.StatusOK, roles)
 	}
 }
@@ -106,35 +143,40 @@ func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
 // CreateRole 创建role
 func CreateRole(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		type RoleDTO struct {
-			Name        string `json:"name"`
-			Description string `json:"description"`
-			TenantID    string `json:"tenant_id"` // 新增租户ID字段
+		// 从请求上下文中获取租户ID
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil || v.RoleName != "Tenant Admin" {
+			log.Printf("No viewer found in context or not authorized")
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
-		var roles []RoleDTO
+		var roles []*RoleDTO
 		if err := c.Bind(&roles); err != nil {
 			log.Printf("Error binding role: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
+		createdRoles := make([]*ent.Role, 0, len(roles))
+
 		for _, dto := range roles {
 			// 从请求上下文中获取租户ID
-			tenantID := c.Get("tenant_id").(uuid.UUID)
+			//tenantID := c.Get("tenant_id").(uuid.UUID)
 
-			role, err := client.Role.Create().
+			r, err := client.Role.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
-				SetTenantID(tenantID). // 关联到租户
+				SetTenantID(v.TenantID). // 关联到租户
+				AddPermissionIDs(dto.PermissionIDs...).
 				Save(context.Background())
 			if err != nil {
 				log.Printf("Error creating role: %v", err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create role"})
 			}
 			fmt.Printf("Created role with ID: %s\n", role.ID)
-			return c.JSON(http.StatusCreated, role)
+			createdRoles = append(createdRoles, r)
+			return c.JSON(http.StatusCreated, r)
 		}
-
+		fmt.Println(createdRoles)
 		return c.JSON(http.StatusCreated, map[string]string{"message": "Roles created successfully"})
 	}
 }
