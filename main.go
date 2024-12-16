@@ -265,7 +265,7 @@ func main() {
 
 	// role
 	//r.GET("/roles", handler.GetAllRoles(client))
-	r.GET("/roles", handler.GetAllRolesByUserByTenant(client))
+	r.GET("/roles", handler.GetAllRolesByUser(client))
 	//r.POST("/add-role", handler.CreateRole(client), middlewarers.Authorize(enforcer))
 	r.POST("/add-role", handler.CreateRole(client))
 	//r.POST("/delete-role", handler.DeleteRoleByName(client), middlewarers.Authorize(enforcer))

@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -64,74 +63,106 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		// 创建新租户
-		tenant, err := client.Tenant.Create().SetName(dto.TenantName).Save(context.Background())
+		tx, err := client.Tx(context.Background())
 		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "create transaction error"})
+		}
+		defer func() {
+			if r := recover(); r != nil || err != nil {
+				err := tx.Rollback()
+				if err != nil {
+					return
+				}
+			}
+		}()
+
+		// 创建新租户
+		tenant, err := tx.Tenant.Create().SetName(dto.TenantName).Save(context.Background())
+		if err != nil {
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
 			log.Printf("Error creating tenant: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating tenant in database"})
 		}
 
+		// 获取所有默认角色
+		//defaultRoles, err := tx.Role.Query().All(context.Background())
+		defaultRoles, err := tx.Role.Query().Where(role.IsDefaultEQ(true)).All(context.Background())
+		if err != nil {
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error getting default roles"})
+		}
+		// 通过事务关联租户和角色 (关键修改在这里)
+		for _, r := range defaultRoles {
+			err = tx.Tenant.UpdateOne(tenant).AddRoles(r).Exec(context.Background()) // 直接在事务中使用 AddRoles
+			if err != nil {
+				err := tx.Rollback()
+				if err != nil {
+					return err
+				}
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning role to tenant"})
+			}
+		}
+
 		// 创建用户并设置为租户的超级管理员
-		us, err := client.User.Create().
+		us, err := tx.User.Create().
 			SetEmail(dto.Email).
 			SetUsername(username).
 			SetPassword(string(hashedPassword)).
 			SetTenantID(tenant.ID).
 			Save(context.Background())
 		if err != nil {
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
 			log.Printf("Error creating user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "create user failed"})
 		}
-
-		//if err := InitializeTenantRolesAndPermissions(client, tenant.ID); err != nil {
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error initializing roles and permissions for tenant"})
+		//us, err := client.User.Create().
+		//	SetEmail(dto.Email).
+		//	SetUsername(username).
+		//	SetPassword(string(hashedPassword)).
+		//	SetTenantID(tenant.ID).
+		//	Save(context.Background())
+		//if err != nil {
+		//	log.Printf("Error creating user: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
 		//}
-		//// 初始化租户的默认角色和权限，如果它们还不存在
-		//if err := InitializeTenantRolesAndPermissions(client, tenant.ID); err != nil {
-		//	log.Printf("Error initializing roles and permissions for tenant: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error initializing roles and permissions for tenant"})
-		//}
-
 		//检查管理员角色是否存在，如果不存在则创建
-		adminRole, err := client.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching admin role"})
-		}
-		//if err != nil {
-		//	if ent.IsNotFound(err) {
-		//		// 如果超级管理员角色不存在，则创建它
-		//		adminRole, err = client.Role.Create().
-		//			SetName("Admin").
-		//			SetDescription("管理员角色").
-		//			SetTenant(tenant). // 关联到租户
-		//			Save(context.Background())
-		//		if err != nil {
-		//			log.Printf("Error creating super admin role: %v", err)
-		//			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating super admin role"})
-		//		}
-		//	} else {
-		//		log.Printf("Error fetching super admin role: %v", err)
-		//		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching super admin role"})
-		//	}
-		//}
-
-		// 查找管理员角色
-		//adminRole, err := client.Role.Query().Where(role.NameEQ("Admin"), role.HasTenantWith(tenant.IDEQ(tenant.ID))).Only(context.Background())
-		//if err != nil {
-		//	log.Printf("Error fetching admin role: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching admin role"})
-		//}
-		// 查找租户的管理员角色
 		//adminRole, err := client.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
-		//if err != nil {
-		//	log.Printf("Error fetching admin role: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error fetching admin role"})
-		//}
 
-		if err = client.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
-			log.Printf("Error assigning super admin role to user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning super admin role"})
+		adminRole, err := tx.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
+
+		if ent.IsNotFound(err) {
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "admin role is not found"})
 		}
+		if err = tx.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
+			log.Printf("Error assigning super admin role to user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "add role to user failed"})
+		}
+
+		if err := tx.Commit(); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "commit transaction error"})
+		}
+
+		//if err = client.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
+		//	log.Printf("Error assigning super admin role to user: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning super admin role"})
+		//}
 		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
 	}
 }
@@ -216,9 +247,9 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})
 		}
-		fmt.Println(role.ID)
-		fmt.Println(role.Name)
-		fmt.Println(role.Description)
+		//fmt.Println(role.ID)
+		//fmt.Println(role.Name)
+		//fmt.Println(role.Description)
 
 		// 生成包含租户信息的accessToken
 		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Email, us.Username, role.Name)

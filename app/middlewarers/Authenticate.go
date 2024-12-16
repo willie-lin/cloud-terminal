@@ -1,7 +1,6 @@
 package middlewarers
 
 import (
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
@@ -66,9 +65,7 @@ func AuthenticateAndAuthorize(next echo.HandlerFunc) echo.HandlerFunc {
 				TenantID: claims.TenantID,
 				UserID:   claims.UserID,
 				RoleName: claims.RoleName,
-				//RoleID:   claims.RoleID,
 			}
-			fmt.Println(claims.RoleName)
 			ctx := viewer.NewContext(c.Request().Context(), v)
 			c.SetRequest(c.Request().WithContext(ctx))
 		}

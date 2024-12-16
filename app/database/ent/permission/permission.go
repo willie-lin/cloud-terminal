@@ -41,11 +41,13 @@ const (
 	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RolesInverseTable = "roles"
-	// ResourcesTable is the table that holds the resources relation/edge. The primary key declared below.
-	ResourcesTable = "resource_permissions"
+	// ResourcesTable is the table that holds the resources relation/edge.
+	ResourcesTable = "resources"
 	// ResourcesInverseTable is the table name for the Resource entity.
 	// It exists in this package in order to avoid circular dependency with the "resource" package.
 	ResourcesInverseTable = "resources"
+	// ResourcesColumn is the table column denoting the resources relation/edge.
+	ResourcesColumn = "permission_resources"
 )
 
 // Columns holds all SQL columns for permission fields.
@@ -60,19 +62,27 @@ var Columns = []string{
 	FieldIsDisabled,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "permissions"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"resource_permissions",
+}
+
 var (
 	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
 	// primary key for the roles relation (M2M).
 	RolesPrimaryKey = []string{"role_id", "permission_id"}
-	// ResourcesPrimaryKey and ResourcesColumn2 are the table columns denoting the
-	// primary key for the resources relation (M2M).
-	ResourcesPrimaryKey = []string{"resource_id", "permission_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -177,6 +187,6 @@ func newResourcesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ResourcesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, ResourcesTable, ResourcesPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, ResourcesTable, ResourcesColumn),
 	)
 }

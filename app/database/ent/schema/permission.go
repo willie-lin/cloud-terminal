@@ -38,10 +38,13 @@ func (Permission) Edges() []ent.Edge {
 	return []ent.Edge{
 		//edge.From("tenant", Tenant.Type).Ref("permissions").Unique(),
 		edge.From("roles", Role.Type).Ref("permissions"),
-		edge.From("resources", Resource.Type).Ref("permissions"),
+		//edge.From("resources", Resource.Type).Ref("permissions"),
 		//edge.To("resource", Resource.Type), // 新增的资源关系
 		// Add more edges here
 		//edge.To("users", User.Type),
+		//edge.To("roles", Role.Type), // 权限分配给多个角色
+		//edge.To("actions", Action.Type), // 权限包含多个操作
+		edge.To("resources", Resource.Type), // 权限针对多个资源类型
 	}
 }
 

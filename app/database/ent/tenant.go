@@ -36,9 +36,11 @@ type Tenant struct {
 type TenantEdges struct {
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
+	// Roles holds the value of the roles edge.
+	Roles []*Role `json:"roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -48,6 +50,15 @@ func (e TenantEdges) UsersOrErr() ([]*User, error) {
 		return e.Users, nil
 	}
 	return nil, &NotLoadedError{edge: "users"}
+}
+
+// RolesOrErr returns the Roles value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) RolesOrErr() ([]*Role, error) {
+	if e.loadedTypes[1] {
+		return e.Roles, nil
+	}
+	return nil, &NotLoadedError{edge: "roles"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -122,6 +133,11 @@ func (t *Tenant) Value(name string) (ent.Value, error) {
 // QueryUsers queries the "users" edge of the Tenant entity.
 func (t *Tenant) QueryUsers() *UserQuery {
 	return NewTenantClient(t.config).QueryUsers(t)
+}
+
+// QueryRoles queries the "roles" edge of the Tenant entity.
+func (t *Tenant) QueryRoles() *RoleQuery {
+	return NewTenantClient(t.config).QueryRoles(t)
 }
 
 // Update returns a builder for updating this Tenant.

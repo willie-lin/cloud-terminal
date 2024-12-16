@@ -134,6 +134,10 @@ func init() {
 	roleDescIsDisabled := roleFields[3].Descriptor()
 	// role.DefaultIsDisabled holds the default value on creation for the is_disabled field.
 	role.DefaultIsDisabled = roleDescIsDisabled.Default.(bool)
+	// roleDescIsDefault is the schema descriptor for is_default field.
+	roleDescIsDefault := roleFields[4].Descriptor()
+	// role.DefaultIsDefault holds the default value on creation for the is_default field.
+	role.DefaultIsDefault = roleDescIsDefault.Default.(bool)
 	// roleDescID is the schema descriptor for id field.
 	roleDescID := roleFields[0].Descriptor()
 	// role.DefaultID holds the default value on creation for the id field.

@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
@@ -85,6 +86,21 @@ func (tu *TenantUpdate) AddUsers(u ...*User) *TenantUpdate {
 	return tu.AddUserIDs(ids...)
 }
 
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (tu *TenantUpdate) AddRoleIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.AddRoleIDs(ids...)
+	return tu
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (tu *TenantUpdate) AddRoles(r ...*Role) *TenantUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tu.AddRoleIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tu *TenantUpdate) Mutation() *TenantMutation {
 	return tu.mutation
@@ -109,6 +125,27 @@ func (tu *TenantUpdate) RemoveUsers(u ...*User) *TenantUpdate {
 		ids[i] = u[i].ID
 	}
 	return tu.RemoveUserIDs(ids...)
+}
+
+// ClearRoles clears all "roles" edges to the Role entity.
+func (tu *TenantUpdate) ClearRoles() *TenantUpdate {
+	tu.mutation.ClearRoles()
+	return tu
+}
+
+// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
+func (tu *TenantUpdate) RemoveRoleIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.RemoveRoleIDs(ids...)
+	return tu
+}
+
+// RemoveRoles removes "roles" edges to Role entities.
+func (tu *TenantUpdate) RemoveRoles(r ...*Role) *TenantUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tu.RemoveRoleIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -232,6 +269,51 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedRolesIDs(); len(nodes) > 0 && !tu.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tenant.Label}
@@ -307,6 +389,21 @@ func (tuo *TenantUpdateOne) AddUsers(u ...*User) *TenantUpdateOne {
 	return tuo.AddUserIDs(ids...)
 }
 
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (tuo *TenantUpdateOne) AddRoleIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.AddRoleIDs(ids...)
+	return tuo
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (tuo *TenantUpdateOne) AddRoles(r ...*Role) *TenantUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tuo.AddRoleIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tuo *TenantUpdateOne) Mutation() *TenantMutation {
 	return tuo.mutation
@@ -331,6 +428,27 @@ func (tuo *TenantUpdateOne) RemoveUsers(u ...*User) *TenantUpdateOne {
 		ids[i] = u[i].ID
 	}
 	return tuo.RemoveUserIDs(ids...)
+}
+
+// ClearRoles clears all "roles" edges to the Role entity.
+func (tuo *TenantUpdateOne) ClearRoles() *TenantUpdateOne {
+	tuo.mutation.ClearRoles()
+	return tuo
+}
+
+// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
+func (tuo *TenantUpdateOne) RemoveRoleIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.RemoveRoleIDs(ids...)
+	return tuo
+}
+
+// RemoveRoles removes "roles" edges to Role entities.
+func (tuo *TenantUpdateOne) RemoveRoles(r ...*Role) *TenantUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tuo.RemoveRoleIDs(ids...)
 }
 
 // Where appends a list predicates to the TenantUpdate builder.
@@ -477,6 +595,51 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedRolesIDs(); len(nodes) > 0 && !tuo.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

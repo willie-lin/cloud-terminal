@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -85,6 +86,20 @@ func (rc *RoleCreate) SetNillableIsDisabled(b *bool) *RoleCreate {
 	return rc
 }
 
+// SetIsDefault sets the "is_default" field.
+func (rc *RoleCreate) SetIsDefault(b bool) *RoleCreate {
+	rc.mutation.SetIsDefault(b)
+	return rc
+}
+
+// SetNillableIsDefault sets the "is_default" field if the given value is not nil.
+func (rc *RoleCreate) SetNillableIsDefault(b *bool) *RoleCreate {
+	if b != nil {
+		rc.SetIsDefault(*b)
+	}
+	return rc
+}
+
 // SetID sets the "id" field.
 func (rc *RoleCreate) SetID(u uuid.UUID) *RoleCreate {
 	rc.mutation.SetID(u)
@@ -127,6 +142,21 @@ func (rc *RoleCreate) AddPermissions(p ...*Permission) *RoleCreate {
 		ids[i] = p[i].ID
 	}
 	return rc.AddPermissionIDs(ids...)
+}
+
+// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
+func (rc *RoleCreate) AddTenantIDs(ids ...uuid.UUID) *RoleCreate {
+	rc.mutation.AddTenantIDs(ids...)
+	return rc
+}
+
+// AddTenant adds the "tenant" edges to the Tenant entity.
+func (rc *RoleCreate) AddTenant(t ...*Tenant) *RoleCreate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return rc.AddTenantIDs(ids...)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -184,6 +214,10 @@ func (rc *RoleCreate) defaults() error {
 		v := role.DefaultIsDisabled
 		rc.mutation.SetIsDisabled(v)
 	}
+	if _, ok := rc.mutation.IsDefault(); !ok {
+		v := role.DefaultIsDefault
+		rc.mutation.SetIsDefault(v)
+	}
 	if _, ok := rc.mutation.ID(); !ok {
 		if role.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized role.DefaultID (forgotten import ent/runtime?)")
@@ -212,6 +246,9 @@ func (rc *RoleCreate) check() error {
 	}
 	if _, ok := rc.mutation.IsDisabled(); !ok {
 		return &ValidationError{Name: "is_disabled", err: errors.New(`ent: missing required field "Role.is_disabled"`)}
+	}
+	if _, ok := rc.mutation.IsDefault(); !ok {
+		return &ValidationError{Name: "is_default", err: errors.New(`ent: missing required field "Role.is_default"`)}
 	}
 	return nil
 }
@@ -268,6 +305,10 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		_spec.SetField(role.FieldIsDisabled, field.TypeBool, value)
 		_node.IsDisabled = value
 	}
+	if value, ok := rc.mutation.IsDefault(); ok {
+		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
+		_node.IsDefault = value
+	}
 	if nodes := rc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -293,6 +334,22 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   role.TenantTable,
+			Columns: role.TenantPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

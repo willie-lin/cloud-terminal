@@ -65,59 +65,62 @@ func InitializeGlobalPermissions(client *ent.Client) error {
 }
 
 func InitializeTenantRolesAndPermissions(client *ent.Client) error {
-	// 获取所有权限
-	allPermissions, err := client.Permission.Query().All(context.Background())
+	ctx := context.Background()
+
+	allPermissions, err := client.Permission.Query().All(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch all permissions: %w", err)
 	}
-	log.Printf("Fetched %d permissions", len(allPermissions))
+	permissionMap := make(map[string]*ent.Permission, len(allPermissions))
+	for _, perm := range allPermissions {
+		permissionMap[perm.Name] = perm
+	}
 
 	for _, template := range defaultRoleTemplates {
-		// 检查角色是否已经存在
-		role, err := client.Role.Query().
-			Where(role.NameEQ(template.Name)).
-			Only(context.Background())
-		if ent.IsNotFound(err) {
-			log.Printf("Creating role: %s", template.Name)
-			newRole, err := client.Role.Create().
-				SetName(template.Name).
-				SetDescription(template.Description).
-				//AddTenantIDs(tenantID).
-				Save(context.Background())
-			if err != nil {
-				return fmt.Errorf("failed to create role %s: %w", template.Name, err)
-			}
-			log.Printf("Created role: %s", newRole.Name)
-		} else if err != nil {
+		role, err := client.Role.Query().Where(role.NameEQ(template.Name)).Only(ctx)
+		if err != nil && !ent.IsNotFound(err) {
 			return fmt.Errorf("failed to query role %s: %w", template.Name, err)
 		}
 
+		if ent.IsNotFound(err) {
+			role, err = client.Role.Create().
+				SetName(template.Name).
+				SetDescription(template.Description).
+				SetIsDisabled(false).
+				SetIsDefault(true).
+				Save(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create role %s: %w", template.Name, err)
+			}
+			log.Printf("Created role: %s", role.Name)
+		} else {
+			log.Printf("Role %s already exists", template.Name)
+		}
+
+		var permissionNames []string
+
 		if template.Name == "Admin" {
-			// 管理员角色拥有所有权限
-			for _, perm := range allPermissions {
-				log.Printf("Associating permission %s with role %s", perm.Name, role.Name)
-				if err := client.Role.UpdateOne(role).AddPermissions(perm).Exec(context.Background()); err != nil {
-					log.Printf("Error associating permission %s with role %s: %v", perm.Name, role.Name, err)
-					return fmt.Errorf("failed to associate permission %s with role %s: %w", perm.Name, role.Name, err)
-				}
-				log.Printf("Associated permission %s with role %s", perm.Name, role.Name)
+			permissionNames = make([]string, 0, len(permissionMap))
+			for k := range permissionMap {
+				permissionNames = append(permissionNames, k)
 			}
 		} else {
-			// 其他角色拥有特定权限
-			for _, permName := range template.Permissions {
-				log.Printf("Querying permission: %s", permName)
-				p, err := client.Permission.Query().
-					Where(permission.NameEQ(permName)).
-					Only(context.Background())
-				if err != nil {
-					log.Printf("Error querying permission %s: %v", permName, err)
-					return fmt.Errorf("failed to query permission %s: %w", permName, err)
-				}
-				log.Printf("Associating permission %s with role %s", p.Name, role.Name)
-				if err := client.Role.UpdateOne(role).AddPermissions(p).Exec(context.Background()); err != nil {
-					return fmt.Errorf("failed to associate permission %s with role %s: %w", permName, role.Name, err)
-				}
-				log.Printf("Associated permission %s with role %s", p.Name, role.Name)
+			permissionNames = template.Permissions
+		}
+		var permissionsToAdd []*ent.Permission
+		for _, permName := range permissionNames {
+			perm, ok := permissionMap[permName]
+			if !ok {
+				log.Printf("Permission %s not found for role %s", permName, template.Name)
+				continue
+			}
+			permissionsToAdd = append(permissionsToAdd, perm)
+		}
+		if len(permissionsToAdd) > 0 {
+			log.Printf("Adding %d permissions to role %s", len(permissionsToAdd), role.Name)
+			err = client.Role.UpdateOne(role).AddPermissions(permissionsToAdd...).Exec(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to associate permissions with role %s: %w", role.Name, err)
 			}
 		}
 	}

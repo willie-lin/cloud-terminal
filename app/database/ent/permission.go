@@ -35,8 +35,9 @@ type Permission struct {
 	IsDisabled bool `json:"is_disabled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PermissionQuery when eager-loading is set.
-	Edges        PermissionEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                PermissionEdges `json:"edges"`
+	resource_permissions *uuid.UUID
+	selectValues         sql.SelectValues
 }
 
 // PermissionEdges holds the relations/edges for other nodes in the graph.
@@ -83,6 +84,8 @@ func (*Permission) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case permission.FieldID:
 			values[i] = new(uuid.UUID)
+		case permission.ForeignKeys[0]: // resource_permissions
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -147,6 +150,13 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_disabled", values[i])
 			} else if value.Valid {
 				pe.IsDisabled = value.Bool
+			}
+		case permission.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_permissions", values[i])
+			} else if value.Valid {
+				pe.resource_permissions = new(uuid.UUID)
+				*pe.resource_permissions = *value.S.(*uuid.UUID)
 			}
 		default:
 			pe.selectValues.Set(columns[i], values[i])

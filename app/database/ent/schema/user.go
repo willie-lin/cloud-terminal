@@ -44,10 +44,8 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		//edge.To("roles", Role.Type),
-		edge.From("tenant", Tenant.Type).Ref("users").Unique(),
-		//edge.To("roles", Role.Type).Unique(), // 确保一个用户只有一个角色
-		edge.To("roles", Role.Type), // 确保一个用户有多个角色
+		edge.To("roles", Role.Type),                            // 用户拥有多个角色
+		edge.From("tenant", Tenant.Type).Ref("users").Unique(), // 用户属于一个租户
 	}
 }
 

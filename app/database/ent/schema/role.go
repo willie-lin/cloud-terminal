@@ -28,18 +28,16 @@ func (Role) Fields() []ent.Field {
 		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
 		field.Bool("is_disabled").Default(false), // 标记角色是否被禁用
+		field.Bool("is_default").Default(false),
 	}
 }
 
 // Edges of the Role.
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
-		//edge.From("users", User.Type).Ref("roles").Unique(),
-		//edge.To("permissions", Permission.Type),
-		//edge.From("tenant", Tenant.Type).Ref("roles"),
-		edge.From("users", User.Type).Ref("roles"),
-		edge.To("permissions", Permission.Type),
-		//edge.To("resources", Resource.Type), // 新增的资源关系
+		edge.From("users", User.Type).Ref("roles"),    // 角色被多个用户拥有
+		edge.To("permissions", Permission.Type),       // 角色拥有多个权限
+		edge.From("tenant", Tenant.Type).Ref("roles"), // 正确用法
 	}
 }
 
