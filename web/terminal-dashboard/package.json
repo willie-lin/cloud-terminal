@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@docsearch/react": "^3.5.2",
+    "@svgr/plugin-svgo": "^8.1.0",
+    "@svgr/webpack": "^8.1.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -31,6 +33,7 @@
     "use-react-countries": "^2.0.0",
     "web-vitals": "^2.1.4",
     "webpack-dev-middleware": "^7.2.1",
+    "webpack-dev-server": "^5.2.0",
     "ws": "^8.17.1"
   },
   "scripts": {
