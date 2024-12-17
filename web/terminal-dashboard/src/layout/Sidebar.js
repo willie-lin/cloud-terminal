@@ -40,7 +40,7 @@ function Sidebar({ email, onLogout }) {
             <div className="mb-2 flex items-center gap-4 p-4">
                 {/*<Link to="/" className="-m-1.5 p-1.5">*/}
                 <Link to="/">
-                    <img src="https://docs.material-tailwind.com/img/logo-ct-dark.png" alt="brand" className="h-8 w-8"/>
+                    <img src="/logo-ct-dark.png" alt="brand" className="h-8 w-8"/>
                 </Link>
                 <Typography variant="h5" className={`${isDarkMode ? 'text-white' : 'text-blue-gray-900'}`}>
                     <Link to="/">

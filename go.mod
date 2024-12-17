@@ -30,7 +30,7 @@ require (
 	github.com/swaggo/swag v1.16.3
 	go.elastic.co/apm/module/apmechov4 v1.15.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 )
 
 require (

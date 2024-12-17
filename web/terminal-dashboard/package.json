@@ -8,11 +8,17 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "apexcharts": "^3.45.2",
-    "axios": "^1.6.2",
+    "axios": "^1.7.4",
+    "braces": "3.0.3",
+    "cross-spawn": "7.0.5",
     "crypto-js": "^4.2.0",
+    "css-select": "^5.1.0",
     "date-fns": "^3.3.1",
     "file-saver": "^2.0.5",
     "js-cookie": "^3.0.5",
+    "nanoid": "^5.0.9",
+    "nth-check": "^2.1.1",
+    "postcss": "8.4.31",
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.1",
     "react-day-picker": "^8.10.0",
@@ -20,9 +26,12 @@
     "react-icons": "^5.0.1",
     "react-image-crop": "^11.0.4",
     "react-scripts": "^5.0.1",
+    "resolve-url-loader": "^5.0.0",
+    "rollup": "^2.79.2",
     "use-react-countries": "^2.0.0",
     "web-vitals": "^2.1.4",
-    "webpack-dev-middleware": "^7.2.1"
+    "webpack-dev-middleware": "^7.2.1",
+    "ws": "^8.17.1"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -53,10 +62,10 @@
     "@heroicons/react": "^2.1.1",
     "@material-tailwind/react": "^2.1.8",
     "autoprefixer": "^10.4.16",
-    "axios": "^1.6.2",
+    "axios": "^1.7.4",
     "postcss-import": "^15.1.0",
     "react-router-dom": "^6.21.1",
-    "tailwindcss": "^3.4.0"
+    "tailwindcss": "^3.4.16"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
