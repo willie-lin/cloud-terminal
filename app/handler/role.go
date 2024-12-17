@@ -50,7 +50,7 @@ func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-func GetAllRolesByUser(client *ent.Client) echo.HandlerFunc {
+func GetAllRolesByUserByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 从请求上下文中获取租户ID
 		v := viewer.FromContext(c.Request().Context())

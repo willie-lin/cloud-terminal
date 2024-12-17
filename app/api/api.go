@@ -163,7 +163,8 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		//	log.Printf("Error assigning super admin role to user: %v", err)
 		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning super admin role"})
 		//}
-		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
+		//return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
+		return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
 	}
 }
 

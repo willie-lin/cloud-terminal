@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {Alert, Button, Card, CardBody, CardHeader, Input, Select, Typography, Option} from "@material-tailwind/react";
-import {addUser, checkEmail} from "../../../api/api";
+import {addUser, checkEmail, getAllRoles} from "../../../api/api";
 import CryptoJS from "crypto-js";
 import {useNavigate} from "react-router-dom";
+import {useFetchRoles} from "../role/RoleHook";
 
 function AddUserForm({ onAddUser, onClose }) {
     const [addUserError, setAddUserError] = useState('');
@@ -11,6 +12,9 @@ function AddUserForm({ onAddUser, onClose }) {
     const [email, setEmail] = useState('');
     const [enableType, setEnableType] = useState('');
     const [onlineStatus, setOnlineStatus] = useState('');
+    const [selectedRole, setSelectedRole] = useState(''); // State for selected role
+
+    const roles = useFetchRoles(); // 使用自定义的 hook 获取角色列表
 
     const navigate = useNavigate();
     const handleEmailChange = async (e) => {
@@ -40,6 +44,7 @@ function AddUserForm({ onAddUser, onClose }) {
             const data = {
                 email: email,  // 使用传递过来的email
                 password: hashedPassword,
+                roleID: selectedRole, // 添加角色到提交数据
                 online: onlineStatus,
                 enableType: enableType
             }
@@ -113,6 +118,13 @@ function AddUserForm({ onAddUser, onClose }) {
                                     </div>
                                 </Alert>
                             )}
+                            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+                                Role
+                            </Typography>
+                            <Select size="lg" label="Role" onChange={value => setSelectedRole(value)}>
+                                {roles && roles.map((role) =>
+                                    ( <Option key={role.id} value={role.id}>{role.name}</Option> ))}
+                            </Select>
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                                 Online Status
                             </Typography>

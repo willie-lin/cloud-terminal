@@ -31,18 +31,19 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
-		roleName := strings.ToLower(v.RoleName)
-		fmt.Println(roleName)
-		if roleName != "superadmin" && roleName != "admin" {
-			log.Printf("User is not authorized")
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-		}
+		//roleName := strings.ToLower(v.RoleName)
+		//fmt.Println(roleName)
+		//if roleName != "superadmin" && roleName != "admin" {
+		//	log.Printf("User is not authorized")
+		//	return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		//}
 
 		type UserDTO struct {
-			Email      string `json:"email"`
-			Password   string `json:"password"`
-			Online     bool   `json:"online"`
-			EnableType bool   `json:"enable_type"`
+			Email      string    `json:"email"`
+			Password   string    `json:"password"`
+			RoleID     uuid.UUID `json:"roleID"`
+			Online     bool      `json:"online"`
+			EnableType bool      `json:"enable_type"`
 			//RoleID     uuid.UUID `json:"roleID"`
 			//RoleName string `json:"role_name"`
 		}
@@ -60,21 +61,17 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		const defaultRoleName = "user"
-
-		// 检查是否存在默认角色，不存在则创建
-		role, err := client.Role.Query().Where(role.NameEQ(defaultRoleName)).Only(context.Background())
+		// 查询指定租户下的角色是否存在
+		r, err := client.Role.Query().
+			Where(role.IDEQ(dto.RoleID)).
+			Where(role.HasTenantWith(tenant.IDEQ(v.TenantID))).
+			Only(context.Background())
 		if ent.IsNotFound(err) {
-			role, err = client.Role.Create().
-				SetName(defaultRoleName).
-				Save(context.Background())
-			if err != nil {
-				log.Printf("Error creating default role: %v", err)
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create default role"})
-			}
+			log.Printf("Role not found in tenant: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Specified role does not exist in the tenant"})
 		} else if err != nil {
-			log.Printf("Error querying default role: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to query default role"})
+			log.Printf("Error querying role: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role"})
 		}
 
 		// 创建用户并分配默认角色
@@ -85,7 +82,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetOnline(dto.Online).
 			SetEnableType(dto.EnableType).
 			SetTenantID(v.TenantID). // 关联到租户
-			AddRoles(role).
+			AddRoles(r).
 			//SetRolesID(dto.RoleID).
 			Save(context.Background())
 		if err != nil {
@@ -112,17 +109,37 @@ func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 func GetALLUserByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 从请求上下文中获取租户ID
-		//tenantID := c.Get("tenant_id").(uuid.UUID)
-		// 从请求上下文中获取租户ID
 		v := viewer.FromContext(c.Request().Context())
 		if v == nil {
 			log.Printf("No viewer found in context")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
 		tenantID := v.TenantID
+		fmt.Println(tenantID)
+		userID := v.UserID
+		fmt.Println(userID)
+		roleName := strings.ToLower(v.RoleName)
+		fmt.Println(roleName)
 		//log.Printf("Queried tenant ID: %s", tenantID)
 
-		users, err := client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
+		//users, err := client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
+
+		// 检查用户角色是否为管理员
+		isAdmin := roleName == "admin" || roleName == "superadmin"
+
+		// 如果是管理员，查询所有用户
+		var users []*ent.User
+		var err error
+		if isAdmin {
+			users, err = client.User.Query().
+				Where(user.HasTenantWith(tenant.IDEQ(tenantID))).
+				All(context.Background())
+		} else {
+			// 否则，只查询当前用户
+			users, err = client.User.Query().
+				Where(user.IDEQ(userID)).
+				All(context.Background())
+		}
 		if err != nil {
 			log.Printf("Error querying users: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
