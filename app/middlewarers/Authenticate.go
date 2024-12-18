@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
+	"log"
 	"net/http"
 	"time"
 )
@@ -68,6 +69,9 @@ func AuthenticateAndAuthorize(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			ctx := viewer.NewContext(c.Request().Context(), v)
 			c.SetRequest(c.Request().WithContext(ctx))
+		} else {
+			log.Println("Invalid token claims or token not valid")
+			return echo.NewHTTPError(http.StatusUnauthorized, "invalid access token")
 		}
 		return next(c)
 	}

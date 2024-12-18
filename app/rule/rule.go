@@ -2,79 +2,122 @@ package rule
 
 import (
 	"context"
+	"fmt"
+	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 )
 
-// DenyIfNoViewer is a rule that returns Deny decision if the viewer is missing in the context.
-func DenyIfNoViewer() privacy.QueryMutationRule {
-	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
-		view := viewer.FromContext(ctx)
-		if view == nil {
-			return privacy.Denyf("viewer-context is missing")
+// AllowIfOwner 是一个隐私规则示例，允许用户访问自己的数据。
+func AllowIfOwner() privacy.QueryRule {
+	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
+		v := viewer.FromContext(ctx)
+		if v == nil {
+			fmt.Println("No viewer in context")
+			return privacy.Denyf("viewer is not authenticated")
 		}
-		return privacy.Skip
+		fmt.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
+
+		// 检查查询是否是 User 查询，并添加查询条件
+		userQuery, ok := q.(*ent.UserQuery)
+		if !ok {
+			return privacy.Denyf("not a UserQuery")
+		}
+		userQuery.Where(user.IDEQ(v.UserID))
+
+		fmt.Println("Allowing access for owner")
+		return privacy.Allow
 	})
 }
 
-// AllowIfAdmin is a rule that returns Allow decision if the viewer is admin.
-//func AllowIfAdmin() privacy.QueryMutationRule {
-//	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
-//		view := viewer.FromContext(ctx)
-//		if view.Admin {
-//			return privacy.Allow
-//		}
-//		return privacy.Skip
-//	})
-//}
+// AllowIfOwnerMutation 是一个隐私规则示例，允许用户修改自己的数据。
+func AllowIfOwnerMutation() privacy.MutationRule {
+	return privacy.MutationRuleFunc(func(ctx context.Context, m ent.Mutation) error {
+		v := viewer.FromContext(ctx)
+		if v == nil {
+			fmt.Println("No viewer in context")
+			return privacy.Denyf("viewer is not authenticated")
+		}
+		fmt.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
 
-//// AllowIfRole is a rule that returns Allow decision if the viewer has a specific role.
-//func AllowIfRole(roleName string) privacy.QueryMutationRule {
-//	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
-//		view := viewer.FromContext(ctx)
-//		if view.HasRole(roleName) {
-//			return privacy.Allow
-//		}
-//		return privacy.Skip
-//	})
-//}
+		// 检查变更是否是 User 变更，并添加查询条件
+		if userMutation, ok := m.(*ent.UserMutation); ok {
+			ids, err := userMutation.IDs(ctx)
+			if err == nil && len(ids) == 1 && ids[0] == v.UserID {
+				fmt.Println("Allowing mutation for owner")
+				return privacy.Allow
+			}
+		}
 
-// AllowIfOwner is a rule that returns Allow decision if the viewer is the owner of the entity.
-func AllowIfOwner() privacy.QueryMutationRule {
-	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
-		view := viewer.FromContext(ctx)
-		entityOwnerID := ctx.Value("ENTITY_OWNER_ID") // 假设我们在上下文中传递了实体的所有者ID
-		if entityOwnerID == view.UserID {
+		fmt.Println("Denying mutation for non-owner")
+		return privacy.Denyf("only owner can perform this action")
+	})
+}
+
+// AllowIfAdmin 是一个查询规则，允许管理员和超级管理员进行查询
+func AllowIfAdmin() privacy.QueryRule {
+	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
+		v := viewer.FromContext(ctx)
+		if v == nil {
+			fmt.Println("No viewer in context")
+			return privacy.Denyf("viewer is not authenticated")
+		}
+		fmt.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
+		if v.RoleName == "admin" || v.RoleName == "superadmin" {
+			fmt.Println("Allowing access for admin or superadmin")
 			return privacy.Allow
 		}
+		fmt.Println("Denying access for non-admin or non-superadmin")
 		return privacy.Skip
 	})
 }
 
-// AllowIfTenantMember is a rule that allows access if the viewer belongs to the same tenant as the entity.
-func AllowIfTenantMember() privacy.QueryMutationRule {
-	return privacy.ContextQueryMutationRule(func(ctx context.Context) error {
-		view := viewer.FromContext(ctx)
-		tenantID := ctx.Value("ENTITY_TENANT_ID") // 假设我们在上下文中传递了实体的租户ID
-		if tenantID == view.TenantID {
+// AllowIfAdminMutation 是一个变更规则，允许管理员和超级管理员进行变更操作
+// AllowIfAdminMutation 是一个变更规则，允许管理员和超级管理员进行变更操作
+func AllowIfAdminMutation() privacy.MutationRule {
+	return privacy.MutationRuleFunc(func(ctx context.Context, m ent.Mutation) error {
+		v := viewer.FromContext(ctx)
+		if v == nil {
+			fmt.Println("No viewer in context")
+			return privacy.Denyf("viewer is not authenticated")
+		}
+		fmt.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
+		if v.RoleName == "admin" || v.RoleName == "superadmin" {
+			fmt.Println("Allowing mutation for admin or superadmin")
 			return privacy.Allow
 		}
+		fmt.Println("Denying mutation for non-admin or non-superadmin")
 		return privacy.Skip
 	})
 }
 
-//// DenyIfNotTenant DenyIfNotTenant 检查当前用户是否属于查询的租户
-//var DenyIfNotTenant privacy.QueryRule = privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
-//	viewer := viewer.FromContext(ctx)
-//	if viewer == nil {
-//		return privacy.Denyf("Viewer not found in context")
-//	}
-//	tenantID := viewer.TenantID
-//	q.Where(entql.FieldEQ("tenant_id", tenantID))
-//	return privacy.Skip
-//})
-//
-//// TenantPolicy 为租户查询设置隐私策略
-//var TenantPolicy = privacy.QueryPolicy{
-//	DenyIfNotTenant,
-//}
+// DenyIfNotOwnerOrAdmin 是一个隐私规则示例，拒绝非所有者或非管理员进行特定操作。
+func DenyIfNotOwnerOrAdmin() privacy.MutationRule {
+	return privacy.MutationRuleFunc(func(ctx context.Context, m ent.Mutation) error {
+		v := viewer.FromContext(ctx)
+		if v == nil {
+			fmt.Println("No viewer in context")
+			return privacy.Denyf("viewer is not authenticated")
+		}
+		fmt.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
+
+		// 如果是管理员或超级管理员，允许操作
+		if v.RoleName == "admin" || v.RoleName == "superadmin" {
+			fmt.Println("Allowing mutation for admin or superadmin")
+			return privacy.Allow
+		}
+
+		// 检查是否是所有者
+		if userMutation, ok := m.(*ent.UserMutation); ok {
+			ids, err := userMutation.IDs(ctx)
+			if err == nil && len(ids) == 1 && ids[0] == v.UserID {
+				fmt.Println("Allowing mutation for owner")
+				return privacy.Allow
+			}
+		}
+
+		fmt.Println("Denying mutation for non-owner and non-admin")
+		return privacy.Denyf("only owner or admin can perform this action")
+	})
+}

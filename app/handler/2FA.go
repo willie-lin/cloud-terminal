@@ -8,6 +8,7 @@ import (
 	"github.com/pquerna/otp/totp"
 	"github.com/skip2/go-qrcode"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"net/http"
 )
@@ -99,8 +100,9 @@ func Check2FA(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
+		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 		// 从数据库中获取用户
-		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
+		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(ctx)
 		if err != nil {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})

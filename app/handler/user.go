@@ -65,7 +65,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 		r, err := client.Role.Query().
 			Where(role.IDEQ(dto.RoleID)).
 			Where(role.HasTenantWith(tenant.IDEQ(v.TenantID))).
-			Only(context.Background())
+			Only(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("Role not found in tenant: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Specified role does not exist in the tenant"})
@@ -84,7 +84,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetTenantID(v.TenantID). // 关联到租户
 			AddRoles(r).
 			//SetRolesID(dto.RoleID).
-			Save(context.Background())
+			Save(c.Request().Context())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
@@ -96,7 +96,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 // GetAllUsers 获取所有用户
 func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		users, err := client.User.Query().All(context.Background())
+		users, err := client.User.Query().All(c.Request().Context())
 		if err != nil {
 			log.Printf("Error querying users: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
@@ -122,7 +122,7 @@ func GetALLUserByTenant(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(roleName)
 		//log.Printf("Queried tenant ID: %s", tenantID)
 
-		//users, err := client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(context.Background())
+		//users, err := client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(c.Request().Context())
 
 		// 检查用户角色是否为管理员
 		isAdmin := roleName == "admin" || roleName == "superadmin"
@@ -133,12 +133,12 @@ func GetALLUserByTenant(client *ent.Client) echo.HandlerFunc {
 		if isAdmin {
 			users, err = client.User.Query().
 				Where(user.HasTenantWith(tenant.IDEQ(tenantID))).
-				All(context.Background())
+				All(c.Request().Context())
 		} else {
 			// 否则，只查询当前用户
 			users, err = client.User.Query().
 				Where(user.IDEQ(userID)).
-				All(context.Background())
+				All(c.Request().Context())
 		}
 		if err != nil {
 			log.Printf("Error querying users: %v", err)
@@ -161,7 +161,7 @@ func GetUserByUsername(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		us, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(context.Background())
+		us, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -260,7 +260,7 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 		//fmt.Println(2222222)
 
 		// 从数据库中获取用户
-		ua, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(context.Background())
+		ua, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -278,7 +278,7 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 			SetOnline(dto.Online).
 			SetEnableType(dto.EnableType).
 			SetLastLoginTime(time.Now()).
-			Save(context.Background())
+			Save(c.Request().Context())
 		if err != nil {
 			log.Printf("Error updating user info: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating user info in database"})
@@ -304,7 +304,7 @@ func DeleteUserByUsername(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		ue, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(context.Background())
+		ue, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -314,7 +314,7 @@ func DeleteUserByUsername(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
 
-		err = client.User.DeleteOne(ue).Exec(context.Background())
+		err = client.User.DeleteOne(ue).Exec(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -394,7 +394,7 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 从数据库中获取用户
-		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(context.Background())
+		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -427,8 +427,8 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 		//	SetAvatar(dto.Avatar).
 		//	SetPhone(dto.Phone).
 		//	SetBio(dto.Bio).
-		//	Save(context.Background())
-		_, err = update.Save(context.Background())
+		//	Save(c.Request().Context())
+		_, err = update.Save(c.Request().Context())
 		if err != nil {
 			log.Printf("Error updating user info: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating user info in database"})
@@ -453,7 +453,7 @@ func UpdateUserByUUID(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, "Invalid UUID")
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
 		defer cancel()
 
 		user, err := client.User.UpdateOneID(id).SetEmail(u.Email).SetNickname(u.Nickname).Save(ctx)
@@ -490,14 +490,14 @@ func AssignRoleToUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 检查用户是否存在
-		user, err := client.User.Get(context.Background(), dto.UserID)
+		user, err := client.User.Get(c.Request().Context(), dto.UserID)
 		if err != nil {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "User not found"})
 		}
 
 		// 检查角色是否存在
-		role, err := client.Role.Query().Where(role.IDEQ(dto.RoleID)).Only(context.Background())
+		role, err := client.Role.Query().Where(role.IDEQ(dto.RoleID)).Only(c.Request().Context())
 		if err != nil {
 			log.Printf("Role not found: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Role not found"})
@@ -506,7 +506,7 @@ func AssignRoleToUser(client *ent.Client) echo.HandlerFunc {
 		// 关联用户和角色
 		err = client.User.UpdateOne(user).
 			AddRoles(role).
-			Exec(context.Background())
+			Exec(c.Request().Context())
 		if err != nil {
 			log.Printf("Error assigning role to user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to assign role to user"})

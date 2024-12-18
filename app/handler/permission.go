@@ -66,7 +66,7 @@ func GetAllPermissionsByUserByTenant(client *ent.Client) echo.HandlerFunc {
 			QueryRoles().
 			WithPermissions().
 			//Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
-			All(context.Background())
+			All(c.Request().Context())
 		if err != nil {
 			log.Printf("Error querying roles for user %s in tenant %s: %v", userID, tenantID, err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})

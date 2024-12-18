@@ -64,7 +64,7 @@ func GetAllRolesByUserByTenant(client *ent.Client) echo.HandlerFunc {
 		userRoles, err := client.User.Query().
 			Where(user.IDEQ(userID)).
 			QueryRoles().
-			All(context.Background())
+			All(c.Request().Context())
 		if err != nil {
 			log.Printf("Error querying roles for user %s: %v", userID, err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
@@ -84,7 +84,7 @@ func GetAllRolesByUserByTenant(client *ent.Client) echo.HandlerFunc {
 			roles, err = client.Tenant.Query().
 				Where(tenant.IDEQ(tenantID)).
 				QueryRoles(). // 直接通过 Tenant 查询关联的角色
-				All(context.Background())
+				All(c.Request().Context())
 			//针对一对多关系：
 			//roles, err = client.Role.Query().
 			//	Where(role.HasUsersWith(user.HasTenantWith(tenant.IDEQ(tenantID)))).

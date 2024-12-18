@@ -189,8 +189,11 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
+		// 使用决策上下文进行查询，跳过隐私规则
+		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
+
 		//fmt.Println(dto.OTP)
-		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).WithTenant().Only(context.Background())
+		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).WithTenant().Only(ctx)
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -228,14 +231,14 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		_, err = client.User.
 			UpdateOne(us).
 			SetLastLoginTime(time.Now()).
-			Save(context.Background())
+			Save(ctx)
 		if err != nil {
 			log.Printf("Error updating last login time: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
 
 		// 查询租户信息，通过边查询获取用户关联的租户
-		tenant, err := us.QueryTenant().Only(context.Background())
+		tenant, err := us.QueryTenant().Only(ctx)
 		if err != nil {
 			log.Printf("Error finding tenant: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error finding tenant"})
@@ -243,7 +246,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 获取用户的第一个角色ID
 		//role, err := us.QueryRoles().First(context.Background())
-		role, err := us.QueryRoles().Only(context.Background())
+		role, err := us.QueryRoles().Only(ctx)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})

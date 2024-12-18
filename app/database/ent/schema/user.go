@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
+	"github.com/willie-lin/cloud-terminal/app/rule"
 	"regexp"
 	"time"
 )
@@ -56,24 +57,59 @@ func (User) Indexes() []ent.Index {
 	}
 }
 
-// Policy defines the privacy policy of the User.
+//
+//// Policy defines the privacy policy of the User.
+//func (User) Policy() ent.Policy {
+//	return privacy.Policy{
+//		Query: privacy.QueryPolicy{
+//			//rule.AllowIfAdmin(),            // 允许管理员进行查询
+//			//rule.AllowIfOwner(),            // 允许用户查询自己的资料
+//			//rule.AllowIfRole("SuperAdmin"), // 允许超级管理员进行查询
+//			//rule.AllowIfTenantMember(),     // 允许同一租户成员进行查询
+//			//privacy.AlwaysAllowRule(),
+//			//privacy.AlwaysDenyRule(),
+//			//rule.AllowIfViewerTenant(),
+//			rule.AllowIfAdmin(),
+//			privacy.AlwaysDenyRule(),
+//		},
+//		Mutation: privacy.MutationPolicy{
+//			//rule.DenyIfNoViewer(),
+//			//rule.AllowIfAdmin(),            // 允许管理员进行操作
+//			//rule.AllowIfOwner(),            // 允许用户修改自己的资料
+//			//rule.AllowIfRole("SuperAdmin"), // 允许超级管理员进行操作
+//			//privacy.AlwaysDenyRule(),
+//			//privacy.AlwaysAllowRule(),
+//
+//			privacy.AlwaysDenyRule(),
+//		},
+//	}
+//}
+
+// User schema.
+
+// Policy of the User.
 func (User) Policy() ent.Policy {
 	return privacy.Policy{
 		Query: privacy.QueryPolicy{
-			//rule.AllowIfAdmin(),            // 允许管理员进行查询
-			//rule.AllowIfOwner(),            // 允许用户查询自己的资料
-			//rule.AllowIfRole("SuperAdmin"), // 允许超级管理员进行查询
-			//rule.AllowIfTenantMember(),     // 允许同一租户成员进行查询
-			privacy.AlwaysAllowRule(),
+			//rule.DenyIfNoViewer(),
+			//rule.AllowIfOwner(),
+			//rule.AllowIfTenantMember(),
+			//rule.AllowSuperAdmin(),
+
+			rule.AllowIfAdmin(),
+			rule.AllowIfOwner(),
 			//privacy.AlwaysDenyRule(),
+			privacy.AlwaysDenyRule(),
 		},
 		Mutation: privacy.MutationPolicy{
 			//rule.DenyIfNoViewer(),
-			//rule.AllowIfAdmin(),            // 允许管理员进行操作
-			//rule.AllowIfOwner(),            // 允许用户修改自己的资料
-			//rule.AllowIfRole("SuperAdmin"), // 允许超级管理员进行操作
-			//privacy.AlwaysDenyRule(),
-			privacy.AlwaysAllowRule(),
+			//rule.AllowIfOwner(),
+			//rule.AllowIfTenantMember(),
+
+			rule.AllowIfAdminMutation(),
+			rule.AllowIfOwnerMutation(),
+			rule.DenyIfNotOwnerOrAdmin(),
+			privacy.AlwaysDenyRule(),
 		},
 	}
 }
