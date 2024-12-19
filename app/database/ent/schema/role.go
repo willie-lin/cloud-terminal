@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
+	"github.com/willie-lin/cloud-terminal/app/rule"
 )
 
 // Role holds the schema definition for the Role entity.
@@ -52,21 +53,15 @@ func (Role) Indexes() []ent.Index {
 func (Role) Policy() ent.Policy {
 	return privacy.Policy{
 		Query: privacy.QueryPolicy{
-			//rule.AllowEmailCheck(),
-			//rule.AllowIfAdmin(),            // 允许管理员进行查询
-			//rule.AllowIfOwner(),            // 允许用户查询自己的资料
-			//rule.AllowIfRole("SuperAdmin"), // 允许超级管理员进行查询
-			//rule.AllowIfTenantMember(),     // 允许同一租户成员进行查询
-			privacy.AlwaysAllowRule(),
-			//privacy.AlwaysDenyRule(),
+
+			rule.AllowOnlySuperAdminQueryRole(),      // 仅允许 superadmin 查询
+			rule.AllowIfAdminOrSuperAdminQueryRole(), // 允许 admin 和 superadmin 查询
+			privacy.AlwaysDenyRule(),
 		},
 		Mutation: privacy.MutationPolicy{
-			//rule.DenyIfNoViewer(),
-			//rule.AllowIfAdmin(),            // 允许管理员进行操作
-			//rule.AllowIfOwner(),            // 允许用户修改自己的资料
-			//rule.AllowIfRole("SuperAdmin"), // 允许超级管理员进行操作
-			//privacy.AlwaysDenyRule(),
-			privacy.AlwaysAllowRule(),
+			rule.AllowOnlySuperAdminMutationRole(),      // 仅允许 superadmin 变更
+			rule.AllowIfAdminOrSuperAdminMutationRole(), // 允许 admin 和 superadmin 变更
+			privacy.AlwaysDenyRule(),                    // 最后的拒绝策略
 		},
 	}
 }
