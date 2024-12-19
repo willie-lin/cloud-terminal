@@ -53,15 +53,15 @@ func (Role) Indexes() []ent.Index {
 func (Role) Policy() ent.Policy {
 	return privacy.Policy{
 		Query: privacy.QueryPolicy{
-
-			rule.AllowOnlySuperAdminQueryRole(),      // 仅允许 superadmin 查询
-			rule.AllowIfAdminOrSuperAdminQueryRole(), // 允许 admin 和 superadmin 查询
-			privacy.AlwaysDenyRule(),
+			rule.AllowIfSuperAdminQueryRole(), // 允许 superuser 查询所有角色
+			rule.AllowIfAdminQueryRole(),      // 允许 admin 查询其租户下的角色
+			rule.AllowIfOwnerQueryRole(),      // 允许 user 查询自己的角色
+			privacy.AlwaysDenyRule(),          // 最后的拒绝策略
 		},
 		Mutation: privacy.MutationPolicy{
-			rule.AllowOnlySuperAdminMutationRole(),      // 仅允许 superadmin 变更
-			rule.AllowIfAdminOrSuperAdminMutationRole(), // 允许 admin 和 superadmin 变更
-			privacy.AlwaysDenyRule(),                    // 最后的拒绝策略
+			rule.AllowIfSuperAdminMutationRole(), // 允许 superuser 变更所有角色
+			rule.AllowIfAdminMutationRole(),      // 允许 admin 变更其租户下的角色
+			privacy.AlwaysDenyRule(),             // 最后的拒绝策略
 		},
 	}
 }

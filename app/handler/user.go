@@ -126,6 +126,7 @@ func GetALLUserByTenant(client *ent.Client) echo.HandlerFunc {
 
 		// 检查用户角色是否为管理员
 		isAdmin := roleName == "admin" || roleName == "superadmin"
+		fmt.Println(isAdmin)
 
 		// 如果是管理员，查询所有用户
 		var users []*ent.User

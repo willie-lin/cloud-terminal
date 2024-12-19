@@ -61,17 +61,15 @@ func (User) Indexes() []ent.Index {
 func (User) Policy() ent.Policy {
 	return privacy.Policy{
 		Query: privacy.QueryPolicy{
-
-			rule.AllowAdminQueryUser(),
-			rule.AllowOwnerQueryUser(),
+			rule.AllowIfSuperAdminQueryUser(),
+			rule.AllowIfAdminQueryUser(),
+			rule.AllowIfOwnerQueryUser(),
 			privacy.AlwaysDenyRule(),
 		},
 		Mutation: privacy.MutationPolicy{
-
-			rule.AllowAdminMutationUser(),
-			rule.AllowOwnerMutationUser(),
-			rule.AllowIfOwnerOrAdminMutationUser(),
-			rule.DenyIfNotAdminOrSuperAdmin(),
+			rule.AllowIfSuperAdminMutationUser(),
+			rule.AllowIfAdminMutationUser(),
+			rule.AllowIfOwnerMutationUser(),
 			privacy.AlwaysDenyRule(),
 		},
 	}

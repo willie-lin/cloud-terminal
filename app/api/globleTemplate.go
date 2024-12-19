@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 )
 
@@ -39,11 +40,13 @@ var defaultRoleTemplates = []RoleTemplate{
 }
 
 func InitializeGlobalPermissions(client *ent.Client) error {
+	// 使用 privacy.DecisionContext 跳过隐私检查
+	ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 	for _, p := range defaultPermissions {
 		//log.Printf("Checking permission: %s - %s", p.Name, p.ResourceType)
 		_, err := client.Permission.Query().
 			Where(permission.NameEQ(p.Name)).
-			Only(context.Background())
+			Only(ctx)
 		if ent.IsNotFound(err) {
 			//log.Printf("Permission not found, creating: %s", p.Name)
 			_, err = client.Permission.Create().
@@ -52,7 +55,7 @@ func InitializeGlobalPermissions(client *ent.Client) error {
 				SetActions(p.Actions). // 直接设置动作列表
 				SetResourceType(p.ResourceType).
 				SetIsDisabled(false).
-				Save(context.Background())
+				Save(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to create permission %s: %w", p.Name, err)
 			}
@@ -65,8 +68,8 @@ func InitializeGlobalPermissions(client *ent.Client) error {
 }
 
 func InitializeTenantRolesAndPermissions(client *ent.Client) error {
-	ctx := context.Background()
-
+	// 使用 privacy.DecisionContext 跳过隐私检查
+	ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 	allPermissions, err := client.Permission.Query().All(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch all permissions: %w", err)
