@@ -103,7 +103,6 @@ func AllowIfOwnerQueryUser() privacy.QueryRule {
 	})
 }
 
-// AllowIfOwnerMutationUser  允许用户变更自己的个人信息。
 func AllowIfOwnerMutationUser() privacy.MutationRule {
 	return privacy.MutationRuleFunc(func(ctx context.Context, m ent.Mutation) error {
 		v := viewer.FromContext(ctx)
@@ -121,7 +120,7 @@ func AllowIfOwnerMutationUser() privacy.MutationRule {
 			}
 		}
 
-		log.Println("Denying mutation for non-owner")
-		return privacy.Denyf("only owner can perform this action")
+		log.Println("Skipping mutation for non-owner")
+		return privacy.Skip
 	})
 }

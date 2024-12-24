@@ -51,13 +51,13 @@ func (Tenant) Indexes() []ent.Index {
 func (Tenant) Policy() ent.Policy {
 	return privacy.Policy{
 		Query: privacy.QueryPolicy{
-			rule.AllowOnlySuperAdminQueryTenant(), // 仅允许 superadmin 查询
-			rule.AllowIfAdminQueryTenant(),        // 允许 admin 查询其租户下的资源
-			privacy.AlwaysDenyRule(),              // 最后的拒绝策略
+			//rule.AllowOnlySuperAdminQueryTenant(), // 仅允许 superadmin 查询
+			rule.AllowIfAdminQueryTenant(), // 允许 admin 查询其租户下的资源
+			privacy.AlwaysDenyRule(),       // 最后的拒绝策略
 		},
 		Mutation: privacy.MutationPolicy{
-			rule.AllowOnlySuperAdminMutationTenant(), // 允许 superuser 变更所有租户
-			rule.AllowIfAdminMutationTenant(),        // 允许 admin 变更其租户下的资源
+			//rule.AllowOnlySuperAdminMutationTenant(), // 允许 superuser 变更所有租户
+			rule.AllowIfAdminMutationTenant(), // 允许 admin 变更其租户下的资源
 			privacy.AlwaysDenyRule(),
 		},
 	}

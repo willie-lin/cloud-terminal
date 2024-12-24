@@ -50,7 +50,7 @@ func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-func GetAllRolesByUserByTenant(client *ent.Client) echo.HandlerFunc {
+func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 从请求上下文中获取租户ID
 		v := viewer.FromContext(c.Request().Context())
@@ -60,44 +60,60 @@ func GetAllRolesByUserByTenant(client *ent.Client) echo.HandlerFunc {
 		}
 		userID := v.UserID
 		tenantID := v.TenantID
-		// 查询用户的角色
-		userRoles, err := client.User.Query().
-			Where(user.IDEQ(userID)).
-			QueryRoles().
-			All(c.Request().Context())
+		roleName := v.RoleName
+
+		//// 查询用户的角色
+		//userRoles, err := client.User.Query().
+		//	Where(user.IDEQ(userID)).
+		//	QueryRoles().
+		//	All(c.Request().Context())
+		//if err != nil {
+		//	log.Printf("Error querying roles for user %s: %v", userID, err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
+		//}
+
+		// 查询该租户下的所有角色
+		//allTenantRoles, err := client.Tenant.Query().Where(tenant.IDEQ(tenantID)).QueryRoles().All(c.Request().Context())
+		//if err != nil {
+		//	log.Printf("Error querying all roles for tenant %s: %v", tenantID, err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
+		//}
+
+		// 查询该租户下的所有角色
+		allTenantRoles, err := client.Role.Query().Where(role.HasTenantWith(tenant.IDEQ(tenantID))).All(c.Request().Context())
 		if err != nil {
-			log.Printf("Error querying roles for user %s: %v", userID, err)
+			log.Printf("Error querying all roles for tenant %s: %v", tenantID, err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
-		}
-		// 检查是否是管理员角色
-		isAdmin := false
-		for _, role := range userRoles {
-			if role.Name == "Admin" {
-				isAdmin = true
-				break
-			}
 		}
 		// 如果是管理员，查询所有属于同一租户的角色
 		var roles []*ent.Role
-		if isAdmin {
-			// 针对多对多关系：
-			roles, err = client.Tenant.Query().
-				Where(tenant.IDEQ(tenantID)).
-				QueryRoles(). // 直接通过 Tenant 查询关联的角色
-				All(c.Request().Context())
-			//针对一对多关系：
-			//roles, err = client.Role.Query().
-			//	Where(role.HasUsersWith(user.HasTenantWith(tenant.IDEQ(tenantID)))).
-			//	All(context.Background())
-			if err != nil {
-				log.Printf("Error querying all roles for tenant %s: %v", tenantID, err)
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
-			}
+		if roleName == "Admin" { // 直接使用 rolename 判断是否是管理员
+			roles = allTenantRoles // 管理员返回所有角色
 		} else {
-			// 普通用户查询：只查询用户自己的角色
-			roles = userRoles
+			// 非管理员需要过滤，只返回分配给用户的角色
+			userRoles, err := client.User.Query().
+				Where(user.IDEQ(userID)).
+				QueryRoles().
+				All(c.Request().Context())
+
+			if err != nil {
+				log.Printf("Error querying user roles for user %s: %v", v.UserID, err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user roles from database"})
+			}
+
+			userRoleIDs := make(map[string]struct{})
+			for _, ur := range userRoles {
+				userRoleIDs[ur.ID.String()] = struct{}{}
+			}
+
+			for _, atr := range allTenantRoles {
+				if _, ok := userRoleIDs[atr.ID.String()]; ok {
+					roles = append(roles, atr)
+				}
+			}
 		}
-		log.Printf("Roles for user %s in tenant %s: %v", userID, tenantID, roles)
+
+		log.Printf("Roles for user in tenant %s: %v", tenantID, roles)
 		return c.JSON(http.StatusOK, roles)
 	}
 }

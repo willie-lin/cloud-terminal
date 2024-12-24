@@ -84,7 +84,28 @@ func AllowIfAdminMutationPermission() privacy.MutationRule {
 	})
 }
 
-// AllowIfOwnerQueryPermission 允许用户查询自己的权限。
+//// AllowIfOwnerQueryPermission 允许用户查询自己的权限。
+//func AllowIfOwnerQueryPermission() privacy.QueryRule {
+//	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
+//		v := viewer.FromContext(ctx)
+//		if v == nil {
+//			log.Println("No viewer in context")
+//			return privacy.Denyf("viewer is not authenticated")
+//		}
+//		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
+//		if permissionQuery, ok := q.(*ent.PermissionQuery); ok {
+//			permissionQuery.Where(permission.HasRolesWith(role.HasUsersWith(user.IDEQ(v.UserID))))
+//			log.Println("Allowing query for user permissions")
+//			return privacy.Allow
+//		}
+//		//log.Println("Denying query for non-owner")
+//		//return privacy.Denyf("only owner can perform this action")
+//		log.Println("Denying query for non-owner")
+//		return privacy.Skip // 重要：这里要返回 privacy.Skip，而不是 privacy.Denyf
+//	})
+//
+//}
+
 func AllowIfOwnerQueryPermission() privacy.QueryRule {
 	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
 		v := viewer.FromContext(ctx)
@@ -98,7 +119,7 @@ func AllowIfOwnerQueryPermission() privacy.QueryRule {
 			log.Println("Allowing query for user permissions")
 			return privacy.Allow
 		}
-		log.Println("Denying query for non-owner")
-		return privacy.Denyf("only owner can perform this action")
+		log.Println("Skipping query for non-permission entity")
+		return privacy.Skip
 	})
 }

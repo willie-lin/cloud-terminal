@@ -57,11 +57,13 @@ func (Role) Policy() ent.Policy {
 			rule.AllowIfAdminQueryRole(),      // 允许 admin 查询其租户下的角色
 			rule.AllowIfOwnerQueryRole(),      // 允许 user 查询自己的角色
 			privacy.AlwaysDenyRule(),          // 最后的拒绝策略
+			//privacy.AlwaysAllowRule(),
 		},
 		Mutation: privacy.MutationPolicy{
 			rule.AllowIfSuperAdminMutationRole(), // 允许 superuser 变更所有角色
 			rule.AllowIfAdminMutationRole(),      // 允许 admin 变更其租户下的角色
 			privacy.AlwaysDenyRule(),             // 最后的拒绝策略
+			//privacy.AlwaysAllowRule(),
 		},
 	}
 }

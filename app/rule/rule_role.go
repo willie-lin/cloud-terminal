@@ -43,6 +43,30 @@ func AllowIfSuperAdminMutationRole() privacy.MutationRule {
 	})
 }
 
+//// AllowIfAdminQueryRole 允许管理员查询其租户下的角色。
+//func AllowIfAdminQueryRole() privacy.QueryRule {
+//	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
+//		v := viewer.FromContext(ctx)
+//		if v == nil {
+//			log.Println("No viewer in context")
+//			return privacy.Denyf("viewer is not authenticated")
+//		}
+//		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
+//		if v.RoleName == "admin" || v.RoleName == "superadmin" {
+//			log.Println("Allowing query for admin or superadmin")
+//			// 确保查询限于管理员的租户
+//			if roleQuery, ok := q.(*ent.RoleQuery); ok {
+//				//roleQuery.Where(role.HasTenantWith(tenant.IDEQ(v.TenantID)))
+//				//roleQuery.Where(role.HasUsersWith(user.HasTenantWith(tenant.IDEQ(v.TenantID))))
+//				roleQuery.Where(role.HasUsersWith(user.IDEQ(v.UserID)))
+//				log.Println("Allowing query for admin roles")
+//			}
+//			return privacy.Allow
+//		}
+//		return privacy.Skip
+//	})
+//}
+
 // AllowIfAdminQueryRole 允许管理员查询其租户下的角色。
 func AllowIfAdminQueryRole() privacy.QueryRule {
 	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
@@ -51,12 +75,12 @@ func AllowIfAdminQueryRole() privacy.QueryRule {
 			log.Println("No viewer in context")
 			return privacy.Denyf("viewer is not authenticated")
 		}
+		log.Printf("Admin query: Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
 		if v.RoleName == "admin" || v.RoleName == "superadmin" {
 			log.Println("Allowing query for admin or superadmin")
-			// 确保查询限于管理员的租户
 			if roleQuery, ok := q.(*ent.RoleQuery); ok {
 				roleQuery.Where(role.HasTenantWith(tenant.IDEQ(v.TenantID)))
-				//roleQuery.Where(role.HasUsersWith(user.HasTenantWith(tenant.IDEQ(v.TenantID))))
+				log.Println("Allowing query for admin roles within tenant")
 			}
 			return privacy.Allow
 		}
@@ -76,8 +100,10 @@ func AllowIfAdminMutationRole() privacy.MutationRule {
 			log.Println("Allowing mutation for admin or superadmin")
 			// 确保变更限于管理员的租户
 			if roleMutation, ok := m.(*ent.RoleMutation); ok {
-				roleMutation.Where(role.HasTenantWith(tenant.IDEQ(v.TenantID)))
-				//roleMutation.Where(role.HasUsersWith(user.HasTenantWith(tenant.IDEQ(v.TenantID))))
+				//roleMutation.Where(role.HasTenantWith(tenant.IDEQ(v.TenantID)))
+				roleMutation.Where(role.HasUsersWith(user.HasTenantWith(tenant.IDEQ(v.TenantID))))
+				//roleMutation.Where(role.HasUsersWith(user.IDEQ(v.UserID)))
+
 			}
 			return privacy.Allow
 		}
@@ -85,7 +111,6 @@ func AllowIfAdminMutationRole() privacy.MutationRule {
 	})
 }
 
-// AllowIfOwnerQueryRole 允许用户查询自己的角色。
 func AllowIfOwnerQueryRole() privacy.QueryRule {
 	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
 		v := viewer.FromContext(ctx)
@@ -94,12 +119,13 @@ func AllowIfOwnerQueryRole() privacy.QueryRule {
 			return privacy.Denyf("viewer is not authenticated")
 		}
 		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
+
 		if roleQuery, ok := q.(*ent.RoleQuery); ok {
 			roleQuery.Where(role.HasUsersWith(user.IDEQ(v.UserID)))
 			log.Println("Allowing query for user roles")
 			return privacy.Allow
 		}
-		log.Println("Denying query for non-owner")
-		return privacy.Denyf("only owner can perform this action")
+
+		return privacy.Skip
 	})
 }
