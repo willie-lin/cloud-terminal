@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -29,7 +28,7 @@ func CheckPermissionName(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 		// 检查permission是否已经存在
-		exists, err := client.Permission.Query().Where(permission.NameEQ(dto.Name)).Exist(context.Background())
+		exists, err := client.Permission.Query().Where(permission.NameEQ(dto.Name)).Exist(c.Request().Context())
 		if err != nil {
 			log.Printf("Error checking name: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error checking name from database"})
@@ -41,7 +40,7 @@ func CheckPermissionName(client *ent.Client) echo.HandlerFunc {
 // GetAllPermissions  获取所有permission
 func GetAllPermissions(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		permissions, err := client.Permission.Query().All(context.Background())
+		permissions, err := client.Permission.Query().All(c.Request().Context())
 		if err != nil {
 			log.Printf("Error querying permissions: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying permissions from database"})
@@ -146,7 +145,7 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 				SetDescription(dto.Description).
 				//SetTenantID(v.TenantID).            // 关联到当前租户
 				AddResourceIDs(dto.ResourceIDs...). // 可选的资源ID
-				Save(context.Background())
+				Save(c.Request().Context())
 			if err != nil {
 				log.Printf("Error creating permission: %v", err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create permission"})
@@ -157,8 +156,25 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
+// IsDefaultPermission 检查角色是否为默认角色
+func IsDefaultPermission(permissionName string) bool {
+	defaultPermissions := []string{"UserManagement", "RoleManagement", "LogAccess", "ApplicationDevelopment"}
+	for _, r := range defaultPermissions {
+		if r == permissionName {
+			return true
+		}
+	}
+	return false
+}
+
 func DeletePermissionByName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		// 从请求上下文中获取租户ID
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil || v.RoleName != "admin" {
+			log.Printf("No viewer found in context or not authorized")
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
 
 		dto := new(PermissionDTO)
 		if err := c.Bind(&dto); err != nil {
@@ -166,7 +182,12 @@ func DeletePermissionByName(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		p, err := client.Permission.Query().Where(permission.NameEQ(dto.Name)).Only(context.Background())
+		if IsDefaultPermission(dto.Name) {
+			log.Printf("Attempt to delete default role: %s", dto.Name)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Cannot delete default Permission"})
+		}
+
+		p, err := client.Permission.Query().Where(permission.NameEQ(dto.Name)).Only(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("Permission not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Permission not found"})
@@ -176,7 +197,7 @@ func DeletePermissionByName(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role from database"})
 		}
 
-		err = client.Permission.DeleteOne(p).Exec(context.Background())
+		err = client.Permission.DeleteOne(p).Exec(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("Permission not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Permission not found"})
