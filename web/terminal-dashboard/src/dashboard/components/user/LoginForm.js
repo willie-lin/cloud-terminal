@@ -76,22 +76,6 @@ function LoginForm({ onLogin }) {
         }
     };
 
-    //         // console.log(data);
-    //         // console.log(data.token);
-    //         // 在存储之前，打印响应数据以确认数据
-    //         onLogin(email);
-    //         // 在登录成功后重定向到/dashboard
-    //         navigate('/dashboard'); // 登录后重定向到仪表盘
-    //
-    //
-    //     } catch (error) {
-    //         // setLoginError(error.message);
-    //         // console.error(error);
-    //         console.error("Error during login:", error);
-    //         setLoginError('用户名或密码错误或者OTP错误');
-    //         setTimeout(() => setLoginError(''), 1000); // 1秒后清除错误信息
-    //     }
-    // };
     return (
         <section className="m-8 flex gap-4">
             <div className="w-full lg:w-3/5 mt-24">

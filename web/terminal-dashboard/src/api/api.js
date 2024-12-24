@@ -50,34 +50,6 @@ api.interceptors.response.use(response => {
 export default api;
 
 
-
-
-
-
-
-
-// // 请求拦截器
-// api.interceptors.request.use(config => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//         config.headers['Authorization'] = `Bearer ${token}`;
-//     }
-//     return config;
-//     }, error => {
-//     return Promise.reject(error);
-// });
-// // 响应拦截器
-// api.interceptors.response.use(response => {
-//     return response;
-//     }, error => {
-//     if (error.response && error.response.status === 401) {
-//         localStorage.removeItem('token');
-//         localStorage.removeItem('email');
-//         window.location.href = '/login';
-//     } return Promise.reject(error);
-// });
-// export default api;
-
 // login
 export const login = async (data) => {
     try {
@@ -88,7 +60,6 @@ export const login = async (data) => {
         }
         const { refreshToken } = response.data;
         localStorage.setItem('refreshToken', refreshToken);
-        // console.log('Refresh token stored:', refreshToken);
         return response;
     } catch (error) {
         // console.error(error);

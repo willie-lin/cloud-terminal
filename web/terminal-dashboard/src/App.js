@@ -57,40 +57,6 @@ const App = () => {
         }
     };
 
-
-    // return (
-    //     // 路由组件
-    //     <ThemeProvider>
-    //         <AuthContext.Provider value={{ isLoggedIn, user, onLogin, onLogout }}>
-    //             <Router>
-    //                 {!isLoggedIn && <Navigation />}
-    //                 <Routes>
-    //                     <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
-    //                     <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
-    //                     <Route path="/reset-password" element={!isLoggedIn ? <ResetPassword onResetPassword={onLogin} /> : <Navigate to="/dashboard" />} />
-    //
-    //                     {/*<Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>*/}
-    //
-    //                     <Route
-    //                         path="/"
-    //                         element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
-    //                     >
-    //                         <Route path="dashboard" element={<HomePage email={user?.email}/>}/>
-    //                         <Route path="users" element={<UserList email={user?.email}/>}/>
-    //                         <Route path="roles" element={<RoleList email={user?.email}/>}/>
-    //                         <Route path="permissions" element={<PermissionList email={user?.email}/>}/>
-    //                         <Route path="userinfo" element={<UserInfo email={user?.email}/>}/>
-    //                         <Route path="open-user-2fa" element={<TwoFactorAuthPage email={user?.email} />}/>
-    //                         <Route path="/" element={<Navigate to="dashboard" />} />
-    //                         {/*<Route path="*" element={<NotFoundPage />} />*/}
-    //                     </Route>
-    //                     <Route path="*" element={<NotFoundPage />} />
-    //                 </Routes>
-    //             </Router>
-    //         </AuthContext.Provider>
-    //     </ThemeProvider>
-    // );
-
     return (
         <ThemeProvider>
             <AuthContext.Provider value={{isLoggedIn, currentUser: user, onLogin, onLogout}}>
