@@ -7,6 +7,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -65,7 +66,7 @@ func AuthenticateAndAuthorize(next echo.HandlerFunc) echo.HandlerFunc {
 			v := &viewer.Viewer{
 				TenantID: claims.TenantID,
 				UserID:   claims.UserID,
-				RoleName: claims.RoleName,
+				RoleName: strings.ToLower(claims.RoleName),
 			}
 			ctx := viewer.NewContext(c.Request().Context(), v)
 			c.SetRequest(c.Request().WithContext(ctx))

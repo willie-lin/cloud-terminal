@@ -254,7 +254,7 @@ func main() {
 	r.POST("/confirm-2FA", handler.Confirm2FA(client))
 	r.POST("/uploads", handler.UploadFile())
 	//r.GET("/users", handler.GetAllUsers(client))
-	r.GET("/users", handler.GetALLUserByTenant(client))
+	r.GET("/users", handler.GetAllUsersByTenant(client))
 	r.POST("/user/email", handler.GetUserByEmail(client))
 	r.POST("/edit-userinfo", handler.UpdateUserInfo(client))
 	//r.POST("/user/email", handler.GetUserByEmail(client), middlewarers.Authorize(enforcer))
@@ -274,7 +274,7 @@ func main() {
 
 	// permission
 	//r.GET("/permissions", handler.GetAllPermissions(client))
-	r.GET("/permissions", handler.GetAllPermissionsByUserByTenant(client))
+	r.GET("/permissions", handler.GetAllPermissionsByTenant(client))
 	//r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
 	r.POST("/add-permission", handler.CreatePermission(client))
 	//r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewarers.Authorize(enforcer))

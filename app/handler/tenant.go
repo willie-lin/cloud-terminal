@@ -95,7 +95,6 @@ func CheckTenantName(client *ent.Client) echo.HandlerFunc {
 		type TenantDTO struct {
 			Name string `json:"name"`
 		}
-
 		dto := new(TenantDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding tenant: %v", err)

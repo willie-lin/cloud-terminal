@@ -2,6 +2,7 @@ package rule
 
 import (
 	"context"
+	"fmt"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
@@ -16,6 +17,11 @@ import (
 func AllowIfSuperAdminQueryPermission() privacy.QueryRule {
 	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
 		v := viewer.FromContext(ctx)
+		fmt.Println("------------Permission----------")
+		fmt.Println(v.UserID)
+		fmt.Println(v.TenantID)
+		fmt.Println(v.RoleName)
+		fmt.Println("------------Permission----------")
 		if v == nil {
 			log.Println("No viewer in context")
 			return privacy.Denyf("viewer is not authenticated")
@@ -32,6 +38,11 @@ func AllowIfSuperAdminQueryPermission() privacy.QueryRule {
 func AllowIfSuperAdminMutationPermission() privacy.MutationRule {
 	return privacy.MutationRuleFunc(func(ctx context.Context, m ent.Mutation) error {
 		v := viewer.FromContext(ctx)
+		fmt.Println("------------Permission----------")
+		fmt.Println(v.UserID)
+		fmt.Println(v.TenantID)
+		fmt.Println(v.RoleName)
+		fmt.Println("------------Permission----------")
 		if v == nil {
 			log.Println("No viewer in context")
 			return privacy.Denyf("viewer is not authenticated")
@@ -48,15 +59,20 @@ func AllowIfSuperAdminMutationPermission() privacy.MutationRule {
 func AllowIfAdminQueryPermission() privacy.QueryRule {
 	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
 		v := viewer.FromContext(ctx)
+		fmt.Println("------------Permission----------")
+		fmt.Println(v.UserID)
+		fmt.Println(v.TenantID)
+		fmt.Println(v.RoleName)
+		fmt.Println("------------Permission----------")
 		if v == nil {
 			log.Println("No viewer in context")
 			return privacy.Denyf("viewer is not authenticated")
 		}
+		log.Printf("Admin query permission: Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
 		if v.RoleName == "admin" || v.RoleName == "superadmin" {
-			log.Println("Allowing query for admin or superadmin")
-			// 确保查询限于管理员的租户
 			if permissionQuery, ok := q.(*ent.PermissionQuery); ok {
-				permissionQuery.Where(permission.HasRolesWith(role.HasUsersWith(user.HasTenantWith(tenant.IDEQ(v.TenantID)))))
+				permissionQuery.Where(permission.HasRolesWith(role.HasTenantWith(tenant.IDEQ(v.TenantID))))
+				log.Println("Allowing query for admin permissions within tenant")
 			}
 			return privacy.Allow
 		}
@@ -68,6 +84,11 @@ func AllowIfAdminQueryPermission() privacy.QueryRule {
 func AllowIfAdminMutationPermission() privacy.MutationRule {
 	return privacy.MutationRuleFunc(func(ctx context.Context, m ent.Mutation) error {
 		v := viewer.FromContext(ctx)
+		fmt.Println("------------Permission----------")
+		fmt.Println(v.UserID)
+		fmt.Println(v.TenantID)
+		fmt.Println(v.RoleName)
+		fmt.Println("------------Permission----------")
 		if v == nil {
 			log.Println("No viewer in context")
 			return privacy.Denyf("viewer is not authenticated")
@@ -84,42 +105,25 @@ func AllowIfAdminMutationPermission() privacy.MutationRule {
 	})
 }
 
-//// AllowIfOwnerQueryPermission 允许用户查询自己的权限。
-//func AllowIfOwnerQueryPermission() privacy.QueryRule {
-//	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
-//		v := viewer.FromContext(ctx)
-//		if v == nil {
-//			log.Println("No viewer in context")
-//			return privacy.Denyf("viewer is not authenticated")
-//		}
-//		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
-//		if permissionQuery, ok := q.(*ent.PermissionQuery); ok {
-//			permissionQuery.Where(permission.HasRolesWith(role.HasUsersWith(user.IDEQ(v.UserID))))
-//			log.Println("Allowing query for user permissions")
-//			return privacy.Allow
-//		}
-//		//log.Println("Denying query for non-owner")
-//		//return privacy.Denyf("only owner can perform this action")
-//		log.Println("Denying query for non-owner")
-//		return privacy.Skip // 重要：这里要返回 privacy.Skip，而不是 privacy.Denyf
-//	})
-//
-//}
-
+// AllowIfOwnerQueryPermission 允许用户查询自己的权限。
 func AllowIfOwnerQueryPermission() privacy.QueryRule {
 	return privacy.QueryRuleFunc(func(ctx context.Context, q ent.Query) error {
 		v := viewer.FromContext(ctx)
+		fmt.Println("------------Permission----------")
+		fmt.Println(v.UserID)
+		fmt.Println(v.TenantID)
+		fmt.Println(v.RoleName)
+		fmt.Println("------------Permission----------")
 		if v == nil {
 			log.Println("No viewer in context")
 			return privacy.Denyf("viewer is not authenticated")
 		}
-		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
+		log.Printf("Owner query permission: Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, v.TenantID, v.RoleName)
 		if permissionQuery, ok := q.(*ent.PermissionQuery); ok {
 			permissionQuery.Where(permission.HasRolesWith(role.HasUsersWith(user.IDEQ(v.UserID))))
 			log.Println("Allowing query for user permissions")
 			return privacy.Allow
 		}
-		log.Println("Skipping query for non-permission entity")
 		return privacy.Skip
 	})
 }

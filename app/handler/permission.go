@@ -2,12 +2,13 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
@@ -49,42 +50,76 @@ func GetAllPermissions(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-func GetAllPermissionsByUserByTenant(client *ent.Client) echo.HandlerFunc {
+//
+//func GetAllPermissionsByUserByTenant(client *ent.Client) echo.HandlerFunc {
+//	return func(c echo.Context) error {
+//		// 从请求上下文中获取租户ID
+//		v := viewer.FromContext(c.Request().Context())
+//		if v == nil {
+//			log.Printf("No viewer found in context")
+//			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
+//		}
+//		userID := v.UserID
+//		tenantID := v.TenantID
+//
+//		// 查询用户的所有角色
+//		roles, err := client.User.Query().
+//			Where(user.IDEQ(userID)).
+//			QueryRoles().
+//			WithPermissions().
+//			//Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
+//			All(c.Request().Context())
+//		if err != nil {
+//			log.Printf("Error querying roles for user %s in tenant %s: %v", userID, tenantID, err)
+//			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
+//		}
+//
+//		// 收集所有权限
+//		var permissions []*ent.Permission
+//		permissionSet := make(map[string]bool)
+//		for _, role := range roles {
+//			for _, perm := range role.Edges.Permissions {
+//				if !permissionSet[perm.ID.String()] {
+//					permissions = append(permissions, perm)
+//					permissionSet[perm.ID.String()] = true
+//				}
+//			}
+//		}
+//
+//		log.Printf("Permissions for user %s in tenant %s: %v", userID, tenantID, permissions)
+//		return c.JSON(http.StatusOK, permissions)
+//	}
+//}
+
+func GetAllPermissionsByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// 从请求上下文中获取租户ID
 		v := viewer.FromContext(c.Request().Context())
 		if v == nil {
 			log.Printf("No viewer found in context")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
-		userID := v.UserID
 		tenantID := v.TenantID
+		roleName := v.RoleName
 
-		// 查询用户的所有角色
-		roles, err := client.User.Query().
-			Where(user.IDEQ(userID)).
-			QueryRoles().
-			WithPermissions().
-			//Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
-			All(c.Request().Context())
-		if err != nil {
-			log.Printf("Error querying roles for user %s in tenant %s: %v", userID, tenantID, err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
-		}
+		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, tenantID, roleName)
 
-		// 收集所有权限
 		var permissions []*ent.Permission
-		permissionSet := make(map[string]bool)
-		for _, role := range roles {
-			for _, perm := range role.Edges.Permissions {
-				if !permissionSet[perm.ID.String()] {
-					permissions = append(permissions, perm)
-					permissionSet[perm.ID.String()] = true
-				}
+		var err error
+		if roleName == "admin" || roleName == "superadmin" {
+			permissions, err = client.Permission.Query().Where(permission.HasRolesWith(role.HasTenantWith(tenant.IDEQ(tenantID)))).All(c.Request().Context())
+			if err != nil {
+				log.Printf("Error querying permissions for tenant %s: %v", tenantID, err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying permissions from database"})
+			}
+		} else {
+			permissions, err = client.Permission.Query().Where(permission.HasRolesWith(role.HasUsersWith(user.IDEQ(v.UserID)))).All(c.Request().Context())
+			if err != nil {
+				log.Printf("Error querying permissions for user %s: %v", v.UserID, err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying permissions from database"})
 			}
 		}
 
-		log.Printf("Permissions for user %s in tenant %s: %v", userID, tenantID, permissions)
+		log.Printf("Permissions for tenant %s: %v", tenantID, permissions)
 		return c.JSON(http.StatusOK, permissions)
 	}
 }
@@ -93,7 +128,7 @@ func GetAllPermissionsByUserByTenant(client *ent.Client) echo.HandlerFunc {
 func CreatePermission(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) (err error) {
 		v := viewer.FromContext(c.Request().Context())
-		if v == nil || v.RoleName != "Tenant Admin" {
+		if v == nil || v.RoleName != "admin" {
 			log.Printf("No viewer found in context or not authorized")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
@@ -116,10 +151,8 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 				log.Printf("Error creating permission: %v", err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create permission"})
 			}
-			fmt.Printf("Created permission with ID: %s\n", p.ID)
 			createdPermissions = append(createdPermissions, p)
 		}
-		fmt.Println(createdPermissions)
 		return c.JSON(http.StatusCreated, map[string]string{"message": "Permission created successfully"})
 	}
 }

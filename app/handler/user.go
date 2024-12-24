@@ -31,21 +31,12 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
-		//roleName := strings.ToLower(v.RoleName)
-		//fmt.Println(roleName)
-		//if roleName != "superadmin" && roleName != "admin" {
-		//	log.Printf("User is not authorized")
-		//	return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-		//}
-
 		type UserDTO struct {
 			Email      string    `json:"email"`
 			Password   string    `json:"password"`
 			RoleID     uuid.UUID `json:"roleID"`
 			Online     bool      `json:"online"`
 			EnableType bool      `json:"enable_type"`
-			//RoleID     uuid.UUID `json:"roleID"`
-			//RoleName string `json:"role_name"`
 		}
 
 		dto := new(UserDTO)
@@ -105,46 +96,36 @@ func GetAllUsers(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// GetALLUserByTenant  获取租户下所有用户
-func GetALLUserByTenant(client *ent.Client) echo.HandlerFunc {
+func GetAllUsersByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// 从请求上下文中获取租户ID
 		v := viewer.FromContext(c.Request().Context())
 		if v == nil {
 			log.Printf("No viewer found in context")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
 		tenantID := v.TenantID
-		fmt.Println(tenantID)
-		userID := v.UserID
-		fmt.Println(userID)
-		roleName := strings.ToLower(v.RoleName)
-		fmt.Println(roleName)
-		//log.Printf("Queried tenant ID: %s", tenantID)
+		roleName := v.RoleName
 
-		//users, err := client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(c.Request().Context())
+		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, tenantID, roleName)
 
-		// 检查用户角色是否为管理员
-		isAdmin := roleName == "admin" || roleName == "superadmin"
-		fmt.Println(isAdmin)
-
-		// 如果是管理员，查询所有用户
 		var users []*ent.User
 		var err error
-		if isAdmin {
-			users, err = client.User.Query().
-				Where(user.HasTenantWith(tenant.IDEQ(tenantID))).
-				All(c.Request().Context())
+		if roleName == "admin" || roleName == "superadmin" {
+			//users, err = client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(c.Request().Context())
+			users, err = client.User.Query().Where().All(c.Request().Context())
+			if err != nil {
+				log.Printf("Error querying users for tenant %s: %v", tenantID, err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
+			}
 		} else {
-			// 否则，只查询当前用户
-			users, err = client.User.Query().
-				Where(user.IDEQ(userID)).
-				All(c.Request().Context())
+			users, err = client.User.Query().Where(user.IDEQ(v.UserID)).All(c.Request().Context())
+			if err != nil {
+				log.Printf("Error querying user %s: %v", v.UserID, err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
+			}
 		}
-		if err != nil {
-			log.Printf("Error querying users: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
-		}
+
+		log.Printf("Users for tenant %s: %v", tenantID, users)
 		return c.JSON(http.StatusOK, users)
 	}
 }
@@ -193,30 +174,13 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 			Bio      string `json:"bio"`
 		}
 
-		// 获取当前登录用户的邮箱
-		//loggedInUserEmail := c.Get("email").(string)
-		// 获取当前登录用户的邮箱
-		//loggedInUser, ok := c.Get("user").(*ent.User)
-		//if !ok {
-		//	return c.JSON(http.StatusUnauthorized, map[string]string{"error": "User not authenticated"})
-		//}
-		//loggedInUserEmail := loggedInUser.Email
-		//fmt.Println(loggedInUserEmail)
-
 		dto := new(EmailDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 		// 检查请求的邮箱是否与登录用户的邮箱匹配
-		//if dto.Email != loggedInUserEmail {
-		//	log.Printf("未授权的访问尝试: 请求邮箱 %s, 登录用户邮箱 %s", dto.Email, loggedInUserEmail)
-		//	fmt.Printf("未授权的访问尝试: 请求邮箱 %s, 登录用户邮箱 %s\n", dto.Email, loggedInUserEmail)
-		//	return c.JSON(http.StatusForbidden, map[string]string{"error": "没有权限访问其他用户的信息"})
-		//}
-
-		ctx := c.Request().Context()
-		ue, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(ctx)
+		ue, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(c.Request().Context())
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -255,10 +219,6 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		//fmt.Println(1111111)
-		//fmt.Println(dto.Online)
-		//fmt.Println(dto.EnableType)
-		//fmt.Println(2222222)
 
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.UsernameEQ(dto.Username)).Only(c.Request().Context())
@@ -404,7 +364,6 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
-		fmt.Println(ua)
 
 		// 设置更新字段
 		update := client.User.UpdateOne(ua)
@@ -474,7 +433,7 @@ func UpdateUserByUUID(client *ent.Client) echo.HandlerFunc {
 func AssignRoleToUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		v := viewer.FromContext(c.Request().Context())
-		if v == nil || strings.ToLower(v.RoleName) != "superadmin" && strings.ToLower(v.RoleName) != "admin" {
+		if v == nil || v.RoleName != "superadmin" && v.RoleName != "admin" {
 			log.Printf("No viewer found in context or not authorized")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
