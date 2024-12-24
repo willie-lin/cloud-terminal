@@ -1,9 +1,15 @@
 import {Chip, IconButton, Tooltip, Typography} from "@material-tailwind/react";
 import {TrashIcon} from "@heroicons/react/16/solid";
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 import DeletePermission from "./DeletePermission";
+import {AuthContext} from "../../../App";
 
 function RenderPermission({ permission, isLast }) {
+
+    const { currentUser } = useContext(AuthContext);
+    // 判断当前用户是否具有删除权限
+    const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
+
 
     const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
 
@@ -70,6 +76,8 @@ function RenderPermission({ permission, isLast }) {
             {/*        </IconButton>*/}
             {/*    </Tooltip>*/}
             {/*</td>*/}
+
+            {canDelete && (
             <td className={classes}>
                 <Tooltip content="Delete permission" placement="top">
                     <IconButton variant="text"
@@ -98,6 +106,7 @@ function RenderPermission({ permission, isLast }) {
                     </div>
                 )}
             </td>
+            )}
         </tr>
     );
 }

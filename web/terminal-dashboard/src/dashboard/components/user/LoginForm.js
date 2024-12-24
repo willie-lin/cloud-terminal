@@ -18,7 +18,6 @@ function LoginForm({ onLogin }) {
         async function checkUser2FA() {
             if (email) { // 只有当 email 不为空时才发送请求
                 const response = await check2FA(email);
-                // console.log(response); // 在控制台打印响应
                 // 根据响应设置 isConfirmed 的值
                 if (response && response.isConfirmed !== undefined) {
                     setIsConfirmed(response.isConfirmed);
@@ -57,13 +56,14 @@ function LoginForm({ onLogin }) {
             }
             // await login(data); // 使用 login 函数
             const response = await login(data);
-            // console.log('Login response:', response);
+            if (response?.data) {
+                const { accessToken, refreshToken, user } = response.data;
 
-            if (response && response.data) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('email', email);
-                // console.log('Stored email:', localStorage.getItem('email'));
-                onLogin(email);
+                localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('refreshToken', refreshToken);
+                localStorage.setItem('user', JSON.stringify(user));
+
+                onLogin(user, refreshToken);
                 navigate('/dashboard');
             } else {
                 console.error('Login response is invalid:', response);

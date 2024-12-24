@@ -15,12 +15,12 @@ import {
 import {FaAudioDescription, FaUser} from "react-icons/fa";
 import EditUserInfo from "./EditUserInfo";
 
-function UserInfo({ email }) {
+function UserInfo({ user }) {
 
     const currentTime = useCurrentTime();
 
     // 在 UserInfo 组件中
-    const userInfo = useFetchUserInfo(email);
+    const userInfo = useFetchUserInfo(user.email);
 
     // const [userInfo, setUserInfo] = useState(null);
     //

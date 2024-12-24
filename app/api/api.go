@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -182,7 +183,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			Password string  `json:"password"`
 			OTP      *string `json:"otp,omitempty"`
 		}
-
 		dto := new(LoginDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
@@ -247,13 +247,14 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		// 获取用户的第一个角色ID
 		//role, err := us.QueryRoles().First(context.Background())
 		role, err := us.QueryRoles().Only(ctx)
+		//role, err := us.QueryRoles().All(ctx)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})
 		}
-		//fmt.Println(role.ID)
-		//fmt.Println(role.Name)
-		//fmt.Println(role.Description)
+		fmt.Println(role.ID)
+		fmt.Println(role.Name)
+		fmt.Println(role.Description)
 
 		// 生成包含租户信息的accessToken
 		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Email, us.Username, role.Name)
@@ -303,6 +304,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			HttpOnly: true,
 		}
 		sess.Values["username"] = us.Username // 保存用户名到session
+		sess.Values["email"] = us.Email       // 保存用户名到session
 		err = sess.Save(c.Request(), c.Response())
 		if err != nil {
 			log.Printf("Error saving session: %v", err)
@@ -314,8 +316,20 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		//c.Set("tenant", tenant)
 
 		//return c.JSON(http.StatusOK, map[string]string{"message": "Login successful"})
-		return c.JSON(http.StatusOK, map[string]string{"message": "Login successful", "refreshToken": refreshToken})
-
+		//return c.JSON(http.StatusOK, map[string]string{"message": "Login successful", "refreshToken": refreshToken})
+		// 返回包含用户信息的响应
+		return c.JSON(http.StatusOK,
+			map[string]interface{}{
+				"accessToken":  accessToken,
+				"refreshToken": refreshToken,
+				"user": map[string]interface{}{
+					"id":       us.ID,
+					"tenantId": tenant.ID,
+					"email":    us.Email,
+					"username": us.Username,
+					"roleName": role.Name,
+				},
+			})
 	}
 }
 

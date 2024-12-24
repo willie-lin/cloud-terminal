@@ -80,8 +80,8 @@ function useTwoFactorAuth(email) {
     return { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler };
 }
 
-function TwoFactorAuthPage({ email }) {
-    const { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler } = useTwoFactorAuth(email);
+function TwoFactorAuthPage({ user }) {
+    const { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler } = useTwoFactorAuth(user.email);
     return (
         <div className="flex flex-col items-center justify-center flex-grow bg-gray-200">
             <div

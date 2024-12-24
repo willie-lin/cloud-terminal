@@ -12,7 +12,7 @@ import {
 import {ChevronUpDownIcon, MagnifyingGlassIcon, UserPlusIcon} from "@heroicons/react/16/solid";
 import {useFetchUsers} from "./UserHook";
 import {useState} from "react";
-import UserRow from "./UserRow";
+import RenderUser from "./RenderUser";
 import AddUserForm from "./AddUser";
 import {ArrowDownTrayIcon} from "@heroicons/react/24/outline";
 import { saveAs } from 'file-saver';
@@ -294,7 +294,7 @@ function UserList() {
                         </thead>
                         <tbody>
                         {(search ? filteredUsers : currentUsers).map((user, index) => (
-                            <UserRow
+                            <RenderUser
                                 key={user.id}
                                 user={user}
                                 isLast={index === (search ? filteredUsers : currentUsers).length - 1}

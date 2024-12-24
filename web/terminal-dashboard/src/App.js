@@ -21,71 +21,100 @@ export const AuthContext = React.createContext(null)
 
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [email, setEmail] = useState('');
-
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const storedEmail = localStorage.getItem('email');
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        const accessToken = localStorage.getItem('accessToken');
         const refreshToken = localStorage.getItem('refreshToken');
 
-        if (refreshToken && storedEmail) {
+        if (refreshToken && storedUser && accessToken) {
             setIsLoggedIn(true);
-            setEmail(storedEmail);
+            setUser(storedUser);
         }
     }, []);
 
 
-    const onLogin = (email, refreshToken) => {
-        setEmail(email);
-        localStorage.setItem('email', email); // 添加这一行来将email保存到localStorage中
+    const onLogin = (user, accessToken, refreshToken) => {
+        setUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         setIsLoggedIn(true);
     };
+
     const onLogout = async () => {
         try {
-        await logout(); // 调用API.js中的退出登录函数
-        setIsLoggedIn(false);
-        setEmail('');
-        localStorage.removeItem('email'); // 添加这一行来从localStorage中删除email
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login'; // 重定向到登录页面
-            } catch (error) {
+            await logout(); // 调用API.js中的退出登录函数
+            setIsLoggedIn(false);
+            setUser(null);
+            localStorage.removeItem('user');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            window.location.href = '/login'; // 重定向到登录页面
+        } catch (error) {
             console.error('Logout error:', error);
         }
     };
 
 
-// 在组件中使用 onLogout 方法
-//     <button onClick={onLogout}>Logout</button>
-
+    // return (
+    //     // 路由组件
+    //     <ThemeProvider>
+    //         <AuthContext.Provider value={{ isLoggedIn, user, onLogin, onLogout }}>
+    //             <Router>
+    //                 {!isLoggedIn && <Navigation />}
+    //                 <Routes>
+    //                     <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
+    //                     <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
+    //                     <Route path="/reset-password" element={!isLoggedIn ? <ResetPassword onResetPassword={onLogin} /> : <Navigate to="/dashboard" />} />
+    //
+    //                     {/*<Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>*/}
+    //
+    //                     <Route
+    //                         path="/"
+    //                         element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
+    //                     >
+    //                         <Route path="dashboard" element={<HomePage email={user?.email}/>}/>
+    //                         <Route path="users" element={<UserList email={user?.email}/>}/>
+    //                         <Route path="roles" element={<RoleList email={user?.email}/>}/>
+    //                         <Route path="permissions" element={<PermissionList email={user?.email}/>}/>
+    //                         <Route path="userinfo" element={<UserInfo email={user?.email}/>}/>
+    //                         <Route path="open-user-2fa" element={<TwoFactorAuthPage email={user?.email} />}/>
+    //                         <Route path="/" element={<Navigate to="dashboard" />} />
+    //                         {/*<Route path="*" element={<NotFoundPage />} />*/}
+    //                     </Route>
+    //                     <Route path="*" element={<NotFoundPage />} />
+    //                 </Routes>
+    //             </Router>
+    //         </AuthContext.Provider>
+    //     </ThemeProvider>
+    // );
 
     return (
-        // 路由组件
         <ThemeProvider>
-            <AuthContext.Provider value={{ isLoggedIn, email, onLogin, onLogout }}>
+            <AuthContext.Provider value={{isLoggedIn, currentUser: user, onLogin, onLogout}}>
                 <Router>
-                    {!isLoggedIn && <Navigation />}
+                    {!isLoggedIn && <Navigation/>}
                     <Routes>
-                        <Route path="/login" element={!isLoggedIn ? <Login onLogin={onLogin} /> : <Navigate to="/dashboard" />} />
-                        <Route path="/register" element={!isLoggedIn ? <Register onRegister={onLogin} /> : <Navigate to="/dashboard" />} />
-                        <Route path="/reset-password" element={!isLoggedIn ? <ResetPassword onResetPassword={onLogin} /> : <Navigate to="/dashboard" />} />
+                        <Route path="/login"
+                               element={!isLoggedIn ? <Login onLogin={onLogin}/> : <Navigate to="/dashboard"/>}/>
+                        <Route path="/register"
+                               element={!isLoggedIn ? <Register onRegister={onLogin}/> : <Navigate to="/dashboard"/>}/>
+                        <Route path="/reset-password"
+                               element={!isLoggedIn ? <ResetPassword onResetPassword={onLogin}/> :
+                                   <Navigate to="/dashboard"/>}/>
 
-                        {/*<Route path="/" element={isLoggedIn ? <Dashboard onLogout={onLogout} email={email} /> : <Navigate to="/login" />}>*/}
-
-                        <Route
-                            path="/"
-                            element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
-                        >
-                            <Route path="dashboard" element={<HomePage email={email}/>}/>
-                            <Route path="users" element={<UserList email={email}/>}/>
-                            <Route path="roles" element={<RoleList email={email}/>}/>
-                            <Route path="permissions" element={<PermissionList email={email}/>}/>
-                            <Route path="userinfo" element={<UserInfo email={email}/>}/>
-                            <Route path="open-user-2fa" element={<TwoFactorAuthPage email={email} />}/>
-                            <Route path="/" element={<Navigate to="dashboard" />} />
-                            {/*<Route path="*" element={<NotFoundPage />} />*/}
+                        <Route path="/" element={isLoggedIn ? <Dashboard/> : <Navigate to="/login"/>}>
+                            <Route path="dashboard" element={<HomePage user={user}/>}/>
+                            <Route path="users" element={<UserList user={user}/>}/>
+                            <Route path="roles" element={<RoleList user={user}/>}/>
+                            <Route path="permissions" element={<PermissionList user={user}/>}/>
+                            <Route path="userinfo" element={<UserInfo user={user}/>}/>
+                            <Route path="open-user-2fa" element={<TwoFactorAuthPage user={user}/>}/>
+                            <Route path="/" element={<Navigate to="dashboard"/>}/>
                         </Route>
-                        <Route path="*" element={<NotFoundPage />} />
+                        <Route path="*" element={<NotFoundPage/>}/>
                     </Routes>
                 </Router>
             </AuthContext.Provider>

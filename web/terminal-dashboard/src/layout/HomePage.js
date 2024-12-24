@@ -1,7 +1,7 @@
 import UserList from "../dashboard/components/user/UserList";
 import {useTheme} from "./ThemeContext";
 
-function HomePage({ email }) {
+function HomePage() {
 
     const { isDarkMode } = useTheme();
     return (

@@ -1,17 +1,24 @@
 import {Avatar, Chip, IconButton, Tooltip, Typography} from "@material-tailwind/react";
 import {PencilIcon, TrashIcon} from "@heroicons/react/16/solid";
 import UpdateUser from "./UpdateUser";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import DeleteUserForm from "./DeleteUserForm";
+import {AuthContext} from "../../../App";
 
 
-function UserRow({ user, isLast, isDarkMode }) {
+function RenderUser({ user, isLast, isDarkMode }) {
+    const { currentUser } = useContext(AuthContext);
+    // 判断当前用户是否具有删除权限
+    const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
+
+
     // const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";
     const classes = `p-2 ${isLast ? '' : `border-b ${isDarkMode ? 'border-gray-700' : 'border-blue-gray-50'}`}`;
 
 
     const [editingUser, setEditingUser] = useState(null);
     const [isUpdateUserOpen, setIsUpdateUserOpen] = useState(false);
+
     const handleUpdateUser = () => {
         setIsUpdateUserOpen(false);
     };
@@ -38,6 +45,7 @@ function UserRow({ user, isLast, isDarkMode }) {
     function closeDeleteUser() {
         setIsDeleteUserOpen(false);
     }
+
 
     return (
         <>
@@ -173,38 +181,68 @@ function UserRow({ user, isLast, isDarkMode }) {
                         </div>
                     )}
                 </td>
-                <td className={classes}>
-                    <Tooltip content="Delete User" placement="top">
-                        <IconButton variant="text"
-                                    color="red"
-                                    buttonType="filled"
-                                    size="regular"
-                                    rounded={false}
-                                    block={false}
-                                    iconOnly={true}
-                                    ripple="light"
-                                    onClick={() => openDeleteUser(user)}
-                        >
-                            <TrashIcon className="h-4 w-4"/>
-                        </IconButton>
-                    </Tooltip>
-                    {isDeleteUserOpen && (
-                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
-                             onClick={(e) => {
-                                 // 如果事件的目标是这个容器本身，那么关闭模态窗口
-                                 if (e.target === e.currentTarget) {
-                                     closeDeleteUser();
-                                 }}}
-                        >
-                        <DeleteUserForm user={deleteUser} onDeleteUser={handleDeleteUser} onClose={closeDeleteUser}/>
-                        </div>
-                    )}
-                </td>
+                {/*<td className={classes}>*/}
+                {/*    <Tooltip content="Delete User" placement="top">*/}
+                {/*        <IconButton variant="text"*/}
+                {/*                    color="red"*/}
+                {/*                    buttonType="filled"*/}
+                {/*                    size="regular"*/}
+                {/*                    rounded={false}*/}
+                {/*                    block={false}*/}
+                {/*                    iconOnly={true}*/}
+                {/*                    ripple="light"*/}
+                {/*                    onClick={() => openDeleteUser(user)}*/}
+                {/*        >*/}
+                {/*            <TrashIcon className="h-4 w-4"/>*/}
+                {/*        </IconButton>*/}
+                {/*    </Tooltip>*/}
+                {/*    {isDeleteUserOpen && (*/}
+                {/*        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"*/}
+                {/*             onClick={(e) => {*/}
+                {/*                 // 如果事件的目标是这个容器本身，那么关闭模态窗口*/}
+                {/*                 if (e.target === e.currentTarget) {*/}
+                {/*                     closeDeleteUser();*/}
+                {/*                 }}}*/}
+                {/*        >*/}
+                {/*        <DeleteUserForm user={deleteUser} onDeleteUser={handleDeleteUser} onClose={closeDeleteUser}/>*/}
+                {/*        </div>*/}
+                {/*    )}*/}
+                {/*</td>*/}
+                {canDelete && (
+                    <td className={classes}>
+                        <Tooltip content="Delete User" placement="top">
+                            <IconButton
+                                variant="text"
+                                color="red"
+                                buttonType="filled"
+                                size="regular"
+                                rounded={false}
+                                block={false}
+                                iconOnly={true}
+                                ripple="light"
+                                onClick={() => openDeleteUser(user)}
+                            >
+                                <TrashIcon className="h-4 w-4" />
+                            </IconButton>
+                        </Tooltip>
+                        {isDeleteUserOpen && (
+                            <div
+                                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                                onClick={(e) => {
+                                    if (e.target === e.currentTarget) {
+                                        closeDeleteUser();
+                                    }
+                                }}
+                            >
+                                <DeleteUserForm user={deleteUser} onDeleteUser={handleDeleteUser} onClose={closeDeleteUser} />
+                            </div>
+                        )}
+                    </td>
+                )}
             </tr>
-
     </>
     );
 }
-export default UserRow;
+export default RenderUser;
 
 // 然后在你的代码中使用这个组件：
