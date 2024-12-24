@@ -11,15 +11,21 @@ import {
 } from "@material-tailwind/react";
 import {ChevronUpDownIcon, MagnifyingGlassIcon, UserPlusIcon} from "@heroicons/react/16/solid";
 import {useFetchUsers} from "./UserHook";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import RenderUser from "./RenderUser";
 import AddUserForm from "./AddUser";
 import {ArrowDownTrayIcon} from "@heroicons/react/24/outline";
 import { saveAs } from 'file-saver';
 import {useTheme}  from '../../../layout/ThemeContext';
+import {AuthContext} from "../../../App";
 
 
 function UserList() {
+
+    const { currentUser } = useContext(AuthContext);
+    // 判断当前用户是否具有删除权限
+    const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
+
     const { isDarkMode } = useTheme();
 
     const TABS = [
@@ -70,13 +76,6 @@ function UserList() {
     );
     // 添加新的状态
     const [isViewAll, setIsViewAll] = useState(false);
-
-
-
-    // let currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
-    // if (!Array.isArray(currentUsers)) {
-    //     currentUsers = [];
-    // }
 
     // 更新 currentUsers 的定义
     let currentUsers;
@@ -167,6 +166,7 @@ function UserList() {
                             See information about all Users
                         </Typography>
                     </div>
+                    {canDelete && (
                     <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
                         <Button
                             className={`flex items-center gap-3 ${isDarkMode ? 'bg-blue-500 hover:bg-blue-600' : ''}`}
@@ -191,38 +191,9 @@ function UserList() {
                             <UserPlusIcon strokeWidth={2} className="h-4 w-4"/> Add User
                         </Button>
                     </div>
+                        )}
                 </div>
                 <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-                    {/*<Tabs value="all" className={`w-full md:w-max ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>*/}
-                    {/*    <TabsHeader className={isDarkMode ? 'bg-gray-800' : ''}>*/}
-                    {/*        {TABS.map(({label, value}) => (*/}
-                    {/*            <Tab key={value} value={value} className={isDarkMode ? 'text-gray-100' : 'text-gray-900'}>*/}
-                    {/*                &nbsp;&nbsp;{label}&nbsp;&nbsp;*/}
-                    {/*            </Tab>*/}
-                    {/*        ))}*/}
-                    {/*    </TabsHeader>*/}
-                    {/*</Tabs>*/}
-                    {/*<Tabs value="all" className={`w-full md:w-max ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>*/}
-                    {/*    <TabsHeader*/}
-                    {/*        className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}*/}
-                    {/*        indicatorProps={{*/}
-                    {/*            className: `${isDarkMode ? 'bg-blue-500' : 'bg-white'} `,*/}
-                    {/*        }}*/}
-                    {/*    >*/}
-                    {/*        {TABS.map(({label, value}) => (*/}
-                    {/*            <Tab*/}
-                    {/*                key={value}*/}
-                    {/*                value={value}*/}
-                    {/*                className={`${isDarkMode ? 'text-gray-100 hover:text-blue-500' : 'text-gray-900 hover:text-blue-500'} ${*/}
-                    {/*                    value === "all" ? (isDarkMode ? 'text-blue-500' : 'text-blue-500') : ''*/}
-                    {/*                }`}*/}
-                    {/*            >*/}
-                    {/*                {label}*/}
-                    {/*            </Tab>*/}
-                    {/*        ))}*/}
-                    {/*    </TabsHeader>*/}
-                    {/*</Tabs>*/}
-
                     <Tabs
                         value="all"
                         className={`w-full md:w-max ${isDarkMode ? 'text-white-100' : 'text-gray-900'}`}

@@ -1,15 +1,49 @@
 import {useFetchRoles} from "./RoleHook";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import {Button, Card, CardBody, CardFooter, CardHeader, Input, Typography} from "@material-tailwind/react";
 import {ArrowDownTrayIcon, MagnifyingGlassIcon} from "@heroicons/react/24/outline";
 import {UserPlusIcon} from "@heroicons/react/16/solid";
 import AddRole from "./AddRole";
 import RenderRole from "./RenderRole";
+import {AuthContext} from "../../../App";
+import { saveAs } from 'file-saver';
 
 function RoleList() {
+    const { currentUser } = useContext(AuthContext);
+    // 判断当前用户是否具有删除权限
+    const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
+
     const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
 
     const roles = useFetchRoles() || [];
+
+    // 创建一个函数来生成 CSV 文件的内容
+    const createCsvContent = (roles) => {
+        // CSV 文件的头部
+        const header = ["ID", "NAME", "DESCRIPTION", "DISABLE", "DEFAULT",  "CREATED", "LASTMODIFIED", ""];
+        // CSV 文件的数据
+        const data = roles.map(role => [
+            role.id,
+            role.name,
+            role.description,
+            role.is_disabled,
+            role.is_default,
+            role.created_at,
+            role.updated_at,
+        ]);
+        // 将头部和数据合并，然后转换为 CSV 格式
+        return [header, ...data].map(row => row.join(',')).join('\n');
+    };
+
+    // 创建一个函数来处理 "Download" 按钮的点击事件
+    const handleDownload = () => {
+        // 生成 CSV 文件的内容
+        const csvContent = createCsvContent(roles);
+        // 创建一个 Blob 对象
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        // 使用 file-saver 库来保存文件
+        saveAs(blob, 'roles.csv');
+    };
 
     const [page, setPage] = useState(1);
     const rolesPerPage = 10;
@@ -60,6 +94,7 @@ function RoleList() {
                             Define some some management Roles.
                         </Typography>
                     </div>
+                    {canDelete && (
                     <div className="flex w-full shrink-0 gap-2 md:w-max">
                         <div className="w-full md:w-72">
                             <Input
@@ -68,13 +103,15 @@ function RoleList() {
                             />
                         </div>
 
-                        <Button className="flex items-center gap-3" size="sm">
+                        <Button className="flex items-center gap-3" size="sm"  onClick={handleDownload}>
+                        {/*<Button className="flex items-center gap-3" size="sm"  >*/}
                             <ArrowDownTrayIcon strokeWidth={2} className="h-4 w-4" /> Download
                         </Button>
                         <Button className="flex items-center gap-3" size="sm" onClick={openAddRole}>
                             <UserPlusIcon strokeWidth={2} className="h-4 w-4"/> Add Role
                         </Button>
                     </div>
+                    )}
                     {isAddRoleOpen && (
                         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
                              onClick={(e) => {

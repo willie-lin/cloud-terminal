@@ -1,6 +1,7 @@
 import { PencilIcon } from "@heroicons/react/24/solid"
-import { useState } from "react";
+import {useContext, useState} from "react";
 import {
+    ArrowDownTrayIcon,
     MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -20,13 +21,48 @@ import {UserPlusIcon} from "@heroicons/react/16/solid";
 import AddPermission from "./AddPermission";
 import {useFetchPermissions} from "./PermissionHook";
 import RenderPermission from "./RenderPermission";
+import {AuthContext} from "../../../App";
+import { saveAs } from 'file-saver';
 
 function PermissionList() {
+    const { currentUser } = useContext(AuthContext);
+    // 判断当前用户是否具有删除权限
+    const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
+
 
     const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
 
 
     const permissions = useFetchPermissions() || [];
+
+    // 创建一个函数来生成 CSV 文件的内容
+    const createCsvContent = (permissions) => {
+        // CSV 文件的头部
+        const header = ["ID", "NAME", "ACTIONS", "RESOURCE_TYPE", "DESCRIPTION", "DEFAULT",  "CREATED", "LASTMODIFIED", ""];
+        // CSV 文件的数据
+        const data = permissions.map(permission => [
+            permission.id,
+            permission.name,
+            permission.actions,
+            permission.description,
+            permission.resource_type,
+            permission.is_disabled,
+            permission.created_at,
+            permission.updated_at,
+        ]);
+        // 将头部和数据合并，然后转换为 CSV 格式
+        return [header, ...data].map(row => row.join(',')).join('\n');
+    };
+
+    // 创建一个函数来处理 "Download" 按钮的点击事件
+    const handleDownload = () => {
+        // 生成 CSV 文件的内容
+        const csvContent = createCsvContent(permissions);
+        // 创建一个 Blob 对象
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        // 使用 file-saver 库来保存文件
+        saveAs(blob, 'permissions.csv');
+    };
 
 
     const [page, setPage] = useState(1);
@@ -79,6 +115,7 @@ function PermissionList() {
                             These are details about the last Permissions.
                         </Typography>
                     </div>
+                    {canDelete && (
                     <div className="flex w-full shrink-0 gap-2 md:w-max">
                         <div className="w-full md:w-72">
                             <Input
@@ -86,11 +123,15 @@ function PermissionList() {
                                 icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                             />
                         </div>
-
+                        <Button className="flex items-center gap-3" size="sm"  onClick={handleDownload}>
+                            {/*<Button className="flex items-center gap-3" size="sm"  >*/}
+                            <ArrowDownTrayIcon strokeWidth={2} className="h-4 w-4" /> Download
+                        </Button>
                         <Button className="flex items-center gap-3" size="sm" onClick={openAddPermission}>
                             <UserPlusIcon strokeWidth={2} className="h-4 w-4"/> Add Permission
                         </Button>
                     </div>
+                )}
                     {isAddPermissionOpen && (
                         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
                              onClick={(e) => {
