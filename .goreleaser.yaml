@@ -48,3 +48,7 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+release:
+  github:
+    owner: willie-lin
+    name: cloud-terminal
