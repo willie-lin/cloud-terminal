@@ -19,6 +19,7 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "is_disabled", Type: field.TypeBool, Default: false},
 		{Name: "resource_permissions", Type: field.TypeUUID, Nullable: true},
+		{Name: "tenant_permissions", Type: field.TypeUUID, Nullable: true},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
 	PermissionsTable = &schema.Table{
@@ -30,6 +31,12 @@ var (
 				Symbol:     "permissions_resources_permissions",
 				Columns:    []*schema.Column{PermissionsColumns[8]},
 				RefColumns: []*schema.Column{ResourcesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "permissions_tenants_permissions",
+				Columns:    []*schema.Column{PermissionsColumns[9]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -52,6 +59,7 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "is_disabled", Type: field.TypeBool, Default: false},
 		{Name: "permission_resources", Type: field.TypeUUID, Nullable: true},
+		{Name: "tenant_resources", Type: field.TypeUUID, Nullable: true},
 	}
 	// ResourcesTable holds the schema information for the "resources" table.
 	ResourcesTable = &schema.Table{
@@ -63,6 +71,12 @@ var (
 				Symbol:     "resources_permissions_resources",
 				Columns:    []*schema.Column{ResourcesColumns[8]},
 				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "resources_tenants_resources",
+				Columns:    []*schema.Column{ResourcesColumns[9]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -252,7 +266,9 @@ var (
 
 func init() {
 	PermissionsTable.ForeignKeys[0].RefTable = ResourcesTable
+	PermissionsTable.ForeignKeys[1].RefTable = TenantsTable
 	ResourcesTable.ForeignKeys[0].RefTable = PermissionsTable
+	ResourcesTable.ForeignKeys[1].RefTable = TenantsTable
 	UsersTable.ForeignKeys[0].RefTable = TenantsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable

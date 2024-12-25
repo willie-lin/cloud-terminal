@@ -15,6 +15,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // ResourceUpdate is the builder for updating Resource entities.
@@ -112,6 +113,25 @@ func (ru *ResourceUpdate) SetNillableIsDisabled(b *bool) *ResourceUpdate {
 	return ru
 }
 
+// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
+func (ru *ResourceUpdate) SetTenantID(id uuid.UUID) *ResourceUpdate {
+	ru.mutation.SetTenantID(id)
+	return ru
+}
+
+// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
+func (ru *ResourceUpdate) SetNillableTenantID(id *uuid.UUID) *ResourceUpdate {
+	if id != nil {
+		ru = ru.SetTenantID(*id)
+	}
+	return ru
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (ru *ResourceUpdate) SetTenant(t *Tenant) *ResourceUpdate {
+	return ru.SetTenantID(t.ID)
+}
+
 // AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
 func (ru *ResourceUpdate) AddPermissionIDs(ids ...uuid.UUID) *ResourceUpdate {
 	ru.mutation.AddPermissionIDs(ids...)
@@ -130,6 +150,12 @@ func (ru *ResourceUpdate) AddPermissions(p ...*Permission) *ResourceUpdate {
 // Mutation returns the ResourceMutation object of the builder.
 func (ru *ResourceUpdate) Mutation() *ResourceMutation {
 	return ru.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (ru *ResourceUpdate) ClearTenant() *ResourceUpdate {
+	ru.mutation.ClearTenant()
+	return ru
 }
 
 // ClearPermissions clears all "permissions" edges to the Permission entity.
@@ -247,6 +273,35 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := ru.mutation.IsDisabled(); ok {
 		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
+	}
+	if ru.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   resource.TenantTable,
+			Columns: []string{resource.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   resource.TenantTable,
+			Columns: []string{resource.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if ru.mutation.PermissionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -395,6 +450,25 @@ func (ruo *ResourceUpdateOne) SetNillableIsDisabled(b *bool) *ResourceUpdateOne 
 	return ruo
 }
 
+// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
+func (ruo *ResourceUpdateOne) SetTenantID(id uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.SetTenantID(id)
+	return ruo
+}
+
+// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
+func (ruo *ResourceUpdateOne) SetNillableTenantID(id *uuid.UUID) *ResourceUpdateOne {
+	if id != nil {
+		ruo = ruo.SetTenantID(*id)
+	}
+	return ruo
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (ruo *ResourceUpdateOne) SetTenant(t *Tenant) *ResourceUpdateOne {
+	return ruo.SetTenantID(t.ID)
+}
+
 // AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
 func (ruo *ResourceUpdateOne) AddPermissionIDs(ids ...uuid.UUID) *ResourceUpdateOne {
 	ruo.mutation.AddPermissionIDs(ids...)
@@ -413,6 +487,12 @@ func (ruo *ResourceUpdateOne) AddPermissions(p ...*Permission) *ResourceUpdateOn
 // Mutation returns the ResourceMutation object of the builder.
 func (ruo *ResourceUpdateOne) Mutation() *ResourceMutation {
 	return ruo.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (ruo *ResourceUpdateOne) ClearTenant() *ResourceUpdateOne {
+	ruo.mutation.ClearTenant()
+	return ruo
 }
 
 // ClearPermissions clears all "permissions" edges to the Permission entity.
@@ -560,6 +640,35 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 	}
 	if value, ok := ruo.mutation.IsDisabled(); ok {
 		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
+	}
+	if ruo.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   resource.TenantTable,
+			Columns: []string{resource.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   resource.TenantTable,
+			Columns: []string{resource.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if ruo.mutation.PermissionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
