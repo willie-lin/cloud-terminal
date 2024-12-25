@@ -20,7 +20,7 @@ before:
 builds:
   - id: "cloud-terminal"
     dir: "."
-    main: "./cmd/myapp"
+    main: "./main.go"
     ldflags:
       - "-s -w"
       - "-X main.version={{.Version}}"
@@ -31,9 +31,9 @@ builds:
 
 
   # 移除大部分 ignore 规则，以构建更多平台
-ignore:
-  - goos: darwin
-    goarch: i386 # 缩进一致
+    ignore:
+      - goos: darwin
+        goarch: i386 # 缩进一致
 
 archives:
   - format: tar.gz
