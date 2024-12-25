@@ -5,15 +5,17 @@
 # Feel free to remove those if you don't want/need to use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
 version: 1
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
     - go generate ./...
+    # 将测试移到 hooks 或 CI/CD 中
+    # - go test ./...
 
 builds:
   - id: "cloud-terminal"
@@ -25,68 +27,17 @@ builds:
       - "-X main.commit={{.Commit}}"
       - "-X main.date={{.Date}}"
 
-  - id: "another-build"  # Add a unique id here
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - windows
-      - darwin
-      - freebsd
-    goarch:
-      - amd64
-      - arm64
-      - arm
+  # 移除大部分 ignore 规则，以构建更多平台
 
 
-
-    goarm:
-      - v6
-      - v7
-
-
-    goamd64:
-      - v2
-      - v3
-
-    gomips:
-      - hard float
-      - soft float
-
-    ignore:
-      - goos: darwin
-        goarch: i386
-      - goos: linux
-        goarch: arm
-        goarm: 7
-      - goarm: mips64
-      - gomips: hard float
-      - goamd64: v4
-    targets:
-      # Since: v1.9
-      - go_first_class
-      # Since: v1.9
-      - go_118_first_class
-      - linux_amd64_v1
-      - darwin_arm64
-      - linux_arm_6
-
-    gobinary: "go1.22"
-
-    command: test
-
+  # 移除大部分 ignore 规则，以构建更多平台
+ignore:
+  - goos: darwin
+    goarch: i386 # 缩进一致
 
 archives:
   - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of `uname`.
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     format_overrides:
       - goos: windows
         format: zip
