@@ -1,9 +1,13 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {check2FA, confirm2FA, enable2FA, getUserByEmail} from "../../../api/api";
 import {Button, Typography} from "@material-tailwind/react";
+import {AuthContext} from "../../../App";
 
 // 自定义Hook，用于处理二次验证的逻辑
-function useTwoFactorAuth(email) {
+function useTwoFactorAuth() {
+
+    const { currentUser } = useContext(AuthContext);
+    const email = currentUser.email
     const [userInfo, setUserInfo] = useState(null);
     const [qrCode, setQrCode] = useState(null);
     const [otp, setOtp] = useState(''); // 新增状态变量
@@ -27,7 +31,7 @@ function useTwoFactorAuth(email) {
             }
         }
         checkUser2FA();
-    }, []); // 空数组作为依赖，意味着这个 useEffect 只会在组件挂载时运行一次
+    }, ); // 空数组作为依赖，意味着这个 useEffect 只会在组件挂载时运行一次
 
      // 检测 用户是否存在
     useEffect(() => {
