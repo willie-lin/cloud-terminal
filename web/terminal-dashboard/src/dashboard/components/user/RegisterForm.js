@@ -40,22 +40,10 @@ function RegisterForm({ onRegister }) {
         }
     };
 
-    // const handleEmailChange = (e) => setEmail(e.target.value);
-    // const handlePasswordChange = (e) => setPassword(e.target.value);
-    // const handleConfirmPasswordChange = (e) => setConfirmPassword(e.target.value);
-    // const handleOrganizationNameChange = (e) => setOrganizationName(e.target.value);
-
-
     const CryptoJS = require("crypto-js");
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // 验证组织名称是否填写
-        // if (!organization || !password) {
-        //     setRegisterError('请填写所有必填字段');
-        //     setTimeout(() => setRegisterError(''), 1000); // 1秒后清除错误信息
-        //     return;
-        // }
-        // 验证电子邮件和密码是否已填写
+        // 验证组织,电子邮件,密码和是否已填写
         if (!email || !password || !organization) {
             setRegisterError('请填写所有必填字段');
             setTimeout(() => setRegisterError(''), 1000); // 1秒后清除错误信息
