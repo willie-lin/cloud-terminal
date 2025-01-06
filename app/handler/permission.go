@@ -7,7 +7,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
@@ -70,13 +69,17 @@ func GetAllPermissionsByTenant(client *ent.Client) echo.HandlerFunc {
 		var permissions []*ent.Permission
 		var err error
 		if roleName == "admin" || roleName == "superadmin" {
-			permissions, err = client.Permission.Query().Where(permission.HasRolesWith(role.HasTenantWith(tenant.IDEQ(tenantID)))).All(c.Request().Context())
+			permissions, err = client.Permission.Query().
+				//Where(permission.HasRolesWith(role.HasTenantWith(tenant.IDEQ(tenantID)))).
+				All(c.Request().Context())
 			if err != nil {
 				log.Printf("Error querying permissions for tenant %s: %v", tenantID, err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying permissions from database"})
 			}
 		} else {
-			permissions, err = client.Permission.Query().Where(permission.HasRolesWith(role.HasUsersWith(user.IDEQ(v.UserID)))).All(c.Request().Context())
+			permissions, err = client.Permission.Query().
+				//Where(permission.HasRolesWith(role.HasUsersWith(user.IDEQ(v.UserID)))).
+				All(c.Request().Context())
 			if err != nil {
 				log.Printf("Error querying permissions for user %s: %v", v.UserID, err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying permissions from database"})
@@ -119,7 +122,7 @@ func CreatePermission(client *ent.Client) echo.HandlerFunc {
 				//SetTenantID(v.TenantID).            // 关联到当前租户
 				SetActions(dto.Actions). // 可选的资源ID
 				SetResourceType(dto.ResourceType).
-				AddRoleIDs(role.ID).
+				//AddRoleIDs(role.ID).
 				Save(c.Request().Context())
 			if err != nil {
 				log.Printf("Error creating permission: %v", err)

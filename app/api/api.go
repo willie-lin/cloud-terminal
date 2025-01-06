@@ -78,44 +78,44 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		}()
 
 		// 创建新租户
-		tenant, err := tx.Tenant.Create().SetName(dto.TenantName).Save(context.Background())
-		if err != nil {
-			err := tx.Rollback()
-			if err != nil {
-				return err
-			}
-			log.Printf("Error creating tenant: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating tenant in database"})
-		}
+		//tenant, err := tx.Tenant.Create().SetName(dto.TenantName).Save(context.Background())
+		//if err != nil {
+		//	err := tx.Rollback()
+		//	if err != nil {
+		//		return err
+		//	}
+		//	log.Printf("Error creating tenant: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating tenant in database"})
+		//}
 
 		// 获取所有默认角色
 		//defaultRoles, err := tx.Role.Query().All(context.Background())
-		defaultRoles, err := tx.Role.Query().Where(role.IsDefaultEQ(true)).All(context.Background())
-		if err != nil {
-			err := tx.Rollback()
-			if err != nil {
-				return err
-			}
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error getting default roles"})
-		}
+		//defaultRoles, err := tx.Role.Query().Where(role.IsDefaultEQ(true)).All(context.Background())
+		//if err != nil {
+		//	err := tx.Rollback()
+		//	if err != nil {
+		//		return err
+		//	}
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error getting default roles"})
+		//}
 		// 通过事务关联租户和角色 (关键修改在这里)
-		for _, r := range defaultRoles {
-			err = tx.Tenant.UpdateOne(tenant).AddRoles(r).Exec(context.Background()) // 直接在事务中使用 AddRoles
-			if err != nil {
-				err := tx.Rollback()
-				if err != nil {
-					return err
-				}
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning role to tenant"})
-			}
-		}
+		//for _, r := range defaultRoles {
+		//	err = tx.Tenant.UpdateOne(tenant).Exec(context.Background()) // 直接在事务中使用 AddRoles
+		//	if err != nil {
+		//		err := tx.Rollback()
+		//		if err != nil {
+		//			return err
+		//		}
+		//		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning role to tenant"})
+		//	}
+		//}
 
 		// 创建用户并设置为租户的超级管理员
 		us, err := tx.User.Create().
 			SetEmail(dto.Email).
 			SetUsername(username).
 			SetPassword(string(hashedPassword)).
-			SetTenantID(tenant.ID).
+			//SetTenantID(tenant.ID).
 			Save(context.Background())
 		if err != nil {
 			err := tx.Rollback()
@@ -188,12 +188,13 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
+		fmt.Println(dto.Password)
 
 		// 使用决策上下文进行查询，跳过隐私规则
 		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 
 		//fmt.Println(dto.OTP)
-		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).WithTenant().Only(ctx)
+		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(ctx)
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
@@ -206,6 +207,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error: password is empty")
 			return c.JSON(http.StatusForbidden, map[string]string{"error": "Password is empty"})
 		}
+
 		// 假设 us.Password 是数据库中存储的哈希值
 		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(dto.Password))
 		if err != nil {
@@ -238,7 +240,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 查询租户信息，通过边查询获取用户关联的租户
-		tenant, err := us.QueryTenant().Only(ctx)
+		tenant, err := us.QueryAccount().Only(ctx)
 		if err != nil {
 			log.Printf("Error finding tenant: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error finding tenant"})

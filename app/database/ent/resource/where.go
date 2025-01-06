@@ -451,44 +451,21 @@ func IsDisabledNEQ(v bool) predicate.Resource {
 	return predicate.Resource(sql.FieldNEQ(FieldIsDisabled, v))
 }
 
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.Resource {
+// HasAccessPolicies applies the HasEdge predicate on the "access_policies" edge.
+func HasAccessPolicies() predicate.Resource {
 	return predicate.Resource(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.Resource {
+// HasAccessPoliciesWith applies the HasEdge predicate on the "access_policies" edge with a given conditions (other predicates).
+func HasAccessPoliciesWith(preds ...predicate.AccessPolicy) predicate.Resource {
 	return predicate.Resource(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasPermissions applies the HasEdge predicate on the "permissions" edge.
-func HasPermissions() predicate.Resource {
-	return predicate.Resource(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, PermissionsTable, PermissionsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasPermissionsWith applies the HasEdge predicate on the "permissions" edge with a given conditions (other predicates).
-func HasPermissionsWith(preds ...predicate.Permission) predicate.Resource {
-	return predicate.Resource(func(s *sql.Selector) {
-		step := newPermissionsStep()
+		step := newAccessPoliciesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -5,7 +5,6 @@ package permission
 import (
 	"time"
 
-	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
@@ -30,33 +29,24 @@ const (
 	FieldDescription = "description"
 	// FieldIsDisabled holds the string denoting the is_disabled field in the database.
 	FieldIsDisabled = "is_disabled"
-	// EdgeRoles holds the string denoting the roles edge name in mutations.
-	EdgeRoles = "roles"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgeResources holds the string denoting the resources edge name in mutations.
-	EdgeResources = "resources"
+	// EdgeAccount holds the string denoting the account edge name in mutations.
+	EdgeAccount = "account"
+	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
+	EdgeAccessPolicies = "access_policies"
 	// Table holds the table name of the permission in the database.
 	Table = "permissions"
-	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
-	RolesTable = "role_permissions"
-	// RolesInverseTable is the table name for the Role entity.
-	// It exists in this package in order to avoid circular dependency with the "role" package.
-	RolesInverseTable = "roles"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "permissions"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_permissions"
-	// ResourcesTable is the table that holds the resources relation/edge.
-	ResourcesTable = "resources"
-	// ResourcesInverseTable is the table name for the Resource entity.
-	// It exists in this package in order to avoid circular dependency with the "resource" package.
-	ResourcesInverseTable = "resources"
-	// ResourcesColumn is the table column denoting the resources relation/edge.
-	ResourcesColumn = "permission_resources"
+	// AccountTable is the table that holds the account relation/edge.
+	AccountTable = "permissions"
+	// AccountInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountInverseTable = "accounts"
+	// AccountColumn is the table column denoting the account relation/edge.
+	AccountColumn = "account_permissions"
+	// AccessPoliciesTable is the table that holds the access_policies relation/edge. The primary key declared below.
+	AccessPoliciesTable = "access_policy_permissions"
+	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
+	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
+	AccessPoliciesInverseTable = "access_policies"
 )
 
 // Columns holds all SQL columns for permission fields.
@@ -74,14 +64,13 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "permissions"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"resource_permissions",
-	"tenant_permissions",
+	"account_permissions",
 }
 
 var (
-	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
-	// primary key for the roles relation (M2M).
-	RolesPrimaryKey = []string{"role_id", "permission_id"}
+	// AccessPoliciesPrimaryKey and AccessPoliciesColumn2 are the table columns denoting the
+	// primary key for the access_policies relation (M2M).
+	AccessPoliciesPrimaryKey = []string{"access_policy_id", "permission_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -99,14 +88,7 @@ func ValidColumn(column string) bool {
 	return false
 }
 
-// Note that the variables below are initialized by the runtime
-// package on the initialization of the application. Therefore,
-// it should be imported in the main as follows:
-//
-//	import _ "github.com/willie-lin/cloud-terminal/app/database/ent/runtime"
 var (
-	Hooks  [1]ent.Hook
-	Policy ent.Policy
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -159,58 +141,37 @@ func ByIsDisabled(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsDisabled, opts...).ToFunc()
 }
 
-// ByRolesCount orders the results by roles count.
-func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByAccountField orders the results by account field.
+func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRolesStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), sql.OrderByField(field, opts...))
 	}
 }
 
-// ByRoles orders the results by roles terms.
-func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByAccessPoliciesCount orders the results by access_policies count.
+func ByAccessPoliciesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborsCount(s, newAccessPoliciesStep(), opts...)
 	}
 }
 
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByAccessPolicies orders the results by access_policies terms.
+func ByAccessPolicies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newAccessPoliciesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByResourcesCount orders the results by resources count.
-func ByResourcesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newResourcesStep(), opts...)
-	}
-}
-
-// ByResources orders the results by resources terms.
-func ByResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newRolesStep() *sqlgraph.Step {
+func newAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RolesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, RolesTable, RolesPrimaryKey...),
+		sqlgraph.To(AccountInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
 	)
 }
-func newTenantStep() *sqlgraph.Step {
+func newAccessPoliciesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newResourcesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ResourcesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ResourcesTable, ResourcesColumn),
+		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
 	)
 }

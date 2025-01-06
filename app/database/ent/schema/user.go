@@ -6,8 +6,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
-	"github.com/willie-lin/cloud-terminal/app/rule"
 	"regexp"
 	"time"
 )
@@ -34,10 +32,10 @@ func (User) Fields() []ent.Field {
 		field.String("username").NotEmpty().MinLen(6).MaxLen(30).Unique(),
 		field.String("password").NotEmpty().MinLen(8).MaxLen(120).Sensitive(),
 		field.String("email").NotEmpty().Match(regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,4}$`)).Unique(),
-		field.String("phone").Optional(),
+		field.String("phone_number").Optional().Default(""),
 		field.String("totp_secret").Optional(),
 		field.Bool("online").Default(true),
-		field.Bool("enable_type").Default(true),
+		field.Enum("status").Values("active", "inactive", "blocked").Default("active"),
 		field.Time("last_login_time").Default(time.Now),
 	}
 }
@@ -45,8 +43,11 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("roles", Role.Type),                            // 用户拥有多个角色
-		edge.From("tenant", Tenant.Type).Ref("users").Unique(), // 用户属于一个租户
+		edge.From("account", Account.Type).Ref("users").Unique().Required(), // 多对一关系：一个 User 属于一个 Account
+		edge.To("roles", Role.Type).StorageKey(edge.Table("user_roles")),
+		edge.To("audit_logs", AuditLog.Type),
+		edge.To("access_policies", AccessPolicy.Type).StorageKey(edge.Table("user_policies")), // 多对多关系：一个 User 可以有多个 AccessPolicy
+
 	}
 }
 
@@ -58,19 +59,19 @@ func (User) Indexes() []ent.Index {
 }
 
 // Policy of the User.
-func (User) Policy() ent.Policy {
-	return privacy.Policy{
-		Query: privacy.QueryPolicy{
-			rule.AllowIfSuperAdminQueryUser(),
-			rule.AllowIfAdminQueryUser(),
-			rule.AllowIfOwnerQueryUser(),
-			privacy.AlwaysDenyRule(),
-		},
-		Mutation: privacy.MutationPolicy{
-			rule.AllowIfSuperAdminMutationUser(),
-			rule.AllowIfAdminMutationUser(),
-			rule.AllowIfOwnerMutationUser(),
-			privacy.AlwaysDenyRule(),
-		},
-	}
-}
+//func (User) Policy() ent.Policy {
+//	return privacy.Policy{
+//		Query: privacy.QueryPolicy{
+//			rule.AllowIfSuperAdminQueryUser(),
+//			rule.AllowIfAdminQueryUser(),
+//			rule.AllowIfOwnerQueryUser(),
+//			privacy.AlwaysDenyRule(),
+//		},
+//		Mutation: privacy.MutationPolicy{
+//			rule.AllowIfSuperAdminMutationUser(),
+//			rule.AllowIfAdminMutationUser(),
+//			rule.AllowIfOwnerMutationUser(),
+//			privacy.AlwaysDenyRule(),
+//		},
+//	}
+//}

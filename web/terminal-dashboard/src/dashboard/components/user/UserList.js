@@ -46,7 +46,7 @@ function UserList() {
     const [search, setSearch] = useState('');
     const [sortField, setSortField] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
-    const headers = ['ID', 'NICKNAME', 'USERNAME', 'EMAIL', 'PHONE', 'BIO', '2FA','STATUS', 'ONLINE', 'CREATED', 'UPDATED', 'LAST MODIFIED', "", ""];
+    const headers = ['ID', 'NICKNAME', 'USERNAME', 'EMAIL', 'PHONE', 'BIO', '2FA','STATUS', 'ONLINE', 'CREATED', 'UPDATED', 'LAST MODIFIED', "EDIT USER"];
 
     const handleSort = (field) => {
         if (sortField === field) {
@@ -112,9 +112,10 @@ function UserList() {
             user.nickname,
             user.username,
             user.email,
-            user.phone,
+            user.phone_number,
             user.bio,
             user.totp_secret,
+            user.status,
             user.online,
             user.enable_type,
             user.created_at,

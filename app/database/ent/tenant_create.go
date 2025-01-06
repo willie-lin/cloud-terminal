@@ -11,11 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
 // TenantCreate is the builder for creating a Tenant entity.
@@ -73,6 +71,48 @@ func (tc *TenantCreate) SetNillableDescription(s *string) *TenantCreate {
 	return tc
 }
 
+// SetContactEmail sets the "contact_email" field.
+func (tc *TenantCreate) SetContactEmail(s string) *TenantCreate {
+	tc.mutation.SetContactEmail(s)
+	return tc
+}
+
+// SetNillableContactEmail sets the "contact_email" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableContactEmail(s *string) *TenantCreate {
+	if s != nil {
+		tc.SetContactEmail(*s)
+	}
+	return tc
+}
+
+// SetContactPhone sets the "contact_phone" field.
+func (tc *TenantCreate) SetContactPhone(s string) *TenantCreate {
+	tc.mutation.SetContactPhone(s)
+	return tc
+}
+
+// SetNillableContactPhone sets the "contact_phone" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableContactPhone(s *string) *TenantCreate {
+	if s != nil {
+		tc.SetContactPhone(*s)
+	}
+	return tc
+}
+
+// SetStatus sets the "status" field.
+func (tc *TenantCreate) SetStatus(t tenant.Status) *TenantCreate {
+	tc.mutation.SetStatus(t)
+	return tc
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableStatus(t *tenant.Status) *TenantCreate {
+	if t != nil {
+		tc.SetStatus(*t)
+	}
+	return tc
+}
+
 // SetID sets the "id" field.
 func (tc *TenantCreate) SetID(u uuid.UUID) *TenantCreate {
 	tc.mutation.SetID(u)
@@ -87,64 +127,30 @@ func (tc *TenantCreate) SetNillableID(u *uuid.UUID) *TenantCreate {
 	return tc
 }
 
-// AddUserIDs adds the "users" edge to the User entity by IDs.
-func (tc *TenantCreate) AddUserIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddUserIDs(ids...)
+// SetPlatformID sets the "platform" edge to the Platform entity by ID.
+func (tc *TenantCreate) SetPlatformID(id uuid.UUID) *TenantCreate {
+	tc.mutation.SetPlatformID(id)
 	return tc
 }
 
-// AddUsers adds the "users" edges to the User entity.
-func (tc *TenantCreate) AddUsers(u ...*User) *TenantCreate {
-	ids := make([]uuid.UUID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tc.AddUserIDs(ids...)
+// SetPlatform sets the "platform" edge to the Platform entity.
+func (tc *TenantCreate) SetPlatform(p *Platform) *TenantCreate {
+	return tc.SetPlatformID(p.ID)
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (tc *TenantCreate) AddRoleIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddRoleIDs(ids...)
+// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
+func (tc *TenantCreate) AddAccountIDs(ids ...uuid.UUID) *TenantCreate {
+	tc.mutation.AddAccountIDs(ids...)
 	return tc
 }
 
-// AddRoles adds the "roles" edges to the Role entity.
-func (tc *TenantCreate) AddRoles(r ...*Role) *TenantCreate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// AddAccounts adds the "accounts" edges to the Account entity.
+func (tc *TenantCreate) AddAccounts(a ...*Account) *TenantCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return tc.AddRoleIDs(ids...)
-}
-
-// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
-func (tc *TenantCreate) AddResourceIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddResourceIDs(ids...)
-	return tc
-}
-
-// AddResources adds the "resources" edges to the Resource entity.
-func (tc *TenantCreate) AddResources(r ...*Resource) *TenantCreate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return tc.AddResourceIDs(ids...)
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (tc *TenantCreate) AddPermissionIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddPermissionIDs(ids...)
-	return tc
-}
-
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (tc *TenantCreate) AddPermissions(p ...*Permission) *TenantCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return tc.AddPermissionIDs(ids...)
+	return tc.AddAccountIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -154,9 +160,7 @@ func (tc *TenantCreate) Mutation() *TenantMutation {
 
 // Save creates the Tenant in the database.
 func (tc *TenantCreate) Save(ctx context.Context) (*Tenant, error) {
-	if err := tc.defaults(); err != nil {
-		return nil, err
-	}
+	tc.defaults()
 	return withHooks(ctx, tc.sqlSave, tc.mutation, tc.hooks)
 }
 
@@ -183,29 +187,23 @@ func (tc *TenantCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (tc *TenantCreate) defaults() error {
+func (tc *TenantCreate) defaults() {
 	if _, ok := tc.mutation.CreatedAt(); !ok {
-		if tenant.DefaultCreatedAt == nil {
-			return fmt.Errorf("ent: uninitialized tenant.DefaultCreatedAt (forgotten import ent/runtime?)")
-		}
 		v := tenant.DefaultCreatedAt()
 		tc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := tc.mutation.UpdatedAt(); !ok {
-		if tenant.DefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized tenant.DefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := tenant.DefaultUpdatedAt()
 		tc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := tc.mutation.Status(); !ok {
+		v := tenant.DefaultStatus
+		tc.mutation.SetStatus(v)
+	}
 	if _, ok := tc.mutation.ID(); !ok {
-		if tenant.DefaultID == nil {
-			return fmt.Errorf("ent: uninitialized tenant.DefaultID (forgotten import ent/runtime?)")
-		}
 		v := tenant.DefaultID()
 		tc.mutation.SetID(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -223,6 +221,17 @@ func (tc *TenantCreate) check() error {
 		if err := tenant.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tenant.name": %w`, err)}
 		}
+	}
+	if _, ok := tc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Tenant.status"`)}
+	}
+	if v, ok := tc.mutation.Status(); ok {
+		if err := tenant.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Tenant.status": %w`, err)}
+		}
+	}
+	if len(tc.mutation.PlatformIDs()) == 0 {
+		return &ValidationError{Name: "platform", err: errors.New(`ent: missing required edge "Tenant.platform"`)}
 	}
 	return nil
 }
@@ -275,63 +284,44 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 		_spec.SetField(tenant.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if nodes := tc.mutation.UsersIDs(); len(nodes) > 0 {
+	if value, ok := tc.mutation.ContactEmail(); ok {
+		_spec.SetField(tenant.FieldContactEmail, field.TypeString, value)
+		_node.ContactEmail = value
+	}
+	if value, ok := tc.mutation.ContactPhone(); ok {
+		_spec.SetField(tenant.FieldContactPhone, field.TypeString, value)
+		_node.ContactPhone = value
+	}
+	if value, ok := tc.mutation.Status(); ok {
+		_spec.SetField(tenant.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
+	}
+	if nodes := tc.mutation.PlatformIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.UsersTable,
-			Columns: []string{tenant.UsersColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   tenant.PlatformTable,
+			Columns: []string{tenant.PlatformColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.platform_tenants = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tc.mutation.RolesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.RolesTable,
-			Columns: tenant.RolesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.ResourcesIDs(); len(nodes) > 0 {
+	if nodes := tc.mutation.AccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   tenant.ResourcesTable,
-			Columns: []string{tenant.ResourcesColumn},
+			Table:   tenant.AccountsTable,
+			Columns: []string{tenant.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
@@ -26,61 +27,48 @@ type Tenant struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// ContactEmail holds the value of the "contact_email" field.
+	ContactEmail string `json:"contact_email,omitempty"`
+	// ContactPhone holds the value of the "contact_phone" field.
+	ContactPhone string `json:"contact_phone,omitempty"`
+	// Status holds the value of the "status" field.
+	Status tenant.Status `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TenantQuery when eager-loading is set.
-	Edges        TenantEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges            TenantEdges `json:"edges"`
+	platform_tenants *uuid.UUID
+	selectValues     sql.SelectValues
 }
 
 // TenantEdges holds the relations/edges for other nodes in the graph.
 type TenantEdges struct {
-	// Users holds the value of the users edge.
-	Users []*User `json:"users,omitempty"`
-	// Roles holds the value of the roles edge.
-	Roles []*Role `json:"roles,omitempty"`
-	// Resources holds the value of the resources edge.
-	Resources []*Resource `json:"resources,omitempty"`
-	// Permissions holds the value of the permissions edge.
-	Permissions []*Permission `json:"permissions,omitempty"`
+	// Platform holds the value of the platform edge.
+	Platform *Platform `json:"platform,omitempty"`
+	// Accounts holds the value of the accounts edge.
+	Accounts []*Account `json:"accounts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [2]bool
 }
 
-// UsersOrErr returns the Users value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[0] {
-		return e.Users, nil
+// PlatformOrErr returns the Platform value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TenantEdges) PlatformOrErr() (*Platform, error) {
+	if e.Platform != nil {
+		return e.Platform, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: platform.Label}
 	}
-	return nil, &NotLoadedError{edge: "users"}
+	return nil, &NotLoadedError{edge: "platform"}
 }
 
-// RolesOrErr returns the Roles value or an error if the edge
+// AccountsOrErr returns the Accounts value or an error if the edge
 // was not loaded in eager-loading.
-func (e TenantEdges) RolesOrErr() ([]*Role, error) {
+func (e TenantEdges) AccountsOrErr() ([]*Account, error) {
 	if e.loadedTypes[1] {
-		return e.Roles, nil
+		return e.Accounts, nil
 	}
-	return nil, &NotLoadedError{edge: "roles"}
-}
-
-// ResourcesOrErr returns the Resources value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) ResourcesOrErr() ([]*Resource, error) {
-	if e.loadedTypes[2] {
-		return e.Resources, nil
-	}
-	return nil, &NotLoadedError{edge: "resources"}
-}
-
-// PermissionsOrErr returns the Permissions value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) PermissionsOrErr() ([]*Permission, error) {
-	if e.loadedTypes[3] {
-		return e.Permissions, nil
-	}
-	return nil, &NotLoadedError{edge: "permissions"}
+	return nil, &NotLoadedError{edge: "accounts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -88,12 +76,14 @@ func (*Tenant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tenant.FieldName, tenant.FieldDescription:
+		case tenant.FieldName, tenant.FieldDescription, tenant.FieldContactEmail, tenant.FieldContactPhone, tenant.FieldStatus:
 			values[i] = new(sql.NullString)
 		case tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case tenant.FieldID:
 			values[i] = new(uuid.UUID)
+		case tenant.ForeignKeys[0]: // platform_tenants
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -139,6 +129,31 @@ func (t *Tenant) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Description = value.String
 			}
+		case tenant.FieldContactEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field contact_email", values[i])
+			} else if value.Valid {
+				t.ContactEmail = value.String
+			}
+		case tenant.FieldContactPhone:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field contact_phone", values[i])
+			} else if value.Valid {
+				t.ContactPhone = value.String
+			}
+		case tenant.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				t.Status = tenant.Status(value.String)
+			}
+		case tenant.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field platform_tenants", values[i])
+			} else if value.Valid {
+				t.platform_tenants = new(uuid.UUID)
+				*t.platform_tenants = *value.S.(*uuid.UUID)
+			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
 		}
@@ -152,24 +167,14 @@ func (t *Tenant) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
 }
 
-// QueryUsers queries the "users" edge of the Tenant entity.
-func (t *Tenant) QueryUsers() *UserQuery {
-	return NewTenantClient(t.config).QueryUsers(t)
+// QueryPlatform queries the "platform" edge of the Tenant entity.
+func (t *Tenant) QueryPlatform() *PlatformQuery {
+	return NewTenantClient(t.config).QueryPlatform(t)
 }
 
-// QueryRoles queries the "roles" edge of the Tenant entity.
-func (t *Tenant) QueryRoles() *RoleQuery {
-	return NewTenantClient(t.config).QueryRoles(t)
-}
-
-// QueryResources queries the "resources" edge of the Tenant entity.
-func (t *Tenant) QueryResources() *ResourceQuery {
-	return NewTenantClient(t.config).QueryResources(t)
-}
-
-// QueryPermissions queries the "permissions" edge of the Tenant entity.
-func (t *Tenant) QueryPermissions() *PermissionQuery {
-	return NewTenantClient(t.config).QueryPermissions(t)
+// QueryAccounts queries the "accounts" edge of the Tenant entity.
+func (t *Tenant) QueryAccounts() *AccountQuery {
+	return NewTenantClient(t.config).QueryAccounts(t)
 }
 
 // Update returns a builder for updating this Tenant.
@@ -206,6 +211,15 @@ func (t *Tenant) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(t.Description)
+	builder.WriteString(", ")
+	builder.WriteString("contact_email=")
+	builder.WriteString(t.ContactEmail)
+	builder.WriteString(", ")
+	builder.WriteString("contact_phone=")
+	builder.WriteString(t.ContactPhone)
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", t.Status))
 	builder.WriteByte(')')
 	return builder.String()
 }

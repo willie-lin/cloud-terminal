@@ -12,9 +12,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -139,23 +141,23 @@ func (uu *UserUpdate) SetNillableEmail(s *string) *UserUpdate {
 	return uu
 }
 
-// SetPhone sets the "phone" field.
-func (uu *UserUpdate) SetPhone(s string) *UserUpdate {
-	uu.mutation.SetPhone(s)
+// SetPhoneNumber sets the "phone_number" field.
+func (uu *UserUpdate) SetPhoneNumber(s string) *UserUpdate {
+	uu.mutation.SetPhoneNumber(s)
 	return uu
 }
 
-// SetNillablePhone sets the "phone" field if the given value is not nil.
-func (uu *UserUpdate) SetNillablePhone(s *string) *UserUpdate {
+// SetNillablePhoneNumber sets the "phone_number" field if the given value is not nil.
+func (uu *UserUpdate) SetNillablePhoneNumber(s *string) *UserUpdate {
 	if s != nil {
-		uu.SetPhone(*s)
+		uu.SetPhoneNumber(*s)
 	}
 	return uu
 }
 
-// ClearPhone clears the value of the "phone" field.
-func (uu *UserUpdate) ClearPhone() *UserUpdate {
-	uu.mutation.ClearPhone()
+// ClearPhoneNumber clears the value of the "phone_number" field.
+func (uu *UserUpdate) ClearPhoneNumber() *UserUpdate {
+	uu.mutation.ClearPhoneNumber()
 	return uu
 }
 
@@ -193,16 +195,16 @@ func (uu *UserUpdate) SetNillableOnline(b *bool) *UserUpdate {
 	return uu
 }
 
-// SetEnableType sets the "enable_type" field.
-func (uu *UserUpdate) SetEnableType(b bool) *UserUpdate {
-	uu.mutation.SetEnableType(b)
+// SetStatus sets the "status" field.
+func (uu *UserUpdate) SetStatus(u user.Status) *UserUpdate {
+	uu.mutation.SetStatus(u)
 	return uu
 }
 
-// SetNillableEnableType sets the "enable_type" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableEnableType(b *bool) *UserUpdate {
-	if b != nil {
-		uu.SetEnableType(*b)
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableStatus(u *user.Status) *UserUpdate {
+	if u != nil {
+		uu.SetStatus(*u)
 	}
 	return uu
 }
@@ -221,6 +223,17 @@ func (uu *UserUpdate) SetNillableLastLoginTime(t *time.Time) *UserUpdate {
 	return uu
 }
 
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (uu *UserUpdate) SetAccountID(id uuid.UUID) *UserUpdate {
+	uu.mutation.SetAccountID(id)
+	return uu
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (uu *UserUpdate) SetAccount(a *Account) *UserUpdate {
+	return uu.SetAccountID(a.ID)
+}
+
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (uu *UserUpdate) AddRoleIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.AddRoleIDs(ids...)
@@ -236,28 +249,45 @@ func (uu *UserUpdate) AddRoles(r ...*Role) *UserUpdate {
 	return uu.AddRoleIDs(ids...)
 }
 
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (uu *UserUpdate) SetTenantID(id uuid.UUID) *UserUpdate {
-	uu.mutation.SetTenantID(id)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (uu *UserUpdate) AddAuditLogIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddAuditLogIDs(ids...)
 	return uu
 }
 
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (uu *UserUpdate) SetNillableTenantID(id *uuid.UUID) *UserUpdate {
-	if id != nil {
-		uu = uu.SetTenantID(*id)
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (uu *UserUpdate) AddAuditLogs(a ...*AuditLog) *UserUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
+	return uu.AddAuditLogIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (uu *UserUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddAccessPolicyIDs(ids...)
 	return uu
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (uu *UserUpdate) SetTenant(t *Tenant) *UserUpdate {
-	return uu.SetTenantID(t.ID)
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (uu *UserUpdate) AddAccessPolicies(a ...*AccessPolicy) *UserUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uu.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (uu *UserUpdate) ClearAccount() *UserUpdate {
+	uu.mutation.ClearAccount()
+	return uu
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -281,17 +311,51 @@ func (uu *UserUpdate) RemoveRoles(r ...*Role) *UserUpdate {
 	return uu.RemoveRoleIDs(ids...)
 }
 
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (uu *UserUpdate) ClearTenant() *UserUpdate {
-	uu.mutation.ClearTenant()
+// ClearAuditLogs clears all "audit_logs" edges to the AuditLog entity.
+func (uu *UserUpdate) ClearAuditLogs() *UserUpdate {
+	uu.mutation.ClearAuditLogs()
 	return uu
+}
+
+// RemoveAuditLogIDs removes the "audit_logs" edge to AuditLog entities by IDs.
+func (uu *UserUpdate) RemoveAuditLogIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveAuditLogIDs(ids...)
+	return uu
+}
+
+// RemoveAuditLogs removes "audit_logs" edges to AuditLog entities.
+func (uu *UserUpdate) RemoveAuditLogs(a ...*AuditLog) *UserUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uu.RemoveAuditLogIDs(ids...)
+}
+
+// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
+func (uu *UserUpdate) ClearAccessPolicies() *UserUpdate {
+	uu.mutation.ClearAccessPolicies()
+	return uu
+}
+
+// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
+func (uu *UserUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveAccessPolicyIDs(ids...)
+	return uu
+}
+
+// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
+func (uu *UserUpdate) RemoveAccessPolicies(a ...*AccessPolicy) *UserUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uu.RemoveAccessPolicyIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (uu *UserUpdate) Save(ctx context.Context) (int, error) {
-	if err := uu.defaults(); err != nil {
-		return 0, err
-	}
+	uu.defaults()
 	return withHooks(ctx, uu.sqlSave, uu.mutation, uu.hooks)
 }
 
@@ -318,15 +382,11 @@ func (uu *UserUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (uu *UserUpdate) defaults() error {
+func (uu *UserUpdate) defaults() {
 	if _, ok := uu.mutation.UpdatedAt(); !ok {
-		if user.UpdateDefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized user.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := user.UpdateDefaultUpdatedAt()
 		uu.mutation.SetUpdatedAt(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -355,6 +415,14 @@ func (uu *UserUpdate) check() error {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
+	}
+	if v, ok := uu.mutation.Status(); ok {
+		if err := user.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
+		}
+	}
+	if uu.mutation.AccountCleared() && len(uu.mutation.AccountIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "User.account"`)
 	}
 	return nil
 }
@@ -401,11 +469,11 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := uu.mutation.Phone(); ok {
-		_spec.SetField(user.FieldPhone, field.TypeString, value)
+	if value, ok := uu.mutation.PhoneNumber(); ok {
+		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
 	}
-	if uu.mutation.PhoneCleared() {
-		_spec.ClearField(user.FieldPhone, field.TypeString)
+	if uu.mutation.PhoneNumberCleared() {
+		_spec.ClearField(user.FieldPhoneNumber, field.TypeString)
 	}
 	if value, ok := uu.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
@@ -416,11 +484,40 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Online(); ok {
 		_spec.SetField(user.FieldOnline, field.TypeBool, value)
 	}
-	if value, ok := uu.mutation.EnableType(); ok {
-		_spec.SetField(user.FieldEnableType, field.TypeBool, value)
+	if value, ok := uu.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
 	if value, ok := uu.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
+	}
+	if uu.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.AccountTable,
+			Columns: []string{user.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.AccountTable,
+			Columns: []string{user.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -467,28 +564,89 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uu.mutation.TenantCleared() {
+	if uu.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: user.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !uu.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: user.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: user.AuditLogsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !uu.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -624,23 +782,23 @@ func (uuo *UserUpdateOne) SetNillableEmail(s *string) *UserUpdateOne {
 	return uuo
 }
 
-// SetPhone sets the "phone" field.
-func (uuo *UserUpdateOne) SetPhone(s string) *UserUpdateOne {
-	uuo.mutation.SetPhone(s)
+// SetPhoneNumber sets the "phone_number" field.
+func (uuo *UserUpdateOne) SetPhoneNumber(s string) *UserUpdateOne {
+	uuo.mutation.SetPhoneNumber(s)
 	return uuo
 }
 
-// SetNillablePhone sets the "phone" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillablePhone(s *string) *UserUpdateOne {
+// SetNillablePhoneNumber sets the "phone_number" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillablePhoneNumber(s *string) *UserUpdateOne {
 	if s != nil {
-		uuo.SetPhone(*s)
+		uuo.SetPhoneNumber(*s)
 	}
 	return uuo
 }
 
-// ClearPhone clears the value of the "phone" field.
-func (uuo *UserUpdateOne) ClearPhone() *UserUpdateOne {
-	uuo.mutation.ClearPhone()
+// ClearPhoneNumber clears the value of the "phone_number" field.
+func (uuo *UserUpdateOne) ClearPhoneNumber() *UserUpdateOne {
+	uuo.mutation.ClearPhoneNumber()
 	return uuo
 }
 
@@ -678,16 +836,16 @@ func (uuo *UserUpdateOne) SetNillableOnline(b *bool) *UserUpdateOne {
 	return uuo
 }
 
-// SetEnableType sets the "enable_type" field.
-func (uuo *UserUpdateOne) SetEnableType(b bool) *UserUpdateOne {
-	uuo.mutation.SetEnableType(b)
+// SetStatus sets the "status" field.
+func (uuo *UserUpdateOne) SetStatus(u user.Status) *UserUpdateOne {
+	uuo.mutation.SetStatus(u)
 	return uuo
 }
 
-// SetNillableEnableType sets the "enable_type" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableEnableType(b *bool) *UserUpdateOne {
-	if b != nil {
-		uuo.SetEnableType(*b)
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableStatus(u *user.Status) *UserUpdateOne {
+	if u != nil {
+		uuo.SetStatus(*u)
 	}
 	return uuo
 }
@@ -706,6 +864,17 @@ func (uuo *UserUpdateOne) SetNillableLastLoginTime(t *time.Time) *UserUpdateOne 
 	return uuo
 }
 
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (uuo *UserUpdateOne) SetAccountID(id uuid.UUID) *UserUpdateOne {
+	uuo.mutation.SetAccountID(id)
+	return uuo
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (uuo *UserUpdateOne) SetAccount(a *Account) *UserUpdateOne {
+	return uuo.SetAccountID(a.ID)
+}
+
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (uuo *UserUpdateOne) AddRoleIDs(ids ...uuid.UUID) *UserUpdateOne {
 	uuo.mutation.AddRoleIDs(ids...)
@@ -721,28 +890,45 @@ func (uuo *UserUpdateOne) AddRoles(r ...*Role) *UserUpdateOne {
 	return uuo.AddRoleIDs(ids...)
 }
 
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (uuo *UserUpdateOne) SetTenantID(id uuid.UUID) *UserUpdateOne {
-	uuo.mutation.SetTenantID(id)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (uuo *UserUpdateOne) AddAuditLogIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddAuditLogIDs(ids...)
 	return uuo
 }
 
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableTenantID(id *uuid.UUID) *UserUpdateOne {
-	if id != nil {
-		uuo = uuo.SetTenantID(*id)
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (uuo *UserUpdateOne) AddAuditLogs(a ...*AuditLog) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
+	return uuo.AddAuditLogIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (uuo *UserUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddAccessPolicyIDs(ids...)
 	return uuo
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (uuo *UserUpdateOne) SetTenant(t *Tenant) *UserUpdateOne {
-	return uuo.SetTenantID(t.ID)
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (uuo *UserUpdateOne) AddAccessPolicies(a ...*AccessPolicy) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uuo.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (uuo *UserUpdateOne) ClearAccount() *UserUpdateOne {
+	uuo.mutation.ClearAccount()
+	return uuo
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -766,10 +952,46 @@ func (uuo *UserUpdateOne) RemoveRoles(r ...*Role) *UserUpdateOne {
 	return uuo.RemoveRoleIDs(ids...)
 }
 
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (uuo *UserUpdateOne) ClearTenant() *UserUpdateOne {
-	uuo.mutation.ClearTenant()
+// ClearAuditLogs clears all "audit_logs" edges to the AuditLog entity.
+func (uuo *UserUpdateOne) ClearAuditLogs() *UserUpdateOne {
+	uuo.mutation.ClearAuditLogs()
 	return uuo
+}
+
+// RemoveAuditLogIDs removes the "audit_logs" edge to AuditLog entities by IDs.
+func (uuo *UserUpdateOne) RemoveAuditLogIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveAuditLogIDs(ids...)
+	return uuo
+}
+
+// RemoveAuditLogs removes "audit_logs" edges to AuditLog entities.
+func (uuo *UserUpdateOne) RemoveAuditLogs(a ...*AuditLog) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uuo.RemoveAuditLogIDs(ids...)
+}
+
+// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
+func (uuo *UserUpdateOne) ClearAccessPolicies() *UserUpdateOne {
+	uuo.mutation.ClearAccessPolicies()
+	return uuo
+}
+
+// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
+func (uuo *UserUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveAccessPolicyIDs(ids...)
+	return uuo
+}
+
+// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
+func (uuo *UserUpdateOne) RemoveAccessPolicies(a ...*AccessPolicy) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uuo.RemoveAccessPolicyIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -787,9 +1009,7 @@ func (uuo *UserUpdateOne) Select(field string, fields ...string) *UserUpdateOne 
 
 // Save executes the query and returns the updated User entity.
 func (uuo *UserUpdateOne) Save(ctx context.Context) (*User, error) {
-	if err := uuo.defaults(); err != nil {
-		return nil, err
-	}
+	uuo.defaults()
 	return withHooks(ctx, uuo.sqlSave, uuo.mutation, uuo.hooks)
 }
 
@@ -816,15 +1036,11 @@ func (uuo *UserUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (uuo *UserUpdateOne) defaults() error {
+func (uuo *UserUpdateOne) defaults() {
 	if _, ok := uuo.mutation.UpdatedAt(); !ok {
-		if user.UpdateDefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized user.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := user.UpdateDefaultUpdatedAt()
 		uuo.mutation.SetUpdatedAt(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -853,6 +1069,14 @@ func (uuo *UserUpdateOne) check() error {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
+	}
+	if v, ok := uuo.mutation.Status(); ok {
+		if err := user.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
+		}
+	}
+	if uuo.mutation.AccountCleared() && len(uuo.mutation.AccountIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "User.account"`)
 	}
 	return nil
 }
@@ -916,11 +1140,11 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := uuo.mutation.Phone(); ok {
-		_spec.SetField(user.FieldPhone, field.TypeString, value)
+	if value, ok := uuo.mutation.PhoneNumber(); ok {
+		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
 	}
-	if uuo.mutation.PhoneCleared() {
-		_spec.ClearField(user.FieldPhone, field.TypeString)
+	if uuo.mutation.PhoneNumberCleared() {
+		_spec.ClearField(user.FieldPhoneNumber, field.TypeString)
 	}
 	if value, ok := uuo.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
@@ -931,11 +1155,40 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Online(); ok {
 		_spec.SetField(user.FieldOnline, field.TypeBool, value)
 	}
-	if value, ok := uuo.mutation.EnableType(); ok {
-		_spec.SetField(user.FieldEnableType, field.TypeBool, value)
+	if value, ok := uuo.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
 	if value, ok := uuo.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
+	}
+	if uuo.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.AccountTable,
+			Columns: []string{user.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.AccountTable,
+			Columns: []string{user.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uuo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -982,28 +1235,89 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uuo.mutation.TenantCleared() {
+	if uuo.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: user.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !uuo.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: user.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: user.AuditLogsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !uuo.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

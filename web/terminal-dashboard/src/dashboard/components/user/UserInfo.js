@@ -22,15 +22,6 @@ function UserInfo({ user }) {
     // 在 UserInfo 组件中
     const userInfo = useFetchUserInfo(user.email);
 
-    // const [userInfo, setUserInfo] = useState(null);
-    //
-    // const fetchedUserInfo = useFetchUserInfo(email);
-    //
-    // useEffect(() => {
-    //     setUserInfo(fetchedUserInfo);
-    // }, [fetchedUserInfo]);
-
-
     const [editUser, setEditUser] = useState(null);
     const [isEditUserOpen, setIsEditUserOpen] = useState(false);
     const handleEditUser = () => {
@@ -81,7 +72,7 @@ function UserInfo({ user }) {
                     <MdOutlinePhoneIphone size="1.3em"/>
                     {userInfo && (
                         <Typography color="blue-gray" className="font-medium ml-2" textGradient>
-                            {userInfo.phone}
+                            {userInfo.phone_number}
                         </Typography>
                     )}
                 </div>

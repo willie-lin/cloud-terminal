@@ -12,7 +12,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
@@ -77,11 +81,15 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			permission.Table: permission.ValidColumn,
-			resource.Table:   resource.ValidColumn,
-			role.Table:       role.ValidColumn,
-			tenant.Table:     tenant.ValidColumn,
-			user.Table:       user.ValidColumn,
+			accesspolicy.Table: accesspolicy.ValidColumn,
+			account.Table:      account.ValidColumn,
+			auditlog.Table:     auditlog.ValidColumn,
+			permission.Table:   permission.ValidColumn,
+			platform.Table:     platform.ValidColumn,
+			resource.Table:     resource.ValidColumn,
+			role.Table:         role.ValidColumn,
+			tenant.Table:       tenant.ValidColumn,
+			user.Table:         user.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

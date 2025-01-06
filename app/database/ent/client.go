@@ -16,7 +16,11 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
@@ -28,8 +32,16 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// AccessPolicy is the client for interacting with the AccessPolicy builders.
+	AccessPolicy *AccessPolicyClient
+	// Account is the client for interacting with the Account builders.
+	Account *AccountClient
+	// AuditLog is the client for interacting with the AuditLog builders.
+	AuditLog *AuditLogClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
+	// Platform is the client for interacting with the Platform builders.
+	Platform *PlatformClient
 	// Resource is the client for interacting with the Resource builders.
 	Resource *ResourceClient
 	// Role is the client for interacting with the Role builders.
@@ -49,7 +61,11 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.AccessPolicy = NewAccessPolicyClient(c.config)
+	c.Account = NewAccountClient(c.config)
+	c.AuditLog = NewAuditLogClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
+	c.Platform = NewPlatformClient(c.config)
 	c.Resource = NewResourceClient(c.config)
 	c.Role = NewRoleClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
@@ -144,13 +160,17 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:        ctx,
-		config:     cfg,
-		Permission: NewPermissionClient(cfg),
-		Resource:   NewResourceClient(cfg),
-		Role:       NewRoleClient(cfg),
-		Tenant:     NewTenantClient(cfg),
-		User:       NewUserClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		AccessPolicy: NewAccessPolicyClient(cfg),
+		Account:      NewAccountClient(cfg),
+		AuditLog:     NewAuditLogClient(cfg),
+		Permission:   NewPermissionClient(cfg),
+		Platform:     NewPlatformClient(cfg),
+		Resource:     NewResourceClient(cfg),
+		Role:         NewRoleClient(cfg),
+		Tenant:       NewTenantClient(cfg),
+		User:         NewUserClient(cfg),
 	}, nil
 }
 
@@ -168,20 +188,24 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:        ctx,
-		config:     cfg,
-		Permission: NewPermissionClient(cfg),
-		Resource:   NewResourceClient(cfg),
-		Role:       NewRoleClient(cfg),
-		Tenant:     NewTenantClient(cfg),
-		User:       NewUserClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		AccessPolicy: NewAccessPolicyClient(cfg),
+		Account:      NewAccountClient(cfg),
+		AuditLog:     NewAuditLogClient(cfg),
+		Permission:   NewPermissionClient(cfg),
+		Platform:     NewPlatformClient(cfg),
+		Resource:     NewResourceClient(cfg),
+		Role:         NewRoleClient(cfg),
+		Tenant:       NewTenantClient(cfg),
+		User:         NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Permission.
+//		AccessPolicy.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -203,28 +227,38 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Permission.Use(hooks...)
-	c.Resource.Use(hooks...)
-	c.Role.Use(hooks...)
-	c.Tenant.Use(hooks...)
-	c.User.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.AccessPolicy, c.Account, c.AuditLog, c.Permission, c.Platform, c.Resource,
+		c.Role, c.Tenant, c.User,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Permission.Intercept(interceptors...)
-	c.Resource.Intercept(interceptors...)
-	c.Role.Intercept(interceptors...)
-	c.Tenant.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.AccessPolicy, c.Account, c.AuditLog, c.Permission, c.Platform, c.Resource,
+		c.Role, c.Tenant, c.User,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AccessPolicyMutation:
+		return c.AccessPolicy.mutate(ctx, m)
+	case *AccountMutation:
+		return c.Account.mutate(ctx, m)
+	case *AuditLogMutation:
+		return c.AuditLog.mutate(ctx, m)
 	case *PermissionMutation:
 		return c.Permission.mutate(ctx, m)
+	case *PlatformMutation:
+		return c.Platform.mutate(ctx, m)
 	case *ResourceMutation:
 		return c.Resource.mutate(ctx, m)
 	case *RoleMutation:
@@ -235,6 +269,581 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AccessPolicyClient is a client for the AccessPolicy schema.
+type AccessPolicyClient struct {
+	config
+}
+
+// NewAccessPolicyClient returns a client for the AccessPolicy from the given config.
+func NewAccessPolicyClient(c config) *AccessPolicyClient {
+	return &AccessPolicyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `accesspolicy.Hooks(f(g(h())))`.
+func (c *AccessPolicyClient) Use(hooks ...Hook) {
+	c.hooks.AccessPolicy = append(c.hooks.AccessPolicy, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `accesspolicy.Intercept(f(g(h())))`.
+func (c *AccessPolicyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AccessPolicy = append(c.inters.AccessPolicy, interceptors...)
+}
+
+// Create returns a builder for creating a AccessPolicy entity.
+func (c *AccessPolicyClient) Create() *AccessPolicyCreate {
+	mutation := newAccessPolicyMutation(c.config, OpCreate)
+	return &AccessPolicyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AccessPolicy entities.
+func (c *AccessPolicyClient) CreateBulk(builders ...*AccessPolicyCreate) *AccessPolicyCreateBulk {
+	return &AccessPolicyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AccessPolicyClient) MapCreateBulk(slice any, setFunc func(*AccessPolicyCreate, int)) *AccessPolicyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AccessPolicyCreateBulk{err: fmt.Errorf("calling to AccessPolicyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AccessPolicyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AccessPolicyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AccessPolicy.
+func (c *AccessPolicyClient) Update() *AccessPolicyUpdate {
+	mutation := newAccessPolicyMutation(c.config, OpUpdate)
+	return &AccessPolicyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AccessPolicyClient) UpdateOne(ap *AccessPolicy) *AccessPolicyUpdateOne {
+	mutation := newAccessPolicyMutation(c.config, OpUpdateOne, withAccessPolicy(ap))
+	return &AccessPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AccessPolicyClient) UpdateOneID(id uuid.UUID) *AccessPolicyUpdateOne {
+	mutation := newAccessPolicyMutation(c.config, OpUpdateOne, withAccessPolicyID(id))
+	return &AccessPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AccessPolicy.
+func (c *AccessPolicyClient) Delete() *AccessPolicyDelete {
+	mutation := newAccessPolicyMutation(c.config, OpDelete)
+	return &AccessPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AccessPolicyClient) DeleteOne(ap *AccessPolicy) *AccessPolicyDeleteOne {
+	return c.DeleteOneID(ap.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AccessPolicyClient) DeleteOneID(id uuid.UUID) *AccessPolicyDeleteOne {
+	builder := c.Delete().Where(accesspolicy.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AccessPolicyDeleteOne{builder}
+}
+
+// Query returns a query builder for AccessPolicy.
+func (c *AccessPolicyClient) Query() *AccessPolicyQuery {
+	return &AccessPolicyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAccessPolicy},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AccessPolicy entity by its id.
+func (c *AccessPolicyClient) Get(ctx context.Context, id uuid.UUID) (*AccessPolicy, error) {
+	return c.Query().Where(accesspolicy.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AccessPolicyClient) GetX(ctx context.Context, id uuid.UUID) *AccessPolicy {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAccount queries the account edge of a AccessPolicy.
+func (c *AccessPolicyClient) QueryAccount(ap *AccessPolicy) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ap.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, accesspolicy.AccountTable, accesspolicy.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRoles queries the roles edge of a AccessPolicy.
+func (c *AccessPolicyClient) QueryRoles(ap *AccessPolicy) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ap.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.RolesTable, accesspolicy.RolesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryResources queries the resources edge of a AccessPolicy.
+func (c *AccessPolicyClient) QueryResources(ap *AccessPolicy) *ResourceQuery {
+	query := (&ResourceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ap.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
+			sqlgraph.To(resource.Table, resource.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, accesspolicy.ResourcesTable, accesspolicy.ResourcesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPermissions queries the permissions edge of a AccessPolicy.
+func (c *AccessPolicyClient) QueryPermissions(ap *AccessPolicy) *PermissionQuery {
+	query := (&PermissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ap.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
+			sqlgraph.To(permission.Table, permission.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, accesspolicy.PermissionsTable, accesspolicy.PermissionsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsers queries the users edge of a AccessPolicy.
+func (c *AccessPolicyClient) QueryUsers(ap *AccessPolicy) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ap.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.UsersTable, accesspolicy.UsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AccessPolicyClient) Hooks() []Hook {
+	return c.hooks.AccessPolicy
+}
+
+// Interceptors returns the client interceptors.
+func (c *AccessPolicyClient) Interceptors() []Interceptor {
+	return c.inters.AccessPolicy
+}
+
+func (c *AccessPolicyClient) mutate(ctx context.Context, m *AccessPolicyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AccessPolicyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AccessPolicyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AccessPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AccessPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AccessPolicy mutation op: %q", m.Op())
+	}
+}
+
+// AccountClient is a client for the Account schema.
+type AccountClient struct {
+	config
+}
+
+// NewAccountClient returns a client for the Account from the given config.
+func NewAccountClient(c config) *AccountClient {
+	return &AccountClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `account.Hooks(f(g(h())))`.
+func (c *AccountClient) Use(hooks ...Hook) {
+	c.hooks.Account = append(c.hooks.Account, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `account.Intercept(f(g(h())))`.
+func (c *AccountClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Account = append(c.inters.Account, interceptors...)
+}
+
+// Create returns a builder for creating a Account entity.
+func (c *AccountClient) Create() *AccountCreate {
+	mutation := newAccountMutation(c.config, OpCreate)
+	return &AccountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Account entities.
+func (c *AccountClient) CreateBulk(builders ...*AccountCreate) *AccountCreateBulk {
+	return &AccountCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AccountClient) MapCreateBulk(slice any, setFunc func(*AccountCreate, int)) *AccountCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AccountCreateBulk{err: fmt.Errorf("calling to AccountClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AccountCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AccountCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Account.
+func (c *AccountClient) Update() *AccountUpdate {
+	mutation := newAccountMutation(c.config, OpUpdate)
+	return &AccountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AccountClient) UpdateOne(a *Account) *AccountUpdateOne {
+	mutation := newAccountMutation(c.config, OpUpdateOne, withAccount(a))
+	return &AccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AccountClient) UpdateOneID(id uuid.UUID) *AccountUpdateOne {
+	mutation := newAccountMutation(c.config, OpUpdateOne, withAccountID(id))
+	return &AccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Account.
+func (c *AccountClient) Delete() *AccountDelete {
+	mutation := newAccountMutation(c.config, OpDelete)
+	return &AccountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AccountClient) DeleteOne(a *Account) *AccountDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AccountClient) DeleteOneID(id uuid.UUID) *AccountDeleteOne {
+	builder := c.Delete().Where(account.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AccountDeleteOne{builder}
+}
+
+// Query returns a query builder for Account.
+func (c *AccountClient) Query() *AccountQuery {
+	return &AccountQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAccount},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Account entity by its id.
+func (c *AccountClient) Get(ctx context.Context, id uuid.UUID) (*Account, error) {
+	return c.Query().Where(account.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AccountClient) GetX(ctx context.Context, id uuid.UUID) *Account {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTenant queries the tenant edge of a Account.
+func (c *AccountClient) QueryTenant(a *Account) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, account.TenantTable, account.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsers queries the users edge of a Account.
+func (c *AccountClient) QueryUsers(a *Account) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.UsersTable, account.UsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRoles queries the roles edge of a Account.
+func (c *AccountClient) QueryRoles(a *Account) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.RolesTable, account.RolesColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessPolicies queries the access_policies edge of a Account.
+func (c *AccountClient) QueryAccessPolicies(a *Account) *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.AccessPoliciesTable, account.AccessPoliciesColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPermissions queries the permissions edge of a Account.
+func (c *AccountClient) QueryPermissions(a *Account) *PermissionQuery {
+	query := (&PermissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(permission.Table, permission.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.PermissionsTable, account.PermissionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AccountClient) Hooks() []Hook {
+	return c.hooks.Account
+}
+
+// Interceptors returns the client interceptors.
+func (c *AccountClient) Interceptors() []Interceptor {
+	return c.inters.Account
+}
+
+func (c *AccountClient) mutate(ctx context.Context, m *AccountMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AccountCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AccountUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AccountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Account mutation op: %q", m.Op())
+	}
+}
+
+// AuditLogClient is a client for the AuditLog schema.
+type AuditLogClient struct {
+	config
+}
+
+// NewAuditLogClient returns a client for the AuditLog from the given config.
+func NewAuditLogClient(c config) *AuditLogClient {
+	return &AuditLogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `auditlog.Hooks(f(g(h())))`.
+func (c *AuditLogClient) Use(hooks ...Hook) {
+	c.hooks.AuditLog = append(c.hooks.AuditLog, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `auditlog.Intercept(f(g(h())))`.
+func (c *AuditLogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AuditLog = append(c.inters.AuditLog, interceptors...)
+}
+
+// Create returns a builder for creating a AuditLog entity.
+func (c *AuditLogClient) Create() *AuditLogCreate {
+	mutation := newAuditLogMutation(c.config, OpCreate)
+	return &AuditLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AuditLog entities.
+func (c *AuditLogClient) CreateBulk(builders ...*AuditLogCreate) *AuditLogCreateBulk {
+	return &AuditLogCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AuditLogClient) MapCreateBulk(slice any, setFunc func(*AuditLogCreate, int)) *AuditLogCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AuditLogCreateBulk{err: fmt.Errorf("calling to AuditLogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AuditLogCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AuditLogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AuditLog.
+func (c *AuditLogClient) Update() *AuditLogUpdate {
+	mutation := newAuditLogMutation(c.config, OpUpdate)
+	return &AuditLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AuditLogClient) UpdateOne(al *AuditLog) *AuditLogUpdateOne {
+	mutation := newAuditLogMutation(c.config, OpUpdateOne, withAuditLog(al))
+	return &AuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AuditLogClient) UpdateOneID(id uuid.UUID) *AuditLogUpdateOne {
+	mutation := newAuditLogMutation(c.config, OpUpdateOne, withAuditLogID(id))
+	return &AuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AuditLog.
+func (c *AuditLogClient) Delete() *AuditLogDelete {
+	mutation := newAuditLogMutation(c.config, OpDelete)
+	return &AuditLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AuditLogClient) DeleteOne(al *AuditLog) *AuditLogDeleteOne {
+	return c.DeleteOneID(al.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AuditLogClient) DeleteOneID(id uuid.UUID) *AuditLogDeleteOne {
+	builder := c.Delete().Where(auditlog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AuditLogDeleteOne{builder}
+}
+
+// Query returns a query builder for AuditLog.
+func (c *AuditLogClient) Query() *AuditLogQuery {
+	return &AuditLogQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAuditLog},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AuditLog entity by its id.
+func (c *AuditLogClient) Get(ctx context.Context, id uuid.UUID) (*AuditLog, error) {
+	return c.Query().Where(auditlog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AuditLogClient) GetX(ctx context.Context, id uuid.UUID) *AuditLog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a AuditLog.
+func (c *AuditLogClient) QueryUser(al *AuditLog) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := al.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(auditlog.Table, auditlog.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, auditlog.UserTable, auditlog.UserPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(al.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AuditLogClient) Hooks() []Hook {
+	return c.hooks.AuditLog
+}
+
+// Interceptors returns the client interceptors.
+func (c *AuditLogClient) Interceptors() []Interceptor {
+	return c.inters.AuditLog
+}
+
+func (c *AuditLogClient) mutate(ctx context.Context, m *AuditLogMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AuditLogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AuditLogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AuditLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AuditLog mutation op: %q", m.Op())
 	}
 }
 
@@ -346,15 +955,15 @@ func (c *PermissionClient) GetX(ctx context.Context, id uuid.UUID) *Permission {
 	return obj
 }
 
-// QueryRoles queries the roles edge of a Permission.
-func (c *PermissionClient) QueryRoles(pe *Permission) *RoleQuery {
-	query := (&RoleClient{config: c.config}).Query()
+// QueryAccount queries the account edge of a Permission.
+func (c *PermissionClient) QueryAccount(pe *Permission) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := pe.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(permission.Table, permission.FieldID, id),
-			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, permission.RolesTable, permission.RolesPrimaryKey...),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, permission.AccountTable, permission.AccountColumn),
 		)
 		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
 		return fromV, nil
@@ -362,31 +971,15 @@ func (c *PermissionClient) QueryRoles(pe *Permission) *RoleQuery {
 	return query
 }
 
-// QueryTenant queries the tenant edge of a Permission.
-func (c *PermissionClient) QueryTenant(pe *Permission) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
+// QueryAccessPolicies queries the access_policies edge of a Permission.
+func (c *PermissionClient) QueryAccessPolicies(pe *Permission) *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := pe.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(permission.Table, permission.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, permission.TenantTable, permission.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryResources queries the resources edge of a Permission.
-func (c *PermissionClient) QueryResources(pe *Permission) *ResourceQuery {
-	query := (&ResourceClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pe.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(permission.Table, permission.FieldID, id),
-			sqlgraph.To(resource.Table, resource.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, permission.ResourcesTable, permission.ResourcesColumn),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, permission.AccessPoliciesTable, permission.AccessPoliciesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
 		return fromV, nil
@@ -396,8 +989,7 @@ func (c *PermissionClient) QueryResources(pe *Permission) *ResourceQuery {
 
 // Hooks returns the client hooks.
 func (c *PermissionClient) Hooks() []Hook {
-	hooks := c.hooks.Permission
-	return append(hooks[:len(hooks):len(hooks)], permission.Hooks[:]...)
+	return c.hooks.Permission
 }
 
 // Interceptors returns the client interceptors.
@@ -417,6 +1009,155 @@ func (c *PermissionClient) mutate(ctx context.Context, m *PermissionMutation) (V
 		return (&PermissionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Permission mutation op: %q", m.Op())
+	}
+}
+
+// PlatformClient is a client for the Platform schema.
+type PlatformClient struct {
+	config
+}
+
+// NewPlatformClient returns a client for the Platform from the given config.
+func NewPlatformClient(c config) *PlatformClient {
+	return &PlatformClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `platform.Hooks(f(g(h())))`.
+func (c *PlatformClient) Use(hooks ...Hook) {
+	c.hooks.Platform = append(c.hooks.Platform, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `platform.Intercept(f(g(h())))`.
+func (c *PlatformClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Platform = append(c.inters.Platform, interceptors...)
+}
+
+// Create returns a builder for creating a Platform entity.
+func (c *PlatformClient) Create() *PlatformCreate {
+	mutation := newPlatformMutation(c.config, OpCreate)
+	return &PlatformCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Platform entities.
+func (c *PlatformClient) CreateBulk(builders ...*PlatformCreate) *PlatformCreateBulk {
+	return &PlatformCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PlatformClient) MapCreateBulk(slice any, setFunc func(*PlatformCreate, int)) *PlatformCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PlatformCreateBulk{err: fmt.Errorf("calling to PlatformClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PlatformCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PlatformCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Platform.
+func (c *PlatformClient) Update() *PlatformUpdate {
+	mutation := newPlatformMutation(c.config, OpUpdate)
+	return &PlatformUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PlatformClient) UpdateOne(pl *Platform) *PlatformUpdateOne {
+	mutation := newPlatformMutation(c.config, OpUpdateOne, withPlatform(pl))
+	return &PlatformUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PlatformClient) UpdateOneID(id uuid.UUID) *PlatformUpdateOne {
+	mutation := newPlatformMutation(c.config, OpUpdateOne, withPlatformID(id))
+	return &PlatformUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Platform.
+func (c *PlatformClient) Delete() *PlatformDelete {
+	mutation := newPlatformMutation(c.config, OpDelete)
+	return &PlatformDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PlatformClient) DeleteOne(pl *Platform) *PlatformDeleteOne {
+	return c.DeleteOneID(pl.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PlatformClient) DeleteOneID(id uuid.UUID) *PlatformDeleteOne {
+	builder := c.Delete().Where(platform.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PlatformDeleteOne{builder}
+}
+
+// Query returns a query builder for Platform.
+func (c *PlatformClient) Query() *PlatformQuery {
+	return &PlatformQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePlatform},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Platform entity by its id.
+func (c *PlatformClient) Get(ctx context.Context, id uuid.UUID) (*Platform, error) {
+	return c.Query().Where(platform.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PlatformClient) GetX(ctx context.Context, id uuid.UUID) *Platform {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTenants queries the tenants edge of a Platform.
+func (c *PlatformClient) QueryTenants(pl *Platform) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(platform.Table, platform.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, platform.TenantsTable, platform.TenantsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PlatformClient) Hooks() []Hook {
+	return c.hooks.Platform
+}
+
+// Interceptors returns the client interceptors.
+func (c *PlatformClient) Interceptors() []Interceptor {
+	return c.inters.Platform
+}
+
+func (c *PlatformClient) mutate(ctx context.Context, m *PlatformMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PlatformCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PlatformUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PlatformUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PlatformDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Platform mutation op: %q", m.Op())
 	}
 }
 
@@ -528,31 +1269,15 @@ func (c *ResourceClient) GetX(ctx context.Context, id uuid.UUID) *Resource {
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a Resource.
-func (c *ResourceClient) QueryTenant(r *Resource) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
+// QueryAccessPolicies queries the access_policies edge of a Resource.
+func (c *ResourceClient) QueryAccessPolicies(r *Resource) *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(resource.Table, resource.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, resource.TenantTable, resource.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryPermissions queries the permissions edge of a Resource.
-func (c *ResourceClient) QueryPermissions(r *Resource) *PermissionQuery {
-	query := (&PermissionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(resource.Table, resource.FieldID, id),
-			sqlgraph.To(permission.Table, permission.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, resource.PermissionsTable, resource.PermissionsColumn),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, resource.AccessPoliciesTable, resource.AccessPoliciesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -562,8 +1287,7 @@ func (c *ResourceClient) QueryPermissions(r *Resource) *PermissionQuery {
 
 // Hooks returns the client hooks.
 func (c *ResourceClient) Hooks() []Hook {
-	hooks := c.hooks.Resource
-	return append(hooks[:len(hooks):len(hooks)], resource.Hooks[:]...)
+	return c.hooks.Resource
 }
 
 // Interceptors returns the client interceptors.
@@ -694,6 +1418,22 @@ func (c *RoleClient) GetX(ctx context.Context, id uuid.UUID) *Role {
 	return obj
 }
 
+// QueryAccount queries the account edge of a Role.
+func (c *RoleClient) QueryAccount(r *Role) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountTable, role.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUsers queries the users edge of a Role.
 func (c *RoleClient) QueryUsers(r *Role) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
@@ -710,15 +1450,15 @@ func (c *RoleClient) QueryUsers(r *Role) *UserQuery {
 	return query
 }
 
-// QueryPermissions queries the permissions edge of a Role.
-func (c *RoleClient) QueryPermissions(r *Role) *PermissionQuery {
-	query := (&PermissionClient{config: c.config}).Query()
+// QueryAccessPolicies queries the access_policies edge of a Role.
+func (c *RoleClient) QueryAccessPolicies(r *Role) *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, id),
-			sqlgraph.To(permission.Table, permission.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, role.PermissionsTable, role.PermissionsPrimaryKey...),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, role.AccessPoliciesTable, role.AccessPoliciesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -726,15 +1466,31 @@ func (c *RoleClient) QueryPermissions(r *Role) *PermissionQuery {
 	return query
 }
 
-// QueryTenant queries the tenant edge of a Role.
-func (c *RoleClient) QueryTenant(r *Role) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
+// QueryParentRole queries the parent_role edge of a Role.
+func (c *RoleClient) QueryParentRole(r *Role) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := r.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, role.TenantTable, role.TenantPrimaryKey...),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, role.ParentRoleTable, role.ParentRolePrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChildRoles queries the child_roles edge of a Role.
+func (c *RoleClient) QueryChildRoles(r *Role) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, role.ChildRolesTable, role.ChildRolesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -744,8 +1500,7 @@ func (c *RoleClient) QueryTenant(r *Role) *TenantQuery {
 
 // Hooks returns the client hooks.
 func (c *RoleClient) Hooks() []Hook {
-	hooks := c.hooks.Role
-	return append(hooks[:len(hooks):len(hooks)], role.Hooks[:]...)
+	return c.hooks.Role
 }
 
 // Interceptors returns the client interceptors.
@@ -876,15 +1631,15 @@ func (c *TenantClient) GetX(ctx context.Context, id uuid.UUID) *Tenant {
 	return obj
 }
 
-// QueryUsers queries the users edge of a Tenant.
-func (c *TenantClient) QueryUsers(t *Tenant) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
+// QueryPlatform queries the platform edge of a Tenant.
+func (c *TenantClient) QueryPlatform(t *Tenant) *PlatformQuery {
+	query := (&PlatformClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := t.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.UsersTable, tenant.UsersColumn),
+			sqlgraph.To(platform.Table, platform.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, tenant.PlatformTable, tenant.PlatformColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -892,47 +1647,15 @@ func (c *TenantClient) QueryUsers(t *Tenant) *UserQuery {
 	return query
 }
 
-// QueryRoles queries the roles edge of a Tenant.
-func (c *TenantClient) QueryRoles(t *Tenant) *RoleQuery {
-	query := (&RoleClient{config: c.config}).Query()
+// QueryAccounts queries the accounts edge of a Tenant.
+func (c *TenantClient) QueryAccounts(t *Tenant) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := t.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, tenant.RolesTable, tenant.RolesPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryResources queries the resources edge of a Tenant.
-func (c *TenantClient) QueryResources(t *Tenant) *ResourceQuery {
-	query := (&ResourceClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(resource.Table, resource.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ResourcesTable, tenant.ResourcesColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryPermissions queries the permissions edge of a Tenant.
-func (c *TenantClient) QueryPermissions(t *Tenant) *PermissionQuery {
-	query := (&PermissionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(permission.Table, permission.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.PermissionsTable, tenant.PermissionsColumn),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.AccountsTable, tenant.AccountsColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -942,8 +1665,7 @@ func (c *TenantClient) QueryPermissions(t *Tenant) *PermissionQuery {
 
 // Hooks returns the client hooks.
 func (c *TenantClient) Hooks() []Hook {
-	hooks := c.hooks.Tenant
-	return append(hooks[:len(hooks):len(hooks)], tenant.Hooks[:]...)
+	return c.hooks.Tenant
 }
 
 // Interceptors returns the client interceptors.
@@ -1074,6 +1796,22 @@ func (c *UserClient) GetX(ctx context.Context, id uuid.UUID) *User {
 	return obj
 }
 
+// QueryAccount queries the account edge of a User.
+func (c *UserClient) QueryAccount(u *User) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.AccountTable, user.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryRoles queries the roles edge of a User.
 func (c *UserClient) QueryRoles(u *User) *RoleQuery {
 	query := (&RoleClient{config: c.config}).Query()
@@ -1090,15 +1828,31 @@ func (c *UserClient) QueryRoles(u *User) *RoleQuery {
 	return query
 }
 
-// QueryTenant queries the tenant edge of a User.
-func (c *UserClient) QueryTenant(u *User) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
+// QueryAuditLogs queries the audit_logs edge of a User.
+func (c *UserClient) QueryAuditLogs(u *User) *AuditLogQuery {
+	query := (&AuditLogClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, user.TenantTable, user.TenantColumn),
+			sqlgraph.To(auditlog.Table, auditlog.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.AuditLogsTable, user.AuditLogsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessPolicies queries the access_policies edge of a User.
+func (c *UserClient) QueryAccessPolicies(u *User) *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.AccessPoliciesTable, user.AccessPoliciesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -1108,8 +1862,7 @@ func (c *UserClient) QueryTenant(u *User) *TenantQuery {
 
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
-	hooks := c.hooks.User
-	return append(hooks[:len(hooks):len(hooks)], user.Hooks[:]...)
+	return c.hooks.User
 }
 
 // Interceptors returns the client interceptors.
@@ -1135,9 +1888,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Permission, Resource, Role, Tenant, User []ent.Hook
+		AccessPolicy, Account, AuditLog, Permission, Platform, Resource, Role, Tenant,
+		User []ent.Hook
 	}
 	inters struct {
-		Permission, Resource, Role, Tenant, User []ent.Interceptor
+		AccessPolicy, Account, AuditLog, Permission, Platform, Resource, Role, Tenant,
+		User []ent.Interceptor
 	}
 )

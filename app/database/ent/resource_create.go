@@ -11,9 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // ResourceCreate is the builder for creating a Resource entity.
@@ -111,38 +110,19 @@ func (rc *ResourceCreate) SetNillableID(u *uuid.UUID) *ResourceCreate {
 	return rc
 }
 
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (rc *ResourceCreate) SetTenantID(id uuid.UUID) *ResourceCreate {
-	rc.mutation.SetTenantID(id)
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (rc *ResourceCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *ResourceCreate {
+	rc.mutation.AddAccessPolicyIDs(ids...)
 	return rc
 }
 
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (rc *ResourceCreate) SetNillableTenantID(id *uuid.UUID) *ResourceCreate {
-	if id != nil {
-		rc = rc.SetTenantID(*id)
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (rc *ResourceCreate) AddAccessPolicies(a ...*AccessPolicy) *ResourceCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return rc
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (rc *ResourceCreate) SetTenant(t *Tenant) *ResourceCreate {
-	return rc.SetTenantID(t.ID)
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (rc *ResourceCreate) AddPermissionIDs(ids ...uuid.UUID) *ResourceCreate {
-	rc.mutation.AddPermissionIDs(ids...)
-	return rc
-}
-
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (rc *ResourceCreate) AddPermissions(p ...*Permission) *ResourceCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return rc.AddPermissionIDs(ids...)
+	return rc.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -152,9 +132,7 @@ func (rc *ResourceCreate) Mutation() *ResourceMutation {
 
 // Save creates the Resource in the database.
 func (rc *ResourceCreate) Save(ctx context.Context) (*Resource, error) {
-	if err := rc.defaults(); err != nil {
-		return nil, err
-	}
+	rc.defaults()
 	return withHooks(ctx, rc.sqlSave, rc.mutation, rc.hooks)
 }
 
@@ -181,18 +159,12 @@ func (rc *ResourceCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (rc *ResourceCreate) defaults() error {
+func (rc *ResourceCreate) defaults() {
 	if _, ok := rc.mutation.CreatedAt(); !ok {
-		if resource.DefaultCreatedAt == nil {
-			return fmt.Errorf("ent: uninitialized resource.DefaultCreatedAt (forgotten import ent/runtime?)")
-		}
 		v := resource.DefaultCreatedAt()
 		rc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := rc.mutation.UpdatedAt(); !ok {
-		if resource.DefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized resource.DefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := resource.DefaultUpdatedAt()
 		rc.mutation.SetUpdatedAt(v)
 	}
@@ -201,13 +173,9 @@ func (rc *ResourceCreate) defaults() error {
 		rc.mutation.SetIsDisabled(v)
 	}
 	if _, ok := rc.mutation.ID(); !ok {
-		if resource.DefaultID == nil {
-			return fmt.Errorf("ent: uninitialized resource.DefaultID (forgotten import ent/runtime?)")
-		}
 		v := resource.DefaultID()
 		rc.mutation.SetID(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -308,32 +276,15 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
 		_node.IsDisabled = value
 	}
-	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := rc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.TenantTable,
-			Columns: []string{resource.TenantColumn},
+			Table:   resource.AccessPoliciesTable,
+			Columns: resource.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.tenant_resources = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := rc.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   resource.PermissionsTable,
-			Columns: []string{resource.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // Permission is the model entity for the Permission schema.
@@ -36,52 +36,40 @@ type Permission struct {
 	IsDisabled bool `json:"is_disabled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PermissionQuery when eager-loading is set.
-	Edges                PermissionEdges `json:"edges"`
-	resource_permissions *uuid.UUID
-	tenant_permissions   *uuid.UUID
-	selectValues         sql.SelectValues
+	Edges               PermissionEdges `json:"edges"`
+	account_permissions *uuid.UUID
+	selectValues        sql.SelectValues
 }
 
 // PermissionEdges holds the relations/edges for other nodes in the graph.
 type PermissionEdges struct {
-	// Roles holds the value of the roles edge.
-	Roles []*Role `json:"roles,omitempty"`
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// Resources holds the value of the resources edge.
-	Resources []*Resource `json:"resources,omitempty"`
+	// Account holds the value of the account edge.
+	Account *Account `json:"account,omitempty"`
+	// AccessPolicies holds the value of the access_policies edge.
+	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [2]bool
 }
 
-// RolesOrErr returns the Roles value or an error if the edge
-// was not loaded in eager-loading.
-func (e PermissionEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[0] {
-		return e.Roles, nil
-	}
-	return nil, &NotLoadedError{edge: "roles"}
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
+// AccountOrErr returns the Account value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e PermissionEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: tenant.Label}
+func (e PermissionEdges) AccountOrErr() (*Account, error) {
+	if e.Account != nil {
+		return e.Account, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: account.Label}
 	}
-	return nil, &NotLoadedError{edge: "tenant"}
+	return nil, &NotLoadedError{edge: "account"}
 }
 
-// ResourcesOrErr returns the Resources value or an error if the edge
+// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
 // was not loaded in eager-loading.
-func (e PermissionEdges) ResourcesOrErr() ([]*Resource, error) {
-	if e.loadedTypes[2] {
-		return e.Resources, nil
+func (e PermissionEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
+	if e.loadedTypes[1] {
+		return e.AccessPolicies, nil
 	}
-	return nil, &NotLoadedError{edge: "resources"}
+	return nil, &NotLoadedError{edge: "access_policies"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -99,9 +87,7 @@ func (*Permission) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case permission.FieldID:
 			values[i] = new(uuid.UUID)
-		case permission.ForeignKeys[0]: // resource_permissions
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case permission.ForeignKeys[1]: // tenant_permissions
+		case permission.ForeignKeys[0]: // account_permissions
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -170,17 +156,10 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 			}
 		case permission.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field resource_permissions", values[i])
+				return fmt.Errorf("unexpected type %T for field account_permissions", values[i])
 			} else if value.Valid {
-				pe.resource_permissions = new(uuid.UUID)
-				*pe.resource_permissions = *value.S.(*uuid.UUID)
-			}
-		case permission.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field tenant_permissions", values[i])
-			} else if value.Valid {
-				pe.tenant_permissions = new(uuid.UUID)
-				*pe.tenant_permissions = *value.S.(*uuid.UUID)
+				pe.account_permissions = new(uuid.UUID)
+				*pe.account_permissions = *value.S.(*uuid.UUID)
 			}
 		default:
 			pe.selectValues.Set(columns[i], values[i])
@@ -195,19 +174,14 @@ func (pe *Permission) Value(name string) (ent.Value, error) {
 	return pe.selectValues.Get(name)
 }
 
-// QueryRoles queries the "roles" edge of the Permission entity.
-func (pe *Permission) QueryRoles() *RoleQuery {
-	return NewPermissionClient(pe.config).QueryRoles(pe)
+// QueryAccount queries the "account" edge of the Permission entity.
+func (pe *Permission) QueryAccount() *AccountQuery {
+	return NewPermissionClient(pe.config).QueryAccount(pe)
 }
 
-// QueryTenant queries the "tenant" edge of the Permission entity.
-func (pe *Permission) QueryTenant() *TenantQuery {
-	return NewPermissionClient(pe.config).QueryTenant(pe)
-}
-
-// QueryResources queries the "resources" edge of the Permission entity.
-func (pe *Permission) QueryResources() *ResourceQuery {
-	return NewPermissionClient(pe.config).QueryResources(pe)
+// QueryAccessPolicies queries the "access_policies" edge of the Permission entity.
+func (pe *Permission) QueryAccessPolicies() *AccessPolicyQuery {
+	return NewPermissionClient(pe.config).QueryAccessPolicies(pe)
 }
 
 // Update returns a builder for updating this Permission.

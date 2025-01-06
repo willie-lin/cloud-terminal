@@ -6,8 +6,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
-	"github.com/willie-lin/cloud-terminal/app/rule"
 )
 
 // Role holds the schema definition for the Role entity.
@@ -36,9 +34,13 @@ func (Role) Fields() []ent.Field {
 // Edges of the Role.
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("users", User.Type).Ref("roles"),    // 角色被多个用户拥有
-		edge.To("permissions", Permission.Type),       // 角色拥有多个权限
-		edge.From("tenant", Tenant.Type).Ref("roles"), // 正确用法
+		edge.From("account", Account.Type).Ref("roles").Unique().Required(),
+		edge.From("users", User.Type).Ref("roles"), // 角色被多个用户拥有
+		edge.To("access_policies", AccessPolicy.Type).StorageKey(edge.Table("role_policies")),
+
+		edge.To("child_roles", Role.Type).From("parent_role"), // 自引用：一个 Role 可以有多个子 Role
+
+		//edge.To("permissions", Permission.Type),       // 角色拥有多个权限
 	}
 }
 
@@ -50,20 +52,20 @@ func (Role) Indexes() []ent.Index {
 }
 
 // Policy defines the privacy policy of the Role.
-func (Role) Policy() ent.Policy {
-	return privacy.Policy{
-		Query: privacy.QueryPolicy{
-			rule.AllowIfSuperAdminQueryRole(), // 允许 superuser 查询所有角色
-			rule.AllowIfAdminQueryRole(),      // 允许 admin 查询其租户下的角色
-			rule.AllowIfOwnerQueryRole(),      // 允许 user 查询自己的角色
-			privacy.AlwaysDenyRule(),          // 最后的拒绝策略
-			//privacy.AlwaysAllowRule(),
-		},
-		Mutation: privacy.MutationPolicy{
-			rule.AllowIfSuperAdminMutationRole(), // 允许 superuser 变更所有角色
-			rule.AllowIfAdminMutationRole(),      // 允许 admin 变更其租户下的角色
-			privacy.AlwaysDenyRule(),             // 最后的拒绝策略
-			//privacy.AlwaysAllowRule(),
-		},
-	}
-}
+//func (Role) Policy() ent.Policy {
+//	return privacy.Policy{
+//		Query: privacy.QueryPolicy{
+//			rule.AllowIfSuperAdminQueryRole(), // 允许 superuser 查询所有角色
+//			rule.AllowIfAdminQueryRole(),      // 允许 admin 查询其租户下的角色
+//			rule.AllowIfOwnerQueryRole(),      // 允许 user 查询自己的角色
+//			privacy.AlwaysDenyRule(),          // 最后的拒绝策略
+//			//privacy.AlwaysAllowRule(),
+//		},
+//		Mutation: privacy.MutationPolicy{
+//			rule.AllowIfSuperAdminMutationRole(), // 允许 superuser 变更所有角色
+//			rule.AllowIfAdminMutationRole(),      // 允许 admin 变更其租户下的角色
+//			privacy.AlwaysDenyRule(),             // 最后的拒绝策略
+//			//privacy.AlwaysAllowRule(),
+//		},
+//	}
+//}

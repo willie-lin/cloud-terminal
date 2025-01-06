@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -114,6 +114,17 @@ func (rc *RoleCreate) SetNillableID(u *uuid.UUID) *RoleCreate {
 	return rc
 }
 
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (rc *RoleCreate) SetAccountID(id uuid.UUID) *RoleCreate {
+	rc.mutation.SetAccountID(id)
+	return rc
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (rc *RoleCreate) SetAccount(a *Account) *RoleCreate {
+	return rc.SetAccountID(a.ID)
+}
+
 // AddUserIDs adds the "users" edge to the User entity by IDs.
 func (rc *RoleCreate) AddUserIDs(ids ...uuid.UUID) *RoleCreate {
 	rc.mutation.AddUserIDs(ids...)
@@ -129,34 +140,49 @@ func (rc *RoleCreate) AddUsers(u ...*User) *RoleCreate {
 	return rc.AddUserIDs(ids...)
 }
 
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (rc *RoleCreate) AddPermissionIDs(ids ...uuid.UUID) *RoleCreate {
-	rc.mutation.AddPermissionIDs(ids...)
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (rc *RoleCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *RoleCreate {
+	rc.mutation.AddAccessPolicyIDs(ids...)
 	return rc
 }
 
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (rc *RoleCreate) AddPermissions(p ...*Permission) *RoleCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (rc *RoleCreate) AddAccessPolicies(a ...*AccessPolicy) *RoleCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return rc.AddPermissionIDs(ids...)
+	return rc.AddAccessPolicyIDs(ids...)
 }
 
-// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
-func (rc *RoleCreate) AddTenantIDs(ids ...uuid.UUID) *RoleCreate {
-	rc.mutation.AddTenantIDs(ids...)
+// AddParentRoleIDs adds the "parent_role" edge to the Role entity by IDs.
+func (rc *RoleCreate) AddParentRoleIDs(ids ...uuid.UUID) *RoleCreate {
+	rc.mutation.AddParentRoleIDs(ids...)
 	return rc
 }
 
-// AddTenant adds the "tenant" edges to the Tenant entity.
-func (rc *RoleCreate) AddTenant(t ...*Tenant) *RoleCreate {
-	ids := make([]uuid.UUID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+// AddParentRole adds the "parent_role" edges to the Role entity.
+func (rc *RoleCreate) AddParentRole(r ...*Role) *RoleCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return rc.AddTenantIDs(ids...)
+	return rc.AddParentRoleIDs(ids...)
+}
+
+// AddChildRoleIDs adds the "child_roles" edge to the Role entity by IDs.
+func (rc *RoleCreate) AddChildRoleIDs(ids ...uuid.UUID) *RoleCreate {
+	rc.mutation.AddChildRoleIDs(ids...)
+	return rc
+}
+
+// AddChildRoles adds the "child_roles" edges to the Role entity.
+func (rc *RoleCreate) AddChildRoles(r ...*Role) *RoleCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return rc.AddChildRoleIDs(ids...)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -166,9 +192,7 @@ func (rc *RoleCreate) Mutation() *RoleMutation {
 
 // Save creates the Role in the database.
 func (rc *RoleCreate) Save(ctx context.Context) (*Role, error) {
-	if err := rc.defaults(); err != nil {
-		return nil, err
-	}
+	rc.defaults()
 	return withHooks(ctx, rc.sqlSave, rc.mutation, rc.hooks)
 }
 
@@ -195,18 +219,12 @@ func (rc *RoleCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (rc *RoleCreate) defaults() error {
+func (rc *RoleCreate) defaults() {
 	if _, ok := rc.mutation.CreatedAt(); !ok {
-		if role.DefaultCreatedAt == nil {
-			return fmt.Errorf("ent: uninitialized role.DefaultCreatedAt (forgotten import ent/runtime?)")
-		}
 		v := role.DefaultCreatedAt()
 		rc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := rc.mutation.UpdatedAt(); !ok {
-		if role.DefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized role.DefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := role.DefaultUpdatedAt()
 		rc.mutation.SetUpdatedAt(v)
 	}
@@ -219,13 +237,9 @@ func (rc *RoleCreate) defaults() error {
 		rc.mutation.SetIsDefault(v)
 	}
 	if _, ok := rc.mutation.ID(); !ok {
-		if role.DefaultID == nil {
-			return fmt.Errorf("ent: uninitialized role.DefaultID (forgotten import ent/runtime?)")
-		}
 		v := role.DefaultID()
 		rc.mutation.SetID(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -249,6 +263,9 @@ func (rc *RoleCreate) check() error {
 	}
 	if _, ok := rc.mutation.IsDefault(); !ok {
 		return &ValidationError{Name: "is_default", err: errors.New(`ent: missing required field "Role.is_default"`)}
+	}
+	if len(rc.mutation.AccountIDs()) == 0 {
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "Role.account"`)}
 	}
 	return nil
 }
@@ -309,6 +326,23 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
 		_node.IsDefault = value
 	}
+	if nodes := rc.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   role.AccountTable,
+			Columns: []string{role.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.account_roles = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := rc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -325,15 +359,15 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := rc.mutation.PermissionsIDs(); len(nodes) > 0 {
+	if nodes := rc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   role.PermissionsTable,
-			Columns: role.PermissionsPrimaryKey,
+			Table:   role.AccessPoliciesTable,
+			Columns: role.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -341,15 +375,31 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := rc.mutation.ParentRoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   role.TenantTable,
-			Columns: role.TenantPrimaryKey,
+			Table:   role.ParentRoleTable,
+			Columns: role.ParentRolePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.ChildRolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   role.ChildRolesTable,
+			Columns: role.ChildRolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

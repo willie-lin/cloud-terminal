@@ -11,8 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -111,16 +113,16 @@ func (uc *UserCreate) SetEmail(s string) *UserCreate {
 	return uc
 }
 
-// SetPhone sets the "phone" field.
-func (uc *UserCreate) SetPhone(s string) *UserCreate {
-	uc.mutation.SetPhone(s)
+// SetPhoneNumber sets the "phone_number" field.
+func (uc *UserCreate) SetPhoneNumber(s string) *UserCreate {
+	uc.mutation.SetPhoneNumber(s)
 	return uc
 }
 
-// SetNillablePhone sets the "phone" field if the given value is not nil.
-func (uc *UserCreate) SetNillablePhone(s *string) *UserCreate {
+// SetNillablePhoneNumber sets the "phone_number" field if the given value is not nil.
+func (uc *UserCreate) SetNillablePhoneNumber(s *string) *UserCreate {
 	if s != nil {
-		uc.SetPhone(*s)
+		uc.SetPhoneNumber(*s)
 	}
 	return uc
 }
@@ -153,16 +155,16 @@ func (uc *UserCreate) SetNillableOnline(b *bool) *UserCreate {
 	return uc
 }
 
-// SetEnableType sets the "enable_type" field.
-func (uc *UserCreate) SetEnableType(b bool) *UserCreate {
-	uc.mutation.SetEnableType(b)
+// SetStatus sets the "status" field.
+func (uc *UserCreate) SetStatus(u user.Status) *UserCreate {
+	uc.mutation.SetStatus(u)
 	return uc
 }
 
-// SetNillableEnableType sets the "enable_type" field if the given value is not nil.
-func (uc *UserCreate) SetNillableEnableType(b *bool) *UserCreate {
-	if b != nil {
-		uc.SetEnableType(*b)
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (uc *UserCreate) SetNillableStatus(u *user.Status) *UserCreate {
+	if u != nil {
+		uc.SetStatus(*u)
 	}
 	return uc
 }
@@ -195,6 +197,17 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 	return uc
 }
 
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (uc *UserCreate) SetAccountID(id uuid.UUID) *UserCreate {
+	uc.mutation.SetAccountID(id)
+	return uc
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (uc *UserCreate) SetAccount(a *Account) *UserCreate {
+	return uc.SetAccountID(a.ID)
+}
+
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (uc *UserCreate) AddRoleIDs(ids ...uuid.UUID) *UserCreate {
 	uc.mutation.AddRoleIDs(ids...)
@@ -210,23 +223,34 @@ func (uc *UserCreate) AddRoles(r ...*Role) *UserCreate {
 	return uc.AddRoleIDs(ids...)
 }
 
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (uc *UserCreate) SetTenantID(id uuid.UUID) *UserCreate {
-	uc.mutation.SetTenantID(id)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (uc *UserCreate) AddAuditLogIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddAuditLogIDs(ids...)
 	return uc
 }
 
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (uc *UserCreate) SetNillableTenantID(id *uuid.UUID) *UserCreate {
-	if id != nil {
-		uc = uc.SetTenantID(*id)
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (uc *UserCreate) AddAuditLogs(a ...*AuditLog) *UserCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
+	return uc.AddAuditLogIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (uc *UserCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddAccessPolicyIDs(ids...)
 	return uc
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (uc *UserCreate) SetTenant(t *Tenant) *UserCreate {
-	return uc.SetTenantID(t.ID)
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (uc *UserCreate) AddAccessPolicies(a ...*AccessPolicy) *UserCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uc.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -236,9 +260,7 @@ func (uc *UserCreate) Mutation() *UserMutation {
 
 // Save creates the User in the database.
 func (uc *UserCreate) Save(ctx context.Context) (*User, error) {
-	if err := uc.defaults(); err != nil {
-		return nil, err
-	}
+	uc.defaults()
 	return withHooks(ctx, uc.sqlSave, uc.mutation, uc.hooks)
 }
 
@@ -265,44 +287,35 @@ func (uc *UserCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (uc *UserCreate) defaults() error {
+func (uc *UserCreate) defaults() {
 	if _, ok := uc.mutation.CreatedAt(); !ok {
-		if user.DefaultCreatedAt == nil {
-			return fmt.Errorf("ent: uninitialized user.DefaultCreatedAt (forgotten import ent/runtime?)")
-		}
 		v := user.DefaultCreatedAt()
 		uc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := uc.mutation.UpdatedAt(); !ok {
-		if user.DefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized user.DefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := user.DefaultUpdatedAt()
 		uc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := uc.mutation.PhoneNumber(); !ok {
+		v := user.DefaultPhoneNumber
+		uc.mutation.SetPhoneNumber(v)
 	}
 	if _, ok := uc.mutation.Online(); !ok {
 		v := user.DefaultOnline
 		uc.mutation.SetOnline(v)
 	}
-	if _, ok := uc.mutation.EnableType(); !ok {
-		v := user.DefaultEnableType
-		uc.mutation.SetEnableType(v)
+	if _, ok := uc.mutation.Status(); !ok {
+		v := user.DefaultStatus
+		uc.mutation.SetStatus(v)
 	}
 	if _, ok := uc.mutation.LastLoginTime(); !ok {
-		if user.DefaultLastLoginTime == nil {
-			return fmt.Errorf("ent: uninitialized user.DefaultLastLoginTime (forgotten import ent/runtime?)")
-		}
 		v := user.DefaultLastLoginTime()
 		uc.mutation.SetLastLoginTime(v)
 	}
 	if _, ok := uc.mutation.ID(); !ok {
-		if user.DefaultID == nil {
-			return fmt.Errorf("ent: uninitialized user.DefaultID (forgotten import ent/runtime?)")
-		}
 		v := user.DefaultID()
 		uc.mutation.SetID(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -350,11 +363,19 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Online(); !ok {
 		return &ValidationError{Name: "online", err: errors.New(`ent: missing required field "User.online"`)}
 	}
-	if _, ok := uc.mutation.EnableType(); !ok {
-		return &ValidationError{Name: "enable_type", err: errors.New(`ent: missing required field "User.enable_type"`)}
+	if _, ok := uc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
+	}
+	if v, ok := uc.mutation.Status(); ok {
+		if err := user.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
+		}
 	}
 	if _, ok := uc.mutation.LastLoginTime(); !ok {
 		return &ValidationError{Name: "last_login_time", err: errors.New(`ent: missing required field "User.last_login_time"`)}
+	}
+	if len(uc.mutation.AccountIDs()) == 0 {
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "User.account"`)}
 	}
 	return nil
 }
@@ -423,9 +444,9 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
 	}
-	if value, ok := uc.mutation.Phone(); ok {
-		_spec.SetField(user.FieldPhone, field.TypeString, value)
-		_node.Phone = value
+	if value, ok := uc.mutation.PhoneNumber(); ok {
+		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
+		_node.PhoneNumber = value
 	}
 	if value, ok := uc.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
@@ -435,13 +456,30 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldOnline, field.TypeBool, value)
 		_node.Online = value
 	}
-	if value, ok := uc.mutation.EnableType(); ok {
-		_spec.SetField(user.FieldEnableType, field.TypeBool, value)
-		_node.EnableType = value
+	if value, ok := uc.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
 	}
 	if value, ok := uc.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
 		_node.LastLoginTime = value
+	}
+	if nodes := uc.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.AccountTable,
+			Columns: []string{user.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.account_users = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -459,21 +497,36 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := uc.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.AuditLogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: user.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.tenant_users = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

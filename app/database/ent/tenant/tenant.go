@@ -3,9 +3,9 @@
 package tenant
 
 import (
+	"fmt"
 	"time"
 
-	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
@@ -24,42 +24,32 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// EdgeUsers holds the string denoting the users edge name in mutations.
-	EdgeUsers = "users"
-	// EdgeRoles holds the string denoting the roles edge name in mutations.
-	EdgeRoles = "roles"
-	// EdgeResources holds the string denoting the resources edge name in mutations.
-	EdgeResources = "resources"
-	// EdgePermissions holds the string denoting the permissions edge name in mutations.
-	EdgePermissions = "permissions"
+	// FieldContactEmail holds the string denoting the contact_email field in the database.
+	FieldContactEmail = "contact_email"
+	// FieldContactPhone holds the string denoting the contact_phone field in the database.
+	FieldContactPhone = "contact_phone"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// EdgePlatform holds the string denoting the platform edge name in mutations.
+	EdgePlatform = "platform"
+	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
+	EdgeAccounts = "accounts"
 	// Table holds the table name of the tenant in the database.
 	Table = "tenants"
-	// UsersTable is the table that holds the users relation/edge.
-	UsersTable = "users"
-	// UsersInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	UsersInverseTable = "users"
-	// UsersColumn is the table column denoting the users relation/edge.
-	UsersColumn = "tenant_users"
-	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
-	RolesTable = "tenant_roles"
-	// RolesInverseTable is the table name for the Role entity.
-	// It exists in this package in order to avoid circular dependency with the "role" package.
-	RolesInverseTable = "roles"
-	// ResourcesTable is the table that holds the resources relation/edge.
-	ResourcesTable = "resources"
-	// ResourcesInverseTable is the table name for the Resource entity.
-	// It exists in this package in order to avoid circular dependency with the "resource" package.
-	ResourcesInverseTable = "resources"
-	// ResourcesColumn is the table column denoting the resources relation/edge.
-	ResourcesColumn = "tenant_resources"
-	// PermissionsTable is the table that holds the permissions relation/edge.
-	PermissionsTable = "permissions"
-	// PermissionsInverseTable is the table name for the Permission entity.
-	// It exists in this package in order to avoid circular dependency with the "permission" package.
-	PermissionsInverseTable = "permissions"
-	// PermissionsColumn is the table column denoting the permissions relation/edge.
-	PermissionsColumn = "tenant_permissions"
+	// PlatformTable is the table that holds the platform relation/edge.
+	PlatformTable = "tenants"
+	// PlatformInverseTable is the table name for the Platform entity.
+	// It exists in this package in order to avoid circular dependency with the "platform" package.
+	PlatformInverseTable = "platforms"
+	// PlatformColumn is the table column denoting the platform relation/edge.
+	PlatformColumn = "platform_tenants"
+	// AccountsTable is the table that holds the accounts relation/edge.
+	AccountsTable = "accounts"
+	// AccountsInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountsInverseTable = "accounts"
+	// AccountsColumn is the table column denoting the accounts relation/edge.
+	AccountsColumn = "tenant_accounts"
 )
 
 // Columns holds all SQL columns for tenant fields.
@@ -69,13 +59,16 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldName,
 	FieldDescription,
+	FieldContactEmail,
+	FieldContactPhone,
+	FieldStatus,
 }
 
-var (
-	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
-	// primary key for the roles relation (M2M).
-	RolesPrimaryKey = []string{"tenant_id", "role_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "tenants"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"platform_tenants",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -84,17 +77,15 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
 
-// Note that the variables below are initialized by the runtime
-// package on the initialization of the application. Therefore,
-// it should be imported in the main as follows:
-//
-//	import _ "github.com/willie-lin/cloud-terminal/app/database/ent/runtime"
 var (
-	Hooks  [1]ent.Hook
-	Policy ent.Policy
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -106,6 +97,33 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// Status defines the type for the "status" enum field.
+type Status string
+
+// StatusActive is the default value of the Status enum.
+const DefaultStatus = StatusActive
+
+// Status values.
+const (
+	StatusActive    Status = "active"
+	StatusInactive  Status = "inactive"
+	StatusSuspended Status = "suspended"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusActive, StatusInactive, StatusSuspended:
+		return nil
+	default:
+		return fmt.Errorf("tenant: invalid enum value for status field: %q", s)
+	}
+}
 
 // OrderOption defines the ordering options for the Tenant queries.
 type OrderOption func(*sql.Selector)
@@ -135,86 +153,52 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByUsersCount orders the results by users count.
-func ByUsersCount(opts ...sql.OrderTermOption) OrderOption {
+// ByContactEmail orders the results by the contact_email field.
+func ByContactEmail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldContactEmail, opts...).ToFunc()
+}
+
+// ByContactPhone orders the results by the contact_phone field.
+func ByContactPhone(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldContactPhone, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByPlatformField orders the results by platform field.
+func ByPlatformField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newUsersStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newPlatformStep(), sql.OrderByField(field, opts...))
 	}
 }
 
-// ByUsers orders the results by users terms.
-func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByAccountsCount orders the results by accounts count.
+func ByAccountsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborsCount(s, newAccountsStep(), opts...)
 	}
 }
 
-// ByRolesCount orders the results by roles count.
-func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByAccounts orders the results by accounts terms.
+func ByAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRolesStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByRoles orders the results by roles terms.
-func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByResourcesCount orders the results by resources count.
-func ByResourcesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newResourcesStep(), opts...)
-	}
-}
-
-// ByResources orders the results by resources terms.
-func ByResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByPermissionsCount orders the results by permissions count.
-func ByPermissionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPermissionsStep(), opts...)
-	}
-}
-
-// ByPermissions orders the results by permissions terms.
-func ByPermissions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPermissionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newUsersStep() *sqlgraph.Step {
+func newPlatformStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(UsersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
+		sqlgraph.To(PlatformInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, PlatformTable, PlatformColumn),
 	)
 }
-func newRolesStep() *sqlgraph.Step {
+func newAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RolesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
-	)
-}
-func newResourcesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ResourcesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ResourcesTable, ResourcesColumn),
-	)
-}
-func newPermissionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PermissionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, PermissionsTable, PermissionsColumn),
+		sqlgraph.To(AccountsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AccountsTable, AccountsColumn),
 	)
 }

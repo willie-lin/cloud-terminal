@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -52,18 +51,18 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		// 查询指定租户下的角色是否存在
-		r, err := client.Role.Query().
-			Where(role.IDEQ(dto.RoleID)).
-			Where(role.HasTenantWith(tenant.IDEQ(v.TenantID))).
-			Only(c.Request().Context())
-		if ent.IsNotFound(err) {
-			log.Printf("Role not found in tenant: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Specified role does not exist in the tenant"})
-		} else if err != nil {
-			log.Printf("Error querying role: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role"})
-		}
+		//// 查询指定租户下的角色是否存在
+		//r, err := client.Role.Query().
+		//	Where(role.IDEQ(dto.RoleID)).
+		//	//Where(role.HasTenantWith(tenant.IDEQ(v.TenantID))).
+		//	Only(c.Request().Context())
+		//if ent.IsNotFound(err) {
+		//	log.Printf("Role not found in tenant: %v", err)
+		//	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Specified role does not exist in the tenant"})
+		//} else if err != nil {
+		//	log.Printf("Error querying role: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role"})
+		//}
 
 		// 创建用户并分配默认角色
 		us, err := client.User.Create().
@@ -71,9 +70,9 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetUsername(utils.GenerateUsername()).
 			SetPassword(string(hashedPassword)).
 			SetOnline(dto.Online).
-			SetEnableType(dto.EnableType).
-			SetTenantID(v.TenantID). // 关联到租户
-			AddRoles(r).
+			//SetEnableType(dto.EnableType).
+			//SetTenantID(v.TenantID). // 关联到租户
+			//AddRoles(r).
 			//SetRolesID(dto.RoleID).
 			Save(c.Request().Context())
 		if err != nil {
@@ -166,12 +165,12 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 		}
 		// user response
 		type UserResponse struct {
-			Avatar   string `json:"avatar"`
-			Nickname string `json:"nickname"`
-			Username string `json:"username"`
-			Email    string `json:"email"`
-			Phone    string `json:"phone"`
-			Bio      string `json:"bio"`
+			Avatar      string `json:"avatar"`
+			Nickname    string `json:"nickname"`
+			Username    string `json:"username"`
+			Email       string `json:"email"`
+			PhoneNumber string `json:"phone_number"`
+			Bio         string `json:"bio"`
 		}
 
 		dto := new(EmailDTO)
@@ -191,12 +190,12 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 		}
 		// Map the user entity to the response struct
 		response := &UserResponse{
-			Avatar:   ue.Avatar,
-			Nickname: ue.Nickname,
-			Username: ue.Username,
-			Email:    ue.Email,
-			Phone:    ue.Phone,
-			Bio:      ue.Bio,
+			Avatar:      ue.Avatar,
+			Nickname:    ue.Nickname,
+			Username:    ue.Username,
+			Email:       ue.Email,
+			PhoneNumber: ue.PhoneNumber,
+			Bio:         ue.Bio,
 		}
 		return c.JSON(http.StatusOK, response)
 	}
@@ -234,10 +233,10 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 		// 更新数据库
 		_, err = client.User.UpdateOne(ua).
 			SetNickname(dto.Nickname).
-			SetPhone(dto.Phone).
+			SetPhoneNumber(dto.Phone).
 			SetBio(dto.Bio).
 			SetOnline(dto.Online).
-			SetEnableType(dto.EnableType).
+			//SetEnableType(dto.EnableType).
 			SetLastLoginTime(time.Now()).
 			Save(c.Request().Context())
 		if err != nil {
@@ -374,7 +373,7 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 			update.SetAvatar(dto.Avatar)
 		}
 		if dto.Phone != "" {
-			update.SetPhone(dto.Phone)
+			update.SetPhoneNumber(dto.Phone)
 		}
 		if dto.Bio != "" {
 			update.SetBio(dto.Bio)

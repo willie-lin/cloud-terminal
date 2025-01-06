@@ -11,10 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // PermissionCreate is the builder for creating a Permission entity.
@@ -112,53 +111,30 @@ func (pc *PermissionCreate) SetNillableID(u *uuid.UUID) *PermissionCreate {
 	return pc
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (pc *PermissionCreate) AddRoleIDs(ids ...uuid.UUID) *PermissionCreate {
-	pc.mutation.AddRoleIDs(ids...)
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (pc *PermissionCreate) SetAccountID(id uuid.UUID) *PermissionCreate {
+	pc.mutation.SetAccountID(id)
 	return pc
 }
 
-// AddRoles adds the "roles" edges to the Role entity.
-func (pc *PermissionCreate) AddRoles(r ...*Role) *PermissionCreate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// SetAccount sets the "account" edge to the Account entity.
+func (pc *PermissionCreate) SetAccount(a *Account) *PermissionCreate {
+	return pc.SetAccountID(a.ID)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (pc *PermissionCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *PermissionCreate {
+	pc.mutation.AddAccessPolicyIDs(ids...)
+	return pc
+}
+
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (pc *PermissionCreate) AddAccessPolicies(a ...*AccessPolicy) *PermissionCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return pc.AddRoleIDs(ids...)
-}
-
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (pc *PermissionCreate) SetTenantID(id uuid.UUID) *PermissionCreate {
-	pc.mutation.SetTenantID(id)
-	return pc
-}
-
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (pc *PermissionCreate) SetNillableTenantID(id *uuid.UUID) *PermissionCreate {
-	if id != nil {
-		pc = pc.SetTenantID(*id)
-	}
-	return pc
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (pc *PermissionCreate) SetTenant(t *Tenant) *PermissionCreate {
-	return pc.SetTenantID(t.ID)
-}
-
-// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
-func (pc *PermissionCreate) AddResourceIDs(ids ...uuid.UUID) *PermissionCreate {
-	pc.mutation.AddResourceIDs(ids...)
-	return pc
-}
-
-// AddResources adds the "resources" edges to the Resource entity.
-func (pc *PermissionCreate) AddResources(r ...*Resource) *PermissionCreate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return pc.AddResourceIDs(ids...)
+	return pc.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
@@ -168,9 +144,7 @@ func (pc *PermissionCreate) Mutation() *PermissionMutation {
 
 // Save creates the Permission in the database.
 func (pc *PermissionCreate) Save(ctx context.Context) (*Permission, error) {
-	if err := pc.defaults(); err != nil {
-		return nil, err
-	}
+	pc.defaults()
 	return withHooks(ctx, pc.sqlSave, pc.mutation, pc.hooks)
 }
 
@@ -197,18 +171,12 @@ func (pc *PermissionCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (pc *PermissionCreate) defaults() error {
+func (pc *PermissionCreate) defaults() {
 	if _, ok := pc.mutation.CreatedAt(); !ok {
-		if permission.DefaultCreatedAt == nil {
-			return fmt.Errorf("ent: uninitialized permission.DefaultCreatedAt (forgotten import ent/runtime?)")
-		}
 		v := permission.DefaultCreatedAt()
 		pc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := pc.mutation.UpdatedAt(); !ok {
-		if permission.DefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized permission.DefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := permission.DefaultUpdatedAt()
 		pc.mutation.SetUpdatedAt(v)
 	}
@@ -217,13 +185,9 @@ func (pc *PermissionCreate) defaults() error {
 		pc.mutation.SetIsDisabled(v)
 	}
 	if _, ok := pc.mutation.ID(); !ok {
-		if permission.DefaultID == nil {
-			return fmt.Errorf("ent: uninitialized permission.DefaultID (forgotten import ent/runtime?)")
-		}
 		v := permission.DefaultID()
 		pc.mutation.SetID(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -250,6 +214,9 @@ func (pc *PermissionCreate) check() error {
 	}
 	if _, ok := pc.mutation.IsDisabled(); !ok {
 		return &ValidationError{Name: "is_disabled", err: errors.New(`ent: missing required field "Permission.is_disabled"`)}
+	}
+	if len(pc.mutation.AccountIDs()) == 0 {
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "Permission.account"`)}
 	}
 	return nil
 }
@@ -314,48 +281,32 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 		_spec.SetField(permission.FieldIsDisabled, field.TypeBool, value)
 		_node.IsDisabled = value
 	}
-	if nodes := pc.mutation.RolesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   permission.RolesTable,
-			Columns: permission.RolesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := pc.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   permission.TenantTable,
-			Columns: []string{permission.TenantColumn},
+			Table:   permission.AccountTable,
+			Columns: []string{permission.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.tenant_permissions = &nodes[0]
+		_node.account_permissions = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pc.mutation.ResourcesIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   permission.ResourcesTable,
-			Columns: []string{permission.ResourcesColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   permission.AccessPoliciesTable,
+			Columns: permission.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

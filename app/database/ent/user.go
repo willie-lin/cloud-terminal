@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -35,52 +35,74 @@ type User struct {
 	Password string `json:"-"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
-	// Phone holds the value of the "phone" field.
-	Phone string `json:"phone,omitempty"`
+	// PhoneNumber holds the value of the "phone_number" field.
+	PhoneNumber string `json:"phone_number,omitempty"`
 	// TotpSecret holds the value of the "totp_secret" field.
 	TotpSecret string `json:"totp_secret,omitempty"`
 	// Online holds the value of the "online" field.
 	Online bool `json:"online,omitempty"`
-	// EnableType holds the value of the "enable_type" field.
-	EnableType bool `json:"enable_type,omitempty"`
+	// Status holds the value of the "status" field.
+	Status user.Status `json:"status,omitempty"`
 	// LastLoginTime holds the value of the "last_login_time" field.
 	LastLoginTime time.Time `json:"last_login_time,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges        UserEdges `json:"edges"`
-	tenant_users *uuid.UUID
-	selectValues sql.SelectValues
+	Edges         UserEdges `json:"edges"`
+	account_users *uuid.UUID
+	selectValues  sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
+	// Account holds the value of the account edge.
+	Account *Account `json:"account,omitempty"`
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
+	// AuditLogs holds the value of the audit_logs edge.
+	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
+	// AccessPolicies holds the value of the access_policies edge.
+	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
+}
+
+// AccountOrErr returns the Account value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) AccountOrErr() (*Account, error) {
+	if e.Account != nil {
+		return e.Account, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: account.Label}
+	}
+	return nil, &NotLoadedError{edge: "account"}
 }
 
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
 }
 
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e UserEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: tenant.Label}
+// AuditLogsOrErr returns the AuditLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AuditLogsOrErr() ([]*AuditLog, error) {
+	if e.loadedTypes[2] {
+		return e.AuditLogs, nil
 	}
-	return nil, &NotLoadedError{edge: "tenant"}
+	return nil, &NotLoadedError{edge: "audit_logs"}
+}
+
+// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
+	if e.loadedTypes[3] {
+		return e.AccessPolicies, nil
+	}
+	return nil, &NotLoadedError{edge: "access_policies"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -88,15 +110,15 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldOnline, user.FieldEnableType:
+		case user.FieldOnline:
 			values[i] = new(sql.NullBool)
-		case user.FieldAvatar, user.FieldNickname, user.FieldBio, user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldPhone, user.FieldTotpSecret:
+		case user.FieldAvatar, user.FieldNickname, user.FieldBio, user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldPhoneNumber, user.FieldTotpSecret, user.FieldStatus:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLastLoginTime:
 			values[i] = new(sql.NullTime)
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
-		case user.ForeignKeys[0]: // tenant_users
+		case user.ForeignKeys[0]: // account_users
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -167,11 +189,11 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Email = value.String
 			}
-		case user.FieldPhone:
+		case user.FieldPhoneNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field phone", values[i])
+				return fmt.Errorf("unexpected type %T for field phone_number", values[i])
 			} else if value.Valid {
-				u.Phone = value.String
+				u.PhoneNumber = value.String
 			}
 		case user.FieldTotpSecret:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -185,11 +207,11 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Online = value.Bool
 			}
-		case user.FieldEnableType:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field enable_type", values[i])
+		case user.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				u.EnableType = value.Bool
+				u.Status = user.Status(value.String)
 			}
 		case user.FieldLastLoginTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -199,10 +221,10 @@ func (u *User) assignValues(columns []string, values []any) error {
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field tenant_users", values[i])
+				return fmt.Errorf("unexpected type %T for field account_users", values[i])
 			} else if value.Valid {
-				u.tenant_users = new(uuid.UUID)
-				*u.tenant_users = *value.S.(*uuid.UUID)
+				u.account_users = new(uuid.UUID)
+				*u.account_users = *value.S.(*uuid.UUID)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -217,14 +239,24 @@ func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
+// QueryAccount queries the "account" edge of the User entity.
+func (u *User) QueryAccount() *AccountQuery {
+	return NewUserClient(u.config).QueryAccount(u)
+}
+
 // QueryRoles queries the "roles" edge of the User entity.
 func (u *User) QueryRoles() *RoleQuery {
 	return NewUserClient(u.config).QueryRoles(u)
 }
 
-// QueryTenant queries the "tenant" edge of the User entity.
-func (u *User) QueryTenant() *TenantQuery {
-	return NewUserClient(u.config).QueryTenant(u)
+// QueryAuditLogs queries the "audit_logs" edge of the User entity.
+func (u *User) QueryAuditLogs() *AuditLogQuery {
+	return NewUserClient(u.config).QueryAuditLogs(u)
+}
+
+// QueryAccessPolicies queries the "access_policies" edge of the User entity.
+func (u *User) QueryAccessPolicies() *AccessPolicyQuery {
+	return NewUserClient(u.config).QueryAccessPolicies(u)
 }
 
 // Update returns a builder for updating this User.
@@ -273,8 +305,8 @@ func (u *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
 	builder.WriteString(", ")
-	builder.WriteString("phone=")
-	builder.WriteString(u.Phone)
+	builder.WriteString("phone_number=")
+	builder.WriteString(u.PhoneNumber)
 	builder.WriteString(", ")
 	builder.WriteString("totp_secret=")
 	builder.WriteString(u.TotpSecret)
@@ -282,8 +314,8 @@ func (u *User) String() string {
 	builder.WriteString("online=")
 	builder.WriteString(fmt.Sprintf("%v", u.Online))
 	builder.WriteString(", ")
-	builder.WriteString("enable_type=")
-	builder.WriteString(fmt.Sprintf("%v", u.EnableType))
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", u.Status))
 	builder.WriteString(", ")
 	builder.WriteString("last_login_time=")
 	builder.WriteString(u.LastLoginTime.Format(time.ANSIC))

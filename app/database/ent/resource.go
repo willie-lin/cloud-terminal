@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // Resource is the model entity for the Resource schema.
@@ -35,41 +34,26 @@ type Resource struct {
 	IsDisabled bool `json:"is_disabled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ResourceQuery when eager-loading is set.
-	Edges                ResourceEdges `json:"edges"`
-	permission_resources *uuid.UUID
-	tenant_resources     *uuid.UUID
-	selectValues         sql.SelectValues
+	Edges        ResourceEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // ResourceEdges holds the relations/edges for other nodes in the graph.
 type ResourceEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// Permissions holds the value of the permissions edge.
-	Permissions []*Permission `json:"permissions,omitempty"`
+	// AccessPolicies holds the value of the access_policies edge.
+	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e ResourceEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// PermissionsOrErr returns the Permissions value or an error if the edge
+// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
 // was not loaded in eager-loading.
-func (e ResourceEdges) PermissionsOrErr() ([]*Permission, error) {
-	if e.loadedTypes[1] {
-		return e.Permissions, nil
+func (e ResourceEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
+	if e.loadedTypes[0] {
+		return e.AccessPolicies, nil
 	}
-	return nil, &NotLoadedError{edge: "permissions"}
+	return nil, &NotLoadedError{edge: "access_policies"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -85,10 +69,6 @@ func (*Resource) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case resource.FieldID:
 			values[i] = new(uuid.UUID)
-		case resource.ForeignKeys[0]: // permission_resources
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case resource.ForeignKeys[1]: // tenant_resources
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -152,20 +132,6 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.IsDisabled = value.Bool
 			}
-		case resource.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field permission_resources", values[i])
-			} else if value.Valid {
-				r.permission_resources = new(uuid.UUID)
-				*r.permission_resources = *value.S.(*uuid.UUID)
-			}
-		case resource.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field tenant_resources", values[i])
-			} else if value.Valid {
-				r.tenant_resources = new(uuid.UUID)
-				*r.tenant_resources = *value.S.(*uuid.UUID)
-			}
 		default:
 			r.selectValues.Set(columns[i], values[i])
 		}
@@ -179,14 +145,9 @@ func (r *Resource) GetValue(name string) (ent.Value, error) {
 	return r.selectValues.Get(name)
 }
 
-// QueryTenant queries the "tenant" edge of the Resource entity.
-func (r *Resource) QueryTenant() *TenantQuery {
-	return NewResourceClient(r.config).QueryTenant(r)
-}
-
-// QueryPermissions queries the "permissions" edge of the Resource entity.
-func (r *Resource) QueryPermissions() *PermissionQuery {
-	return NewResourceClient(r.config).QueryPermissions(r)
+// QueryAccessPolicies queries the "access_policies" edge of the Resource entity.
+func (r *Resource) QueryAccessPolicies() *AccessPolicyQuery {
+	return NewResourceClient(r.config).QueryAccessPolicies(r)
 }
 
 // Update returns a builder for updating this Resource.

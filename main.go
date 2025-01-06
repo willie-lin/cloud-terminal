@@ -191,14 +191,19 @@ func main() {
 	config.AutoMigration(client, ctx)
 	fmt.Println("config auto migration")
 	config.DebugMode(err, client, ctx)
-	// 初始化全局权限
-	if err := api.InitializeGlobalPermissions(client); err != nil {
-		log.Fatalf("failed to initialize global permissions: %v", err)
-	}
 
-	// 初始化默认角色
-	if err = api.InitializeTenantRolesAndPermissions(client); err != nil {
-		log.Fatalf("Error initializing tenant roles and permissions: %v", err)
+	//
+	//// 初始化全局权限
+	//if err := api.InitializeGlobalPermissions(client); err != nil {
+	//	log.Fatalf("failed to initialize global permissions: %v", err)
+	//}
+	//
+	//// 初始化默认角色
+	//if err = api.InitializeTenantRolesAndPermissions(client); err != nil {
+	//	log.Fatalf("Error initializing tenant roles and permissions: %v", err)
+	//}
+	if err := api.InitSuperAdminAndSuperRoles(client); err != nil {
+		log.Fatal("init superadmin and superadmin roles failed", zap.Error(err))
 	}
 
 	// 迁移租户

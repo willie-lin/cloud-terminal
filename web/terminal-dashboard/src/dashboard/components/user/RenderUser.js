@@ -53,7 +53,8 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.id}
                         </Typography>
                     </div>
@@ -64,20 +65,22 @@ function RenderUser({ user, isLast, isDarkMode }) {
                         <Avatar src={user.avatar} alt={user.nickname} size="sm"/>
                         <div className="flex flex-col">
                             {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                            <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                            <Typography variant="small"
+                                        className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                                 {user.nickname}
                             </Typography>
                             {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                            <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
-                                {user.email}
-                            </Typography>
+                            {/*<Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>*/}
+                            {/*    {user.email}*/}
+                            {/*</Typography>*/}
                         </div>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.username}
                         </Typography>
                     </div>
@@ -85,7 +88,8 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.email}
                         </Typography>
                     </div>
@@ -93,15 +97,17 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
-                            {user.phone}
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                            {user.phone_number}
                         </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.bio}
                         </Typography>
                     </div>
@@ -109,9 +115,49 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.totp_secret}
                         </Typography>
+                    </div>
+                </td>
+                {/*<td className={classes}>*/}
+                {/*    <div className="flex flex-col">*/}
+                {/*        /!*<Typography variant="small" color="blue-gray" className="font-normal">*!/*/}
+                {/*        <Typography variant="small"*/}
+                {/*                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>*/}
+                {/*            {(() => {*/}
+                {/*                switch (user.status) {*/}
+                {/*                    case 'active':*/}
+                {/*                        return '启用';*/}
+                {/*                    case 'inactive':*/}
+                {/*                        return '禁用';*/}
+                {/*                    case 'blocked':*/}
+                {/*                        return '已阻止';*/}
+                {/*                    default:*/}
+                {/*                        return '未知状态'; // 处理未知状态的情况*/}
+                {/*                }*/}
+                {/*            })()}*/}
+                {/*        </Typography>*/}
+                {/*    </div>*/}
+                {/*</td>*/}
+                <td className={classes}>
+                    <div className="w-max">
+                        <Chip variant="ghost" size="sm" value={
+                            (() => {
+                            switch (user.status) {
+                                case 'active':
+                                    return '启用';
+                                case 'inactive':
+                                    return '禁用';
+                                case 'blocked':
+                                    return '已阻止';
+                                default:
+                                    return '未知状态'; // 处理未知状态的情况
+                            }
+                        })()}
+                              color={user.status ? "green" : "blue-gray"}
+                        />
                     </div>
                 </td>
                 <td className={classes}>
@@ -124,15 +170,8 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
-                            {user.enable_type ? '启用' : '禁用'}
-                        </Typography>
-                    </div>
-                </td>
-                <td className={classes}>
-                    <div className="flex flex-col">
-                        {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.created_at}
                         </Typography>
                     </div>
@@ -140,7 +179,8 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.updated_at}
                         </Typography>
                     </div>
@@ -148,7 +188,8 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small"
+                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.last_login_time}
                         </Typography>
                     </div>
@@ -177,37 +218,10 @@ function RenderUser({ user, isLast, isDarkMode }) {
                                  }
                              }}
                         >
-                            <UpdateUser user={editingUser} onUpdateUser={handleUpdateUser}  onClose={closeUpdateUser}/>
+                            <UpdateUser user={editingUser} onUpdateUser={handleUpdateUser} onClose={closeUpdateUser}/>
                         </div>
                     )}
                 </td>
-                {/*<td className={classes}>*/}
-                {/*    <Tooltip content="Delete User" placement="top">*/}
-                {/*        <IconButton variant="text"*/}
-                {/*                    color="red"*/}
-                {/*                    buttonType="filled"*/}
-                {/*                    size="regular"*/}
-                {/*                    rounded={false}*/}
-                {/*                    block={false}*/}
-                {/*                    iconOnly={true}*/}
-                {/*                    ripple="light"*/}
-                {/*                    onClick={() => openDeleteUser(user)}*/}
-                {/*        >*/}
-                {/*            <TrashIcon className="h-4 w-4"/>*/}
-                {/*        </IconButton>*/}
-                {/*    </Tooltip>*/}
-                {/*    {isDeleteUserOpen && (*/}
-                {/*        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"*/}
-                {/*             onClick={(e) => {*/}
-                {/*                 // 如果事件的目标是这个容器本身，那么关闭模态窗口*/}
-                {/*                 if (e.target === e.currentTarget) {*/}
-                {/*                     closeDeleteUser();*/}
-                {/*                 }}}*/}
-                {/*        >*/}
-                {/*        <DeleteUserForm user={deleteUser} onDeleteUser={handleDeleteUser} onClose={closeDeleteUser}/>*/}
-                {/*        </div>*/}
-                {/*    )}*/}
-                {/*</td>*/}
                 {canDelete && (
                     <td className={classes}>
                         <Tooltip content="Delete User" placement="top">
@@ -222,7 +236,7 @@ function RenderUser({ user, isLast, isDarkMode }) {
                                 ripple="light"
                                 onClick={() => openDeleteUser(user)}
                             >
-                                <TrashIcon className="h-4 w-4" />
+                                <TrashIcon className="h-4 w-4"/>
                             </IconButton>
                         </Tooltip>
                         {isDeleteUserOpen && (
@@ -234,15 +248,17 @@ function RenderUser({ user, isLast, isDarkMode }) {
                                     }
                                 }}
                             >
-                                <DeleteUserForm user={deleteUser} onDeleteUser={handleDeleteUser} onClose={closeDeleteUser} />
+                                <DeleteUserForm user={deleteUser} onDeleteUser={handleDeleteUser}
+                                                onClose={closeDeleteUser}/>
                             </div>
                         )}
                     </td>
                 )}
             </tr>
-    </>
+        </>
     );
 }
+
 export default RenderUser;
 
 // 然后在你的代码中使用这个组件：

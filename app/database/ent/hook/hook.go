@@ -9,6 +9,42 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 )
 
+// The AccessPolicyFunc type is an adapter to allow the use of ordinary
+// function as AccessPolicy mutator.
+type AccessPolicyFunc func(context.Context, *ent.AccessPolicyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AccessPolicyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AccessPolicyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccessPolicyMutation", m)
+}
+
+// The AccountFunc type is an adapter to allow the use of ordinary
+// function as Account mutator.
+type AccountFunc func(context.Context, *ent.AccountMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AccountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AccountMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccountMutation", m)
+}
+
+// The AuditLogFunc type is an adapter to allow the use of ordinary
+// function as AuditLog mutator.
+type AuditLogFunc func(context.Context, *ent.AuditLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AuditLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AuditLogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuditLogMutation", m)
+}
+
 // The PermissionFunc type is an adapter to allow the use of ordinary
 // function as Permission mutator.
 type PermissionFunc func(context.Context, *ent.PermissionMutation) (ent.Value, error)
@@ -19,6 +55,18 @@ func (f PermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PermissionMutation", m)
+}
+
+// The PlatformFunc type is an adapter to allow the use of ordinary
+// function as Platform mutator.
+type PlatformFunc func(context.Context, *ent.PlatformMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PlatformFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PlatformMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlatformMutation", m)
 }
 
 // The ResourceFunc type is an adapter to allow the use of ordinary

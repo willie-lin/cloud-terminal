@@ -96,9 +96,9 @@ func Email(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldEmail, v))
 }
 
-// Phone applies equality check predicate on the "phone" field. It's identical to PhoneEQ.
-func Phone(v string) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldPhone, v))
+// PhoneNumber applies equality check predicate on the "phone_number" field. It's identical to PhoneNumberEQ.
+func PhoneNumber(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPhoneNumber, v))
 }
 
 // TotpSecret applies equality check predicate on the "totp_secret" field. It's identical to TotpSecretEQ.
@@ -109,11 +109,6 @@ func TotpSecret(v string) predicate.User {
 // Online applies equality check predicate on the "online" field. It's identical to OnlineEQ.
 func Online(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldOnline, v))
-}
-
-// EnableType applies equality check predicate on the "enable_type" field. It's identical to EnableTypeEQ.
-func EnableType(v bool) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldEnableType, v))
 }
 
 // LastLoginTime applies equality check predicate on the "last_login_time" field. It's identical to LastLoginTimeEQ.
@@ -621,79 +616,79 @@ func EmailContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldEmail, v))
 }
 
-// PhoneEQ applies the EQ predicate on the "phone" field.
-func PhoneEQ(v string) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldPhone, v))
+// PhoneNumberEQ applies the EQ predicate on the "phone_number" field.
+func PhoneNumberEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPhoneNumber, v))
 }
 
-// PhoneNEQ applies the NEQ predicate on the "phone" field.
-func PhoneNEQ(v string) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldPhone, v))
+// PhoneNumberNEQ applies the NEQ predicate on the "phone_number" field.
+func PhoneNumberNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldPhoneNumber, v))
 }
 
-// PhoneIn applies the In predicate on the "phone" field.
-func PhoneIn(vs ...string) predicate.User {
-	return predicate.User(sql.FieldIn(FieldPhone, vs...))
+// PhoneNumberIn applies the In predicate on the "phone_number" field.
+func PhoneNumberIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldPhoneNumber, vs...))
 }
 
-// PhoneNotIn applies the NotIn predicate on the "phone" field.
-func PhoneNotIn(vs ...string) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldPhone, vs...))
+// PhoneNumberNotIn applies the NotIn predicate on the "phone_number" field.
+func PhoneNumberNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldPhoneNumber, vs...))
 }
 
-// PhoneGT applies the GT predicate on the "phone" field.
-func PhoneGT(v string) predicate.User {
-	return predicate.User(sql.FieldGT(FieldPhone, v))
+// PhoneNumberGT applies the GT predicate on the "phone_number" field.
+func PhoneNumberGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldPhoneNumber, v))
 }
 
-// PhoneGTE applies the GTE predicate on the "phone" field.
-func PhoneGTE(v string) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldPhone, v))
+// PhoneNumberGTE applies the GTE predicate on the "phone_number" field.
+func PhoneNumberGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldPhoneNumber, v))
 }
 
-// PhoneLT applies the LT predicate on the "phone" field.
-func PhoneLT(v string) predicate.User {
-	return predicate.User(sql.FieldLT(FieldPhone, v))
+// PhoneNumberLT applies the LT predicate on the "phone_number" field.
+func PhoneNumberLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldPhoneNumber, v))
 }
 
-// PhoneLTE applies the LTE predicate on the "phone" field.
-func PhoneLTE(v string) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldPhone, v))
+// PhoneNumberLTE applies the LTE predicate on the "phone_number" field.
+func PhoneNumberLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldPhoneNumber, v))
 }
 
-// PhoneContains applies the Contains predicate on the "phone" field.
-func PhoneContains(v string) predicate.User {
-	return predicate.User(sql.FieldContains(FieldPhone, v))
+// PhoneNumberContains applies the Contains predicate on the "phone_number" field.
+func PhoneNumberContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldPhoneNumber, v))
 }
 
-// PhoneHasPrefix applies the HasPrefix predicate on the "phone" field.
-func PhoneHasPrefix(v string) predicate.User {
-	return predicate.User(sql.FieldHasPrefix(FieldPhone, v))
+// PhoneNumberHasPrefix applies the HasPrefix predicate on the "phone_number" field.
+func PhoneNumberHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldPhoneNumber, v))
 }
 
-// PhoneHasSuffix applies the HasSuffix predicate on the "phone" field.
-func PhoneHasSuffix(v string) predicate.User {
-	return predicate.User(sql.FieldHasSuffix(FieldPhone, v))
+// PhoneNumberHasSuffix applies the HasSuffix predicate on the "phone_number" field.
+func PhoneNumberHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldPhoneNumber, v))
 }
 
-// PhoneIsNil applies the IsNil predicate on the "phone" field.
-func PhoneIsNil() predicate.User {
-	return predicate.User(sql.FieldIsNull(FieldPhone))
+// PhoneNumberIsNil applies the IsNil predicate on the "phone_number" field.
+func PhoneNumberIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldPhoneNumber))
 }
 
-// PhoneNotNil applies the NotNil predicate on the "phone" field.
-func PhoneNotNil() predicate.User {
-	return predicate.User(sql.FieldNotNull(FieldPhone))
+// PhoneNumberNotNil applies the NotNil predicate on the "phone_number" field.
+func PhoneNumberNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldPhoneNumber))
 }
 
-// PhoneEqualFold applies the EqualFold predicate on the "phone" field.
-func PhoneEqualFold(v string) predicate.User {
-	return predicate.User(sql.FieldEqualFold(FieldPhone, v))
+// PhoneNumberEqualFold applies the EqualFold predicate on the "phone_number" field.
+func PhoneNumberEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldPhoneNumber, v))
 }
 
-// PhoneContainsFold applies the ContainsFold predicate on the "phone" field.
-func PhoneContainsFold(v string) predicate.User {
-	return predicate.User(sql.FieldContainsFold(FieldPhone, v))
+// PhoneNumberContainsFold applies the ContainsFold predicate on the "phone_number" field.
+func PhoneNumberContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldPhoneNumber, v))
 }
 
 // TotpSecretEQ applies the EQ predicate on the "totp_secret" field.
@@ -781,14 +776,24 @@ func OnlineNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldOnline, v))
 }
 
-// EnableTypeEQ applies the EQ predicate on the "enable_type" field.
-func EnableTypeEQ(v bool) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldEnableType, v))
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v Status) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldStatus, v))
 }
 
-// EnableTypeNEQ applies the NEQ predicate on the "enable_type" field.
-func EnableTypeNEQ(v bool) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldEnableType, v))
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v Status) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...Status) predicate.User {
+	return predicate.User(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...Status) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldStatus, vs...))
 }
 
 // LastLoginTimeEQ applies the EQ predicate on the "last_login_time" field.
@@ -831,6 +836,29 @@ func LastLoginTimeLTE(v time.Time) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldLastLoginTime, v))
 }
 
+// HasAccount applies the HasEdge predicate on the "account" edge.
+func HasAccount() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
+func HasAccountWith(preds ...predicate.Account) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAccountStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasRoles applies the HasEdge predicate on the "roles" edge.
 func HasRoles() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -854,21 +882,44 @@ func HasRolesWith(preds ...predicate.Role) predicate.User {
 	})
 }
 
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.User {
+// HasAuditLogs applies the HasEdge predicate on the "audit_logs" edge.
+func HasAuditLogs() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, AuditLogsTable, AuditLogsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.User {
+// HasAuditLogsWith applies the HasEdge predicate on the "audit_logs" edge with a given conditions (other predicates).
+func HasAuditLogsWith(preds ...predicate.AuditLog) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newTenantStep()
+		step := newAuditLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAccessPolicies applies the HasEdge predicate on the "access_policies" edge.
+func HasAccessPolicies() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccessPoliciesWith applies the HasEdge predicate on the "access_policies" edge with a given conditions (other predicates).
+func HasAccessPoliciesWith(preds ...predicate.AccessPolicy) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAccessPoliciesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

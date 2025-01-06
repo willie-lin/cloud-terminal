@@ -12,10 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // ResourceUpdate is the builder for updating Resource entities.
@@ -113,38 +112,19 @@ func (ru *ResourceUpdate) SetNillableIsDisabled(b *bool) *ResourceUpdate {
 	return ru
 }
 
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (ru *ResourceUpdate) SetTenantID(id uuid.UUID) *ResourceUpdate {
-	ru.mutation.SetTenantID(id)
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (ru *ResourceUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *ResourceUpdate {
+	ru.mutation.AddAccessPolicyIDs(ids...)
 	return ru
 }
 
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (ru *ResourceUpdate) SetNillableTenantID(id *uuid.UUID) *ResourceUpdate {
-	if id != nil {
-		ru = ru.SetTenantID(*id)
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (ru *ResourceUpdate) AddAccessPolicies(a ...*AccessPolicy) *ResourceUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return ru
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (ru *ResourceUpdate) SetTenant(t *Tenant) *ResourceUpdate {
-	return ru.SetTenantID(t.ID)
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (ru *ResourceUpdate) AddPermissionIDs(ids ...uuid.UUID) *ResourceUpdate {
-	ru.mutation.AddPermissionIDs(ids...)
-	return ru
-}
-
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (ru *ResourceUpdate) AddPermissions(p ...*Permission) *ResourceUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return ru.AddPermissionIDs(ids...)
+	return ru.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -152,38 +132,30 @@ func (ru *ResourceUpdate) Mutation() *ResourceMutation {
 	return ru.mutation
 }
 
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (ru *ResourceUpdate) ClearTenant() *ResourceUpdate {
-	ru.mutation.ClearTenant()
+// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
+func (ru *ResourceUpdate) ClearAccessPolicies() *ResourceUpdate {
+	ru.mutation.ClearAccessPolicies()
 	return ru
 }
 
-// ClearPermissions clears all "permissions" edges to the Permission entity.
-func (ru *ResourceUpdate) ClearPermissions() *ResourceUpdate {
-	ru.mutation.ClearPermissions()
+// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
+func (ru *ResourceUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *ResourceUpdate {
+	ru.mutation.RemoveAccessPolicyIDs(ids...)
 	return ru
 }
 
-// RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
-func (ru *ResourceUpdate) RemovePermissionIDs(ids ...uuid.UUID) *ResourceUpdate {
-	ru.mutation.RemovePermissionIDs(ids...)
-	return ru
-}
-
-// RemovePermissions removes "permissions" edges to Permission entities.
-func (ru *ResourceUpdate) RemovePermissions(p ...*Permission) *ResourceUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
+func (ru *ResourceUpdate) RemoveAccessPolicies(a ...*AccessPolicy) *ResourceUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return ru.RemovePermissionIDs(ids...)
+	return ru.RemoveAccessPolicyIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (ru *ResourceUpdate) Save(ctx context.Context) (int, error) {
-	if err := ru.defaults(); err != nil {
-		return 0, err
-	}
+	ru.defaults()
 	return withHooks(ctx, ru.sqlSave, ru.mutation, ru.hooks)
 }
 
@@ -210,15 +182,11 @@ func (ru *ResourceUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (ru *ResourceUpdate) defaults() error {
+func (ru *ResourceUpdate) defaults() {
 	if _, ok := ru.mutation.UpdatedAt(); !ok {
-		if resource.UpdateDefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized resource.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := resource.UpdateDefaultUpdatedAt()
 		ru.mutation.SetUpdatedAt(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -274,57 +242,28 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.IsDisabled(); ok {
 		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
 	}
-	if ru.mutation.TenantCleared() {
+	if ru.mutation.AccessPoliciesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.TenantTable,
-			Columns: []string{resource.TenantColumn},
+			Table:   resource.AccessPoliciesTable,
+			Columns: resource.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ru.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := ru.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !ru.mutation.AccessPoliciesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.TenantTable,
-			Columns: []string{resource.TenantColumn},
+			Table:   resource.AccessPoliciesTable,
+			Columns: resource.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ru.mutation.PermissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   resource.PermissionsTable,
-			Columns: []string{resource.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.RemovedPermissionsIDs(); len(nodes) > 0 && !ru.mutation.PermissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   resource.PermissionsTable,
-			Columns: []string{resource.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -332,15 +271,15 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ru.mutation.PermissionsIDs(); len(nodes) > 0 {
+	if nodes := ru.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   resource.PermissionsTable,
-			Columns: []string{resource.PermissionsColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.AccessPoliciesTable,
+			Columns: resource.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -450,38 +389,19 @@ func (ruo *ResourceUpdateOne) SetNillableIsDisabled(b *bool) *ResourceUpdateOne 
 	return ruo
 }
 
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (ruo *ResourceUpdateOne) SetTenantID(id uuid.UUID) *ResourceUpdateOne {
-	ruo.mutation.SetTenantID(id)
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (ruo *ResourceUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.AddAccessPolicyIDs(ids...)
 	return ruo
 }
 
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (ruo *ResourceUpdateOne) SetNillableTenantID(id *uuid.UUID) *ResourceUpdateOne {
-	if id != nil {
-		ruo = ruo.SetTenantID(*id)
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (ruo *ResourceUpdateOne) AddAccessPolicies(a ...*AccessPolicy) *ResourceUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return ruo
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (ruo *ResourceUpdateOne) SetTenant(t *Tenant) *ResourceUpdateOne {
-	return ruo.SetTenantID(t.ID)
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (ruo *ResourceUpdateOne) AddPermissionIDs(ids ...uuid.UUID) *ResourceUpdateOne {
-	ruo.mutation.AddPermissionIDs(ids...)
-	return ruo
-}
-
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (ruo *ResourceUpdateOne) AddPermissions(p ...*Permission) *ResourceUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return ruo.AddPermissionIDs(ids...)
+	return ruo.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -489,31 +409,25 @@ func (ruo *ResourceUpdateOne) Mutation() *ResourceMutation {
 	return ruo.mutation
 }
 
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (ruo *ResourceUpdateOne) ClearTenant() *ResourceUpdateOne {
-	ruo.mutation.ClearTenant()
+// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
+func (ruo *ResourceUpdateOne) ClearAccessPolicies() *ResourceUpdateOne {
+	ruo.mutation.ClearAccessPolicies()
 	return ruo
 }
 
-// ClearPermissions clears all "permissions" edges to the Permission entity.
-func (ruo *ResourceUpdateOne) ClearPermissions() *ResourceUpdateOne {
-	ruo.mutation.ClearPermissions()
+// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
+func (ruo *ResourceUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.RemoveAccessPolicyIDs(ids...)
 	return ruo
 }
 
-// RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
-func (ruo *ResourceUpdateOne) RemovePermissionIDs(ids ...uuid.UUID) *ResourceUpdateOne {
-	ruo.mutation.RemovePermissionIDs(ids...)
-	return ruo
-}
-
-// RemovePermissions removes "permissions" edges to Permission entities.
-func (ruo *ResourceUpdateOne) RemovePermissions(p ...*Permission) *ResourceUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
+func (ruo *ResourceUpdateOne) RemoveAccessPolicies(a ...*AccessPolicy) *ResourceUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return ruo.RemovePermissionIDs(ids...)
+	return ruo.RemoveAccessPolicyIDs(ids...)
 }
 
 // Where appends a list predicates to the ResourceUpdate builder.
@@ -531,9 +445,7 @@ func (ruo *ResourceUpdateOne) Select(field string, fields ...string) *ResourceUp
 
 // Save executes the query and returns the updated Resource entity.
 func (ruo *ResourceUpdateOne) Save(ctx context.Context) (*Resource, error) {
-	if err := ruo.defaults(); err != nil {
-		return nil, err
-	}
+	ruo.defaults()
 	return withHooks(ctx, ruo.sqlSave, ruo.mutation, ruo.hooks)
 }
 
@@ -560,15 +472,11 @@ func (ruo *ResourceUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (ruo *ResourceUpdateOne) defaults() error {
+func (ruo *ResourceUpdateOne) defaults() {
 	if _, ok := ruo.mutation.UpdatedAt(); !ok {
-		if resource.UpdateDefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized resource.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
 		v := resource.UpdateDefaultUpdatedAt()
 		ruo.mutation.SetUpdatedAt(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -641,57 +549,28 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 	if value, ok := ruo.mutation.IsDisabled(); ok {
 		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
 	}
-	if ruo.mutation.TenantCleared() {
+	if ruo.mutation.AccessPoliciesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.TenantTable,
-			Columns: []string{resource.TenantColumn},
+			Table:   resource.AccessPoliciesTable,
+			Columns: resource.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ruo.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := ruo.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !ruo.mutation.AccessPoliciesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.TenantTable,
-			Columns: []string{resource.TenantColumn},
+			Table:   resource.AccessPoliciesTable,
+			Columns: resource.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ruo.mutation.PermissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   resource.PermissionsTable,
-			Columns: []string{resource.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.RemovedPermissionsIDs(); len(nodes) > 0 && !ruo.mutation.PermissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   resource.PermissionsTable,
-			Columns: []string{resource.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -699,15 +578,15 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ruo.mutation.PermissionsIDs(); len(nodes) > 0 {
+	if nodes := ruo.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   resource.PermissionsTable,
-			Columns: []string{resource.PermissionsColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.AccessPoliciesTable,
+			Columns: resource.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
