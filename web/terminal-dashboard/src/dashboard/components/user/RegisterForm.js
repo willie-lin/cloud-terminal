@@ -4,7 +4,7 @@ import {checkEmail, checkOrganizationName, register} from "../../../api/api";
 import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
 import {Link} from "react-router-dom";
 import {EnvelopeIcon, LockClosedIcon} from "@heroicons/react/24/solid";
-import {BuildingOfficeIcon} from "@heroicons/react/16/solid";
+import {BuildingOfficeIcon, HomeIcon} from "@heroicons/react/16/solid";
 
 function RegisterForm({ onRegister }) {
     const [email, setEmail] = useState('');
@@ -97,7 +97,8 @@ function RegisterForm({ onRegister }) {
                             color="lightBlue"
                             outline={true}
                             value={organization}
-                            icon={<BuildingOfficeIcon className="h-5 w-5" />}
+                            // icon={<BuildingOfficeIcon className="h-5 w-5" />}
+                            icon={<HomeIcon className="h-5 w-5" />}
                             onChange={ handleOrganizationNameChange }
                             error={!!organizationError}
                         />
