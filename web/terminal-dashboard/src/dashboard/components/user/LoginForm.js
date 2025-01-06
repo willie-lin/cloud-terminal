@@ -4,6 +4,7 @@ import {check2FA, checkEmail, login} from "../../../api/api";
 import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
 import {Link, useNavigate} from "react-router-dom";
 import CryptoJS from 'crypto-js';
+import {EnvelopeIcon, LockClosedIcon} from "@heroicons/react/24/solid";
 
 function LoginForm({ onLogin }) {
     const [email, setEmail] = React.useState('');
@@ -100,6 +101,7 @@ function LoginForm({ onLogin }) {
                             value={email}
                             onChange={handleEmailChange}
                             error={!!emailError}
+                            icon={<EnvelopeIcon className="h-5 w-5" />}
                         />
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                             Password
@@ -113,6 +115,7 @@ function LoginForm({ onLogin }) {
                             outline={true}
                             // placeholder="Password"
                             value={password}
+                            icon={<LockClosedIcon className="h-5 w-5" />}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                         {isConfirmed && (

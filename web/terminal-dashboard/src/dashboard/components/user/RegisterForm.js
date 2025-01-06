@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import {checkEmail, checkOrganizationName, register} from "../../../api/api";
 import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
 import {Link} from "react-router-dom";
+import {EnvelopeIcon, LockClosedIcon} from "@heroicons/react/24/solid";
+import {BuildingOfficeIcon} from "@heroicons/react/16/solid";
 
 function RegisterForm({ onRegister }) {
     const [email, setEmail] = useState('');
@@ -106,8 +108,8 @@ function RegisterForm({ onRegister }) {
                             type="text"
                             color="lightBlue"
                             outline={true}
-                            // placeholder="Email"
                             value={organization}
+                            icon={<BuildingOfficeIcon className="h-5 w-5" />}
                             onChange={ handleOrganizationNameChange }
                             error={!!organizationError}
                         />
@@ -121,7 +123,7 @@ function RegisterForm({ onRegister }) {
                             type="email"
                             color="lightBlue"
                             outline={true}
-                            // placeholder="Email"
+                            icon={<EnvelopeIcon className="h-5 w-5" />}
                             value={email}
                             onChange={ handleEmailChange }
                             error={!!emailError}
@@ -146,8 +148,8 @@ function RegisterForm({ onRegister }) {
                             color="lightBlue"
                             size="regular"
                             outline={true}
-                            // placeholder="Password"
                             value={password}
+                            icon={<LockClosedIcon className="h-5 w-5" />}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                         {registerError && (
@@ -171,8 +173,8 @@ function RegisterForm({ onRegister }) {
                             color="lightBlue"
                             size="regular"
                             outline={true}
-                            // placeholder="ConfirmPassword"
                             value={confirmPassword}
+                            icon={<LockClosedIcon className="h-5 w-5" />}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
                     </div>
