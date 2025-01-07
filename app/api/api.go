@@ -256,9 +256,9 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})
 		}
-		fmt.Println(r.ID)
-		fmt.Println(r.Name)
-		fmt.Println(r.Description)
+		//fmt.Println(r.ID)
+		//fmt.Println(r.Name)
+		//fmt.Println(r.Description)
 
 		// 生成包含租户信息的accessToken
 		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Email, us.Username, r.Name)
