@@ -110,6 +110,38 @@ func (pu *PlatformUpdate) ClearVersion() *PlatformUpdate {
 	return pu
 }
 
+// SetStatus sets the "status" field.
+func (pu *PlatformUpdate) SetStatus(pl platform.Status) *PlatformUpdate {
+	pu.mutation.SetStatus(pl)
+	return pu
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (pu *PlatformUpdate) SetNillableStatus(pl *platform.Status) *PlatformUpdate {
+	if pl != nil {
+		pu.SetStatus(*pl)
+	}
+	return pu
+}
+
+// ClearStatus clears the value of the "status" field.
+func (pu *PlatformUpdate) ClearStatus() *PlatformUpdate {
+	pu.mutation.ClearStatus()
+	return pu
+}
+
+// SetConfig sets the "config" field.
+func (pu *PlatformUpdate) SetConfig(m map[string]interface{}) *PlatformUpdate {
+	pu.mutation.SetConfig(m)
+	return pu
+}
+
+// ClearConfig clears the value of the "config" field.
+func (pu *PlatformUpdate) ClearConfig() *PlatformUpdate {
+	pu.mutation.ClearConfig()
+	return pu
+}
+
 // AddTenantIDs adds the "tenants" edge to the Tenant entity by IDs.
 func (pu *PlatformUpdate) AddTenantIDs(ids ...uuid.UUID) *PlatformUpdate {
 	pu.mutation.AddTenantIDs(ids...)
@@ -194,6 +226,11 @@ func (pu *PlatformUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
+	if v, ok := pu.mutation.Status(); ok {
+		if err := platform.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Platform.status": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -232,6 +269,18 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.VersionCleared() {
 		_spec.ClearField(platform.FieldVersion, field.TypeString)
+	}
+	if value, ok := pu.mutation.Status(); ok {
+		_spec.SetField(platform.FieldStatus, field.TypeEnum, value)
+	}
+	if pu.mutation.StatusCleared() {
+		_spec.ClearField(platform.FieldStatus, field.TypeEnum)
+	}
+	if value, ok := pu.mutation.Config(); ok {
+		_spec.SetField(platform.FieldConfig, field.TypeJSON, value)
+	}
+	if pu.mutation.ConfigCleared() {
+		_spec.ClearField(platform.FieldConfig, field.TypeJSON)
 	}
 	if pu.mutation.TenantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -378,6 +427,38 @@ func (puo *PlatformUpdateOne) ClearVersion() *PlatformUpdateOne {
 	return puo
 }
 
+// SetStatus sets the "status" field.
+func (puo *PlatformUpdateOne) SetStatus(pl platform.Status) *PlatformUpdateOne {
+	puo.mutation.SetStatus(pl)
+	return puo
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (puo *PlatformUpdateOne) SetNillableStatus(pl *platform.Status) *PlatformUpdateOne {
+	if pl != nil {
+		puo.SetStatus(*pl)
+	}
+	return puo
+}
+
+// ClearStatus clears the value of the "status" field.
+func (puo *PlatformUpdateOne) ClearStatus() *PlatformUpdateOne {
+	puo.mutation.ClearStatus()
+	return puo
+}
+
+// SetConfig sets the "config" field.
+func (puo *PlatformUpdateOne) SetConfig(m map[string]interface{}) *PlatformUpdateOne {
+	puo.mutation.SetConfig(m)
+	return puo
+}
+
+// ClearConfig clears the value of the "config" field.
+func (puo *PlatformUpdateOne) ClearConfig() *PlatformUpdateOne {
+	puo.mutation.ClearConfig()
+	return puo
+}
+
 // AddTenantIDs adds the "tenants" edge to the Tenant entity by IDs.
 func (puo *PlatformUpdateOne) AddTenantIDs(ids ...uuid.UUID) *PlatformUpdateOne {
 	puo.mutation.AddTenantIDs(ids...)
@@ -475,6 +556,11 @@ func (puo *PlatformUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
+	if v, ok := puo.mutation.Status(); ok {
+		if err := platform.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Platform.status": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -530,6 +616,18 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	}
 	if puo.mutation.VersionCleared() {
 		_spec.ClearField(platform.FieldVersion, field.TypeString)
+	}
+	if value, ok := puo.mutation.Status(); ok {
+		_spec.SetField(platform.FieldStatus, field.TypeEnum, value)
+	}
+	if puo.mutation.StatusCleared() {
+		_spec.ClearField(platform.FieldStatus, field.TypeEnum)
+	}
+	if value, ok := puo.mutation.Config(); ok {
+		_spec.SetField(platform.FieldConfig, field.TypeJSON, value)
+	}
+	if puo.mutation.ConfigCleared() {
+		_spec.ClearField(platform.FieldConfig, field.TypeJSON)
 	}
 	if puo.mutation.TenantsCleared() {
 		edge := &sqlgraph.EdgeSpec{

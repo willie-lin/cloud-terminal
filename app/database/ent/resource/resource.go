@@ -23,14 +23,20 @@ const (
 	FieldName = "name"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
+	// FieldArn holds the string denoting the arn field in the database.
+	FieldArn = "arn"
 	// FieldProperties holds the string denoting the properties field in the database.
 	FieldProperties = "properties"
-	// FieldValue holds the string denoting the value field in the database.
-	FieldValue = "value"
+	// FieldTags holds the string denoting the tags field in the database.
+	FieldTags = "tags"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
+	// EdgeChildren holds the string denoting the children edge name in mutations.
+	EdgeChildren = "children"
+	// EdgeParent holds the string denoting the parent edge name in mutations.
+	EdgeParent = "parent"
 	// Table holds the table name of the resource in the database.
 	Table = "resources"
 	// AccountTable is the table that holds the account relation/edge. The primary key declared below.
@@ -38,6 +44,10 @@ const (
 	// AccountInverseTable is the table name for the Account entity.
 	// It exists in this package in order to avoid circular dependency with the "account" package.
 	AccountInverseTable = "accounts"
+	// ChildrenTable is the table that holds the children relation/edge. The primary key declared below.
+	ChildrenTable = "resource_parent"
+	// ParentTable is the table that holds the parent relation/edge. The primary key declared below.
+	ParentTable = "resource_parent"
 )
 
 // Columns holds all SQL columns for resource fields.
@@ -47,8 +57,9 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldName,
 	FieldType,
+	FieldArn,
 	FieldProperties,
-	FieldValue,
+	FieldTags,
 	FieldDescription,
 }
 
@@ -56,6 +67,12 @@ var (
 	// AccountPrimaryKey and AccountColumn2 are the table columns denoting the
 	// primary key for the account relation (M2M).
 	AccountPrimaryKey = []string{"account_id", "resource_id"}
+	// ChildrenPrimaryKey and ChildrenColumn2 are the table columns denoting the
+	// primary key for the children relation (M2M).
+	ChildrenPrimaryKey = []string{"resource_id", "child_id"}
+	// ParentPrimaryKey and ParentColumn2 are the table columns denoting the
+	// primary key for the parent relation (M2M).
+	ParentPrimaryKey = []string{"resource_id", "child_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -79,8 +96,8 @@ var (
 	NameValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
-	// ValueValidator is a validator for the "value" field. It is called by the builders before save.
-	ValueValidator func(string) error
+	// ArnValidator is a validator for the "arn" field. It is called by the builders before save.
+	ArnValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -113,9 +130,9 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
-// ByValue orders the results by the value field.
-func ByValue(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldValue, opts...).ToFunc()
+// ByArn orders the results by the arn field.
+func ByArn(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldArn, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.
@@ -136,10 +153,52 @@ func ByAccount(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByChildrenCount orders the results by children count.
+func ByChildrenCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChildrenStep(), opts...)
+	}
+}
+
+// ByChildren orders the results by children terms.
+func ByChildren(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChildrenStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByParentCount orders the results by parent count.
+func ByParentCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newParentStep(), opts...)
+	}
+}
+
+// ByParent orders the results by parent terms.
+func ByParent(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParentStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccountInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, AccountTable, AccountPrimaryKey...),
+	)
+}
+func newChildrenStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ChildrenTable, ChildrenPrimaryKey...),
+	)
+}
+func newParentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ParentTable, ParentPrimaryKey...),
 	)
 }

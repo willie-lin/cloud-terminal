@@ -26,6 +26,8 @@ func (Platform) Fields() []ent.Field {
 		field.String("description").Optional(),
 		field.String("region").Optional(),
 		field.String("version").Optional(),
+		field.Enum("status").Values("active", "maintenance", "disabled").Default("active").Optional(), // 平台状态 (可选)
+		field.JSON("config", map[string]interface{}{}).Optional(),                                     // 平台配置 (可选)
 	}
 }
 

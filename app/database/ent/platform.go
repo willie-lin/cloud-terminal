@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -30,6 +31,10 @@ type Platform struct {
 	Region string `json:"region,omitempty"`
 	// Version holds the value of the "version" field.
 	Version string `json:"version,omitempty"`
+	// Status holds the value of the "status" field.
+	Status platform.Status `json:"status,omitempty"`
+	// Config holds the value of the "config" field.
+	Config map[string]interface{} `json:"config,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PlatformQuery when eager-loading is set.
 	Edges        PlatformEdges `json:"edges"`
@@ -59,7 +64,9 @@ func (*Platform) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case platform.FieldName, platform.FieldDescription, platform.FieldRegion, platform.FieldVersion:
+		case platform.FieldConfig:
+			values[i] = new([]byte)
+		case platform.FieldName, platform.FieldDescription, platform.FieldRegion, platform.FieldVersion, platform.FieldStatus:
 			values[i] = new(sql.NullString)
 		case platform.FieldCreatedAt, platform.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -122,6 +129,20 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pl.Version = value.String
 			}
+		case platform.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				pl.Status = platform.Status(value.String)
+			}
+		case platform.FieldConfig:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field config", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &pl.Config); err != nil {
+					return fmt.Errorf("unmarshal field config: %w", err)
+				}
+			}
 		default:
 			pl.selectValues.Set(columns[i], values[i])
 		}
@@ -180,6 +201,12 @@ func (pl *Platform) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("version=")
 	builder.WriteString(pl.Version)
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", pl.Status))
+	builder.WriteString(", ")
+	builder.WriteString("config=")
+	builder.WriteString(fmt.Sprintf("%v", pl.Config))
 	builder.WriteByte(')')
 	return builder.String()
 }

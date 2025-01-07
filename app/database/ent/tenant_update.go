@@ -12,12 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
@@ -114,49 +112,19 @@ func (tu *TenantUpdate) AddAccounts(a ...*Account) *TenantUpdate {
 	return tu.AddAccountIDs(ids...)
 }
 
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (tu *TenantUpdate) AddPermissionIDs(ids ...uuid.UUID) *TenantUpdate {
-	tu.mutation.AddPermissionIDs(ids...)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (tu *TenantUpdate) AddAuditLogIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.AddAuditLogIDs(ids...)
 	return tu
 }
 
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (tu *TenantUpdate) AddPermissions(p ...*Permission) *TenantUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return tu.AddPermissionIDs(ids...)
-}
-
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (tu *TenantUpdate) AddRoleIDs(ids ...uuid.UUID) *TenantUpdate {
-	tu.mutation.AddRoleIDs(ids...)
-	return tu
-}
-
-// AddRoles adds the "roles" edges to the Role entity.
-func (tu *TenantUpdate) AddRoles(r ...*Role) *TenantUpdate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return tu.AddRoleIDs(ids...)
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (tu *TenantUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdate {
-	tu.mutation.AddAccessPolicyIDs(ids...)
-	return tu
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (tu *TenantUpdate) AddAccessPolicies(a ...*AccessPolicy) *TenantUpdate {
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (tu *TenantUpdate) AddAuditLogs(a ...*AuditLog) *TenantUpdate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return tu.AddAccessPolicyIDs(ids...)
+	return tu.AddAuditLogIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -191,67 +159,25 @@ func (tu *TenantUpdate) RemoveAccounts(a ...*Account) *TenantUpdate {
 	return tu.RemoveAccountIDs(ids...)
 }
 
-// ClearPermissions clears all "permissions" edges to the Permission entity.
-func (tu *TenantUpdate) ClearPermissions() *TenantUpdate {
-	tu.mutation.ClearPermissions()
+// ClearAuditLogs clears all "audit_logs" edges to the AuditLog entity.
+func (tu *TenantUpdate) ClearAuditLogs() *TenantUpdate {
+	tu.mutation.ClearAuditLogs()
 	return tu
 }
 
-// RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
-func (tu *TenantUpdate) RemovePermissionIDs(ids ...uuid.UUID) *TenantUpdate {
-	tu.mutation.RemovePermissionIDs(ids...)
+// RemoveAuditLogIDs removes the "audit_logs" edge to AuditLog entities by IDs.
+func (tu *TenantUpdate) RemoveAuditLogIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.RemoveAuditLogIDs(ids...)
 	return tu
 }
 
-// RemovePermissions removes "permissions" edges to Permission entities.
-func (tu *TenantUpdate) RemovePermissions(p ...*Permission) *TenantUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return tu.RemovePermissionIDs(ids...)
-}
-
-// ClearRoles clears all "roles" edges to the Role entity.
-func (tu *TenantUpdate) ClearRoles() *TenantUpdate {
-	tu.mutation.ClearRoles()
-	return tu
-}
-
-// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (tu *TenantUpdate) RemoveRoleIDs(ids ...uuid.UUID) *TenantUpdate {
-	tu.mutation.RemoveRoleIDs(ids...)
-	return tu
-}
-
-// RemoveRoles removes "roles" edges to Role entities.
-func (tu *TenantUpdate) RemoveRoles(r ...*Role) *TenantUpdate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return tu.RemoveRoleIDs(ids...)
-}
-
-// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
-func (tu *TenantUpdate) ClearAccessPolicies() *TenantUpdate {
-	tu.mutation.ClearAccessPolicies()
-	return tu
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (tu *TenantUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdate {
-	tu.mutation.RemoveAccessPolicyIDs(ids...)
-	return tu
-}
-
-// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
-func (tu *TenantUpdate) RemoveAccessPolicies(a ...*AccessPolicy) *TenantUpdate {
+// RemoveAuditLogs removes "audit_logs" edges to AuditLog entities.
+func (tu *TenantUpdate) RemoveAuditLogs(a ...*AuditLog) *TenantUpdate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return tu.RemoveAccessPolicyIDs(ids...)
+	return tu.RemoveAuditLogIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -409,28 +335,28 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tu.mutation.PermissionsCleared() {
+	if tu.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
+			Table:   tenant.AuditLogsTable,
+			Columns: tenant.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.RemovedPermissionsIDs(); len(nodes) > 0 && !tu.mutation.PermissionsCleared() {
+	if nodes := tu.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !tu.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
+			Table:   tenant.AuditLogsTable,
+			Columns: tenant.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -438,105 +364,15 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if tu.mutation.RolesCleared() {
+	if nodes := tu.mutation.AuditLogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   tenant.RolesTable,
-			Columns: tenant.RolesPrimaryKey,
+			Table:   tenant.AuditLogsTable,
+			Columns: tenant.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.RemovedRolesIDs(); len(nodes) > 0 && !tu.mutation.RolesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.RolesTable,
-			Columns: tenant.RolesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.RolesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.RolesTable,
-			Columns: tenant.RolesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if tu.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.AccessPoliciesTable,
-			Columns: tenant.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !tu.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.AccessPoliciesTable,
-			Columns: tenant.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.AccessPoliciesTable,
-			Columns: tenant.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -644,49 +480,19 @@ func (tuo *TenantUpdateOne) AddAccounts(a ...*Account) *TenantUpdateOne {
 	return tuo.AddAccountIDs(ids...)
 }
 
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (tuo *TenantUpdateOne) AddPermissionIDs(ids ...uuid.UUID) *TenantUpdateOne {
-	tuo.mutation.AddPermissionIDs(ids...)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (tuo *TenantUpdateOne) AddAuditLogIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.AddAuditLogIDs(ids...)
 	return tuo
 }
 
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (tuo *TenantUpdateOne) AddPermissions(p ...*Permission) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return tuo.AddPermissionIDs(ids...)
-}
-
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (tuo *TenantUpdateOne) AddRoleIDs(ids ...uuid.UUID) *TenantUpdateOne {
-	tuo.mutation.AddRoleIDs(ids...)
-	return tuo
-}
-
-// AddRoles adds the "roles" edges to the Role entity.
-func (tuo *TenantUpdateOne) AddRoles(r ...*Role) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return tuo.AddRoleIDs(ids...)
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (tuo *TenantUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdateOne {
-	tuo.mutation.AddAccessPolicyIDs(ids...)
-	return tuo
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (tuo *TenantUpdateOne) AddAccessPolicies(a ...*AccessPolicy) *TenantUpdateOne {
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (tuo *TenantUpdateOne) AddAuditLogs(a ...*AuditLog) *TenantUpdateOne {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return tuo.AddAccessPolicyIDs(ids...)
+	return tuo.AddAuditLogIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -721,67 +527,25 @@ func (tuo *TenantUpdateOne) RemoveAccounts(a ...*Account) *TenantUpdateOne {
 	return tuo.RemoveAccountIDs(ids...)
 }
 
-// ClearPermissions clears all "permissions" edges to the Permission entity.
-func (tuo *TenantUpdateOne) ClearPermissions() *TenantUpdateOne {
-	tuo.mutation.ClearPermissions()
+// ClearAuditLogs clears all "audit_logs" edges to the AuditLog entity.
+func (tuo *TenantUpdateOne) ClearAuditLogs() *TenantUpdateOne {
+	tuo.mutation.ClearAuditLogs()
 	return tuo
 }
 
-// RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
-func (tuo *TenantUpdateOne) RemovePermissionIDs(ids ...uuid.UUID) *TenantUpdateOne {
-	tuo.mutation.RemovePermissionIDs(ids...)
+// RemoveAuditLogIDs removes the "audit_logs" edge to AuditLog entities by IDs.
+func (tuo *TenantUpdateOne) RemoveAuditLogIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.RemoveAuditLogIDs(ids...)
 	return tuo
 }
 
-// RemovePermissions removes "permissions" edges to Permission entities.
-func (tuo *TenantUpdateOne) RemovePermissions(p ...*Permission) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return tuo.RemovePermissionIDs(ids...)
-}
-
-// ClearRoles clears all "roles" edges to the Role entity.
-func (tuo *TenantUpdateOne) ClearRoles() *TenantUpdateOne {
-	tuo.mutation.ClearRoles()
-	return tuo
-}
-
-// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (tuo *TenantUpdateOne) RemoveRoleIDs(ids ...uuid.UUID) *TenantUpdateOne {
-	tuo.mutation.RemoveRoleIDs(ids...)
-	return tuo
-}
-
-// RemoveRoles removes "roles" edges to Role entities.
-func (tuo *TenantUpdateOne) RemoveRoles(r ...*Role) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return tuo.RemoveRoleIDs(ids...)
-}
-
-// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
-func (tuo *TenantUpdateOne) ClearAccessPolicies() *TenantUpdateOne {
-	tuo.mutation.ClearAccessPolicies()
-	return tuo
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (tuo *TenantUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdateOne {
-	tuo.mutation.RemoveAccessPolicyIDs(ids...)
-	return tuo
-}
-
-// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
-func (tuo *TenantUpdateOne) RemoveAccessPolicies(a ...*AccessPolicy) *TenantUpdateOne {
+// RemoveAuditLogs removes "audit_logs" edges to AuditLog entities.
+func (tuo *TenantUpdateOne) RemoveAuditLogs(a ...*AuditLog) *TenantUpdateOne {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return tuo.RemoveAccessPolicyIDs(ids...)
+	return tuo.RemoveAuditLogIDs(ids...)
 }
 
 // Where appends a list predicates to the TenantUpdate builder.
@@ -969,28 +733,28 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tuo.mutation.PermissionsCleared() {
+	if tuo.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
+			Table:   tenant.AuditLogsTable,
+			Columns: tenant.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.RemovedPermissionsIDs(); len(nodes) > 0 && !tuo.mutation.PermissionsCleared() {
+	if nodes := tuo.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !tuo.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
+			Table:   tenant.AuditLogsTable,
+			Columns: tenant.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -998,105 +762,15 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if tuo.mutation.RolesCleared() {
+	if nodes := tuo.mutation.AuditLogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   tenant.RolesTable,
-			Columns: tenant.RolesPrimaryKey,
+			Table:   tenant.AuditLogsTable,
+			Columns: tenant.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.RemovedRolesIDs(); len(nodes) > 0 && !tuo.mutation.RolesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.RolesTable,
-			Columns: tenant.RolesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.RolesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.RolesTable,
-			Columns: tenant.RolesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if tuo.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.AccessPoliciesTable,
-			Columns: tenant.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !tuo.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.AccessPoliciesTable,
-			Columns: tenant.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.AccessPoliciesTable,
-			Columns: tenant.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

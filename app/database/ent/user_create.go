@@ -112,6 +112,20 @@ func (uc *UserCreate) SetEmail(s string) *UserCreate {
 	return uc
 }
 
+// SetEmailVerified sets the "email_verified" field.
+func (uc *UserCreate) SetEmailVerified(b bool) *UserCreate {
+	uc.mutation.SetEmailVerified(b)
+	return uc
+}
+
+// SetNillableEmailVerified sets the "email_verified" field if the given value is not nil.
+func (uc *UserCreate) SetNillableEmailVerified(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetEmailVerified(*b)
+	}
+	return uc
+}
+
 // SetPhoneNumber sets the "phone_number" field.
 func (uc *UserCreate) SetPhoneNumber(s string) *UserCreate {
 	uc.mutation.SetPhoneNumber(s)
@@ -122,6 +136,20 @@ func (uc *UserCreate) SetPhoneNumber(s string) *UserCreate {
 func (uc *UserCreate) SetNillablePhoneNumber(s *string) *UserCreate {
 	if s != nil {
 		uc.SetPhoneNumber(*s)
+	}
+	return uc
+}
+
+// SetPhoneNumberVerified sets the "phone_number_verified" field.
+func (uc *UserCreate) SetPhoneNumberVerified(b bool) *UserCreate {
+	uc.mutation.SetPhoneNumberVerified(b)
+	return uc
+}
+
+// SetNillablePhoneNumberVerified sets the "phone_number_verified" field if the given value is not nil.
+func (uc *UserCreate) SetNillablePhoneNumberVerified(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetPhoneNumberVerified(*b)
 	}
 	return uc
 }
@@ -168,6 +196,34 @@ func (uc *UserCreate) SetNillableStatus(u *user.Status) *UserCreate {
 	return uc
 }
 
+// SetLoginAttempts sets the "login_attempts" field.
+func (uc *UserCreate) SetLoginAttempts(i int) *UserCreate {
+	uc.mutation.SetLoginAttempts(i)
+	return uc
+}
+
+// SetNillableLoginAttempts sets the "login_attempts" field if the given value is not nil.
+func (uc *UserCreate) SetNillableLoginAttempts(i *int) *UserCreate {
+	if i != nil {
+		uc.SetLoginAttempts(*i)
+	}
+	return uc
+}
+
+// SetLockoutTime sets the "lockout_time" field.
+func (uc *UserCreate) SetLockoutTime(t time.Time) *UserCreate {
+	uc.mutation.SetLockoutTime(t)
+	return uc
+}
+
+// SetNillableLockoutTime sets the "lockout_time" field if the given value is not nil.
+func (uc *UserCreate) SetNillableLockoutTime(t *time.Time) *UserCreate {
+	if t != nil {
+		uc.SetLockoutTime(*t)
+	}
+	return uc
+}
+
 // SetLastLoginTime sets the "last_login_time" field.
 func (uc *UserCreate) SetLastLoginTime(t time.Time) *UserCreate {
 	uc.mutation.SetLastLoginTime(t)
@@ -179,6 +235,12 @@ func (uc *UserCreate) SetNillableLastLoginTime(t *time.Time) *UserCreate {
 	if t != nil {
 		uc.SetLastLoginTime(*t)
 	}
+	return uc
+}
+
+// SetSocialLogins sets the "social_logins" field.
+func (uc *UserCreate) SetSocialLogins(m map[string]string) *UserCreate {
+	uc.mutation.SetSocialLogins(m)
 	return uc
 }
 
@@ -280,9 +342,17 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultUpdatedAt()
 		uc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := uc.mutation.EmailVerified(); !ok {
+		v := user.DefaultEmailVerified
+		uc.mutation.SetEmailVerified(v)
+	}
 	if _, ok := uc.mutation.PhoneNumber(); !ok {
 		v := user.DefaultPhoneNumber
 		uc.mutation.SetPhoneNumber(v)
+	}
+	if _, ok := uc.mutation.PhoneNumberVerified(); !ok {
+		v := user.DefaultPhoneNumberVerified
+		uc.mutation.SetPhoneNumberVerified(v)
 	}
 	if _, ok := uc.mutation.Online(); !ok {
 		v := user.DefaultOnline
@@ -291,6 +361,10 @@ func (uc *UserCreate) defaults() {
 	if _, ok := uc.mutation.Status(); !ok {
 		v := user.DefaultStatus
 		uc.mutation.SetStatus(v)
+	}
+	if _, ok := uc.mutation.LoginAttempts(); !ok {
+		v := user.DefaultLoginAttempts
+		uc.mutation.SetLoginAttempts(v)
 	}
 	if _, ok := uc.mutation.LastLoginTime(); !ok {
 		v := user.DefaultLastLoginTime()
@@ -344,6 +418,12 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
+	if _, ok := uc.mutation.EmailVerified(); !ok {
+		return &ValidationError{Name: "email_verified", err: errors.New(`ent: missing required field "User.email_verified"`)}
+	}
+	if _, ok := uc.mutation.PhoneNumberVerified(); !ok {
+		return &ValidationError{Name: "phone_number_verified", err: errors.New(`ent: missing required field "User.phone_number_verified"`)}
+	}
 	if _, ok := uc.mutation.Online(); !ok {
 		return &ValidationError{Name: "online", err: errors.New(`ent: missing required field "User.online"`)}
 	}
@@ -354,6 +434,9 @@ func (uc *UserCreate) check() error {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
 		}
+	}
+	if _, ok := uc.mutation.LoginAttempts(); !ok {
+		return &ValidationError{Name: "login_attempts", err: errors.New(`ent: missing required field "User.login_attempts"`)}
 	}
 	if _, ok := uc.mutation.LastLoginTime(); !ok {
 		return &ValidationError{Name: "last_login_time", err: errors.New(`ent: missing required field "User.last_login_time"`)}
@@ -428,9 +511,17 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
 	}
+	if value, ok := uc.mutation.EmailVerified(); ok {
+		_spec.SetField(user.FieldEmailVerified, field.TypeBool, value)
+		_node.EmailVerified = value
+	}
 	if value, ok := uc.mutation.PhoneNumber(); ok {
 		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
 		_node.PhoneNumber = value
+	}
+	if value, ok := uc.mutation.PhoneNumberVerified(); ok {
+		_spec.SetField(user.FieldPhoneNumberVerified, field.TypeBool, value)
+		_node.PhoneNumberVerified = value
 	}
 	if value, ok := uc.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
@@ -444,9 +535,21 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
 	}
+	if value, ok := uc.mutation.LoginAttempts(); ok {
+		_spec.SetField(user.FieldLoginAttempts, field.TypeInt, value)
+		_node.LoginAttempts = value
+	}
+	if value, ok := uc.mutation.LockoutTime(); ok {
+		_spec.SetField(user.FieldLockoutTime, field.TypeTime, value)
+		_node.LockoutTime = value
+	}
 	if value, ok := uc.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
 		_node.LastLoginTime = value
+	}
+	if value, ok := uc.mutation.SocialLogins(); ok {
+		_spec.SetField(user.FieldSocialLogins, field.TypeJSON, value)
+		_node.SocialLogins = value
 	}
 	if nodes := uc.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

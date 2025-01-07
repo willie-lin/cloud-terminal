@@ -91,9 +91,14 @@ func ResourceID(v int) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldEQ(FieldResourceID, v))
 }
 
-// ResourceType applies equality check predicate on the "resource_type" field. It's identical to ResourceTypeEQ.
-func ResourceType(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldEQ(FieldResourceType, v))
+// IPAddress applies equality check predicate on the "ip_address" field. It's identical to IPAddressEQ.
+func IPAddress(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEQ(FieldIPAddress, v))
+}
+
+// UserAgent applies equality check predicate on the "user_agent" field. It's identical to UserAgentEQ.
+func UserAgent(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEQ(FieldUserAgent, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -437,58 +442,23 @@ func ResourceIDNotNil() predicate.AuditLog {
 }
 
 // ResourceTypeEQ applies the EQ predicate on the "resource_type" field.
-func ResourceTypeEQ(v string) predicate.AuditLog {
+func ResourceTypeEQ(v ResourceType) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldEQ(FieldResourceType, v))
 }
 
 // ResourceTypeNEQ applies the NEQ predicate on the "resource_type" field.
-func ResourceTypeNEQ(v string) predicate.AuditLog {
+func ResourceTypeNEQ(v ResourceType) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldNEQ(FieldResourceType, v))
 }
 
 // ResourceTypeIn applies the In predicate on the "resource_type" field.
-func ResourceTypeIn(vs ...string) predicate.AuditLog {
+func ResourceTypeIn(vs ...ResourceType) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldIn(FieldResourceType, vs...))
 }
 
 // ResourceTypeNotIn applies the NotIn predicate on the "resource_type" field.
-func ResourceTypeNotIn(vs ...string) predicate.AuditLog {
+func ResourceTypeNotIn(vs ...ResourceType) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldNotIn(FieldResourceType, vs...))
-}
-
-// ResourceTypeGT applies the GT predicate on the "resource_type" field.
-func ResourceTypeGT(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldGT(FieldResourceType, v))
-}
-
-// ResourceTypeGTE applies the GTE predicate on the "resource_type" field.
-func ResourceTypeGTE(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldGTE(FieldResourceType, v))
-}
-
-// ResourceTypeLT applies the LT predicate on the "resource_type" field.
-func ResourceTypeLT(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldLT(FieldResourceType, v))
-}
-
-// ResourceTypeLTE applies the LTE predicate on the "resource_type" field.
-func ResourceTypeLTE(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldLTE(FieldResourceType, v))
-}
-
-// ResourceTypeContains applies the Contains predicate on the "resource_type" field.
-func ResourceTypeContains(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldContains(FieldResourceType, v))
-}
-
-// ResourceTypeHasPrefix applies the HasPrefix predicate on the "resource_type" field.
-func ResourceTypeHasPrefix(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldHasPrefix(FieldResourceType, v))
-}
-
-// ResourceTypeHasSuffix applies the HasSuffix predicate on the "resource_type" field.
-func ResourceTypeHasSuffix(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldHasSuffix(FieldResourceType, v))
 }
 
 // ResourceTypeIsNil applies the IsNil predicate on the "resource_type" field.
@@ -501,14 +471,154 @@ func ResourceTypeNotNil() predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldNotNull(FieldResourceType))
 }
 
-// ResourceTypeEqualFold applies the EqualFold predicate on the "resource_type" field.
-func ResourceTypeEqualFold(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldEqualFold(FieldResourceType, v))
+// IPAddressEQ applies the EQ predicate on the "ip_address" field.
+func IPAddressEQ(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEQ(FieldIPAddress, v))
 }
 
-// ResourceTypeContainsFold applies the ContainsFold predicate on the "resource_type" field.
-func ResourceTypeContainsFold(v string) predicate.AuditLog {
-	return predicate.AuditLog(sql.FieldContainsFold(FieldResourceType, v))
+// IPAddressNEQ applies the NEQ predicate on the "ip_address" field.
+func IPAddressNEQ(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNEQ(FieldIPAddress, v))
+}
+
+// IPAddressIn applies the In predicate on the "ip_address" field.
+func IPAddressIn(vs ...string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldIn(FieldIPAddress, vs...))
+}
+
+// IPAddressNotIn applies the NotIn predicate on the "ip_address" field.
+func IPAddressNotIn(vs ...string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNotIn(FieldIPAddress, vs...))
+}
+
+// IPAddressGT applies the GT predicate on the "ip_address" field.
+func IPAddressGT(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldGT(FieldIPAddress, v))
+}
+
+// IPAddressGTE applies the GTE predicate on the "ip_address" field.
+func IPAddressGTE(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldGTE(FieldIPAddress, v))
+}
+
+// IPAddressLT applies the LT predicate on the "ip_address" field.
+func IPAddressLT(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldLT(FieldIPAddress, v))
+}
+
+// IPAddressLTE applies the LTE predicate on the "ip_address" field.
+func IPAddressLTE(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldLTE(FieldIPAddress, v))
+}
+
+// IPAddressContains applies the Contains predicate on the "ip_address" field.
+func IPAddressContains(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldContains(FieldIPAddress, v))
+}
+
+// IPAddressHasPrefix applies the HasPrefix predicate on the "ip_address" field.
+func IPAddressHasPrefix(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldHasPrefix(FieldIPAddress, v))
+}
+
+// IPAddressHasSuffix applies the HasSuffix predicate on the "ip_address" field.
+func IPAddressHasSuffix(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldHasSuffix(FieldIPAddress, v))
+}
+
+// IPAddressIsNil applies the IsNil predicate on the "ip_address" field.
+func IPAddressIsNil() predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldIsNull(FieldIPAddress))
+}
+
+// IPAddressNotNil applies the NotNil predicate on the "ip_address" field.
+func IPAddressNotNil() predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNotNull(FieldIPAddress))
+}
+
+// IPAddressEqualFold applies the EqualFold predicate on the "ip_address" field.
+func IPAddressEqualFold(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEqualFold(FieldIPAddress, v))
+}
+
+// IPAddressContainsFold applies the ContainsFold predicate on the "ip_address" field.
+func IPAddressContainsFold(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldContainsFold(FieldIPAddress, v))
+}
+
+// UserAgentEQ applies the EQ predicate on the "user_agent" field.
+func UserAgentEQ(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEQ(FieldUserAgent, v))
+}
+
+// UserAgentNEQ applies the NEQ predicate on the "user_agent" field.
+func UserAgentNEQ(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNEQ(FieldUserAgent, v))
+}
+
+// UserAgentIn applies the In predicate on the "user_agent" field.
+func UserAgentIn(vs ...string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldIn(FieldUserAgent, vs...))
+}
+
+// UserAgentNotIn applies the NotIn predicate on the "user_agent" field.
+func UserAgentNotIn(vs ...string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNotIn(FieldUserAgent, vs...))
+}
+
+// UserAgentGT applies the GT predicate on the "user_agent" field.
+func UserAgentGT(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldGT(FieldUserAgent, v))
+}
+
+// UserAgentGTE applies the GTE predicate on the "user_agent" field.
+func UserAgentGTE(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldGTE(FieldUserAgent, v))
+}
+
+// UserAgentLT applies the LT predicate on the "user_agent" field.
+func UserAgentLT(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldLT(FieldUserAgent, v))
+}
+
+// UserAgentLTE applies the LTE predicate on the "user_agent" field.
+func UserAgentLTE(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldLTE(FieldUserAgent, v))
+}
+
+// UserAgentContains applies the Contains predicate on the "user_agent" field.
+func UserAgentContains(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldContains(FieldUserAgent, v))
+}
+
+// UserAgentHasPrefix applies the HasPrefix predicate on the "user_agent" field.
+func UserAgentHasPrefix(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldHasPrefix(FieldUserAgent, v))
+}
+
+// UserAgentHasSuffix applies the HasSuffix predicate on the "user_agent" field.
+func UserAgentHasSuffix(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldHasSuffix(FieldUserAgent, v))
+}
+
+// UserAgentIsNil applies the IsNil predicate on the "user_agent" field.
+func UserAgentIsNil() predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldIsNull(FieldUserAgent))
+}
+
+// UserAgentNotNil applies the NotNil predicate on the "user_agent" field.
+func UserAgentNotNil() predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNotNull(FieldUserAgent))
+}
+
+// UserAgentEqualFold applies the EqualFold predicate on the "user_agent" field.
+func UserAgentEqualFold(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEqualFold(FieldUserAgent, v))
+}
+
+// UserAgentContainsFold applies the ContainsFold predicate on the "user_agent" field.
+func UserAgentContainsFold(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldContainsFold(FieldUserAgent, v))
 }
 
 // DetailsIsNil applies the IsNil predicate on the "details" field.
@@ -536,6 +646,29 @@ func HasUser() predicate.AuditLog {
 func HasUserWith(preds ...predicate.User) predicate.AuditLog {
 	return predicate.AuditLog(func(s *sql.Selector) {
 		step := newUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTenant applies the HasEdge predicate on the "tenant" edge.
+func HasTenant() predicate.AuditLog {
+	return predicate.AuditLog(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, TenantTable, TenantPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
+func HasTenantWith(preds ...predicate.Tenant) predicate.AuditLog {
+	return predicate.AuditLog(func(s *sql.Selector) {
+		step := newTenantStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

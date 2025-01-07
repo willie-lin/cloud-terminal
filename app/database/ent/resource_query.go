@@ -21,11 +21,13 @@ import (
 // ResourceQuery is the builder for querying Resource entities.
 type ResourceQuery struct {
 	config
-	ctx         *QueryContext
-	order       []resource.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Resource
-	withAccount *AccountQuery
+	ctx          *QueryContext
+	order        []resource.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.Resource
+	withAccount  *AccountQuery
+	withChildren *ResourceQuery
+	withParent   *ResourceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -77,6 +79,50 @@ func (rq *ResourceQuery) QueryAccount() *AccountQuery {
 			sqlgraph.From(resource.Table, resource.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, resource.AccountTable, resource.AccountPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChildren chains the current query on the "children" edge.
+func (rq *ResourceQuery) QueryChildren() *ResourceQuery {
+	query := (&ResourceClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resource.Table, resource.FieldID, selector),
+			sqlgraph.To(resource.Table, resource.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, resource.ChildrenTable, resource.ChildrenPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryParent chains the current query on the "parent" edge.
+func (rq *ResourceQuery) QueryParent() *ResourceQuery {
+	query := (&ResourceClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resource.Table, resource.FieldID, selector),
+			sqlgraph.To(resource.Table, resource.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, resource.ParentTable, resource.ParentPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -271,12 +317,14 @@ func (rq *ResourceQuery) Clone() *ResourceQuery {
 		return nil
 	}
 	return &ResourceQuery{
-		config:      rq.config,
-		ctx:         rq.ctx.Clone(),
-		order:       append([]resource.OrderOption{}, rq.order...),
-		inters:      append([]Interceptor{}, rq.inters...),
-		predicates:  append([]predicate.Resource{}, rq.predicates...),
-		withAccount: rq.withAccount.Clone(),
+		config:       rq.config,
+		ctx:          rq.ctx.Clone(),
+		order:        append([]resource.OrderOption{}, rq.order...),
+		inters:       append([]Interceptor{}, rq.inters...),
+		predicates:   append([]predicate.Resource{}, rq.predicates...),
+		withAccount:  rq.withAccount.Clone(),
+		withChildren: rq.withChildren.Clone(),
+		withParent:   rq.withParent.Clone(),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
@@ -291,6 +339,28 @@ func (rq *ResourceQuery) WithAccount(opts ...func(*AccountQuery)) *ResourceQuery
 		opt(query)
 	}
 	rq.withAccount = query
+	return rq
+}
+
+// WithChildren tells the query-builder to eager-load the nodes that are connected to
+// the "children" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ResourceQuery) WithChildren(opts ...func(*ResourceQuery)) *ResourceQuery {
+	query := (&ResourceClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withChildren = query
+	return rq
+}
+
+// WithParent tells the query-builder to eager-load the nodes that are connected to
+// the "parent" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ResourceQuery) WithParent(opts ...func(*ResourceQuery)) *ResourceQuery {
+	query := (&ResourceClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withParent = query
 	return rq
 }
 
@@ -372,8 +442,10 @@ func (rq *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 	var (
 		nodes       = []*Resource{}
 		_spec       = rq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			rq.withAccount != nil,
+			rq.withChildren != nil,
+			rq.withParent != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -398,6 +470,20 @@ func (rq *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 		if err := rq.loadAccount(ctx, query, nodes,
 			func(n *Resource) { n.Edges.Account = []*Account{} },
 			func(n *Resource, e *Account) { n.Edges.Account = append(n.Edges.Account, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withChildren; query != nil {
+		if err := rq.loadChildren(ctx, query, nodes,
+			func(n *Resource) { n.Edges.Children = []*Resource{} },
+			func(n *Resource, e *Resource) { n.Edges.Children = append(n.Edges.Children, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withParent; query != nil {
+		if err := rq.loadParent(ctx, query, nodes,
+			func(n *Resource) { n.Edges.Parent = []*Resource{} },
+			func(n *Resource, e *Resource) { n.Edges.Parent = append(n.Edges.Parent, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -458,6 +544,128 @@ func (rq *ResourceQuery) loadAccount(ctx context.Context, query *AccountQuery, n
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "account" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (rq *ResourceQuery) loadChildren(ctx context.Context, query *ResourceQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Resource)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Resource)
+	nids := make(map[uuid.UUID]map[*Resource]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(resource.ChildrenTable)
+		s.Join(joinT).On(s.C(resource.FieldID), joinT.C(resource.ChildrenPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(resource.ChildrenPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(resource.ChildrenPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Resource]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Resource](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "children" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (rq *ResourceQuery) loadParent(ctx context.Context, query *ResourceQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Resource)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Resource)
+	nids := make(map[uuid.UUID]map[*Resource]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(resource.ParentTable)
+		s.Join(joinT).On(s.C(resource.FieldID), joinT.C(resource.ParentPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(resource.ParentPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(resource.ParentPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Resource]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Resource](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "parent" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)

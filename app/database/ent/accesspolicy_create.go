@@ -12,7 +12,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
 )
 
 // AccessPolicyCreate is the builder for creating a AccessPolicy entity.
@@ -85,20 +86,16 @@ func (apc *AccessPolicyCreate) SetNillableEffect(a *accesspolicy.Effect) *Access
 }
 
 // SetStatements sets the "statements" field.
-func (apc *AccessPolicyCreate) SetStatements(m []map[string]interface{}) *AccessPolicyCreate {
-	apc.mutation.SetStatements(m)
+func (apc *AccessPolicyCreate) SetStatements(ss schema.PolicyStatement) *AccessPolicyCreate {
+	apc.mutation.SetStatements(ss)
 	return apc
 }
 
-// SetResourceType sets the "resource_type" field.
-func (apc *AccessPolicyCreate) SetResourceType(s string) *AccessPolicyCreate {
-	apc.mutation.SetResourceType(s)
-	return apc
-}
-
-// SetAction sets the "action" field.
-func (apc *AccessPolicyCreate) SetAction(s string) *AccessPolicyCreate {
-	apc.mutation.SetAction(s)
+// SetNillableStatements sets the "statements" field if the given value is not nil.
+func (apc *AccessPolicyCreate) SetNillableStatements(ss *schema.PolicyStatement) *AccessPolicyCreate {
+	if ss != nil {
+		apc.SetStatements(*ss)
+	}
 	return apc
 }
 
@@ -130,19 +127,19 @@ func (apc *AccessPolicyCreate) SetNillableID(u *uuid.UUID) *AccessPolicyCreate {
 	return apc
 }
 
-// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
-func (apc *AccessPolicyCreate) AddTenantIDs(ids ...uuid.UUID) *AccessPolicyCreate {
-	apc.mutation.AddTenantIDs(ids...)
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (apc *AccessPolicyCreate) AddRoleIDs(ids ...uuid.UUID) *AccessPolicyCreate {
+	apc.mutation.AddRoleIDs(ids...)
 	return apc
 }
 
-// AddTenant adds the "tenant" edges to the Tenant entity.
-func (apc *AccessPolicyCreate) AddTenant(t ...*Tenant) *AccessPolicyCreate {
-	ids := make([]uuid.UUID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+// AddRoles adds the "roles" edges to the Role entity.
+func (apc *AccessPolicyCreate) AddRoles(r ...*Role) *AccessPolicyCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return apc.AddTenantIDs(ids...)
+	return apc.AddRoleIDs(ids...)
 }
 
 // Mutation returns the AccessPolicyMutation object of the builder.
@@ -192,6 +189,10 @@ func (apc *AccessPolicyCreate) defaults() {
 		v := accesspolicy.DefaultEffect
 		apc.mutation.SetEffect(v)
 	}
+	if _, ok := apc.mutation.Statements(); !ok {
+		v := accesspolicy.DefaultStatements
+		apc.mutation.SetStatements(v)
+	}
 	if _, ok := apc.mutation.Immutable(); !ok {
 		v := accesspolicy.DefaultImmutable
 		apc.mutation.SetImmutable(v)
@@ -229,27 +230,8 @@ func (apc *AccessPolicyCreate) check() error {
 	if _, ok := apc.mutation.Statements(); !ok {
 		return &ValidationError{Name: "statements", err: errors.New(`ent: missing required field "AccessPolicy.statements"`)}
 	}
-	if _, ok := apc.mutation.ResourceType(); !ok {
-		return &ValidationError{Name: "resource_type", err: errors.New(`ent: missing required field "AccessPolicy.resource_type"`)}
-	}
-	if v, ok := apc.mutation.ResourceType(); ok {
-		if err := accesspolicy.ResourceTypeValidator(v); err != nil {
-			return &ValidationError{Name: "resource_type", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.resource_type": %w`, err)}
-		}
-	}
-	if _, ok := apc.mutation.Action(); !ok {
-		return &ValidationError{Name: "action", err: errors.New(`ent: missing required field "AccessPolicy.action"`)}
-	}
-	if v, ok := apc.mutation.Action(); ok {
-		if err := accesspolicy.ActionValidator(v); err != nil {
-			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.action": %w`, err)}
-		}
-	}
 	if _, ok := apc.mutation.Immutable(); !ok {
 		return &ValidationError{Name: "immutable", err: errors.New(`ent: missing required field "AccessPolicy.immutable"`)}
-	}
-	if len(apc.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "AccessPolicy.tenant"`)}
 	}
 	return nil
 }
@@ -310,27 +292,19 @@ func (apc *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec
 		_spec.SetField(accesspolicy.FieldStatements, field.TypeJSON, value)
 		_node.Statements = value
 	}
-	if value, ok := apc.mutation.ResourceType(); ok {
-		_spec.SetField(accesspolicy.FieldResourceType, field.TypeString, value)
-		_node.ResourceType = value
-	}
-	if value, ok := apc.mutation.Action(); ok {
-		_spec.SetField(accesspolicy.FieldAction, field.TypeString, value)
-		_node.Action = value
-	}
 	if value, ok := apc.mutation.Immutable(); ok {
 		_spec.SetField(accesspolicy.FieldImmutable, field.TypeBool, value)
 		_node.Immutable = value
 	}
-	if nodes := apc.mutation.TenantIDs(); len(nodes) > 0 {
+	if nodes := apc.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   accesspolicy.TenantTable,
-			Columns: accesspolicy.TenantPrimaryKey,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspolicy.RolesTable,
+			Columns: []string{accesspolicy.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

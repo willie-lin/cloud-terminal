@@ -64,6 +64,20 @@ func (ru *ResourceUpdate) SetNillableType(s *string) *ResourceUpdate {
 	return ru
 }
 
+// SetArn sets the "arn" field.
+func (ru *ResourceUpdate) SetArn(s string) *ResourceUpdate {
+	ru.mutation.SetArn(s)
+	return ru
+}
+
+// SetNillableArn sets the "arn" field if the given value is not nil.
+func (ru *ResourceUpdate) SetNillableArn(s *string) *ResourceUpdate {
+	if s != nil {
+		ru.SetArn(*s)
+	}
+	return ru
+}
+
 // SetProperties sets the "properties" field.
 func (ru *ResourceUpdate) SetProperties(m map[string]interface{}) *ResourceUpdate {
 	ru.mutation.SetProperties(m)
@@ -76,17 +90,15 @@ func (ru *ResourceUpdate) ClearProperties() *ResourceUpdate {
 	return ru
 }
 
-// SetValue sets the "value" field.
-func (ru *ResourceUpdate) SetValue(s string) *ResourceUpdate {
-	ru.mutation.SetValue(s)
+// SetTags sets the "tags" field.
+func (ru *ResourceUpdate) SetTags(m map[string]string) *ResourceUpdate {
+	ru.mutation.SetTags(m)
 	return ru
 }
 
-// SetNillableValue sets the "value" field if the given value is not nil.
-func (ru *ResourceUpdate) SetNillableValue(s *string) *ResourceUpdate {
-	if s != nil {
-		ru.SetValue(*s)
-	}
+// ClearTags clears the value of the "tags" field.
+func (ru *ResourceUpdate) ClearTags() *ResourceUpdate {
+	ru.mutation.ClearTags()
 	return ru
 }
 
@@ -125,6 +137,36 @@ func (ru *ResourceUpdate) AddAccount(a ...*Account) *ResourceUpdate {
 	return ru.AddAccountIDs(ids...)
 }
 
+// AddChildIDs adds the "children" edge to the Resource entity by IDs.
+func (ru *ResourceUpdate) AddChildIDs(ids ...uuid.UUID) *ResourceUpdate {
+	ru.mutation.AddChildIDs(ids...)
+	return ru
+}
+
+// AddChildren adds the "children" edges to the Resource entity.
+func (ru *ResourceUpdate) AddChildren(r ...*Resource) *ResourceUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.AddChildIDs(ids...)
+}
+
+// AddParentIDs adds the "parent" edge to the Resource entity by IDs.
+func (ru *ResourceUpdate) AddParentIDs(ids ...uuid.UUID) *ResourceUpdate {
+	ru.mutation.AddParentIDs(ids...)
+	return ru
+}
+
+// AddParent adds the "parent" edges to the Resource entity.
+func (ru *ResourceUpdate) AddParent(r ...*Resource) *ResourceUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.AddParentIDs(ids...)
+}
+
 // Mutation returns the ResourceMutation object of the builder.
 func (ru *ResourceUpdate) Mutation() *ResourceMutation {
 	return ru.mutation
@@ -149,6 +191,48 @@ func (ru *ResourceUpdate) RemoveAccount(a ...*Account) *ResourceUpdate {
 		ids[i] = a[i].ID
 	}
 	return ru.RemoveAccountIDs(ids...)
+}
+
+// ClearChildren clears all "children" edges to the Resource entity.
+func (ru *ResourceUpdate) ClearChildren() *ResourceUpdate {
+	ru.mutation.ClearChildren()
+	return ru
+}
+
+// RemoveChildIDs removes the "children" edge to Resource entities by IDs.
+func (ru *ResourceUpdate) RemoveChildIDs(ids ...uuid.UUID) *ResourceUpdate {
+	ru.mutation.RemoveChildIDs(ids...)
+	return ru
+}
+
+// RemoveChildren removes "children" edges to Resource entities.
+func (ru *ResourceUpdate) RemoveChildren(r ...*Resource) *ResourceUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.RemoveChildIDs(ids...)
+}
+
+// ClearParent clears all "parent" edges to the Resource entity.
+func (ru *ResourceUpdate) ClearParent() *ResourceUpdate {
+	ru.mutation.ClearParent()
+	return ru
+}
+
+// RemoveParentIDs removes the "parent" edge to Resource entities by IDs.
+func (ru *ResourceUpdate) RemoveParentIDs(ids ...uuid.UUID) *ResourceUpdate {
+	ru.mutation.RemoveParentIDs(ids...)
+	return ru
+}
+
+// RemoveParent removes "parent" edges to Resource entities.
+func (ru *ResourceUpdate) RemoveParent(r ...*Resource) *ResourceUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.RemoveParentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -199,9 +283,9 @@ func (ru *ResourceUpdate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if v, ok := ru.mutation.Value(); ok {
-		if err := resource.ValueValidator(v); err != nil {
-			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "Resource.value": %w`, err)}
+	if v, ok := ru.mutation.Arn(); ok {
+		if err := resource.ArnValidator(v); err != nil {
+			return &ValidationError{Name: "arn", err: fmt.Errorf(`ent: validator failed for field "Resource.arn": %w`, err)}
 		}
 	}
 	return nil
@@ -228,14 +312,20 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 	}
+	if value, ok := ru.mutation.Arn(); ok {
+		_spec.SetField(resource.FieldArn, field.TypeString, value)
+	}
 	if value, ok := ru.mutation.Properties(); ok {
 		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)
 	}
 	if ru.mutation.PropertiesCleared() {
 		_spec.ClearField(resource.FieldProperties, field.TypeJSON)
 	}
-	if value, ok := ru.mutation.Value(); ok {
-		_spec.SetField(resource.FieldValue, field.TypeString, value)
+	if value, ok := ru.mutation.Tags(); ok {
+		_spec.SetField(resource.FieldTags, field.TypeJSON, value)
+	}
+	if ru.mutation.TagsCleared() {
+		_spec.ClearField(resource.FieldTags, field.TypeJSON)
 	}
 	if value, ok := ru.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
@@ -281,6 +371,96 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.ChildrenTable,
+			Columns: resource.ChildrenPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !ru.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.ChildrenTable,
+			Columns: resource.ChildrenPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.ChildrenTable,
+			Columns: resource.ChildrenPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.ParentTable,
+			Columns: resource.ParentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedParentIDs(); len(nodes) > 0 && !ru.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.ParentTable,
+			Columns: resource.ParentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.ParentTable,
+			Columns: resource.ParentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -342,6 +522,20 @@ func (ruo *ResourceUpdateOne) SetNillableType(s *string) *ResourceUpdateOne {
 	return ruo
 }
 
+// SetArn sets the "arn" field.
+func (ruo *ResourceUpdateOne) SetArn(s string) *ResourceUpdateOne {
+	ruo.mutation.SetArn(s)
+	return ruo
+}
+
+// SetNillableArn sets the "arn" field if the given value is not nil.
+func (ruo *ResourceUpdateOne) SetNillableArn(s *string) *ResourceUpdateOne {
+	if s != nil {
+		ruo.SetArn(*s)
+	}
+	return ruo
+}
+
 // SetProperties sets the "properties" field.
 func (ruo *ResourceUpdateOne) SetProperties(m map[string]interface{}) *ResourceUpdateOne {
 	ruo.mutation.SetProperties(m)
@@ -354,17 +548,15 @@ func (ruo *ResourceUpdateOne) ClearProperties() *ResourceUpdateOne {
 	return ruo
 }
 
-// SetValue sets the "value" field.
-func (ruo *ResourceUpdateOne) SetValue(s string) *ResourceUpdateOne {
-	ruo.mutation.SetValue(s)
+// SetTags sets the "tags" field.
+func (ruo *ResourceUpdateOne) SetTags(m map[string]string) *ResourceUpdateOne {
+	ruo.mutation.SetTags(m)
 	return ruo
 }
 
-// SetNillableValue sets the "value" field if the given value is not nil.
-func (ruo *ResourceUpdateOne) SetNillableValue(s *string) *ResourceUpdateOne {
-	if s != nil {
-		ruo.SetValue(*s)
-	}
+// ClearTags clears the value of the "tags" field.
+func (ruo *ResourceUpdateOne) ClearTags() *ResourceUpdateOne {
+	ruo.mutation.ClearTags()
 	return ruo
 }
 
@@ -403,6 +595,36 @@ func (ruo *ResourceUpdateOne) AddAccount(a ...*Account) *ResourceUpdateOne {
 	return ruo.AddAccountIDs(ids...)
 }
 
+// AddChildIDs adds the "children" edge to the Resource entity by IDs.
+func (ruo *ResourceUpdateOne) AddChildIDs(ids ...uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.AddChildIDs(ids...)
+	return ruo
+}
+
+// AddChildren adds the "children" edges to the Resource entity.
+func (ruo *ResourceUpdateOne) AddChildren(r ...*Resource) *ResourceUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.AddChildIDs(ids...)
+}
+
+// AddParentIDs adds the "parent" edge to the Resource entity by IDs.
+func (ruo *ResourceUpdateOne) AddParentIDs(ids ...uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.AddParentIDs(ids...)
+	return ruo
+}
+
+// AddParent adds the "parent" edges to the Resource entity.
+func (ruo *ResourceUpdateOne) AddParent(r ...*Resource) *ResourceUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.AddParentIDs(ids...)
+}
+
 // Mutation returns the ResourceMutation object of the builder.
 func (ruo *ResourceUpdateOne) Mutation() *ResourceMutation {
 	return ruo.mutation
@@ -427,6 +649,48 @@ func (ruo *ResourceUpdateOne) RemoveAccount(a ...*Account) *ResourceUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return ruo.RemoveAccountIDs(ids...)
+}
+
+// ClearChildren clears all "children" edges to the Resource entity.
+func (ruo *ResourceUpdateOne) ClearChildren() *ResourceUpdateOne {
+	ruo.mutation.ClearChildren()
+	return ruo
+}
+
+// RemoveChildIDs removes the "children" edge to Resource entities by IDs.
+func (ruo *ResourceUpdateOne) RemoveChildIDs(ids ...uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.RemoveChildIDs(ids...)
+	return ruo
+}
+
+// RemoveChildren removes "children" edges to Resource entities.
+func (ruo *ResourceUpdateOne) RemoveChildren(r ...*Resource) *ResourceUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.RemoveChildIDs(ids...)
+}
+
+// ClearParent clears all "parent" edges to the Resource entity.
+func (ruo *ResourceUpdateOne) ClearParent() *ResourceUpdateOne {
+	ruo.mutation.ClearParent()
+	return ruo
+}
+
+// RemoveParentIDs removes the "parent" edge to Resource entities by IDs.
+func (ruo *ResourceUpdateOne) RemoveParentIDs(ids ...uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.RemoveParentIDs(ids...)
+	return ruo
+}
+
+// RemoveParent removes "parent" edges to Resource entities.
+func (ruo *ResourceUpdateOne) RemoveParent(r ...*Resource) *ResourceUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.RemoveParentIDs(ids...)
 }
 
 // Where appends a list predicates to the ResourceUpdate builder.
@@ -490,9 +754,9 @@ func (ruo *ResourceUpdateOne) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if v, ok := ruo.mutation.Value(); ok {
-		if err := resource.ValueValidator(v); err != nil {
-			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "Resource.value": %w`, err)}
+	if v, ok := ruo.mutation.Arn(); ok {
+		if err := resource.ArnValidator(v); err != nil {
+			return &ValidationError{Name: "arn", err: fmt.Errorf(`ent: validator failed for field "Resource.arn": %w`, err)}
 		}
 	}
 	return nil
@@ -536,14 +800,20 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 	if value, ok := ruo.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 	}
+	if value, ok := ruo.mutation.Arn(); ok {
+		_spec.SetField(resource.FieldArn, field.TypeString, value)
+	}
 	if value, ok := ruo.mutation.Properties(); ok {
 		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)
 	}
 	if ruo.mutation.PropertiesCleared() {
 		_spec.ClearField(resource.FieldProperties, field.TypeJSON)
 	}
-	if value, ok := ruo.mutation.Value(); ok {
-		_spec.SetField(resource.FieldValue, field.TypeString, value)
+	if value, ok := ruo.mutation.Tags(); ok {
+		_spec.SetField(resource.FieldTags, field.TypeJSON, value)
+	}
+	if ruo.mutation.TagsCleared() {
+		_spec.ClearField(resource.FieldTags, field.TypeJSON)
 	}
 	if value, ok := ruo.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
@@ -589,6 +859,96 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.ChildrenTable,
+			Columns: resource.ChildrenPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !ruo.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.ChildrenTable,
+			Columns: resource.ChildrenPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.ChildrenTable,
+			Columns: resource.ChildrenPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.ParentTable,
+			Columns: resource.ParentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedParentIDs(); len(nodes) > 0 && !ruo.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.ParentTable,
+			Columns: resource.ParentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.ParentTable,
+			Columns: resource.ParentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

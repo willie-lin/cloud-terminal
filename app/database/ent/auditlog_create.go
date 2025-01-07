@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -97,15 +98,43 @@ func (alc *AuditLogCreate) SetNillableResourceID(i *int) *AuditLogCreate {
 }
 
 // SetResourceType sets the "resource_type" field.
-func (alc *AuditLogCreate) SetResourceType(s string) *AuditLogCreate {
-	alc.mutation.SetResourceType(s)
+func (alc *AuditLogCreate) SetResourceType(at auditlog.ResourceType) *AuditLogCreate {
+	alc.mutation.SetResourceType(at)
 	return alc
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (alc *AuditLogCreate) SetNillableResourceType(s *string) *AuditLogCreate {
+func (alc *AuditLogCreate) SetNillableResourceType(at *auditlog.ResourceType) *AuditLogCreate {
+	if at != nil {
+		alc.SetResourceType(*at)
+	}
+	return alc
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (alc *AuditLogCreate) SetIPAddress(s string) *AuditLogCreate {
+	alc.mutation.SetIPAddress(s)
+	return alc
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (alc *AuditLogCreate) SetNillableIPAddress(s *string) *AuditLogCreate {
 	if s != nil {
-		alc.SetResourceType(*s)
+		alc.SetIPAddress(*s)
+	}
+	return alc
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (alc *AuditLogCreate) SetUserAgent(s string) *AuditLogCreate {
+	alc.mutation.SetUserAgent(s)
+	return alc
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (alc *AuditLogCreate) SetNillableUserAgent(s *string) *AuditLogCreate {
+	if s != nil {
+		alc.SetUserAgent(*s)
 	}
 	return alc
 }
@@ -143,6 +172,21 @@ func (alc *AuditLogCreate) AddUser(u ...*User) *AuditLogCreate {
 		ids[i] = u[i].ID
 	}
 	return alc.AddUserIDs(ids...)
+}
+
+// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
+func (alc *AuditLogCreate) AddTenantIDs(ids ...uuid.UUID) *AuditLogCreate {
+	alc.mutation.AddTenantIDs(ids...)
+	return alc
+}
+
+// AddTenant adds the "tenant" edges to the Tenant entity.
+func (alc *AuditLogCreate) AddTenant(t ...*Tenant) *AuditLogCreate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return alc.AddTenantIDs(ids...)
 }
 
 // Mutation returns the AuditLogMutation object of the builder.
@@ -218,8 +262,15 @@ func (alc *AuditLogCreate) check() error {
 	if _, ok := alc.mutation.Action(); !ok {
 		return &ValidationError{Name: "action", err: errors.New(`ent: missing required field "AuditLog.action"`)}
 	}
-	if len(alc.mutation.UserIDs()) == 0 {
-		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "AuditLog.user"`)}
+	if v, ok := alc.mutation.Action(); ok {
+		if err := auditlog.ActionValidator(v); err != nil {
+			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "AuditLog.action": %w`, err)}
+		}
+	}
+	if v, ok := alc.mutation.ResourceType(); ok {
+		if err := auditlog.ResourceTypeValidator(v); err != nil {
+			return &ValidationError{Name: "resource_type", err: fmt.Errorf(`ent: validator failed for field "AuditLog.resource_type": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -285,8 +336,16 @@ func (alc *AuditLogCreate) createSpec() (*AuditLog, *sqlgraph.CreateSpec) {
 		_node.ResourceID = value
 	}
 	if value, ok := alc.mutation.ResourceType(); ok {
-		_spec.SetField(auditlog.FieldResourceType, field.TypeString, value)
+		_spec.SetField(auditlog.FieldResourceType, field.TypeEnum, value)
 		_node.ResourceType = value
+	}
+	if value, ok := alc.mutation.IPAddress(); ok {
+		_spec.SetField(auditlog.FieldIPAddress, field.TypeString, value)
+		_node.IPAddress = value
+	}
+	if value, ok := alc.mutation.UserAgent(); ok {
+		_spec.SetField(auditlog.FieldUserAgent, field.TypeString, value)
+		_node.UserAgent = value
 	}
 	if value, ok := alc.mutation.Details(); ok {
 		_spec.SetField(auditlog.FieldDetails, field.TypeJSON, value)
@@ -301,6 +360,22 @@ func (alc *AuditLogCreate) createSpec() (*AuditLog, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := alc.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   auditlog.TenantTable,
+			Columns: auditlog.TenantPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

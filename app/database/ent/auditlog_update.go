@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -33,20 +34,6 @@ func (alu *AuditLogUpdate) Where(ps ...predicate.AuditLog) *AuditLogUpdate {
 // SetUpdatedAt sets the "updated_at" field.
 func (alu *AuditLogUpdate) SetUpdatedAt(t time.Time) *AuditLogUpdate {
 	alu.mutation.SetUpdatedAt(t)
-	return alu
-}
-
-// SetTimestamp sets the "timestamp" field.
-func (alu *AuditLogUpdate) SetTimestamp(t time.Time) *AuditLogUpdate {
-	alu.mutation.SetTimestamp(t)
-	return alu
-}
-
-// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableTimestamp(t *time.Time) *AuditLogUpdate {
-	if t != nil {
-		alu.SetTimestamp(*t)
-	}
 	return alu
 }
 
@@ -127,15 +114,15 @@ func (alu *AuditLogUpdate) ClearResourceID() *AuditLogUpdate {
 }
 
 // SetResourceType sets the "resource_type" field.
-func (alu *AuditLogUpdate) SetResourceType(s string) *AuditLogUpdate {
-	alu.mutation.SetResourceType(s)
+func (alu *AuditLogUpdate) SetResourceType(at auditlog.ResourceType) *AuditLogUpdate {
+	alu.mutation.SetResourceType(at)
 	return alu
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableResourceType(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetResourceType(*s)
+func (alu *AuditLogUpdate) SetNillableResourceType(at *auditlog.ResourceType) *AuditLogUpdate {
+	if at != nil {
+		alu.SetResourceType(*at)
 	}
 	return alu
 }
@@ -143,6 +130,46 @@ func (alu *AuditLogUpdate) SetNillableResourceType(s *string) *AuditLogUpdate {
 // ClearResourceType clears the value of the "resource_type" field.
 func (alu *AuditLogUpdate) ClearResourceType() *AuditLogUpdate {
 	alu.mutation.ClearResourceType()
+	return alu
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (alu *AuditLogUpdate) SetIPAddress(s string) *AuditLogUpdate {
+	alu.mutation.SetIPAddress(s)
+	return alu
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (alu *AuditLogUpdate) SetNillableIPAddress(s *string) *AuditLogUpdate {
+	if s != nil {
+		alu.SetIPAddress(*s)
+	}
+	return alu
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (alu *AuditLogUpdate) ClearIPAddress() *AuditLogUpdate {
+	alu.mutation.ClearIPAddress()
+	return alu
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (alu *AuditLogUpdate) SetUserAgent(s string) *AuditLogUpdate {
+	alu.mutation.SetUserAgent(s)
+	return alu
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (alu *AuditLogUpdate) SetNillableUserAgent(s *string) *AuditLogUpdate {
+	if s != nil {
+		alu.SetUserAgent(*s)
+	}
+	return alu
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (alu *AuditLogUpdate) ClearUserAgent() *AuditLogUpdate {
+	alu.mutation.ClearUserAgent()
 	return alu
 }
 
@@ -173,6 +200,21 @@ func (alu *AuditLogUpdate) AddUser(u ...*User) *AuditLogUpdate {
 	return alu.AddUserIDs(ids...)
 }
 
+// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
+func (alu *AuditLogUpdate) AddTenantIDs(ids ...uuid.UUID) *AuditLogUpdate {
+	alu.mutation.AddTenantIDs(ids...)
+	return alu
+}
+
+// AddTenant adds the "tenant" edges to the Tenant entity.
+func (alu *AuditLogUpdate) AddTenant(t ...*Tenant) *AuditLogUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return alu.AddTenantIDs(ids...)
+}
+
 // Mutation returns the AuditLogMutation object of the builder.
 func (alu *AuditLogUpdate) Mutation() *AuditLogMutation {
 	return alu.mutation
@@ -197,6 +239,27 @@ func (alu *AuditLogUpdate) RemoveUser(u ...*User) *AuditLogUpdate {
 		ids[i] = u[i].ID
 	}
 	return alu.RemoveUserIDs(ids...)
+}
+
+// ClearTenant clears all "tenant" edges to the Tenant entity.
+func (alu *AuditLogUpdate) ClearTenant() *AuditLogUpdate {
+	alu.mutation.ClearTenant()
+	return alu
+}
+
+// RemoveTenantIDs removes the "tenant" edge to Tenant entities by IDs.
+func (alu *AuditLogUpdate) RemoveTenantIDs(ids ...uuid.UUID) *AuditLogUpdate {
+	alu.mutation.RemoveTenantIDs(ids...)
+	return alu
+}
+
+// RemoveTenant removes "tenant" edges to Tenant entities.
+func (alu *AuditLogUpdate) RemoveTenant(t ...*Tenant) *AuditLogUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return alu.RemoveTenantIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -235,7 +298,25 @@ func (alu *AuditLogUpdate) defaults() {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (alu *AuditLogUpdate) check() error {
+	if v, ok := alu.mutation.Action(); ok {
+		if err := auditlog.ActionValidator(v); err != nil {
+			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "AuditLog.action": %w`, err)}
+		}
+	}
+	if v, ok := alu.mutation.ResourceType(); ok {
+		if err := auditlog.ResourceTypeValidator(v); err != nil {
+			return &ValidationError{Name: "resource_type", err: fmt.Errorf(`ent: validator failed for field "AuditLog.resource_type": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (alu *AuditLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := alu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID))
 	if ps := alu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -246,9 +327,6 @@ func (alu *AuditLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := alu.mutation.UpdatedAt(); ok {
 		_spec.SetField(auditlog.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := alu.mutation.Timestamp(); ok {
-		_spec.SetField(auditlog.FieldTimestamp, field.TypeTime, value)
 	}
 	if value, ok := alu.mutation.ActorID(); ok {
 		_spec.SetField(auditlog.FieldActorID, field.TypeInt, value)
@@ -272,10 +350,22 @@ func (alu *AuditLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.ClearField(auditlog.FieldResourceID, field.TypeInt)
 	}
 	if value, ok := alu.mutation.ResourceType(); ok {
-		_spec.SetField(auditlog.FieldResourceType, field.TypeString, value)
+		_spec.SetField(auditlog.FieldResourceType, field.TypeEnum, value)
 	}
 	if alu.mutation.ResourceTypeCleared() {
-		_spec.ClearField(auditlog.FieldResourceType, field.TypeString)
+		_spec.ClearField(auditlog.FieldResourceType, field.TypeEnum)
+	}
+	if value, ok := alu.mutation.IPAddress(); ok {
+		_spec.SetField(auditlog.FieldIPAddress, field.TypeString, value)
+	}
+	if alu.mutation.IPAddressCleared() {
+		_spec.ClearField(auditlog.FieldIPAddress, field.TypeString)
+	}
+	if value, ok := alu.mutation.UserAgent(); ok {
+		_spec.SetField(auditlog.FieldUserAgent, field.TypeString, value)
+	}
+	if alu.mutation.UserAgentCleared() {
+		_spec.ClearField(auditlog.FieldUserAgent, field.TypeString)
 	}
 	if value, ok := alu.mutation.Details(); ok {
 		_spec.SetField(auditlog.FieldDetails, field.TypeJSON, value)
@@ -328,6 +418,51 @@ func (alu *AuditLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if alu.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   auditlog.TenantTable,
+			Columns: auditlog.TenantPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := alu.mutation.RemovedTenantIDs(); len(nodes) > 0 && !alu.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   auditlog.TenantTable,
+			Columns: auditlog.TenantPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := alu.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   auditlog.TenantTable,
+			Columns: auditlog.TenantPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, alu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{auditlog.Label}
@@ -351,20 +486,6 @@ type AuditLogUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (aluo *AuditLogUpdateOne) SetUpdatedAt(t time.Time) *AuditLogUpdateOne {
 	aluo.mutation.SetUpdatedAt(t)
-	return aluo
-}
-
-// SetTimestamp sets the "timestamp" field.
-func (aluo *AuditLogUpdateOne) SetTimestamp(t time.Time) *AuditLogUpdateOne {
-	aluo.mutation.SetTimestamp(t)
-	return aluo
-}
-
-// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableTimestamp(t *time.Time) *AuditLogUpdateOne {
-	if t != nil {
-		aluo.SetTimestamp(*t)
-	}
 	return aluo
 }
 
@@ -445,15 +566,15 @@ func (aluo *AuditLogUpdateOne) ClearResourceID() *AuditLogUpdateOne {
 }
 
 // SetResourceType sets the "resource_type" field.
-func (aluo *AuditLogUpdateOne) SetResourceType(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetResourceType(s)
+func (aluo *AuditLogUpdateOne) SetResourceType(at auditlog.ResourceType) *AuditLogUpdateOne {
+	aluo.mutation.SetResourceType(at)
 	return aluo
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableResourceType(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetResourceType(*s)
+func (aluo *AuditLogUpdateOne) SetNillableResourceType(at *auditlog.ResourceType) *AuditLogUpdateOne {
+	if at != nil {
+		aluo.SetResourceType(*at)
 	}
 	return aluo
 }
@@ -461,6 +582,46 @@ func (aluo *AuditLogUpdateOne) SetNillableResourceType(s *string) *AuditLogUpdat
 // ClearResourceType clears the value of the "resource_type" field.
 func (aluo *AuditLogUpdateOne) ClearResourceType() *AuditLogUpdateOne {
 	aluo.mutation.ClearResourceType()
+	return aluo
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (aluo *AuditLogUpdateOne) SetIPAddress(s string) *AuditLogUpdateOne {
+	aluo.mutation.SetIPAddress(s)
+	return aluo
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (aluo *AuditLogUpdateOne) SetNillableIPAddress(s *string) *AuditLogUpdateOne {
+	if s != nil {
+		aluo.SetIPAddress(*s)
+	}
+	return aluo
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (aluo *AuditLogUpdateOne) ClearIPAddress() *AuditLogUpdateOne {
+	aluo.mutation.ClearIPAddress()
+	return aluo
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (aluo *AuditLogUpdateOne) SetUserAgent(s string) *AuditLogUpdateOne {
+	aluo.mutation.SetUserAgent(s)
+	return aluo
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (aluo *AuditLogUpdateOne) SetNillableUserAgent(s *string) *AuditLogUpdateOne {
+	if s != nil {
+		aluo.SetUserAgent(*s)
+	}
+	return aluo
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (aluo *AuditLogUpdateOne) ClearUserAgent() *AuditLogUpdateOne {
+	aluo.mutation.ClearUserAgent()
 	return aluo
 }
 
@@ -491,6 +652,21 @@ func (aluo *AuditLogUpdateOne) AddUser(u ...*User) *AuditLogUpdateOne {
 	return aluo.AddUserIDs(ids...)
 }
 
+// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
+func (aluo *AuditLogUpdateOne) AddTenantIDs(ids ...uuid.UUID) *AuditLogUpdateOne {
+	aluo.mutation.AddTenantIDs(ids...)
+	return aluo
+}
+
+// AddTenant adds the "tenant" edges to the Tenant entity.
+func (aluo *AuditLogUpdateOne) AddTenant(t ...*Tenant) *AuditLogUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return aluo.AddTenantIDs(ids...)
+}
+
 // Mutation returns the AuditLogMutation object of the builder.
 func (aluo *AuditLogUpdateOne) Mutation() *AuditLogMutation {
 	return aluo.mutation
@@ -515,6 +691,27 @@ func (aluo *AuditLogUpdateOne) RemoveUser(u ...*User) *AuditLogUpdateOne {
 		ids[i] = u[i].ID
 	}
 	return aluo.RemoveUserIDs(ids...)
+}
+
+// ClearTenant clears all "tenant" edges to the Tenant entity.
+func (aluo *AuditLogUpdateOne) ClearTenant() *AuditLogUpdateOne {
+	aluo.mutation.ClearTenant()
+	return aluo
+}
+
+// RemoveTenantIDs removes the "tenant" edge to Tenant entities by IDs.
+func (aluo *AuditLogUpdateOne) RemoveTenantIDs(ids ...uuid.UUID) *AuditLogUpdateOne {
+	aluo.mutation.RemoveTenantIDs(ids...)
+	return aluo
+}
+
+// RemoveTenant removes "tenant" edges to Tenant entities.
+func (aluo *AuditLogUpdateOne) RemoveTenant(t ...*Tenant) *AuditLogUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return aluo.RemoveTenantIDs(ids...)
 }
 
 // Where appends a list predicates to the AuditLogUpdate builder.
@@ -566,7 +763,25 @@ func (aluo *AuditLogUpdateOne) defaults() {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (aluo *AuditLogUpdateOne) check() error {
+	if v, ok := aluo.mutation.Action(); ok {
+		if err := auditlog.ActionValidator(v); err != nil {
+			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "AuditLog.action": %w`, err)}
+		}
+	}
+	if v, ok := aluo.mutation.ResourceType(); ok {
+		if err := auditlog.ResourceTypeValidator(v); err != nil {
+			return &ValidationError{Name: "resource_type", err: fmt.Errorf(`ent: validator failed for field "AuditLog.resource_type": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (aluo *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err error) {
+	if err := aluo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID))
 	id, ok := aluo.mutation.ID()
 	if !ok {
@@ -595,9 +810,6 @@ func (aluo *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, er
 	if value, ok := aluo.mutation.UpdatedAt(); ok {
 		_spec.SetField(auditlog.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := aluo.mutation.Timestamp(); ok {
-		_spec.SetField(auditlog.FieldTimestamp, field.TypeTime, value)
-	}
 	if value, ok := aluo.mutation.ActorID(); ok {
 		_spec.SetField(auditlog.FieldActorID, field.TypeInt, value)
 	}
@@ -620,10 +832,22 @@ func (aluo *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, er
 		_spec.ClearField(auditlog.FieldResourceID, field.TypeInt)
 	}
 	if value, ok := aluo.mutation.ResourceType(); ok {
-		_spec.SetField(auditlog.FieldResourceType, field.TypeString, value)
+		_spec.SetField(auditlog.FieldResourceType, field.TypeEnum, value)
 	}
 	if aluo.mutation.ResourceTypeCleared() {
-		_spec.ClearField(auditlog.FieldResourceType, field.TypeString)
+		_spec.ClearField(auditlog.FieldResourceType, field.TypeEnum)
+	}
+	if value, ok := aluo.mutation.IPAddress(); ok {
+		_spec.SetField(auditlog.FieldIPAddress, field.TypeString, value)
+	}
+	if aluo.mutation.IPAddressCleared() {
+		_spec.ClearField(auditlog.FieldIPAddress, field.TypeString)
+	}
+	if value, ok := aluo.mutation.UserAgent(); ok {
+		_spec.SetField(auditlog.FieldUserAgent, field.TypeString, value)
+	}
+	if aluo.mutation.UserAgentCleared() {
+		_spec.ClearField(auditlog.FieldUserAgent, field.TypeString)
 	}
 	if value, ok := aluo.mutation.Details(); ok {
 		_spec.SetField(auditlog.FieldDetails, field.TypeJSON, value)
@@ -669,6 +893,51 @@ func (aluo *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if aluo.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   auditlog.TenantTable,
+			Columns: auditlog.TenantPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := aluo.mutation.RemovedTenantIDs(); len(nodes) > 0 && !aluo.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   auditlog.TenantTable,
+			Columns: auditlog.TenantPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := aluo.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   auditlog.TenantTable,
+			Columns: auditlog.TenantPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

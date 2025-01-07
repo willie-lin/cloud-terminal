@@ -27,10 +27,12 @@ type Resource struct {
 	Name string `json:"name,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
+	// Arn holds the value of the "arn" field.
+	Arn string `json:"arn,omitempty"`
 	// Properties holds the value of the "properties" field.
 	Properties map[string]interface{} `json:"properties,omitempty"`
-	// Value holds the value of the "value" field.
-	Value string `json:"value,omitempty"`
+	// Tags holds the value of the "tags" field.
+	Tags map[string]string `json:"tags,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -43,9 +45,13 @@ type Resource struct {
 type ResourceEdges struct {
 	// Account holds the value of the account edge.
 	Account []*Account `json:"account,omitempty"`
+	// Children holds the value of the children edge.
+	Children []*Resource `json:"children,omitempty"`
+	// Parent holds the value of the parent edge.
+	Parent []*Resource `json:"parent,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -57,14 +63,32 @@ func (e ResourceEdges) AccountOrErr() ([]*Account, error) {
 	return nil, &NotLoadedError{edge: "account"}
 }
 
+// ChildrenOrErr returns the Children value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResourceEdges) ChildrenOrErr() ([]*Resource, error) {
+	if e.loadedTypes[1] {
+		return e.Children, nil
+	}
+	return nil, &NotLoadedError{edge: "children"}
+}
+
+// ParentOrErr returns the Parent value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResourceEdges) ParentOrErr() ([]*Resource, error) {
+	if e.loadedTypes[2] {
+		return e.Parent, nil
+	}
+	return nil, &NotLoadedError{edge: "parent"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Resource) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resource.FieldProperties:
+		case resource.FieldProperties, resource.FieldTags:
 			values[i] = new([]byte)
-		case resource.FieldName, resource.FieldType, resource.FieldValue, resource.FieldDescription:
+		case resource.FieldName, resource.FieldType, resource.FieldArn, resource.FieldDescription:
 			values[i] = new(sql.NullString)
 		case resource.FieldCreatedAt, resource.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -115,6 +139,12 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Type = value.String
 			}
+		case resource.FieldArn:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field arn", values[i])
+			} else if value.Valid {
+				r.Arn = value.String
+			}
 		case resource.FieldProperties:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field properties", values[i])
@@ -123,11 +153,13 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field properties: %w", err)
 				}
 			}
-		case resource.FieldValue:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field value", values[i])
-			} else if value.Valid {
-				r.Value = value.String
+		case resource.FieldTags:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field tags", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &r.Tags); err != nil {
+					return fmt.Errorf("unmarshal field tags: %w", err)
+				}
 			}
 		case resource.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -142,15 +174,25 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// GetValue returns the ent.Value that was dynamically selected and assigned to the Resource.
+// Value returns the ent.Value that was dynamically selected and assigned to the Resource.
 // This includes values selected through modifiers, order, etc.
-func (r *Resource) GetValue(name string) (ent.Value, error) {
+func (r *Resource) Value(name string) (ent.Value, error) {
 	return r.selectValues.Get(name)
 }
 
 // QueryAccount queries the "account" edge of the Resource entity.
 func (r *Resource) QueryAccount() *AccountQuery {
 	return NewResourceClient(r.config).QueryAccount(r)
+}
+
+// QueryChildren queries the "children" edge of the Resource entity.
+func (r *Resource) QueryChildren() *ResourceQuery {
+	return NewResourceClient(r.config).QueryChildren(r)
+}
+
+// QueryParent queries the "parent" edge of the Resource entity.
+func (r *Resource) QueryParent() *ResourceQuery {
+	return NewResourceClient(r.config).QueryParent(r)
 }
 
 // Update returns a builder for updating this Resource.
@@ -188,11 +230,14 @@ func (r *Resource) String() string {
 	builder.WriteString("type=")
 	builder.WriteString(r.Type)
 	builder.WriteString(", ")
+	builder.WriteString("arn=")
+	builder.WriteString(r.Arn)
+	builder.WriteString(", ")
 	builder.WriteString("properties=")
 	builder.WriteString(fmt.Sprintf("%v", r.Properties))
 	builder.WriteString(", ")
-	builder.WriteString("value=")
-	builder.WriteString(r.Value)
+	builder.WriteString("tags=")
+	builder.WriteString(fmt.Sprintf("%v", r.Tags))
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(r.Description)

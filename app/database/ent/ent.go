@@ -15,7 +15,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
@@ -84,7 +83,6 @@ func checkColumn(table, column string) error {
 			accesspolicy.Table: accesspolicy.ValidColumn,
 			account.Table:      account.ValidColumn,
 			auditlog.Table:     auditlog.ValidColumn,
-			permission.Table:   permission.ValidColumn,
 			platform.Table:     platform.ValidColumn,
 			resource.Table:     resource.ValidColumn,
 			role.Table:         role.ValidColumn,

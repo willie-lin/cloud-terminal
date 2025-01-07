@@ -45,18 +45,6 @@ func (f AuditLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuditLogMutation", m)
 }
 
-// The PermissionFunc type is an adapter to allow the use of ordinary
-// function as Permission mutator.
-type PermissionFunc func(context.Context, *ent.PermissionMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f PermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.PermissionMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PermissionMutation", m)
-}
-
 // The PlatformFunc type is an adapter to allow the use of ordinary
 // function as Platform mutator.
 type PlatformFunc func(context.Context, *ent.PlatformMutation) (ent.Value, error)

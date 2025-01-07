@@ -96,9 +96,19 @@ func Email(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldEmail, v))
 }
 
+// EmailVerified applies equality check predicate on the "email_verified" field. It's identical to EmailVerifiedEQ.
+func EmailVerified(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldEmailVerified, v))
+}
+
 // PhoneNumber applies equality check predicate on the "phone_number" field. It's identical to PhoneNumberEQ.
 func PhoneNumber(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPhoneNumber, v))
+}
+
+// PhoneNumberVerified applies equality check predicate on the "phone_number_verified" field. It's identical to PhoneNumberVerifiedEQ.
+func PhoneNumberVerified(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPhoneNumberVerified, v))
 }
 
 // TotpSecret applies equality check predicate on the "totp_secret" field. It's identical to TotpSecretEQ.
@@ -109,6 +119,16 @@ func TotpSecret(v string) predicate.User {
 // Online applies equality check predicate on the "online" field. It's identical to OnlineEQ.
 func Online(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldOnline, v))
+}
+
+// LoginAttempts applies equality check predicate on the "login_attempts" field. It's identical to LoginAttemptsEQ.
+func LoginAttempts(v int) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLoginAttempts, v))
+}
+
+// LockoutTime applies equality check predicate on the "lockout_time" field. It's identical to LockoutTimeEQ.
+func LockoutTime(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLockoutTime, v))
 }
 
 // LastLoginTime applies equality check predicate on the "last_login_time" field. It's identical to LastLoginTimeEQ.
@@ -616,6 +636,16 @@ func EmailContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldEmail, v))
 }
 
+// EmailVerifiedEQ applies the EQ predicate on the "email_verified" field.
+func EmailVerifiedEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldEmailVerified, v))
+}
+
+// EmailVerifiedNEQ applies the NEQ predicate on the "email_verified" field.
+func EmailVerifiedNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldEmailVerified, v))
+}
+
 // PhoneNumberEQ applies the EQ predicate on the "phone_number" field.
 func PhoneNumberEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPhoneNumber, v))
@@ -689,6 +719,16 @@ func PhoneNumberEqualFold(v string) predicate.User {
 // PhoneNumberContainsFold applies the ContainsFold predicate on the "phone_number" field.
 func PhoneNumberContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldPhoneNumber, v))
+}
+
+// PhoneNumberVerifiedEQ applies the EQ predicate on the "phone_number_verified" field.
+func PhoneNumberVerifiedEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPhoneNumberVerified, v))
+}
+
+// PhoneNumberVerifiedNEQ applies the NEQ predicate on the "phone_number_verified" field.
+func PhoneNumberVerifiedNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldPhoneNumberVerified, v))
 }
 
 // TotpSecretEQ applies the EQ predicate on the "totp_secret" field.
@@ -796,6 +836,96 @@ func StatusNotIn(vs ...Status) predicate.User {
 	return predicate.User(sql.FieldNotIn(FieldStatus, vs...))
 }
 
+// LoginAttemptsEQ applies the EQ predicate on the "login_attempts" field.
+func LoginAttemptsEQ(v int) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLoginAttempts, v))
+}
+
+// LoginAttemptsNEQ applies the NEQ predicate on the "login_attempts" field.
+func LoginAttemptsNEQ(v int) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldLoginAttempts, v))
+}
+
+// LoginAttemptsIn applies the In predicate on the "login_attempts" field.
+func LoginAttemptsIn(vs ...int) predicate.User {
+	return predicate.User(sql.FieldIn(FieldLoginAttempts, vs...))
+}
+
+// LoginAttemptsNotIn applies the NotIn predicate on the "login_attempts" field.
+func LoginAttemptsNotIn(vs ...int) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldLoginAttempts, vs...))
+}
+
+// LoginAttemptsGT applies the GT predicate on the "login_attempts" field.
+func LoginAttemptsGT(v int) predicate.User {
+	return predicate.User(sql.FieldGT(FieldLoginAttempts, v))
+}
+
+// LoginAttemptsGTE applies the GTE predicate on the "login_attempts" field.
+func LoginAttemptsGTE(v int) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldLoginAttempts, v))
+}
+
+// LoginAttemptsLT applies the LT predicate on the "login_attempts" field.
+func LoginAttemptsLT(v int) predicate.User {
+	return predicate.User(sql.FieldLT(FieldLoginAttempts, v))
+}
+
+// LoginAttemptsLTE applies the LTE predicate on the "login_attempts" field.
+func LoginAttemptsLTE(v int) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldLoginAttempts, v))
+}
+
+// LockoutTimeEQ applies the EQ predicate on the "lockout_time" field.
+func LockoutTimeEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLockoutTime, v))
+}
+
+// LockoutTimeNEQ applies the NEQ predicate on the "lockout_time" field.
+func LockoutTimeNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldLockoutTime, v))
+}
+
+// LockoutTimeIn applies the In predicate on the "lockout_time" field.
+func LockoutTimeIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldLockoutTime, vs...))
+}
+
+// LockoutTimeNotIn applies the NotIn predicate on the "lockout_time" field.
+func LockoutTimeNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldLockoutTime, vs...))
+}
+
+// LockoutTimeGT applies the GT predicate on the "lockout_time" field.
+func LockoutTimeGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldLockoutTime, v))
+}
+
+// LockoutTimeGTE applies the GTE predicate on the "lockout_time" field.
+func LockoutTimeGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldLockoutTime, v))
+}
+
+// LockoutTimeLT applies the LT predicate on the "lockout_time" field.
+func LockoutTimeLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldLockoutTime, v))
+}
+
+// LockoutTimeLTE applies the LTE predicate on the "lockout_time" field.
+func LockoutTimeLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldLockoutTime, v))
+}
+
+// LockoutTimeIsNil applies the IsNil predicate on the "lockout_time" field.
+func LockoutTimeIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldLockoutTime))
+}
+
+// LockoutTimeNotNil applies the NotNil predicate on the "lockout_time" field.
+func LockoutTimeNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldLockoutTime))
+}
+
 // LastLoginTimeEQ applies the EQ predicate on the "last_login_time" field.
 func LastLoginTimeEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldLastLoginTime, v))
@@ -834,6 +964,16 @@ func LastLoginTimeLT(v time.Time) predicate.User {
 // LastLoginTimeLTE applies the LTE predicate on the "last_login_time" field.
 func LastLoginTimeLTE(v time.Time) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldLastLoginTime, v))
+}
+
+// SocialLoginsIsNil applies the IsNil predicate on the "social_logins" field.
+func SocialLoginsIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldSocialLogins))
+}
+
+// SocialLoginsNotNil applies the NotNil predicate on the "social_logins" field.
+func SocialLoginsNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldSocialLogins))
 }
 
 // HasAccount applies the HasEdge predicate on the "account" edge.

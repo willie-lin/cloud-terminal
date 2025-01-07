@@ -52,6 +52,26 @@ func (au *AccountUpdate) SetNillableName(s *string) *AccountUpdate {
 	return au
 }
 
+// SetDescription sets the "description" field.
+func (au *AccountUpdate) SetDescription(s string) *AccountUpdate {
+	au.mutation.SetDescription(s)
+	return au
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (au *AccountUpdate) SetNillableDescription(s *string) *AccountUpdate {
+	if s != nil {
+		au.SetDescription(*s)
+	}
+	return au
+}
+
+// ClearDescription clears the value of the "description" field.
+func (au *AccountUpdate) ClearDescription() *AccountUpdate {
+	au.mutation.ClearDescription()
+	return au
+}
+
 // SetStatus sets the "status" field.
 func (au *AccountUpdate) SetStatus(a account.Status) *AccountUpdate {
 	au.mutation.SetStatus(a)
@@ -232,6 +252,12 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.Name(); ok {
 		_spec.SetField(account.FieldName, field.TypeString, value)
 	}
+	if value, ok := au.mutation.Description(); ok {
+		_spec.SetField(account.FieldDescription, field.TypeString, value)
+	}
+	if au.mutation.DescriptionCleared() {
+		_spec.ClearField(account.FieldDescription, field.TypeString)
+	}
 	if value, ok := au.mutation.Status(); ok {
 		_spec.SetField(account.FieldStatus, field.TypeEnum, value)
 	}
@@ -391,6 +417,26 @@ func (auo *AccountUpdateOne) SetNillableName(s *string) *AccountUpdateOne {
 	if s != nil {
 		auo.SetName(*s)
 	}
+	return auo
+}
+
+// SetDescription sets the "description" field.
+func (auo *AccountUpdateOne) SetDescription(s string) *AccountUpdateOne {
+	auo.mutation.SetDescription(s)
+	return auo
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (auo *AccountUpdateOne) SetNillableDescription(s *string) *AccountUpdateOne {
+	if s != nil {
+		auo.SetDescription(*s)
+	}
+	return auo
+}
+
+// ClearDescription clears the value of the "description" field.
+func (auo *AccountUpdateOne) ClearDescription() *AccountUpdateOne {
+	auo.mutation.ClearDescription()
 	return auo
 }
 
@@ -603,6 +649,12 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err e
 	}
 	if value, ok := auo.mutation.Name(); ok {
 		_spec.SetField(account.FieldName, field.TypeString, value)
+	}
+	if value, ok := auo.mutation.Description(); ok {
+		_spec.SetField(account.FieldDescription, field.TypeString, value)
+	}
+	if auo.mutation.DescriptionCleared() {
+		_spec.ClearField(account.FieldDescription, field.TypeString)
 	}
 	if value, ok := auo.mutation.Status(); ok {
 		_spec.SetField(account.FieldStatus, field.TypeEnum, value)

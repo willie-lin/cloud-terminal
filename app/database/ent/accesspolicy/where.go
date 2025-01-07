@@ -76,16 +76,6 @@ func Description(v string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldDescription, v))
 }
 
-// ResourceType applies equality check predicate on the "resource_type" field. It's identical to ResourceTypeEQ.
-func ResourceType(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldEQ(FieldResourceType, v))
-}
-
-// Action applies equality check predicate on the "action" field. It's identical to ActionEQ.
-func Action(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldEQ(FieldAction, v))
-}
-
 // Immutable applies equality check predicate on the "immutable" field. It's identical to ImmutableEQ.
 func Immutable(v bool) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldImmutable, v))
@@ -331,136 +321,6 @@ func EffectNotIn(vs ...Effect) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldNotIn(FieldEffect, vs...))
 }
 
-// ResourceTypeEQ applies the EQ predicate on the "resource_type" field.
-func ResourceTypeEQ(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldEQ(FieldResourceType, v))
-}
-
-// ResourceTypeNEQ applies the NEQ predicate on the "resource_type" field.
-func ResourceTypeNEQ(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldNEQ(FieldResourceType, v))
-}
-
-// ResourceTypeIn applies the In predicate on the "resource_type" field.
-func ResourceTypeIn(vs ...string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldIn(FieldResourceType, vs...))
-}
-
-// ResourceTypeNotIn applies the NotIn predicate on the "resource_type" field.
-func ResourceTypeNotIn(vs ...string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldNotIn(FieldResourceType, vs...))
-}
-
-// ResourceTypeGT applies the GT predicate on the "resource_type" field.
-func ResourceTypeGT(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldGT(FieldResourceType, v))
-}
-
-// ResourceTypeGTE applies the GTE predicate on the "resource_type" field.
-func ResourceTypeGTE(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldGTE(FieldResourceType, v))
-}
-
-// ResourceTypeLT applies the LT predicate on the "resource_type" field.
-func ResourceTypeLT(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldLT(FieldResourceType, v))
-}
-
-// ResourceTypeLTE applies the LTE predicate on the "resource_type" field.
-func ResourceTypeLTE(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldLTE(FieldResourceType, v))
-}
-
-// ResourceTypeContains applies the Contains predicate on the "resource_type" field.
-func ResourceTypeContains(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldContains(FieldResourceType, v))
-}
-
-// ResourceTypeHasPrefix applies the HasPrefix predicate on the "resource_type" field.
-func ResourceTypeHasPrefix(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldHasPrefix(FieldResourceType, v))
-}
-
-// ResourceTypeHasSuffix applies the HasSuffix predicate on the "resource_type" field.
-func ResourceTypeHasSuffix(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldHasSuffix(FieldResourceType, v))
-}
-
-// ResourceTypeEqualFold applies the EqualFold predicate on the "resource_type" field.
-func ResourceTypeEqualFold(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldEqualFold(FieldResourceType, v))
-}
-
-// ResourceTypeContainsFold applies the ContainsFold predicate on the "resource_type" field.
-func ResourceTypeContainsFold(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldContainsFold(FieldResourceType, v))
-}
-
-// ActionEQ applies the EQ predicate on the "action" field.
-func ActionEQ(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldEQ(FieldAction, v))
-}
-
-// ActionNEQ applies the NEQ predicate on the "action" field.
-func ActionNEQ(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldNEQ(FieldAction, v))
-}
-
-// ActionIn applies the In predicate on the "action" field.
-func ActionIn(vs ...string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldIn(FieldAction, vs...))
-}
-
-// ActionNotIn applies the NotIn predicate on the "action" field.
-func ActionNotIn(vs ...string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldNotIn(FieldAction, vs...))
-}
-
-// ActionGT applies the GT predicate on the "action" field.
-func ActionGT(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldGT(FieldAction, v))
-}
-
-// ActionGTE applies the GTE predicate on the "action" field.
-func ActionGTE(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldGTE(FieldAction, v))
-}
-
-// ActionLT applies the LT predicate on the "action" field.
-func ActionLT(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldLT(FieldAction, v))
-}
-
-// ActionLTE applies the LTE predicate on the "action" field.
-func ActionLTE(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldLTE(FieldAction, v))
-}
-
-// ActionContains applies the Contains predicate on the "action" field.
-func ActionContains(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldContains(FieldAction, v))
-}
-
-// ActionHasPrefix applies the HasPrefix predicate on the "action" field.
-func ActionHasPrefix(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldHasPrefix(FieldAction, v))
-}
-
-// ActionHasSuffix applies the HasSuffix predicate on the "action" field.
-func ActionHasSuffix(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldHasSuffix(FieldAction, v))
-}
-
-// ActionEqualFold applies the EqualFold predicate on the "action" field.
-func ActionEqualFold(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldEqualFold(FieldAction, v))
-}
-
-// ActionContainsFold applies the ContainsFold predicate on the "action" field.
-func ActionContainsFold(v string) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldContainsFold(FieldAction, v))
-}
-
 // ImmutableEQ applies the EQ predicate on the "immutable" field.
 func ImmutableEQ(v bool) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldImmutable, v))
@@ -471,21 +331,21 @@ func ImmutableNEQ(v bool) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldNEQ(FieldImmutable, v))
 }
 
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.AccessPolicy {
+// HasRoles applies the HasEdge predicate on the "roles" edge.
+func HasRoles() predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, TenantTable, TenantPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.AccessPolicy {
+// HasRolesWith applies the HasEdge predicate on the "roles" edge with a given conditions (other predicates).
+func HasRolesWith(preds ...predicate.Role) predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newTenantStep()
+		step := newRolesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

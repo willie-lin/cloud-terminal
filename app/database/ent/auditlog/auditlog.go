@@ -3,6 +3,7 @@
 package auditlog
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -31,10 +32,16 @@ const (
 	FieldResourceID = "resource_id"
 	// FieldResourceType holds the string denoting the resource_type field in the database.
 	FieldResourceType = "resource_type"
+	// FieldIPAddress holds the string denoting the ip_address field in the database.
+	FieldIPAddress = "ip_address"
+	// FieldUserAgent holds the string denoting the user_agent field in the database.
+	FieldUserAgent = "user_agent"
 	// FieldDetails holds the string denoting the details field in the database.
 	FieldDetails = "details"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeTenant holds the string denoting the tenant edge name in mutations.
+	EdgeTenant = "tenant"
 	// Table holds the table name of the auditlog in the database.
 	Table = "audit_logs"
 	// UserTable is the table that holds the user relation/edge. The primary key declared below.
@@ -42,6 +49,11 @@ const (
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
+	// TenantTable is the table that holds the tenant relation/edge. The primary key declared below.
+	TenantTable = "tenant_audit_logs"
+	// TenantInverseTable is the table name for the Tenant entity.
+	// It exists in this package in order to avoid circular dependency with the "tenant" package.
+	TenantInverseTable = "tenants"
 )
 
 // Columns holds all SQL columns for auditlog fields.
@@ -55,6 +67,8 @@ var Columns = []string{
 	FieldAction,
 	FieldResourceID,
 	FieldResourceType,
+	FieldIPAddress,
+	FieldUserAgent,
 	FieldDetails,
 }
 
@@ -62,6 +76,9 @@ var (
 	// UserPrimaryKey and UserColumn2 are the table columns denoting the
 	// primary key for the user relation (M2M).
 	UserPrimaryKey = []string{"user_id", "audit_log_id"}
+	// TenantPrimaryKey and TenantColumn2 are the table columns denoting the
+	// primary key for the tenant relation (M2M).
+	TenantPrimaryKey = []string{"tenant_id", "audit_log_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -83,9 +100,39 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultTimestamp holds the default value on creation for the "timestamp" field.
 	DefaultTimestamp func() time.Time
+	// ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	ActionValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// ResourceType defines the type for the "resource_type" enum field.
+type ResourceType string
+
+// ResourceType values.
+const (
+	ResourceTypeUser       ResourceType = "user"
+	ResourceTypeAccount    ResourceType = "account"
+	ResourceTypeRole       ResourceType = "role"
+	ResourceTypePermission ResourceType = "permission"
+	ResourceTypeResource   ResourceType = "resource"
+	ResourceTypeTenant     ResourceType = "tenant"
+	ResourceTypePlatform   ResourceType = "platform"
+)
+
+func (rt ResourceType) String() string {
+	return string(rt)
+}
+
+// ResourceTypeValidator is a validator for the "resource_type" field enum values. It is called by the builders before save.
+func ResourceTypeValidator(rt ResourceType) error {
+	switch rt {
+	case ResourceTypeUser, ResourceTypeAccount, ResourceTypeRole, ResourceTypePermission, ResourceTypeResource, ResourceTypeTenant, ResourceTypePlatform:
+		return nil
+	default:
+		return fmt.Errorf("auditlog: invalid enum value for resource_type field: %q", rt)
+	}
+}
 
 // OrderOption defines the ordering options for the AuditLog queries.
 type OrderOption func(*sql.Selector)
@@ -135,6 +182,16 @@ func ByResourceType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResourceType, opts...).ToFunc()
 }
 
+// ByIPAddress orders the results by the ip_address field.
+func ByIPAddress(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIPAddress, opts...).ToFunc()
+}
+
+// ByUserAgent orders the results by the user_agent field.
+func ByUserAgent(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserAgent, opts...).ToFunc()
+}
+
 // ByUserCount orders the results by user count.
 func ByUserCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -148,10 +205,31 @@ func ByUser(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByTenantCount orders the results by tenant count.
+func ByTenantCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTenantStep(), opts...)
+	}
+}
+
+// ByTenant orders the results by tenant terms.
+func ByTenant(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+	)
+}
+func newTenantStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TenantInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, TenantTable, TenantPrimaryKey...),
 	)
 }

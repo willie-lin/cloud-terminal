@@ -18,34 +18,28 @@ func (AccessPolicy) Mixin() []ent.Mixin {
 	}
 }
 
+type PolicyStatement struct {
+	Effect    string      `json:"Effect"`
+	Actions   []string    `json:"Action"`
+	Resources []string    `json:"Resource"`
+	Condition interface{} `json:"Condition,omitempty"`
+}
+
 // Fields of the AccessPolicy.
 func (AccessPolicy) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
-		field.Enum("effect").Values("allow", "deny").Default("allow"), // 策略效果
-		//field.JSON("condition", &model.Condition{}).Optional(),
-		field.JSON("statements", []map[string]interface{}{}), // 使用 JSON 存储策略语句
-		field.String("resource_type").NotEmpty(),
-		field.String("action").NotEmpty(),
-		field.Bool("immutable").Default(false), // 添加 immutable 字段，默认为 false
+		field.Enum("effect").Values("allow", "deny").Default("allow"),          // 策略效果
+		field.JSON("statements", PolicyStatement{}).Default(PolicyStatement{}), // 使用 JSON 存储策略语句
+		field.Bool("immutable").Default(false),                                 // 添加 immutable 字段，默认为 false
 	}
 }
 
 // Edges of the AccessPolicy.
 func (AccessPolicy) Edges() []ent.Edge {
 	return []ent.Edge{
-
-		edge.From("tenant", Tenant.Type).Ref("access_policies").Required(),
-		//edge.From("account", Account.Type).Ref("access_policies").Unique().Required(),
-		//edge.From("users", User.Type).Ref("access_policies"),
-		////edge.From("roles", Role.Type).Ref("access_policies"),
-		//edge.To("roles", Role.Type),
-		//edge.To("permissions", Permission.Type),
-		//edge.To("resources", Resource.Type),
-		////edge.To("resources", Resource.Type).StorageKey(edge.Table("access_policy_resources")),
-		////edge.To("permissions", Permission.Type).StorageKey(edge.Table("access_policy_permissions")),
-
+		edge.To("roles", Role.Type),
 	}
 }

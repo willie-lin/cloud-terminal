@@ -42,15 +42,11 @@ type TenantEdges struct {
 	Platform *Platform `json:"platform,omitempty"`
 	// Accounts holds the value of the accounts edge.
 	Accounts []*Account `json:"accounts,omitempty"`
-	// Permissions holds the value of the permissions edge.
-	Permissions []*Permission `json:"permissions,omitempty"`
-	// Roles holds the value of the roles edge.
-	Roles []*Role `json:"roles,omitempty"`
-	// AccessPolicies holds the value of the access_policies edge.
-	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
+	// AuditLogs holds the value of the audit_logs edge.
+	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [3]bool
 }
 
 // PlatformOrErr returns the Platform value or an error if the edge
@@ -73,31 +69,13 @@ func (e TenantEdges) AccountsOrErr() ([]*Account, error) {
 	return nil, &NotLoadedError{edge: "accounts"}
 }
 
-// PermissionsOrErr returns the Permissions value or an error if the edge
+// AuditLogsOrErr returns the AuditLogs value or an error if the edge
 // was not loaded in eager-loading.
-func (e TenantEdges) PermissionsOrErr() ([]*Permission, error) {
+func (e TenantEdges) AuditLogsOrErr() ([]*AuditLog, error) {
 	if e.loadedTypes[2] {
-		return e.Permissions, nil
+		return e.AuditLogs, nil
 	}
-	return nil, &NotLoadedError{edge: "permissions"}
-}
-
-// RolesOrErr returns the Roles value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[3] {
-		return e.Roles, nil
-	}
-	return nil, &NotLoadedError{edge: "roles"}
-}
-
-// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
-	if e.loadedTypes[4] {
-		return e.AccessPolicies, nil
-	}
-	return nil, &NotLoadedError{edge: "access_policies"}
+	return nil, &NotLoadedError{edge: "audit_logs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -194,19 +172,9 @@ func (t *Tenant) QueryAccounts() *AccountQuery {
 	return NewTenantClient(t.config).QueryAccounts(t)
 }
 
-// QueryPermissions queries the "permissions" edge of the Tenant entity.
-func (t *Tenant) QueryPermissions() *PermissionQuery {
-	return NewTenantClient(t.config).QueryPermissions(t)
-}
-
-// QueryRoles queries the "roles" edge of the Tenant entity.
-func (t *Tenant) QueryRoles() *RoleQuery {
-	return NewTenantClient(t.config).QueryRoles(t)
-}
-
-// QueryAccessPolicies queries the "access_policies" edge of the Tenant entity.
-func (t *Tenant) QueryAccessPolicies() *AccessPolicyQuery {
-	return NewTenantClient(t.config).QueryAccessPolicies(t)
+// QueryAuditLogs queries the "audit_logs" edge of the Tenant entity.
+func (t *Tenant) QueryAuditLogs() *AuditLogQuery {
+	return NewTenantClient(t.config).QueryAuditLogs(t)
 }
 
 // Update returns a builder for updating this Tenant.

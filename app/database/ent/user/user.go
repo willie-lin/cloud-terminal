@@ -32,16 +32,26 @@ const (
 	FieldPassword = "password"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
+	// FieldEmailVerified holds the string denoting the email_verified field in the database.
+	FieldEmailVerified = "email_verified"
 	// FieldPhoneNumber holds the string denoting the phone_number field in the database.
 	FieldPhoneNumber = "phone_number"
+	// FieldPhoneNumberVerified holds the string denoting the phone_number_verified field in the database.
+	FieldPhoneNumberVerified = "phone_number_verified"
 	// FieldTotpSecret holds the string denoting the totp_secret field in the database.
 	FieldTotpSecret = "totp_secret"
 	// FieldOnline holds the string denoting the online field in the database.
 	FieldOnline = "online"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldLoginAttempts holds the string denoting the login_attempts field in the database.
+	FieldLoginAttempts = "login_attempts"
+	// FieldLockoutTime holds the string denoting the lockout_time field in the database.
+	FieldLockoutTime = "lockout_time"
 	// FieldLastLoginTime holds the string denoting the last_login_time field in the database.
 	FieldLastLoginTime = "last_login_time"
+	// FieldSocialLogins holds the string denoting the social_logins field in the database.
+	FieldSocialLogins = "social_logins"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
@@ -82,11 +92,16 @@ var Columns = []string{
 	FieldUsername,
 	FieldPassword,
 	FieldEmail,
+	FieldEmailVerified,
 	FieldPhoneNumber,
+	FieldPhoneNumberVerified,
 	FieldTotpSecret,
 	FieldOnline,
 	FieldStatus,
+	FieldLoginAttempts,
+	FieldLockoutTime,
 	FieldLastLoginTime,
+	FieldSocialLogins,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
@@ -134,10 +149,16 @@ var (
 	PasswordValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
+	// DefaultEmailVerified holds the default value on creation for the "email_verified" field.
+	DefaultEmailVerified bool
 	// DefaultPhoneNumber holds the default value on creation for the "phone_number" field.
 	DefaultPhoneNumber string
+	// DefaultPhoneNumberVerified holds the default value on creation for the "phone_number_verified" field.
+	DefaultPhoneNumberVerified bool
 	// DefaultOnline holds the default value on creation for the "online" field.
 	DefaultOnline bool
+	// DefaultLoginAttempts holds the default value on creation for the "login_attempts" field.
+	DefaultLoginAttempts int
 	// DefaultLastLoginTime holds the default value on creation for the "last_login_time" field.
 	DefaultLastLoginTime func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
@@ -219,9 +240,19 @@ func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
 }
 
+// ByEmailVerified orders the results by the email_verified field.
+func ByEmailVerified(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmailVerified, opts...).ToFunc()
+}
+
 // ByPhoneNumber orders the results by the phone_number field.
 func ByPhoneNumber(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPhoneNumber, opts...).ToFunc()
+}
+
+// ByPhoneNumberVerified orders the results by the phone_number_verified field.
+func ByPhoneNumberVerified(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPhoneNumberVerified, opts...).ToFunc()
 }
 
 // ByTotpSecret orders the results by the totp_secret field.
@@ -237,6 +268,16 @@ func ByOnline(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByLoginAttempts orders the results by the login_attempts field.
+func ByLoginAttempts(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLoginAttempts, opts...).ToFunc()
+}
+
+// ByLockoutTime orders the results by the lockout_time field.
+func ByLockoutTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLockoutTime, opts...).ToFunc()
 }
 
 // ByLastLoginTime orders the results by the last_login_time field.

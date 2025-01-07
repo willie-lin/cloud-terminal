@@ -34,7 +34,11 @@ type AuditLog struct {
 	// ResourceID holds the value of the "resource_id" field.
 	ResourceID int `json:"resource_id,omitempty"`
 	// ResourceType holds the value of the "resource_type" field.
-	ResourceType string `json:"resource_type,omitempty"`
+	ResourceType auditlog.ResourceType `json:"resource_type,omitempty"`
+	// IPAddress holds the value of the "ip_address" field.
+	IPAddress string `json:"ip_address,omitempty"`
+	// UserAgent holds the value of the "user_agent" field.
+	UserAgent string `json:"user_agent,omitempty"`
 	// Details holds the value of the "details" field.
 	Details map[string]interface{} `json:"details,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -47,9 +51,11 @@ type AuditLog struct {
 type AuditLogEdges struct {
 	// User holds the value of the user edge.
 	User []*User `json:"user,omitempty"`
+	// Tenant holds the value of the tenant edge.
+	Tenant []*Tenant `json:"tenant,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -61,6 +67,15 @@ func (e AuditLogEdges) UserOrErr() ([]*User, error) {
 	return nil, &NotLoadedError{edge: "user"}
 }
 
+// TenantOrErr returns the Tenant value or an error if the edge
+// was not loaded in eager-loading.
+func (e AuditLogEdges) TenantOrErr() ([]*Tenant, error) {
+	if e.loadedTypes[1] {
+		return e.Tenant, nil
+	}
+	return nil, &NotLoadedError{edge: "tenant"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*AuditLog) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -70,7 +85,7 @@ func (*AuditLog) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case auditlog.FieldActorID, auditlog.FieldResourceID:
 			values[i] = new(sql.NullInt64)
-		case auditlog.FieldActorUsername, auditlog.FieldAction, auditlog.FieldResourceType:
+		case auditlog.FieldActorUsername, auditlog.FieldAction, auditlog.FieldResourceType, auditlog.FieldIPAddress, auditlog.FieldUserAgent:
 			values[i] = new(sql.NullString)
 		case auditlog.FieldCreatedAt, auditlog.FieldUpdatedAt, auditlog.FieldTimestamp:
 			values[i] = new(sql.NullTime)
@@ -143,7 +158,19 @@ func (al *AuditLog) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_type", values[i])
 			} else if value.Valid {
-				al.ResourceType = value.String
+				al.ResourceType = auditlog.ResourceType(value.String)
+			}
+		case auditlog.FieldIPAddress:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ip_address", values[i])
+			} else if value.Valid {
+				al.IPAddress = value.String
+			}
+		case auditlog.FieldUserAgent:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field user_agent", values[i])
+			} else if value.Valid {
+				al.UserAgent = value.String
 			}
 		case auditlog.FieldDetails:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -169,6 +196,11 @@ func (al *AuditLog) Value(name string) (ent.Value, error) {
 // QueryUser queries the "user" edge of the AuditLog entity.
 func (al *AuditLog) QueryUser() *UserQuery {
 	return NewAuditLogClient(al.config).QueryUser(al)
+}
+
+// QueryTenant queries the "tenant" edge of the AuditLog entity.
+func (al *AuditLog) QueryTenant() *TenantQuery {
+	return NewAuditLogClient(al.config).QueryTenant(al)
 }
 
 // Update returns a builder for updating this AuditLog.
@@ -216,7 +248,13 @@ func (al *AuditLog) String() string {
 	builder.WriteString(fmt.Sprintf("%v", al.ResourceID))
 	builder.WriteString(", ")
 	builder.WriteString("resource_type=")
-	builder.WriteString(al.ResourceType)
+	builder.WriteString(fmt.Sprintf("%v", al.ResourceType))
+	builder.WriteString(", ")
+	builder.WriteString("ip_address=")
+	builder.WriteString(al.IPAddress)
+	builder.WriteString(", ")
+	builder.WriteString("user_agent=")
+	builder.WriteString(al.UserAgent)
 	builder.WriteString(", ")
 	builder.WriteString("details=")
 	builder.WriteString(fmt.Sprintf("%v", al.Details))

@@ -32,18 +32,14 @@ type Role struct {
 	IsDefault bool `json:"is_default,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoleQuery when eager-loading is set.
-	Edges            RoleEdges `json:"edges"`
-	permission_roles *uuid.UUID
-	user_roles       *uuid.UUID
-	selectValues     sql.SelectValues
+	Edges               RoleEdges `json:"edges"`
+	access_policy_roles *uuid.UUID
+	user_roles          *uuid.UUID
+	selectValues        sql.SelectValues
 }
 
 // RoleEdges holds the relations/edges for other nodes in the graph.
 type RoleEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant []*Tenant `json:"tenant,omitempty"`
-	// Permissions holds the value of the permissions edge.
-	Permissions []*Permission `json:"permissions,omitempty"`
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
 	// ParentRole holds the value of the parent_role edge.
@@ -52,31 +48,13 @@ type RoleEdges struct {
 	ChildRoles []*Role `json:"child_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading.
-func (e RoleEdges) TenantOrErr() ([]*Tenant, error) {
-	if e.loadedTypes[0] {
-		return e.Tenant, nil
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// PermissionsOrErr returns the Permissions value or an error if the edge
-// was not loaded in eager-loading.
-func (e RoleEdges) PermissionsOrErr() ([]*Permission, error) {
-	if e.loadedTypes[1] {
-		return e.Permissions, nil
-	}
-	return nil, &NotLoadedError{edge: "permissions"}
+	loadedTypes [3]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
 // was not loaded in eager-loading.
 func (e RoleEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[0] {
 		return e.Users, nil
 	}
 	return nil, &NotLoadedError{edge: "users"}
@@ -85,7 +63,7 @@ func (e RoleEdges) UsersOrErr() ([]*User, error) {
 // ParentRoleOrErr returns the ParentRole value or an error if the edge
 // was not loaded in eager-loading.
 func (e RoleEdges) ParentRoleOrErr() ([]*Role, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[1] {
 		return e.ParentRole, nil
 	}
 	return nil, &NotLoadedError{edge: "parent_role"}
@@ -94,7 +72,7 @@ func (e RoleEdges) ParentRoleOrErr() ([]*Role, error) {
 // ChildRolesOrErr returns the ChildRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e RoleEdges) ChildRolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[2] {
 		return e.ChildRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "child_roles"}
@@ -113,7 +91,7 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case role.FieldID:
 			values[i] = new(uuid.UUID)
-		case role.ForeignKeys[0]: // permission_roles
+		case role.ForeignKeys[0]: // access_policy_roles
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case role.ForeignKeys[1]: // user_roles
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
@@ -176,10 +154,10 @@ func (r *Role) assignValues(columns []string, values []any) error {
 			}
 		case role.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field permission_roles", values[i])
+				return fmt.Errorf("unexpected type %T for field access_policy_roles", values[i])
 			} else if value.Valid {
-				r.permission_roles = new(uuid.UUID)
-				*r.permission_roles = *value.S.(*uuid.UUID)
+				r.access_policy_roles = new(uuid.UUID)
+				*r.access_policy_roles = *value.S.(*uuid.UUID)
 			}
 		case role.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -199,16 +177,6 @@ func (r *Role) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (r *Role) Value(name string) (ent.Value, error) {
 	return r.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the Role entity.
-func (r *Role) QueryTenant() *TenantQuery {
-	return NewRoleClient(r.config).QueryTenant(r)
-}
-
-// QueryPermissions queries the "permissions" edge of the Role entity.
-func (r *Role) QueryPermissions() *PermissionQuery {
-	return NewRoleClient(r.config).QueryPermissions(r)
 }
 
 // QueryUsers queries the "users" edge of the Role entity.

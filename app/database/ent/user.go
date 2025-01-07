@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -35,16 +36,26 @@ type User struct {
 	Password string `json:"-"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
+	// EmailVerified holds the value of the "email_verified" field.
+	EmailVerified bool `json:"email_verified,omitempty"`
 	// PhoneNumber holds the value of the "phone_number" field.
 	PhoneNumber string `json:"phone_number,omitempty"`
+	// PhoneNumberVerified holds the value of the "phone_number_verified" field.
+	PhoneNumberVerified bool `json:"phone_number_verified,omitempty"`
 	// TotpSecret holds the value of the "totp_secret" field.
 	TotpSecret string `json:"totp_secret,omitempty"`
 	// Online holds the value of the "online" field.
 	Online bool `json:"online,omitempty"`
 	// Status holds the value of the "status" field.
 	Status user.Status `json:"status,omitempty"`
+	// LoginAttempts holds the value of the "login_attempts" field.
+	LoginAttempts int `json:"login_attempts,omitempty"`
+	// LockoutTime holds the value of the "lockout_time" field.
+	LockoutTime time.Time `json:"lockout_time,omitempty"`
 	// LastLoginTime holds the value of the "last_login_time" field.
 	LastLoginTime time.Time `json:"last_login_time,omitempty"`
+	// SocialLogins holds the value of the "social_logins" field.
+	SocialLogins map[string]string `json:"social_logins,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges         UserEdges `json:"edges"`
@@ -100,11 +111,15 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldOnline:
+		case user.FieldSocialLogins:
+			values[i] = new([]byte)
+		case user.FieldEmailVerified, user.FieldPhoneNumberVerified, user.FieldOnline:
 			values[i] = new(sql.NullBool)
+		case user.FieldLoginAttempts:
+			values[i] = new(sql.NullInt64)
 		case user.FieldAvatar, user.FieldNickname, user.FieldBio, user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldPhoneNumber, user.FieldTotpSecret, user.FieldStatus:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLastLoginTime:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLockoutTime, user.FieldLastLoginTime:
 			values[i] = new(sql.NullTime)
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
@@ -181,11 +196,23 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Email = value.String
 			}
+		case user.FieldEmailVerified:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field email_verified", values[i])
+			} else if value.Valid {
+				u.EmailVerified = value.Bool
+			}
 		case user.FieldPhoneNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field phone_number", values[i])
 			} else if value.Valid {
 				u.PhoneNumber = value.String
+			}
+		case user.FieldPhoneNumberVerified:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field phone_number_verified", values[i])
+			} else if value.Valid {
+				u.PhoneNumberVerified = value.Bool
 			}
 		case user.FieldTotpSecret:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -205,11 +232,31 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Status = user.Status(value.String)
 			}
+		case user.FieldLoginAttempts:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field login_attempts", values[i])
+			} else if value.Valid {
+				u.LoginAttempts = int(value.Int64)
+			}
+		case user.FieldLockoutTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field lockout_time", values[i])
+			} else if value.Valid {
+				u.LockoutTime = value.Time
+			}
 		case user.FieldLastLoginTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field last_login_time", values[i])
 			} else if value.Valid {
 				u.LastLoginTime = value.Time
+			}
+		case user.FieldSocialLogins:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field social_logins", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &u.SocialLogins); err != nil {
+					return fmt.Errorf("unmarshal field social_logins: %w", err)
+				}
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -299,8 +346,14 @@ func (u *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
 	builder.WriteString(", ")
+	builder.WriteString("email_verified=")
+	builder.WriteString(fmt.Sprintf("%v", u.EmailVerified))
+	builder.WriteString(", ")
 	builder.WriteString("phone_number=")
 	builder.WriteString(u.PhoneNumber)
+	builder.WriteString(", ")
+	builder.WriteString("phone_number_verified=")
+	builder.WriteString(fmt.Sprintf("%v", u.PhoneNumberVerified))
 	builder.WriteString(", ")
 	builder.WriteString("totp_secret=")
 	builder.WriteString(u.TotpSecret)
@@ -311,8 +364,17 @@ func (u *User) String() string {
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", u.Status))
 	builder.WriteString(", ")
+	builder.WriteString("login_attempts=")
+	builder.WriteString(fmt.Sprintf("%v", u.LoginAttempts))
+	builder.WriteString(", ")
+	builder.WriteString("lockout_time=")
+	builder.WriteString(u.LockoutTime.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("last_login_time=")
 	builder.WriteString(u.LastLoginTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("social_logins=")
+	builder.WriteString(fmt.Sprintf("%v", u.SocialLogins))
 	builder.WriteByte(')')
 	return builder.String()
 }

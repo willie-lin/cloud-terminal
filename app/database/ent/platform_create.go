@@ -98,6 +98,26 @@ func (pc *PlatformCreate) SetNillableVersion(s *string) *PlatformCreate {
 	return pc
 }
 
+// SetStatus sets the "status" field.
+func (pc *PlatformCreate) SetStatus(pl platform.Status) *PlatformCreate {
+	pc.mutation.SetStatus(pl)
+	return pc
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (pc *PlatformCreate) SetNillableStatus(pl *platform.Status) *PlatformCreate {
+	if pl != nil {
+		pc.SetStatus(*pl)
+	}
+	return pc
+}
+
+// SetConfig sets the "config" field.
+func (pc *PlatformCreate) SetConfig(m map[string]interface{}) *PlatformCreate {
+	pc.mutation.SetConfig(m)
+	return pc
+}
+
 // SetID sets the "id" field.
 func (pc *PlatformCreate) SetID(u uuid.UUID) *PlatformCreate {
 	pc.mutation.SetID(u)
@@ -170,6 +190,10 @@ func (pc *PlatformCreate) defaults() {
 		v := platform.DefaultUpdatedAt()
 		pc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := pc.mutation.Status(); !ok {
+		v := platform.DefaultStatus
+		pc.mutation.SetStatus(v)
+	}
 	if _, ok := pc.mutation.ID(); !ok {
 		v := platform.DefaultID()
 		pc.mutation.SetID(v)
@@ -190,6 +214,11 @@ func (pc *PlatformCreate) check() error {
 	if v, ok := pc.mutation.Name(); ok {
 		if err := platform.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
+		}
+	}
+	if v, ok := pc.mutation.Status(); ok {
+		if err := platform.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Platform.status": %w`, err)}
 		}
 	}
 	return nil
@@ -250,6 +279,14 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.Version(); ok {
 		_spec.SetField(platform.FieldVersion, field.TypeString, value)
 		_node.Version = value
+	}
+	if value, ok := pc.mutation.Status(); ok {
+		_spec.SetField(platform.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
+	}
+	if value, ok := pc.mutation.Config(); ok {
+		_spec.SetField(platform.FieldConfig, field.TypeJSON, value)
+		_node.Config = value
 	}
 	if nodes := pc.mutation.TenantsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

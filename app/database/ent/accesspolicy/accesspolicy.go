@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
 )
 
 const (
@@ -28,21 +29,19 @@ const (
 	FieldEffect = "effect"
 	// FieldStatements holds the string denoting the statements field in the database.
 	FieldStatements = "statements"
-	// FieldResourceType holds the string denoting the resource_type field in the database.
-	FieldResourceType = "resource_type"
-	// FieldAction holds the string denoting the action field in the database.
-	FieldAction = "action"
 	// FieldImmutable holds the string denoting the immutable field in the database.
 	FieldImmutable = "immutable"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
+	// EdgeRoles holds the string denoting the roles edge name in mutations.
+	EdgeRoles = "roles"
 	// Table holds the table name of the accesspolicy in the database.
 	Table = "access_policies"
-	// TenantTable is the table that holds the tenant relation/edge. The primary key declared below.
-	TenantTable = "tenant_access_policies"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
+	// RolesTable is the table that holds the roles relation/edge.
+	RolesTable = "roles"
+	// RolesInverseTable is the table name for the Role entity.
+	// It exists in this package in order to avoid circular dependency with the "role" package.
+	RolesInverseTable = "roles"
+	// RolesColumn is the table column denoting the roles relation/edge.
+	RolesColumn = "access_policy_roles"
 )
 
 // Columns holds all SQL columns for accesspolicy fields.
@@ -54,16 +53,8 @@ var Columns = []string{
 	FieldDescription,
 	FieldEffect,
 	FieldStatements,
-	FieldResourceType,
-	FieldAction,
 	FieldImmutable,
 }
-
-var (
-	// TenantPrimaryKey and TenantColumn2 are the table columns denoting the
-	// primary key for the tenant relation (M2M).
-	TenantPrimaryKey = []string{"tenant_id", "access_policy_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -84,10 +75,8 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
-	// ResourceTypeValidator is a validator for the "resource_type" field. It is called by the builders before save.
-	ResourceTypeValidator func(string) error
-	// ActionValidator is a validator for the "action" field. It is called by the builders before save.
-	ActionValidator func(string) error
+	// DefaultStatements holds the default value on creation for the "statements" field.
+	DefaultStatements schema.PolicyStatement
 	// DefaultImmutable holds the default value on creation for the "immutable" field.
 	DefaultImmutable bool
 	// DefaultID holds the default value on creation for the "id" field.
@@ -153,38 +142,28 @@ func ByEffect(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEffect, opts...).ToFunc()
 }
 
-// ByResourceType orders the results by the resource_type field.
-func ByResourceType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldResourceType, opts...).ToFunc()
-}
-
-// ByAction orders the results by the action field.
-func ByAction(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAction, opts...).ToFunc()
-}
-
 // ByImmutable orders the results by the immutable field.
 func ByImmutable(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImmutable, opts...).ToFunc()
 }
 
-// ByTenantCount orders the results by tenant count.
-func ByTenantCount(opts ...sql.OrderTermOption) OrderOption {
+// ByRolesCount orders the results by roles count.
+func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newTenantStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newRolesStep(), opts...)
 	}
 }
 
-// ByTenant orders the results by tenant terms.
-func ByTenant(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByRoles orders the results by roles terms.
+func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newTenantStep() *sqlgraph.Step {
+func newRolesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, TenantTable, TenantPrimaryKey...),
+		sqlgraph.To(RolesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
 	)
 }

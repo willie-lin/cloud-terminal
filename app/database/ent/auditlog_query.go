@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -26,6 +27,7 @@ type AuditLogQuery struct {
 	inters     []Interceptor
 	predicates []predicate.AuditLog
 	withUser   *UserQuery
+	withTenant *TenantQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -77,6 +79,28 @@ func (alq *AuditLogQuery) QueryUser() *UserQuery {
 			sqlgraph.From(auditlog.Table, auditlog.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, auditlog.UserTable, auditlog.UserPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(alq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTenant chains the current query on the "tenant" edge.
+func (alq *AuditLogQuery) QueryTenant() *TenantQuery {
+	query := (&TenantClient{config: alq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := alq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := alq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(auditlog.Table, auditlog.FieldID, selector),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, auditlog.TenantTable, auditlog.TenantPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(alq.driver.Dialect(), step)
 		return fromU, nil
@@ -277,6 +301,7 @@ func (alq *AuditLogQuery) Clone() *AuditLogQuery {
 		inters:     append([]Interceptor{}, alq.inters...),
 		predicates: append([]predicate.AuditLog{}, alq.predicates...),
 		withUser:   alq.withUser.Clone(),
+		withTenant: alq.withTenant.Clone(),
 		// clone intermediate query.
 		sql:  alq.sql.Clone(),
 		path: alq.path,
@@ -291,6 +316,17 @@ func (alq *AuditLogQuery) WithUser(opts ...func(*UserQuery)) *AuditLogQuery {
 		opt(query)
 	}
 	alq.withUser = query
+	return alq
+}
+
+// WithTenant tells the query-builder to eager-load the nodes that are connected to
+// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
+func (alq *AuditLogQuery) WithTenant(opts ...func(*TenantQuery)) *AuditLogQuery {
+	query := (&TenantClient{config: alq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	alq.withTenant = query
 	return alq
 }
 
@@ -372,8 +408,9 @@ func (alq *AuditLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Au
 	var (
 		nodes       = []*AuditLog{}
 		_spec       = alq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			alq.withUser != nil,
+			alq.withTenant != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -398,6 +435,13 @@ func (alq *AuditLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Au
 		if err := alq.loadUser(ctx, query, nodes,
 			func(n *AuditLog) { n.Edges.User = []*User{} },
 			func(n *AuditLog, e *User) { n.Edges.User = append(n.Edges.User, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := alq.withTenant; query != nil {
+		if err := alq.loadTenant(ctx, query, nodes,
+			func(n *AuditLog) { n.Edges.Tenant = []*Tenant{} },
+			func(n *AuditLog, e *Tenant) { n.Edges.Tenant = append(n.Edges.Tenant, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -458,6 +502,67 @@ func (alq *AuditLogQuery) loadUser(ctx context.Context, query *UserQuery, nodes 
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "user" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (alq *AuditLogQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*AuditLog, init func(*AuditLog), assign func(*AuditLog, *Tenant)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*AuditLog)
+	nids := make(map[uuid.UUID]map[*AuditLog]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(auditlog.TenantTable)
+		s.Join(joinT).On(s.C(tenant.FieldID), joinT.C(auditlog.TenantPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(auditlog.TenantPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(auditlog.TenantPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*AuditLog]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Tenant](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "tenant" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)

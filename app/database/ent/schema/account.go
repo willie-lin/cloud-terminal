@@ -22,6 +22,7 @@ func (Account) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique().NotEmpty(),
+		field.String("description").Optional(), // 可选的描述信息
 		field.Enum("status").Values("active", "suspended", "deleted").Default("active"),
 	}
 }

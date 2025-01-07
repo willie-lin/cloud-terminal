@@ -11,9 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -112,36 +110,6 @@ func (rc *RoleCreate) SetNillableID(u *uuid.UUID) *RoleCreate {
 		rc.SetID(*u)
 	}
 	return rc
-}
-
-// AddTenantIDs adds the "tenant" edge to the Tenant entity by IDs.
-func (rc *RoleCreate) AddTenantIDs(ids ...uuid.UUID) *RoleCreate {
-	rc.mutation.AddTenantIDs(ids...)
-	return rc
-}
-
-// AddTenant adds the "tenant" edges to the Tenant entity.
-func (rc *RoleCreate) AddTenant(t ...*Tenant) *RoleCreate {
-	ids := make([]uuid.UUID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return rc.AddTenantIDs(ids...)
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (rc *RoleCreate) AddPermissionIDs(ids ...uuid.UUID) *RoleCreate {
-	rc.mutation.AddPermissionIDs(ids...)
-	return rc
-}
-
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (rc *RoleCreate) AddPermissions(p ...*Permission) *RoleCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return rc.AddPermissionIDs(ids...)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -268,9 +236,6 @@ func (rc *RoleCreate) check() error {
 	if _, ok := rc.mutation.IsDefault(); !ok {
 		return &ValidationError{Name: "is_default", err: errors.New(`ent: missing required field "Role.is_default"`)}
 	}
-	if len(rc.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "Role.tenant"`)}
-	}
 	return nil
 }
 
@@ -329,38 +294,6 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 	if value, ok := rc.mutation.IsDefault(); ok {
 		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
 		_node.IsDefault = value
-	}
-	if nodes := rc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   role.TenantTable,
-			Columns: role.TenantPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := rc.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.PermissionsTable,
-			Columns: []string{role.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

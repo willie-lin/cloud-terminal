@@ -3,6 +3,7 @@
 package platform
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -27,6 +28,10 @@ const (
 	FieldRegion = "region"
 	// FieldVersion holds the string denoting the version field in the database.
 	FieldVersion = "version"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// FieldConfig holds the string denoting the config field in the database.
+	FieldConfig = "config"
 	// EdgeTenants holds the string denoting the tenants edge name in mutations.
 	EdgeTenants = "tenants"
 	// Table holds the table name of the platform in the database.
@@ -49,6 +54,8 @@ var Columns = []string{
 	FieldDescription,
 	FieldRegion,
 	FieldVersion,
+	FieldStatus,
+	FieldConfig,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -73,6 +80,33 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// Status defines the type for the "status" enum field.
+type Status string
+
+// StatusActive is the default value of the Status enum.
+const DefaultStatus = StatusActive
+
+// Status values.
+const (
+	StatusActive      Status = "active"
+	StatusMaintenance Status = "maintenance"
+	StatusDisabled    Status = "disabled"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusActive, StatusMaintenance, StatusDisabled:
+		return nil
+	default:
+		return fmt.Errorf("platform: invalid enum value for status field: %q", s)
+	}
+}
 
 // OrderOption defines the ordering options for the Platform queries.
 type OrderOption func(*sql.Selector)
@@ -110,6 +144,11 @@ func ByRegion(opts ...sql.OrderTermOption) OrderOption {
 // ByVersion orders the results by the version field.
 func ByVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVersion, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
 // ByTenantsCount orders the results by tenants count.

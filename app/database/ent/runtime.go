@@ -9,7 +9,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
@@ -41,16 +40,12 @@ func init() {
 	accesspolicyDescName := accesspolicyFields[1].Descriptor()
 	// accesspolicy.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	accesspolicy.NameValidator = accesspolicyDescName.Validators[0].(func(string) error)
-	// accesspolicyDescResourceType is the schema descriptor for resource_type field.
-	accesspolicyDescResourceType := accesspolicyFields[5].Descriptor()
-	// accesspolicy.ResourceTypeValidator is a validator for the "resource_type" field. It is called by the builders before save.
-	accesspolicy.ResourceTypeValidator = accesspolicyDescResourceType.Validators[0].(func(string) error)
-	// accesspolicyDescAction is the schema descriptor for action field.
-	accesspolicyDescAction := accesspolicyFields[6].Descriptor()
-	// accesspolicy.ActionValidator is a validator for the "action" field. It is called by the builders before save.
-	accesspolicy.ActionValidator = accesspolicyDescAction.Validators[0].(func(string) error)
+	// accesspolicyDescStatements is the schema descriptor for statements field.
+	accesspolicyDescStatements := accesspolicyFields[4].Descriptor()
+	// accesspolicy.DefaultStatements holds the default value on creation for the statements field.
+	accesspolicy.DefaultStatements = accesspolicyDescStatements.Default.(schema.PolicyStatement)
 	// accesspolicyDescImmutable is the schema descriptor for immutable field.
-	accesspolicyDescImmutable := accesspolicyFields[7].Descriptor()
+	accesspolicyDescImmutable := accesspolicyFields[5].Descriptor()
 	// accesspolicy.DefaultImmutable holds the default value on creation for the immutable field.
 	accesspolicy.DefaultImmutable = accesspolicyDescImmutable.Default.(bool)
 	// accesspolicyDescID is the schema descriptor for id field.
@@ -99,37 +94,14 @@ func init() {
 	auditlogDescTimestamp := auditlogFields[1].Descriptor()
 	// auditlog.DefaultTimestamp holds the default value on creation for the timestamp field.
 	auditlog.DefaultTimestamp = auditlogDescTimestamp.Default.(func() time.Time)
+	// auditlogDescAction is the schema descriptor for action field.
+	auditlogDescAction := auditlogFields[4].Descriptor()
+	// auditlog.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	auditlog.ActionValidator = auditlogDescAction.Validators[0].(func(string) error)
 	// auditlogDescID is the schema descriptor for id field.
 	auditlogDescID := auditlogFields[0].Descriptor()
 	// auditlog.DefaultID holds the default value on creation for the id field.
 	auditlog.DefaultID = auditlogDescID.Default.(func() uuid.UUID)
-	permissionMixin := schema.Permission{}.Mixin()
-	permissionMixinFields0 := permissionMixin[0].Fields()
-	_ = permissionMixinFields0
-	permissionFields := schema.Permission{}.Fields()
-	_ = permissionFields
-	// permissionDescCreatedAt is the schema descriptor for created_at field.
-	permissionDescCreatedAt := permissionMixinFields0[0].Descriptor()
-	// permission.DefaultCreatedAt holds the default value on creation for the created_at field.
-	permission.DefaultCreatedAt = permissionDescCreatedAt.Default.(func() time.Time)
-	// permissionDescUpdatedAt is the schema descriptor for updated_at field.
-	permissionDescUpdatedAt := permissionMixinFields0[1].Descriptor()
-	// permission.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	permission.DefaultUpdatedAt = permissionDescUpdatedAt.Default.(func() time.Time)
-	// permission.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	permission.UpdateDefaultUpdatedAt = permissionDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// permissionDescName is the schema descriptor for name field.
-	permissionDescName := permissionFields[1].Descriptor()
-	// permission.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	permission.NameValidator = permissionDescName.Validators[0].(func(string) error)
-	// permissionDescIsDisabled is the schema descriptor for is_disabled field.
-	permissionDescIsDisabled := permissionFields[5].Descriptor()
-	// permission.DefaultIsDisabled holds the default value on creation for the is_disabled field.
-	permission.DefaultIsDisabled = permissionDescIsDisabled.Default.(bool)
-	// permissionDescID is the schema descriptor for id field.
-	permissionDescID := permissionFields[0].Descriptor()
-	// permission.DefaultID holds the default value on creation for the id field.
-	permission.DefaultID = permissionDescID.Default.(func() uuid.UUID)
 	platformMixin := schema.Platform{}.Mixin()
 	platformMixinFields0 := platformMixin[0].Fields()
 	_ = platformMixinFields0
@@ -176,10 +148,10 @@ func init() {
 	resourceDescType := resourceFields[2].Descriptor()
 	// resource.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	resource.TypeValidator = resourceDescType.Validators[0].(func(string) error)
-	// resourceDescValue is the schema descriptor for value field.
-	resourceDescValue := resourceFields[4].Descriptor()
-	// resource.ValueValidator is a validator for the "value" field. It is called by the builders before save.
-	resource.ValueValidator = resourceDescValue.Validators[0].(func(string) error)
+	// resourceDescArn is the schema descriptor for arn field.
+	resourceDescArn := resourceFields[3].Descriptor()
+	// resource.ArnValidator is a validator for the "arn" field. It is called by the builders before save.
+	resource.ArnValidator = resourceDescArn.Validators[0].(func(string) error)
 	// resourceDescID is the schema descriptor for id field.
 	resourceDescID := resourceFields[0].Descriptor()
 	// resource.DefaultID holds the default value on creation for the id field.
@@ -331,16 +303,28 @@ func init() {
 			return nil
 		}
 	}()
+	// userDescEmailVerified is the schema descriptor for email_verified field.
+	userDescEmailVerified := userFields[7].Descriptor()
+	// user.DefaultEmailVerified holds the default value on creation for the email_verified field.
+	user.DefaultEmailVerified = userDescEmailVerified.Default.(bool)
 	// userDescPhoneNumber is the schema descriptor for phone_number field.
-	userDescPhoneNumber := userFields[7].Descriptor()
+	userDescPhoneNumber := userFields[8].Descriptor()
 	// user.DefaultPhoneNumber holds the default value on creation for the phone_number field.
 	user.DefaultPhoneNumber = userDescPhoneNumber.Default.(string)
+	// userDescPhoneNumberVerified is the schema descriptor for phone_number_verified field.
+	userDescPhoneNumberVerified := userFields[9].Descriptor()
+	// user.DefaultPhoneNumberVerified holds the default value on creation for the phone_number_verified field.
+	user.DefaultPhoneNumberVerified = userDescPhoneNumberVerified.Default.(bool)
 	// userDescOnline is the schema descriptor for online field.
-	userDescOnline := userFields[9].Descriptor()
+	userDescOnline := userFields[11].Descriptor()
 	// user.DefaultOnline holds the default value on creation for the online field.
 	user.DefaultOnline = userDescOnline.Default.(bool)
+	// userDescLoginAttempts is the schema descriptor for login_attempts field.
+	userDescLoginAttempts := userFields[13].Descriptor()
+	// user.DefaultLoginAttempts holds the default value on creation for the login_attempts field.
+	user.DefaultLoginAttempts = userDescLoginAttempts.Default.(int)
 	// userDescLastLoginTime is the schema descriptor for last_login_time field.
-	userDescLastLoginTime := userFields[11].Descriptor()
+	userDescLastLoginTime := userFields[15].Descriptor()
 	// user.DefaultLastLoginTime holds the default value on creation for the last_login_time field.
 	user.DefaultLastLoginTime = userDescLastLoginTime.Default.(func() time.Time)
 	// userDescID is the schema descriptor for id field.

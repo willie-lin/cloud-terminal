@@ -140,6 +140,20 @@ func (uu *UserUpdate) SetNillableEmail(s *string) *UserUpdate {
 	return uu
 }
 
+// SetEmailVerified sets the "email_verified" field.
+func (uu *UserUpdate) SetEmailVerified(b bool) *UserUpdate {
+	uu.mutation.SetEmailVerified(b)
+	return uu
+}
+
+// SetNillableEmailVerified sets the "email_verified" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableEmailVerified(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetEmailVerified(*b)
+	}
+	return uu
+}
+
 // SetPhoneNumber sets the "phone_number" field.
 func (uu *UserUpdate) SetPhoneNumber(s string) *UserUpdate {
 	uu.mutation.SetPhoneNumber(s)
@@ -157,6 +171,20 @@ func (uu *UserUpdate) SetNillablePhoneNumber(s *string) *UserUpdate {
 // ClearPhoneNumber clears the value of the "phone_number" field.
 func (uu *UserUpdate) ClearPhoneNumber() *UserUpdate {
 	uu.mutation.ClearPhoneNumber()
+	return uu
+}
+
+// SetPhoneNumberVerified sets the "phone_number_verified" field.
+func (uu *UserUpdate) SetPhoneNumberVerified(b bool) *UserUpdate {
+	uu.mutation.SetPhoneNumberVerified(b)
+	return uu
+}
+
+// SetNillablePhoneNumberVerified sets the "phone_number_verified" field if the given value is not nil.
+func (uu *UserUpdate) SetNillablePhoneNumberVerified(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetPhoneNumberVerified(*b)
+	}
 	return uu
 }
 
@@ -208,6 +236,47 @@ func (uu *UserUpdate) SetNillableStatus(u *user.Status) *UserUpdate {
 	return uu
 }
 
+// SetLoginAttempts sets the "login_attempts" field.
+func (uu *UserUpdate) SetLoginAttempts(i int) *UserUpdate {
+	uu.mutation.ResetLoginAttempts()
+	uu.mutation.SetLoginAttempts(i)
+	return uu
+}
+
+// SetNillableLoginAttempts sets the "login_attempts" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableLoginAttempts(i *int) *UserUpdate {
+	if i != nil {
+		uu.SetLoginAttempts(*i)
+	}
+	return uu
+}
+
+// AddLoginAttempts adds i to the "login_attempts" field.
+func (uu *UserUpdate) AddLoginAttempts(i int) *UserUpdate {
+	uu.mutation.AddLoginAttempts(i)
+	return uu
+}
+
+// SetLockoutTime sets the "lockout_time" field.
+func (uu *UserUpdate) SetLockoutTime(t time.Time) *UserUpdate {
+	uu.mutation.SetLockoutTime(t)
+	return uu
+}
+
+// SetNillableLockoutTime sets the "lockout_time" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableLockoutTime(t *time.Time) *UserUpdate {
+	if t != nil {
+		uu.SetLockoutTime(*t)
+	}
+	return uu
+}
+
+// ClearLockoutTime clears the value of the "lockout_time" field.
+func (uu *UserUpdate) ClearLockoutTime() *UserUpdate {
+	uu.mutation.ClearLockoutTime()
+	return uu
+}
+
 // SetLastLoginTime sets the "last_login_time" field.
 func (uu *UserUpdate) SetLastLoginTime(t time.Time) *UserUpdate {
 	uu.mutation.SetLastLoginTime(t)
@@ -219,6 +288,18 @@ func (uu *UserUpdate) SetNillableLastLoginTime(t *time.Time) *UserUpdate {
 	if t != nil {
 		uu.SetLastLoginTime(*t)
 	}
+	return uu
+}
+
+// SetSocialLogins sets the "social_logins" field.
+func (uu *UserUpdate) SetSocialLogins(m map[string]string) *UserUpdate {
+	uu.mutation.SetSocialLogins(m)
+	return uu
+}
+
+// ClearSocialLogins clears the value of the "social_logins" field.
+func (uu *UserUpdate) ClearSocialLogins() *UserUpdate {
+	uu.mutation.ClearSocialLogins()
 	return uu
 }
 
@@ -432,11 +513,17 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
+	if value, ok := uu.mutation.EmailVerified(); ok {
+		_spec.SetField(user.FieldEmailVerified, field.TypeBool, value)
+	}
 	if value, ok := uu.mutation.PhoneNumber(); ok {
 		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
 	}
 	if uu.mutation.PhoneNumberCleared() {
 		_spec.ClearField(user.FieldPhoneNumber, field.TypeString)
+	}
+	if value, ok := uu.mutation.PhoneNumberVerified(); ok {
+		_spec.SetField(user.FieldPhoneNumberVerified, field.TypeBool, value)
 	}
 	if value, ok := uu.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
@@ -450,8 +537,26 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
+	if value, ok := uu.mutation.LoginAttempts(); ok {
+		_spec.SetField(user.FieldLoginAttempts, field.TypeInt, value)
+	}
+	if value, ok := uu.mutation.AddedLoginAttempts(); ok {
+		_spec.AddField(user.FieldLoginAttempts, field.TypeInt, value)
+	}
+	if value, ok := uu.mutation.LockoutTime(); ok {
+		_spec.SetField(user.FieldLockoutTime, field.TypeTime, value)
+	}
+	if uu.mutation.LockoutTimeCleared() {
+		_spec.ClearField(user.FieldLockoutTime, field.TypeTime)
+	}
 	if value, ok := uu.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
+	}
+	if value, ok := uu.mutation.SocialLogins(); ok {
+		_spec.SetField(user.FieldSocialLogins, field.TypeJSON, value)
+	}
+	if uu.mutation.SocialLoginsCleared() {
+		_spec.ClearField(user.FieldSocialLogins, field.TypeJSON)
 	}
 	if uu.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -700,6 +805,20 @@ func (uuo *UserUpdateOne) SetNillableEmail(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// SetEmailVerified sets the "email_verified" field.
+func (uuo *UserUpdateOne) SetEmailVerified(b bool) *UserUpdateOne {
+	uuo.mutation.SetEmailVerified(b)
+	return uuo
+}
+
+// SetNillableEmailVerified sets the "email_verified" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableEmailVerified(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetEmailVerified(*b)
+	}
+	return uuo
+}
+
 // SetPhoneNumber sets the "phone_number" field.
 func (uuo *UserUpdateOne) SetPhoneNumber(s string) *UserUpdateOne {
 	uuo.mutation.SetPhoneNumber(s)
@@ -717,6 +836,20 @@ func (uuo *UserUpdateOne) SetNillablePhoneNumber(s *string) *UserUpdateOne {
 // ClearPhoneNumber clears the value of the "phone_number" field.
 func (uuo *UserUpdateOne) ClearPhoneNumber() *UserUpdateOne {
 	uuo.mutation.ClearPhoneNumber()
+	return uuo
+}
+
+// SetPhoneNumberVerified sets the "phone_number_verified" field.
+func (uuo *UserUpdateOne) SetPhoneNumberVerified(b bool) *UserUpdateOne {
+	uuo.mutation.SetPhoneNumberVerified(b)
+	return uuo
+}
+
+// SetNillablePhoneNumberVerified sets the "phone_number_verified" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillablePhoneNumberVerified(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetPhoneNumberVerified(*b)
+	}
 	return uuo
 }
 
@@ -768,6 +901,47 @@ func (uuo *UserUpdateOne) SetNillableStatus(u *user.Status) *UserUpdateOne {
 	return uuo
 }
 
+// SetLoginAttempts sets the "login_attempts" field.
+func (uuo *UserUpdateOne) SetLoginAttempts(i int) *UserUpdateOne {
+	uuo.mutation.ResetLoginAttempts()
+	uuo.mutation.SetLoginAttempts(i)
+	return uuo
+}
+
+// SetNillableLoginAttempts sets the "login_attempts" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableLoginAttempts(i *int) *UserUpdateOne {
+	if i != nil {
+		uuo.SetLoginAttempts(*i)
+	}
+	return uuo
+}
+
+// AddLoginAttempts adds i to the "login_attempts" field.
+func (uuo *UserUpdateOne) AddLoginAttempts(i int) *UserUpdateOne {
+	uuo.mutation.AddLoginAttempts(i)
+	return uuo
+}
+
+// SetLockoutTime sets the "lockout_time" field.
+func (uuo *UserUpdateOne) SetLockoutTime(t time.Time) *UserUpdateOne {
+	uuo.mutation.SetLockoutTime(t)
+	return uuo
+}
+
+// SetNillableLockoutTime sets the "lockout_time" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableLockoutTime(t *time.Time) *UserUpdateOne {
+	if t != nil {
+		uuo.SetLockoutTime(*t)
+	}
+	return uuo
+}
+
+// ClearLockoutTime clears the value of the "lockout_time" field.
+func (uuo *UserUpdateOne) ClearLockoutTime() *UserUpdateOne {
+	uuo.mutation.ClearLockoutTime()
+	return uuo
+}
+
 // SetLastLoginTime sets the "last_login_time" field.
 func (uuo *UserUpdateOne) SetLastLoginTime(t time.Time) *UserUpdateOne {
 	uuo.mutation.SetLastLoginTime(t)
@@ -779,6 +953,18 @@ func (uuo *UserUpdateOne) SetNillableLastLoginTime(t *time.Time) *UserUpdateOne 
 	if t != nil {
 		uuo.SetLastLoginTime(*t)
 	}
+	return uuo
+}
+
+// SetSocialLogins sets the "social_logins" field.
+func (uuo *UserUpdateOne) SetSocialLogins(m map[string]string) *UserUpdateOne {
+	uuo.mutation.SetSocialLogins(m)
+	return uuo
+}
+
+// ClearSocialLogins clears the value of the "social_logins" field.
+func (uuo *UserUpdateOne) ClearSocialLogins() *UserUpdateOne {
+	uuo.mutation.ClearSocialLogins()
 	return uuo
 }
 
@@ -1022,11 +1208,17 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
+	if value, ok := uuo.mutation.EmailVerified(); ok {
+		_spec.SetField(user.FieldEmailVerified, field.TypeBool, value)
+	}
 	if value, ok := uuo.mutation.PhoneNumber(); ok {
 		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
 	}
 	if uuo.mutation.PhoneNumberCleared() {
 		_spec.ClearField(user.FieldPhoneNumber, field.TypeString)
+	}
+	if value, ok := uuo.mutation.PhoneNumberVerified(); ok {
+		_spec.SetField(user.FieldPhoneNumberVerified, field.TypeBool, value)
 	}
 	if value, ok := uuo.mutation.TotpSecret(); ok {
 		_spec.SetField(user.FieldTotpSecret, field.TypeString, value)
@@ -1040,8 +1232,26 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
+	if value, ok := uuo.mutation.LoginAttempts(); ok {
+		_spec.SetField(user.FieldLoginAttempts, field.TypeInt, value)
+	}
+	if value, ok := uuo.mutation.AddedLoginAttempts(); ok {
+		_spec.AddField(user.FieldLoginAttempts, field.TypeInt, value)
+	}
+	if value, ok := uuo.mutation.LockoutTime(); ok {
+		_spec.SetField(user.FieldLockoutTime, field.TypeTime, value)
+	}
+	if uuo.mutation.LockoutTimeCleared() {
+		_spec.ClearField(user.FieldLockoutTime, field.TypeTime)
+	}
 	if value, ok := uuo.mutation.LastLoginTime(); ok {
 		_spec.SetField(user.FieldLastLoginTime, field.TypeTime, value)
+	}
+	if value, ok := uuo.mutation.SocialLogins(); ok {
+		_spec.SetField(user.FieldSocialLogins, field.TypeJSON, value)
+	}
+	if uuo.mutation.SocialLoginsCleared() {
+		_spec.ClearField(user.FieldSocialLogins, field.TypeJSON)
 	}
 	if uuo.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{

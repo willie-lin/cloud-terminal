@@ -84,7 +84,7 @@ import (
 //		// 审计日志权限
 //		{"audit:read", "允许读取审计日志"},
 //	}
-//
+
 //	for _, p := range permissionsToCreate {
 //		//existingPermission, err := client.Permission.Query().Where(permission.NameEQ(p.Name)).Where(permission.HasAccountWith(account.IDEQ(account.ID))).Only(ctx)
 //		existingPermission, err := client.Permission.Query().
@@ -199,12 +199,12 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	rolesToCreate := []string{"super_admin", "platform_admin", "tenant_admin"}
 
 	for _, roleName := range rolesToCreate {
-		_, err := client.Role.Query().Where(role.NameEQ(roleName)).Where(role.HasTenantWith(tenant.NameEQ(managementTenant.Name))).Only(ctx)
+		_, err := client.Role.Query().Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return fmt.Errorf("query role %s failed: %w", roleName, err)
 		}
 		if ent.IsNotFound(err) {
-			_, err := client.Role.Create().SetName(roleName).AddTenant(managementTenant).Save(ctx)
+			_, err := client.Role.Create().SetName(roleName).Save(ctx)
 			if err != nil {
 				return fmt.Errorf("create role %s failed: %w", roleName, err)
 			}
@@ -254,7 +254,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	}
 
 	// 5. 将超级管理员用户关联到 super_admin 角色
-	superAdminRole, err := client.Role.Query().Where(role.NameEQ("super_admin")).Where(role.HasTenantWith(tenant.IDEQ(managementTenant.ID))).Only(ctx)
+	superAdminRole, err := client.Role.Query().Where(role.NameEQ("super_admin")).Only(ctx)
 	if err != nil {
 		return fmt.Errorf("query super admin role failed: %w", err)
 	}

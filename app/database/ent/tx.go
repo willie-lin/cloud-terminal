@@ -18,8 +18,6 @@ type Tx struct {
 	Account *AccountClient
 	// AuditLog is the client for interacting with the AuditLog builders.
 	AuditLog *AuditLogClient
-	// Permission is the client for interacting with the Permission builders.
-	Permission *PermissionClient
 	// Platform is the client for interacting with the Platform builders.
 	Platform *PlatformClient
 	// Resource is the client for interacting with the Resource builders.
@@ -164,7 +162,6 @@ func (tx *Tx) init() {
 	tx.AccessPolicy = NewAccessPolicyClient(tx.config)
 	tx.Account = NewAccountClient(tx.config)
 	tx.AuditLog = NewAuditLogClient(tx.config)
-	tx.Permission = NewPermissionClient(tx.config)
 	tx.Platform = NewPlatformClient(tx.config)
 	tx.Resource = NewResourceClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)

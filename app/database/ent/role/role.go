@@ -27,10 +27,6 @@ const (
 	FieldIsDisabled = "is_disabled"
 	// FieldIsDefault holds the string denoting the is_default field in the database.
 	FieldIsDefault = "is_default"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgePermissions holds the string denoting the permissions edge name in mutations.
-	EdgePermissions = "permissions"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
 	// EdgeParentRole holds the string denoting the parent_role edge name in mutations.
@@ -39,18 +35,6 @@ const (
 	EdgeChildRoles = "child_roles"
 	// Table holds the table name of the role in the database.
 	Table = "roles"
-	// TenantTable is the table that holds the tenant relation/edge. The primary key declared below.
-	TenantTable = "tenant_roles"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// PermissionsTable is the table that holds the permissions relation/edge.
-	PermissionsTable = "permissions"
-	// PermissionsInverseTable is the table name for the Permission entity.
-	// It exists in this package in order to avoid circular dependency with the "permission" package.
-	PermissionsInverseTable = "permissions"
-	// PermissionsColumn is the table column denoting the permissions relation/edge.
-	PermissionsColumn = "role_permissions"
 	// UsersTable is the table that holds the users relation/edge.
 	UsersTable = "users"
 	// UsersInverseTable is the table name for the User entity.
@@ -78,14 +62,11 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "roles"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"permission_roles",
+	"access_policy_roles",
 	"user_roles",
 }
 
 var (
-	// TenantPrimaryKey and TenantColumn2 are the table columns denoting the
-	// primary key for the tenant relation (M2M).
-	TenantPrimaryKey = []string{"tenant_id", "role_id"}
 	// ParentRolePrimaryKey and ParentRoleColumn2 are the table columns denoting the
 	// primary key for the parent_role relation (M2M).
 	ParentRolePrimaryKey = []string{"role_id", "parent_role_id"}
@@ -164,34 +145,6 @@ func ByIsDefault(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsDefault, opts...).ToFunc()
 }
 
-// ByTenantCount orders the results by tenant count.
-func ByTenantCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newTenantStep(), opts...)
-	}
-}
-
-// ByTenant orders the results by tenant terms.
-func ByTenant(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByPermissionsCount orders the results by permissions count.
-func ByPermissionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPermissionsStep(), opts...)
-	}
-}
-
-// ByPermissions orders the results by permissions terms.
-func ByPermissions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPermissionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByUsersCount orders the results by users count.
 func ByUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -232,20 +185,6 @@ func ByChildRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newChildRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, TenantTable, TenantPrimaryKey...),
-	)
-}
-func newPermissionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PermissionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, PermissionsTable, PermissionsColumn),
-	)
 }
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

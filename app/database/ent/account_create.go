@@ -58,6 +58,20 @@ func (ac *AccountCreate) SetName(s string) *AccountCreate {
 	return ac
 }
 
+// SetDescription sets the "description" field.
+func (ac *AccountCreate) SetDescription(s string) *AccountCreate {
+	ac.mutation.SetDescription(s)
+	return ac
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableDescription(s *string) *AccountCreate {
+	if s != nil {
+		ac.SetDescription(*s)
+	}
+	return ac
+}
+
 // SetStatus sets the "status" field.
 func (ac *AccountCreate) SetStatus(a account.Status) *AccountCreate {
 	ac.mutation.SetStatus(a)
@@ -253,6 +267,10 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.Name(); ok {
 		_spec.SetField(account.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := ac.mutation.Description(); ok {
+		_spec.SetField(account.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if value, ok := ac.mutation.Status(); ok {
 		_spec.SetField(account.FieldStatus, field.TypeEnum, value)

@@ -62,15 +62,21 @@ func (rc *ResourceCreate) SetType(s string) *ResourceCreate {
 	return rc
 }
 
+// SetArn sets the "arn" field.
+func (rc *ResourceCreate) SetArn(s string) *ResourceCreate {
+	rc.mutation.SetArn(s)
+	return rc
+}
+
 // SetProperties sets the "properties" field.
 func (rc *ResourceCreate) SetProperties(m map[string]interface{}) *ResourceCreate {
 	rc.mutation.SetProperties(m)
 	return rc
 }
 
-// SetValue sets the "value" field.
-func (rc *ResourceCreate) SetValue(s string) *ResourceCreate {
-	rc.mutation.SetValue(s)
+// SetTags sets the "tags" field.
+func (rc *ResourceCreate) SetTags(m map[string]string) *ResourceCreate {
+	rc.mutation.SetTags(m)
 	return rc
 }
 
@@ -115,6 +121,36 @@ func (rc *ResourceCreate) AddAccount(a ...*Account) *ResourceCreate {
 		ids[i] = a[i].ID
 	}
 	return rc.AddAccountIDs(ids...)
+}
+
+// AddChildIDs adds the "children" edge to the Resource entity by IDs.
+func (rc *ResourceCreate) AddChildIDs(ids ...uuid.UUID) *ResourceCreate {
+	rc.mutation.AddChildIDs(ids...)
+	return rc
+}
+
+// AddChildren adds the "children" edges to the Resource entity.
+func (rc *ResourceCreate) AddChildren(r ...*Resource) *ResourceCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return rc.AddChildIDs(ids...)
+}
+
+// AddParentIDs adds the "parent" edge to the Resource entity by IDs.
+func (rc *ResourceCreate) AddParentIDs(ids ...uuid.UUID) *ResourceCreate {
+	rc.mutation.AddParentIDs(ids...)
+	return rc
+}
+
+// AddParent adds the "parent" edges to the Resource entity.
+func (rc *ResourceCreate) AddParent(r ...*Resource) *ResourceCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return rc.AddParentIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -190,12 +226,12 @@ func (rc *ResourceCreate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if _, ok := rc.mutation.Value(); !ok {
-		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "Resource.value"`)}
+	if _, ok := rc.mutation.Arn(); !ok {
+		return &ValidationError{Name: "arn", err: errors.New(`ent: missing required field "Resource.arn"`)}
 	}
-	if v, ok := rc.mutation.Value(); ok {
-		if err := resource.ValueValidator(v); err != nil {
-			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "Resource.value": %w`, err)}
+	if v, ok := rc.mutation.Arn(); ok {
+		if err := resource.ArnValidator(v); err != nil {
+			return &ValidationError{Name: "arn", err: fmt.Errorf(`ent: validator failed for field "Resource.arn": %w`, err)}
 		}
 	}
 	if len(rc.mutation.AccountIDs()) == 0 {
@@ -252,13 +288,17 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
+	if value, ok := rc.mutation.Arn(); ok {
+		_spec.SetField(resource.FieldArn, field.TypeString, value)
+		_node.Arn = value
+	}
 	if value, ok := rc.mutation.Properties(); ok {
 		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)
 		_node.Properties = value
 	}
-	if value, ok := rc.mutation.Value(); ok {
-		_spec.SetField(resource.FieldValue, field.TypeString, value)
-		_node.Value = value
+	if value, ok := rc.mutation.Tags(); ok {
+		_spec.SetField(resource.FieldTags, field.TypeJSON, value)
+		_node.Tags = value
 	}
 	if value, ok := rc.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
@@ -273,6 +313,38 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   resource.ChildrenTable,
+			Columns: resource.ChildrenPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.ParentTable,
+			Columns: resource.ParentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

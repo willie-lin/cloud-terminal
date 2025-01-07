@@ -11,11 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
@@ -128,49 +126,19 @@ func (tc *TenantCreate) AddAccounts(a ...*Account) *TenantCreate {
 	return tc.AddAccountIDs(ids...)
 }
 
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (tc *TenantCreate) AddPermissionIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddPermissionIDs(ids...)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (tc *TenantCreate) AddAuditLogIDs(ids ...uuid.UUID) *TenantCreate {
+	tc.mutation.AddAuditLogIDs(ids...)
 	return tc
 }
 
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (tc *TenantCreate) AddPermissions(p ...*Permission) *TenantCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return tc.AddPermissionIDs(ids...)
-}
-
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (tc *TenantCreate) AddRoleIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddRoleIDs(ids...)
-	return tc
-}
-
-// AddRoles adds the "roles" edges to the Role entity.
-func (tc *TenantCreate) AddRoles(r ...*Role) *TenantCreate {
-	ids := make([]uuid.UUID, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return tc.AddRoleIDs(ids...)
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (tc *TenantCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddAccessPolicyIDs(ids...)
-	return tc
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (tc *TenantCreate) AddAccessPolicies(a ...*AccessPolicy) *TenantCreate {
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (tc *TenantCreate) AddAuditLogs(a ...*AuditLog) *TenantCreate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return tc.AddAccessPolicyIDs(ids...)
+	return tc.AddAuditLogIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -341,47 +309,15 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tc.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.PermissionsTable,
-			Columns: []string{tenant.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := tc.mutation.AuditLogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   tenant.RolesTable,
-			Columns: tenant.RolesPrimaryKey,
+			Table:   tenant.AuditLogsTable,
+			Columns: tenant.AuditLogsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   tenant.AccessPoliciesTable,
-			Columns: tenant.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

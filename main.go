@@ -277,14 +277,14 @@ func main() {
 	r.POST("/delete-role", handler.DeleteRoleByName(client))
 	r.POST("/check-role-name", handler.CheckRoleName(client))
 
-	// permission
-	//r.GET("/permissions", handler.GetAllPermissions(client))
-	r.GET("/permissions", handler.GetAllPermissionsByTenant(client))
-	//r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
-	r.POST("/add-permission", handler.CreatePermission(client))
-	//r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewarers.Authorize(enforcer))
-	r.POST("/delete-permission", handler.DeletePermissionByName(client))
-	r.POST("/check-permission-name", handler.CheckPermissionName(client))
+	//// permission
+	////r.GET("/permissions", handler.GetAllPermissions(client))
+	//r.GET("/permissions", handler.GetAllPermissionsByTenant(client))
+	////r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
+	//r.POST("/add-permission", handler.CreatePermission(client))
+	////r.POST("/delete-permission", handler.DeletePermissionByName(client), middlewarers.Authorize(enforcer))
+	//r.POST("/delete-permission", handler.DeletePermissionByName(client))
+	//r.POST("/check-permission-name", handler.CheckPermissionName(client))
 
 	//
 	//e.POST("/tenants", handler.CreateTenant(client), middlewarers.Authorize(enforcer))

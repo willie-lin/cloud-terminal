@@ -30,13 +30,18 @@ func (User) Fields() []ent.Field {
 		field.String("nickname").MinLen(2).MaxLen(30).Unique().Optional(),
 		field.String("bio").MaxLen(200).Optional(),
 		field.String("username").NotEmpty().MinLen(6).MaxLen(30).Unique(),
-		field.String("password").NotEmpty().MinLen(8).MaxLen(120).Sensitive(),
+		field.String("password").NotEmpty().MinLen(20).MaxLen(120).Sensitive(),
 		field.String("email").NotEmpty().Match(regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,4}$`)).Unique(),
+		field.Bool("email_verified").Default(true), // 邮箱是否已验证
 		field.String("phone_number").Optional().Default(""),
+		field.Bool("phone_number_verified").Default(false), // 邮箱是否已验证
 		field.String("totp_secret").Optional(),
 		field.Bool("online").Default(true),
 		field.Enum("status").Values("active", "inactive", "blocked").Default("active"),
+		field.Int("login_attempts").Default(0), // 登录尝试次数
+		field.Time("lockout_time").Optional(),  // 账户锁定时间
 		field.Time("last_login_time").Default(time.Now),
+		field.JSON("social_logins", map[string]string{}).Optional(), // 社交登录信息
 	}
 }
 

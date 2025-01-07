@@ -456,6 +456,46 @@ func VersionContainsFold(v string) predicate.Platform {
 	return predicate.Platform(sql.FieldContainsFold(FieldVersion, v))
 }
 
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v Status) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldStatus, v))
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v Status) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...Status) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...Status) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusIsNil applies the IsNil predicate on the "status" field.
+func StatusIsNil() predicate.Platform {
+	return predicate.Platform(sql.FieldIsNull(FieldStatus))
+}
+
+// StatusNotNil applies the NotNil predicate on the "status" field.
+func StatusNotNil() predicate.Platform {
+	return predicate.Platform(sql.FieldNotNull(FieldStatus))
+}
+
+// ConfigIsNil applies the IsNil predicate on the "config" field.
+func ConfigIsNil() predicate.Platform {
+	return predicate.Platform(sql.FieldIsNull(FieldConfig))
+}
+
+// ConfigNotNil applies the NotNil predicate on the "config" field.
+func ConfigNotNil() predicate.Platform {
+	return predicate.Platform(sql.FieldNotNull(FieldConfig))
+}
+
 // HasTenants applies the HasEdge predicate on the "tenants" edge.
 func HasTenants() predicate.Platform {
 	return predicate.Platform(func(s *sql.Selector) {

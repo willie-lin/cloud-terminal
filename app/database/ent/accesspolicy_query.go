@@ -15,7 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 )
 
 // AccessPolicyQuery is the builder for querying AccessPolicy entities.
@@ -25,7 +25,7 @@ type AccessPolicyQuery struct {
 	order      []accesspolicy.OrderOption
 	inters     []Interceptor
 	predicates []predicate.AccessPolicy
-	withTenant *TenantQuery
+	withRoles  *RoleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,9 +62,9 @@ func (apq *AccessPolicyQuery) Order(o ...accesspolicy.OrderOption) *AccessPolicy
 	return apq
 }
 
-// QueryTenant chains the current query on the "tenant" edge.
-func (apq *AccessPolicyQuery) QueryTenant() *TenantQuery {
-	query := (&TenantClient{config: apq.config}).Query()
+// QueryRoles chains the current query on the "roles" edge.
+func (apq *AccessPolicyQuery) QueryRoles() *RoleQuery {
+	query := (&RoleClient{config: apq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := apq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -75,8 +75,8 @@ func (apq *AccessPolicyQuery) QueryTenant() *TenantQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.TenantTable, accesspolicy.TenantPrimaryKey...),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, accesspolicy.RolesTable, accesspolicy.RolesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(apq.driver.Dialect(), step)
 		return fromU, nil
@@ -276,21 +276,21 @@ func (apq *AccessPolicyQuery) Clone() *AccessPolicyQuery {
 		order:      append([]accesspolicy.OrderOption{}, apq.order...),
 		inters:     append([]Interceptor{}, apq.inters...),
 		predicates: append([]predicate.AccessPolicy{}, apq.predicates...),
-		withTenant: apq.withTenant.Clone(),
+		withRoles:  apq.withRoles.Clone(),
 		// clone intermediate query.
 		sql:  apq.sql.Clone(),
 		path: apq.path,
 	}
 }
 
-// WithTenant tells the query-builder to eager-load the nodes that are connected to
-// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
-func (apq *AccessPolicyQuery) WithTenant(opts ...func(*TenantQuery)) *AccessPolicyQuery {
-	query := (&TenantClient{config: apq.config}).Query()
+// WithRoles tells the query-builder to eager-load the nodes that are connected to
+// the "roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (apq *AccessPolicyQuery) WithRoles(opts ...func(*RoleQuery)) *AccessPolicyQuery {
+	query := (&RoleClient{config: apq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	apq.withTenant = query
+	apq.withRoles = query
 	return apq
 }
 
@@ -373,7 +373,7 @@ func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		nodes       = []*AccessPolicy{}
 		_spec       = apq.querySpec()
 		loadedTypes = [1]bool{
-			apq.withTenant != nil,
+			apq.withRoles != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -394,74 +394,44 @@ func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := apq.withTenant; query != nil {
-		if err := apq.loadTenant(ctx, query, nodes,
-			func(n *AccessPolicy) { n.Edges.Tenant = []*Tenant{} },
-			func(n *AccessPolicy, e *Tenant) { n.Edges.Tenant = append(n.Edges.Tenant, e) }); err != nil {
+	if query := apq.withRoles; query != nil {
+		if err := apq.loadRoles(ctx, query, nodes,
+			func(n *AccessPolicy) { n.Edges.Roles = []*Role{} },
+			func(n *AccessPolicy, e *Role) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (apq *AccessPolicyQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Tenant)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*AccessPolicy)
-	nids := make(map[uuid.UUID]map[*AccessPolicy]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+func (apq *AccessPolicyQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Role)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*AccessPolicy)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(accesspolicy.TenantTable)
-		s.Join(joinT).On(s.C(tenant.FieldID), joinT.C(accesspolicy.TenantPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(accesspolicy.TenantPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(accesspolicy.TenantPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(uuid.UUID)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*AccessPolicy]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Tenant](ctx, query, qr, query.inters)
+	query.withFKs = true
+	query.Where(predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(accesspolicy.RolesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.access_policy_roles
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "access_policy_roles" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "tenant" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "access_policy_roles" returned %v for node %v`, *fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
