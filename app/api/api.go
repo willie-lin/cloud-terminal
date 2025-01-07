@@ -188,7 +188,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		fmt.Println(dto.Password)
 
 		// 使用决策上下文进行查询，跳过隐私规则
 		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
@@ -247,27 +246,28 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error finding tenant: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
 		}
+		fmt.Println(tenant.ID)
 
 		// 获取用户的第一个角色ID
 		//role, err := us.QueryRoles().First(context.Background())
-		role, err := us.QueryRoles().Only(ctx)
+		r, err := us.QueryRoles().Only(ctx)
 		//role, err := us.QueryRoles().All(ctx)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})
 		}
-		fmt.Println(role.ID)
-		fmt.Println(role.Name)
-		fmt.Println(role.Description)
+		fmt.Println(r.ID)
+		fmt.Println(r.Name)
+		fmt.Println(r.Description)
 
 		// 生成包含租户信息的accessToken
-		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Email, us.Username, role.Name)
+		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 		// 生成包含租户信息的RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, us.Email, us.Username, role.Name)
+		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})
@@ -331,7 +331,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 					"tenantId": tenant.ID,
 					"email":    us.Email,
 					"username": us.Username,
-					"roleName": role.Name,
+					"roleName": r.Name,
 				},
 			})
 	}
