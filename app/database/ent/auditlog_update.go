@@ -50,17 +50,111 @@ func (alu *AuditLogUpdate) SetNillableTimestamp(t *time.Time) *AuditLogUpdate {
 	return alu
 }
 
-// SetOperation sets the "operation" field.
-func (alu *AuditLogUpdate) SetOperation(s string) *AuditLogUpdate {
-	alu.mutation.SetOperation(s)
+// SetActorID sets the "actor_id" field.
+func (alu *AuditLogUpdate) SetActorID(i int) *AuditLogUpdate {
+	alu.mutation.ResetActorID()
+	alu.mutation.SetActorID(i)
 	return alu
 }
 
-// SetNillableOperation sets the "operation" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableOperation(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetOperation(*s)
+// SetNillableActorID sets the "actor_id" field if the given value is not nil.
+func (alu *AuditLogUpdate) SetNillableActorID(i *int) *AuditLogUpdate {
+	if i != nil {
+		alu.SetActorID(*i)
 	}
+	return alu
+}
+
+// AddActorID adds i to the "actor_id" field.
+func (alu *AuditLogUpdate) AddActorID(i int) *AuditLogUpdate {
+	alu.mutation.AddActorID(i)
+	return alu
+}
+
+// SetActorUsername sets the "actor_username" field.
+func (alu *AuditLogUpdate) SetActorUsername(s string) *AuditLogUpdate {
+	alu.mutation.SetActorUsername(s)
+	return alu
+}
+
+// SetNillableActorUsername sets the "actor_username" field if the given value is not nil.
+func (alu *AuditLogUpdate) SetNillableActorUsername(s *string) *AuditLogUpdate {
+	if s != nil {
+		alu.SetActorUsername(*s)
+	}
+	return alu
+}
+
+// SetAction sets the "action" field.
+func (alu *AuditLogUpdate) SetAction(s string) *AuditLogUpdate {
+	alu.mutation.SetAction(s)
+	return alu
+}
+
+// SetNillableAction sets the "action" field if the given value is not nil.
+func (alu *AuditLogUpdate) SetNillableAction(s *string) *AuditLogUpdate {
+	if s != nil {
+		alu.SetAction(*s)
+	}
+	return alu
+}
+
+// SetResourceID sets the "resource_id" field.
+func (alu *AuditLogUpdate) SetResourceID(i int) *AuditLogUpdate {
+	alu.mutation.ResetResourceID()
+	alu.mutation.SetResourceID(i)
+	return alu
+}
+
+// SetNillableResourceID sets the "resource_id" field if the given value is not nil.
+func (alu *AuditLogUpdate) SetNillableResourceID(i *int) *AuditLogUpdate {
+	if i != nil {
+		alu.SetResourceID(*i)
+	}
+	return alu
+}
+
+// AddResourceID adds i to the "resource_id" field.
+func (alu *AuditLogUpdate) AddResourceID(i int) *AuditLogUpdate {
+	alu.mutation.AddResourceID(i)
+	return alu
+}
+
+// ClearResourceID clears the value of the "resource_id" field.
+func (alu *AuditLogUpdate) ClearResourceID() *AuditLogUpdate {
+	alu.mutation.ClearResourceID()
+	return alu
+}
+
+// SetResourceType sets the "resource_type" field.
+func (alu *AuditLogUpdate) SetResourceType(s string) *AuditLogUpdate {
+	alu.mutation.SetResourceType(s)
+	return alu
+}
+
+// SetNillableResourceType sets the "resource_type" field if the given value is not nil.
+func (alu *AuditLogUpdate) SetNillableResourceType(s *string) *AuditLogUpdate {
+	if s != nil {
+		alu.SetResourceType(*s)
+	}
+	return alu
+}
+
+// ClearResourceType clears the value of the "resource_type" field.
+func (alu *AuditLogUpdate) ClearResourceType() *AuditLogUpdate {
+	alu.mutation.ClearResourceType()
+	return alu
+}
+
+// SetDetails sets the "details" field.
+func (alu *AuditLogUpdate) SetDetails(m map[string]interface{}) *AuditLogUpdate {
+	alu.mutation.SetDetails(m)
+	return alu
+}
+
+// ClearDetails clears the value of the "details" field.
+func (alu *AuditLogUpdate) ClearDetails() *AuditLogUpdate {
+	alu.mutation.ClearDetails()
 	return alu
 }
 
@@ -156,8 +250,38 @@ func (alu *AuditLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := alu.mutation.Timestamp(); ok {
 		_spec.SetField(auditlog.FieldTimestamp, field.TypeTime, value)
 	}
-	if value, ok := alu.mutation.Operation(); ok {
-		_spec.SetField(auditlog.FieldOperation, field.TypeString, value)
+	if value, ok := alu.mutation.ActorID(); ok {
+		_spec.SetField(auditlog.FieldActorID, field.TypeInt, value)
+	}
+	if value, ok := alu.mutation.AddedActorID(); ok {
+		_spec.AddField(auditlog.FieldActorID, field.TypeInt, value)
+	}
+	if value, ok := alu.mutation.ActorUsername(); ok {
+		_spec.SetField(auditlog.FieldActorUsername, field.TypeString, value)
+	}
+	if value, ok := alu.mutation.Action(); ok {
+		_spec.SetField(auditlog.FieldAction, field.TypeString, value)
+	}
+	if value, ok := alu.mutation.ResourceID(); ok {
+		_spec.SetField(auditlog.FieldResourceID, field.TypeInt, value)
+	}
+	if value, ok := alu.mutation.AddedResourceID(); ok {
+		_spec.AddField(auditlog.FieldResourceID, field.TypeInt, value)
+	}
+	if alu.mutation.ResourceIDCleared() {
+		_spec.ClearField(auditlog.FieldResourceID, field.TypeInt)
+	}
+	if value, ok := alu.mutation.ResourceType(); ok {
+		_spec.SetField(auditlog.FieldResourceType, field.TypeString, value)
+	}
+	if alu.mutation.ResourceTypeCleared() {
+		_spec.ClearField(auditlog.FieldResourceType, field.TypeString)
+	}
+	if value, ok := alu.mutation.Details(); ok {
+		_spec.SetField(auditlog.FieldDetails, field.TypeJSON, value)
+	}
+	if alu.mutation.DetailsCleared() {
+		_spec.ClearField(auditlog.FieldDetails, field.TypeJSON)
 	}
 	if alu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -244,17 +368,111 @@ func (aluo *AuditLogUpdateOne) SetNillableTimestamp(t *time.Time) *AuditLogUpdat
 	return aluo
 }
 
-// SetOperation sets the "operation" field.
-func (aluo *AuditLogUpdateOne) SetOperation(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetOperation(s)
+// SetActorID sets the "actor_id" field.
+func (aluo *AuditLogUpdateOne) SetActorID(i int) *AuditLogUpdateOne {
+	aluo.mutation.ResetActorID()
+	aluo.mutation.SetActorID(i)
 	return aluo
 }
 
-// SetNillableOperation sets the "operation" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableOperation(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetOperation(*s)
+// SetNillableActorID sets the "actor_id" field if the given value is not nil.
+func (aluo *AuditLogUpdateOne) SetNillableActorID(i *int) *AuditLogUpdateOne {
+	if i != nil {
+		aluo.SetActorID(*i)
 	}
+	return aluo
+}
+
+// AddActorID adds i to the "actor_id" field.
+func (aluo *AuditLogUpdateOne) AddActorID(i int) *AuditLogUpdateOne {
+	aluo.mutation.AddActorID(i)
+	return aluo
+}
+
+// SetActorUsername sets the "actor_username" field.
+func (aluo *AuditLogUpdateOne) SetActorUsername(s string) *AuditLogUpdateOne {
+	aluo.mutation.SetActorUsername(s)
+	return aluo
+}
+
+// SetNillableActorUsername sets the "actor_username" field if the given value is not nil.
+func (aluo *AuditLogUpdateOne) SetNillableActorUsername(s *string) *AuditLogUpdateOne {
+	if s != nil {
+		aluo.SetActorUsername(*s)
+	}
+	return aluo
+}
+
+// SetAction sets the "action" field.
+func (aluo *AuditLogUpdateOne) SetAction(s string) *AuditLogUpdateOne {
+	aluo.mutation.SetAction(s)
+	return aluo
+}
+
+// SetNillableAction sets the "action" field if the given value is not nil.
+func (aluo *AuditLogUpdateOne) SetNillableAction(s *string) *AuditLogUpdateOne {
+	if s != nil {
+		aluo.SetAction(*s)
+	}
+	return aluo
+}
+
+// SetResourceID sets the "resource_id" field.
+func (aluo *AuditLogUpdateOne) SetResourceID(i int) *AuditLogUpdateOne {
+	aluo.mutation.ResetResourceID()
+	aluo.mutation.SetResourceID(i)
+	return aluo
+}
+
+// SetNillableResourceID sets the "resource_id" field if the given value is not nil.
+func (aluo *AuditLogUpdateOne) SetNillableResourceID(i *int) *AuditLogUpdateOne {
+	if i != nil {
+		aluo.SetResourceID(*i)
+	}
+	return aluo
+}
+
+// AddResourceID adds i to the "resource_id" field.
+func (aluo *AuditLogUpdateOne) AddResourceID(i int) *AuditLogUpdateOne {
+	aluo.mutation.AddResourceID(i)
+	return aluo
+}
+
+// ClearResourceID clears the value of the "resource_id" field.
+func (aluo *AuditLogUpdateOne) ClearResourceID() *AuditLogUpdateOne {
+	aluo.mutation.ClearResourceID()
+	return aluo
+}
+
+// SetResourceType sets the "resource_type" field.
+func (aluo *AuditLogUpdateOne) SetResourceType(s string) *AuditLogUpdateOne {
+	aluo.mutation.SetResourceType(s)
+	return aluo
+}
+
+// SetNillableResourceType sets the "resource_type" field if the given value is not nil.
+func (aluo *AuditLogUpdateOne) SetNillableResourceType(s *string) *AuditLogUpdateOne {
+	if s != nil {
+		aluo.SetResourceType(*s)
+	}
+	return aluo
+}
+
+// ClearResourceType clears the value of the "resource_type" field.
+func (aluo *AuditLogUpdateOne) ClearResourceType() *AuditLogUpdateOne {
+	aluo.mutation.ClearResourceType()
+	return aluo
+}
+
+// SetDetails sets the "details" field.
+func (aluo *AuditLogUpdateOne) SetDetails(m map[string]interface{}) *AuditLogUpdateOne {
+	aluo.mutation.SetDetails(m)
+	return aluo
+}
+
+// ClearDetails clears the value of the "details" field.
+func (aluo *AuditLogUpdateOne) ClearDetails() *AuditLogUpdateOne {
+	aluo.mutation.ClearDetails()
 	return aluo
 }
 
@@ -380,8 +598,38 @@ func (aluo *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, er
 	if value, ok := aluo.mutation.Timestamp(); ok {
 		_spec.SetField(auditlog.FieldTimestamp, field.TypeTime, value)
 	}
-	if value, ok := aluo.mutation.Operation(); ok {
-		_spec.SetField(auditlog.FieldOperation, field.TypeString, value)
+	if value, ok := aluo.mutation.ActorID(); ok {
+		_spec.SetField(auditlog.FieldActorID, field.TypeInt, value)
+	}
+	if value, ok := aluo.mutation.AddedActorID(); ok {
+		_spec.AddField(auditlog.FieldActorID, field.TypeInt, value)
+	}
+	if value, ok := aluo.mutation.ActorUsername(); ok {
+		_spec.SetField(auditlog.FieldActorUsername, field.TypeString, value)
+	}
+	if value, ok := aluo.mutation.Action(); ok {
+		_spec.SetField(auditlog.FieldAction, field.TypeString, value)
+	}
+	if value, ok := aluo.mutation.ResourceID(); ok {
+		_spec.SetField(auditlog.FieldResourceID, field.TypeInt, value)
+	}
+	if value, ok := aluo.mutation.AddedResourceID(); ok {
+		_spec.AddField(auditlog.FieldResourceID, field.TypeInt, value)
+	}
+	if aluo.mutation.ResourceIDCleared() {
+		_spec.ClearField(auditlog.FieldResourceID, field.TypeInt)
+	}
+	if value, ok := aluo.mutation.ResourceType(); ok {
+		_spec.SetField(auditlog.FieldResourceType, field.TypeString, value)
+	}
+	if aluo.mutation.ResourceTypeCleared() {
+		_spec.ClearField(auditlog.FieldResourceType, field.TypeString)
+	}
+	if value, ok := aluo.mutation.Details(); ok {
+		_spec.SetField(auditlog.FieldDetails, field.TypeJSON, value)
+	}
+	if aluo.mutation.DetailsCleared() {
+		_spec.ClearField(auditlog.FieldDetails, field.TypeJSON)
 	}
 	if aluo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

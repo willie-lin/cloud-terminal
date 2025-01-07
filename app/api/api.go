@@ -240,10 +240,12 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 查询租户信息，通过边查询获取用户关联的租户
-		tenant, err := us.QueryAccount().Only(ctx)
-		if err != nil {
+		tenant, err := us.QueryAccount().QueryTenant().Only(ctx)
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Tenant not found"})
+		} else if err != nil {
 			log.Printf("Error finding tenant: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error finding tenant"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
 		}
 
 		// 获取用户的第一个角色ID

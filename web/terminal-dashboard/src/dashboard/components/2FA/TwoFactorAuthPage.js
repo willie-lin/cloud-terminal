@@ -1,7 +1,8 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {check2FA, confirm2FA, enable2FA, getUserByEmail} from "../../../api/api";
-import {Button, Typography} from "@material-tailwind/react";
+import {Alert, Button, Card, CardBody, CardFooter, CardHeader, Input, Typography} from "@material-tailwind/react";
 import {AuthContext} from "../../../App";
+import {LockOpenIcon, QrCodeIcon, ShieldCheckIcon} from "@heroicons/react/16/solid";
 
 // 自定义Hook，用于处理二次验证的逻辑
 function useTwoFactorAuth() {
@@ -75,7 +76,7 @@ function useTwoFactorAuth() {
             setIsConfirmed(true); // 设置状态变量为true
         } catch (error) {
             console.error('Error:', error);
-            setError('确认二次验证失败');
+            setError('Secondary verification failed！');
             setIsConfirmed(false); // 在这里添加这行代码
         } finally {
             setLoading(false);
@@ -86,74 +87,110 @@ function useTwoFactorAuth() {
 
 function TwoFactorAuthPage({ user }) {
     const { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler } = useTwoFactorAuth(user.email);
+
     return (
-        <div className="flex flex-col items-center justify-center flex-grow bg-gray-200">
-            <div
-                className="p-6 mt-6 text-center border w-96 rounded-xl hover:shadow-xl transition-shadow duration-300 ease-in-out">
-                {error && <p className="text-red-500">{error}</p>}
-                {loading && <p className="text-blue-500">加载中...</p>}
-                {userInfo && <Typography color="blue-gray" className="font-medium text-black textGradient">
-                    用户名: {userInfo.email}。
-                </Typography>}
-                {!loading && (
-                    isConfirmed ? (
-                        <p className="text-green-500 text-lg">✅ 已开启二次认证防护！</p>
-                    ) : (
-                        <>
-                            {!qrGenerated &&
-                                <p className="text-black text-lg">你还没有开启二次验证，开启二次验证可以提高账户的安全性。</p>}
-                            {!qrGenerated && <Button
-                                color="lightBlue"
-                                buttonType="filled"
-                                size="regular"
-                                rounded={false}
-                                block={false}
-                                iconOnly={false}
-                                ripple="light"
-                                onClick={generateQRCode}
-                                className="mt-4"
+    // <section className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
+        <div className="w-full flex flex-col items-center lg:w-3/5 bg-gray-100">
+            <Card className="w-full max-w-md mt-[10%]">
+                <div className="text-center p-6">
+                    <Typography variant="h2" className="font-bold mb-4">Two-Factor Authentication</Typography>
+                    <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">
+                        {isConfirmed ? "Your account is protected with 2FA" : "Enhance your account security with 2FA"}
+                    </Typography>
+                </div>
+
+                <div className="p-6">
+                    {error && (
+                        <Alert color="red" className="mb-4">
+                            {error}
+                        </Alert>
+                    )}
+                    {loading && (
+                        <Alert color="blue-gray" className="mb-4">
+                            Loading...
+                        </Alert>
+                    )}
+                    {userInfo && (
+                        <Typography variant="h6" color="blue-gray" className="mb-4">
+                            Username: {userInfo.email}
+                        </Typography>
+                    )}
+                    {!loading && (
+                        isConfirmed ? (
+                            <Alert
+                                icon={<ShieldCheckIcon className="h-6 w-6" />}
+                                className="mb-2"
                             >
-                                生成二次验证二维码
-                            </Button>}
-                            {qrGenerated && qrCode &&
-                                <img src={`data:image/png;base64,${qrCode}`} alt="二次验证二维码"
-                                     className="mt-4 mx-auto"/>}
-                            {qrGenerated && qrCode && <input
-                                type="text"
-                                value={otp}
-                                onChange={e => setOtp(e.target.value)}
-                                placeholder="请输入你的一次性密码"
-                                style={{
-                                    border: '1px solid lightBlue', // 添加边框
-                                    backgroundColor: '#f8f9fa', // 改变背景颜色
-                                    width: '250px', // 增加宽度
-                                    padding: '5px', // 添加内边距
-                                    borderRadius: '5px', // 添加边框圆角
-                                    marginBottom: '20px', // 增加下边距
-                                    textAlign: 'center', // 文字居中
-                                }}
-                                className="mt-4 mx-auto"
-                            />}
-                            {qrGenerated && qrCode && <Button
-                                color="lightBlue"
-                                buttonType="filled"
-                                size="regular"
-                                rounded={false}
-                                block={false}
-                                iconOnly={false}
-                                ripple="light"
-                                onClick={confirm2FAHandler}
-                                className="mt-4 mx-auto"
-                                style={{width: '250px'}}
-                            >
-                                确认二次验证
-                            </Button>}
-                        </>
-                    )
-                )}
-            </div>
+                                ✅Two-factor authentication is enabled!
+                            </Alert>
+                        ) : (
+                            <>
+                                {!qrGenerated && (
+                                    <Typography color="gray" className="mb-3">
+                                        You haven't turned on two-factor authentication, which improves the security of your account.
+                                    </Typography>
+                                )}
+                                {!qrGenerated && (
+                                    <Button
+                                        type="button"
+                                        color="lightBlue"
+                                        onClick={generateQRCode}
+                                        className="flex items-center justify-center gap-2 mt-2"
+                                    >
+                                        <QrCodeIcon className="h-5 w-5" />
+                                        Generate two-factor authentication QR code
+                                    </Button>
+                                )}
+                                {qrGenerated && qrCode && (
+                                    <div className="flex flex-col items-center gap-4 mt-4">
+                                        <img
+                                            src={`data:image/png;base64,${qrCode}`}
+                                            alt="Two-factor authentication QR code"
+                                            className="w-48 h-48"
+                                        />
+                                        <Input
+                                            type="text"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value)}
+                                            placeholder="Enter your one-time password"
+                                            className="!border !border-gray-300 bg-white text-gray-900 shadow-lg ring-transparent placeholder:text-gray-500 focus:!border-gray-900 focus:ring-4 focus:ring-gray-900"
+                                            labelProps={{ className: "hidden" }}
+                                            containerProps={{ className: "min-w-[100px]" }}
+                                        />
+                                        <Button
+                                            type="button"
+                                            color="black"
+                                            onClick={confirm2FAHandler}
+                                            className="flex items-center justify-center gap-2 w-full mt-4"
+                                        >
+                                            <LockOpenIcon className="h-5 w-5" />
+                                            Confirm two-factor authentication
+                                        </Button>
+                                    </div>
+                                )}
+                            </>
+                        )
+                    )}
+                </div>
+
+                <CardFooter className="pt-0">
+                    <Typography variant="small" className="mt-6 flex justify-center">
+                        Need help?
+                        <Typography
+                            as="a"
+                            href="#"
+                            variant="small"
+                            color="lightBlue"
+                            className="ml-1 font-bold"
+                        >
+                            Contact Support.
+                        </Typography>
+                    </Typography>
+                </CardFooter>
+            </Card>
         </div>
-    );
+    // </section>
+);
 }
 
 export default TwoFactorAuthPage;

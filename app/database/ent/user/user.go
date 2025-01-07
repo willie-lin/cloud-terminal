@@ -48,8 +48,6 @@ const (
 	EdgeRoles = "roles"
 	// EdgeAuditLogs holds the string denoting the audit_logs edge name in mutations.
 	EdgeAuditLogs = "audit_logs"
-	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
-	EdgeAccessPolicies = "access_policies"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// AccountTable is the table that holds the account relation/edge.
@@ -59,21 +57,18 @@ const (
 	AccountInverseTable = "accounts"
 	// AccountColumn is the table column denoting the account relation/edge.
 	AccountColumn = "account_users"
-	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
-	RolesTable = "user_roles"
+	// RolesTable is the table that holds the roles relation/edge.
+	RolesTable = "roles"
 	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RolesInverseTable = "roles"
+	// RolesColumn is the table column denoting the roles relation/edge.
+	RolesColumn = "user_roles"
 	// AuditLogsTable is the table that holds the audit_logs relation/edge. The primary key declared below.
 	AuditLogsTable = "user_audit_logs"
 	// AuditLogsInverseTable is the table name for the AuditLog entity.
 	// It exists in this package in order to avoid circular dependency with the "auditlog" package.
 	AuditLogsInverseTable = "audit_logs"
-	// AccessPoliciesTable is the table that holds the access_policies relation/edge. The primary key declared below.
-	AccessPoliciesTable = "user_policies"
-	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
-	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
-	AccessPoliciesInverseTable = "access_policies"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -98,18 +93,13 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"account_users",
+	"role_users",
 }
 
 var (
-	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
-	// primary key for the roles relation (M2M).
-	RolesPrimaryKey = []string{"user_id", "role_id"}
 	// AuditLogsPrimaryKey and AuditLogsColumn2 are the table columns denoting the
 	// primary key for the audit_logs relation (M2M).
 	AuditLogsPrimaryKey = []string{"user_id", "audit_log_id"}
-	// AccessPoliciesPrimaryKey and AccessPoliciesColumn2 are the table columns denoting the
-	// primary key for the access_policies relation (M2M).
-	AccessPoliciesPrimaryKey = []string{"user_id", "access_policy_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -288,20 +278,6 @@ func ByAuditLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAuditLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByAccessPoliciesCount orders the results by access_policies count.
-func ByAccessPoliciesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAccessPoliciesStep(), opts...)
-	}
-}
-
-// ByAccessPolicies orders the results by access_policies terms.
-func ByAccessPolicies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccessPoliciesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
 func newAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -313,7 +289,7 @@ func newRolesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RolesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
 	)
 }
 func newAuditLogsStep() *sqlgraph.Step {
@@ -321,12 +297,5 @@ func newAuditLogsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AuditLogsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, AuditLogsTable, AuditLogsPrimaryKey...),
-	)
-}
-func newAccessPoliciesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
 	)
 }

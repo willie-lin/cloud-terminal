@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
@@ -236,21 +235,6 @@ func (uc *UserCreate) AddAuditLogs(a ...*AuditLog) *UserCreate {
 		ids[i] = a[i].ID
 	}
 	return uc.AddAuditLogIDs(ids...)
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (uc *UserCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *UserCreate {
-	uc.mutation.AddAccessPolicyIDs(ids...)
-	return uc
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (uc *UserCreate) AddAccessPolicies(a ...*AccessPolicy) *UserCreate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uc.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -483,10 +467,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	}
 	if nodes := uc.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.RolesTable,
-			Columns: user.RolesPrimaryKey,
+			Columns: []string{user.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -506,22 +490,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   user.AccessPoliciesTable,
-			Columns: user.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

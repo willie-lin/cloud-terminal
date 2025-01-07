@@ -12,11 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
@@ -54,6 +52,20 @@ func (au *AccountUpdate) SetNillableName(s *string) *AccountUpdate {
 	return au
 }
 
+// SetStatus sets the "status" field.
+func (au *AccountUpdate) SetStatus(a account.Status) *AccountUpdate {
+	au.mutation.SetStatus(a)
+	return au
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (au *AccountUpdate) SetNillableStatus(a *account.Status) *AccountUpdate {
+	if a != nil {
+		au.SetStatus(*a)
+	}
+	return au
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
 func (au *AccountUpdate) SetTenantID(id uuid.UUID) *AccountUpdate {
 	au.mutation.SetTenantID(id)
@@ -80,49 +92,19 @@ func (au *AccountUpdate) AddUsers(u ...*User) *AccountUpdate {
 	return au.AddUserIDs(ids...)
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (au *AccountUpdate) AddRoleIDs(ids ...uuid.UUID) *AccountUpdate {
-	au.mutation.AddRoleIDs(ids...)
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (au *AccountUpdate) AddResourceIDs(ids ...uuid.UUID) *AccountUpdate {
+	au.mutation.AddResourceIDs(ids...)
 	return au
 }
 
-// AddRoles adds the "roles" edges to the Role entity.
-func (au *AccountUpdate) AddRoles(r ...*Role) *AccountUpdate {
+// AddResources adds the "resources" edges to the Resource entity.
+func (au *AccountUpdate) AddResources(r ...*Resource) *AccountUpdate {
 	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
-	return au.AddRoleIDs(ids...)
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (au *AccountUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *AccountUpdate {
-	au.mutation.AddAccessPolicyIDs(ids...)
-	return au
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (au *AccountUpdate) AddAccessPolicies(a ...*AccessPolicy) *AccountUpdate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return au.AddAccessPolicyIDs(ids...)
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (au *AccountUpdate) AddPermissionIDs(ids ...uuid.UUID) *AccountUpdate {
-	au.mutation.AddPermissionIDs(ids...)
-	return au
-}
-
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (au *AccountUpdate) AddPermissions(p ...*Permission) *AccountUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return au.AddPermissionIDs(ids...)
+	return au.AddResourceIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -157,67 +139,25 @@ func (au *AccountUpdate) RemoveUsers(u ...*User) *AccountUpdate {
 	return au.RemoveUserIDs(ids...)
 }
 
-// ClearRoles clears all "roles" edges to the Role entity.
-func (au *AccountUpdate) ClearRoles() *AccountUpdate {
-	au.mutation.ClearRoles()
+// ClearResources clears all "resources" edges to the Resource entity.
+func (au *AccountUpdate) ClearResources() *AccountUpdate {
+	au.mutation.ClearResources()
 	return au
 }
 
-// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (au *AccountUpdate) RemoveRoleIDs(ids ...uuid.UUID) *AccountUpdate {
-	au.mutation.RemoveRoleIDs(ids...)
+// RemoveResourceIDs removes the "resources" edge to Resource entities by IDs.
+func (au *AccountUpdate) RemoveResourceIDs(ids ...uuid.UUID) *AccountUpdate {
+	au.mutation.RemoveResourceIDs(ids...)
 	return au
 }
 
-// RemoveRoles removes "roles" edges to Role entities.
-func (au *AccountUpdate) RemoveRoles(r ...*Role) *AccountUpdate {
+// RemoveResources removes "resources" edges to Resource entities.
+func (au *AccountUpdate) RemoveResources(r ...*Resource) *AccountUpdate {
 	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
-	return au.RemoveRoleIDs(ids...)
-}
-
-// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
-func (au *AccountUpdate) ClearAccessPolicies() *AccountUpdate {
-	au.mutation.ClearAccessPolicies()
-	return au
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (au *AccountUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *AccountUpdate {
-	au.mutation.RemoveAccessPolicyIDs(ids...)
-	return au
-}
-
-// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
-func (au *AccountUpdate) RemoveAccessPolicies(a ...*AccessPolicy) *AccountUpdate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return au.RemoveAccessPolicyIDs(ids...)
-}
-
-// ClearPermissions clears all "permissions" edges to the Permission entity.
-func (au *AccountUpdate) ClearPermissions() *AccountUpdate {
-	au.mutation.ClearPermissions()
-	return au
-}
-
-// RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
-func (au *AccountUpdate) RemovePermissionIDs(ids ...uuid.UUID) *AccountUpdate {
-	au.mutation.RemovePermissionIDs(ids...)
-	return au
-}
-
-// RemovePermissions removes "permissions" edges to Permission entities.
-func (au *AccountUpdate) RemovePermissions(p ...*Permission) *AccountUpdate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return au.RemovePermissionIDs(ids...)
+	return au.RemoveResourceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -263,6 +203,11 @@ func (au *AccountUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Account.name": %w`, err)}
 		}
 	}
+	if v, ok := au.mutation.Status(); ok {
+		if err := account.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Account.status": %w`, err)}
+		}
+	}
 	if au.mutation.TenantCleared() && len(au.mutation.TenantIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Account.tenant"`)
 	}
@@ -286,6 +231,9 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := au.mutation.Name(); ok {
 		_spec.SetField(account.FieldName, field.TypeString, value)
+	}
+	if value, ok := au.mutation.Status(); ok {
+		_spec.SetField(account.FieldStatus, field.TypeEnum, value)
 	}
 	if au.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -361,28 +309,28 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if au.mutation.RolesCleared() {
+	if au.mutation.ResourcesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: []string{account.RolesColumn},
+			Table:   account.ResourcesTable,
+			Columns: account.ResourcesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.RemovedRolesIDs(); len(nodes) > 0 && !au.mutation.RolesCleared() {
+	if nodes := au.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !au.mutation.ResourcesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: []string{account.RolesColumn},
+			Table:   account.ResourcesTable,
+			Columns: account.ResourcesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -390,105 +338,15 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := au.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: []string{account.RolesColumn},
+			Table:   account.ResourcesTable,
+			Columns: account.ResourcesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if au.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.AccessPoliciesTable,
-			Columns: []string{account.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := au.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !au.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.AccessPoliciesTable,
-			Columns: []string{account.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := au.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.AccessPoliciesTable,
-			Columns: []string{account.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if au.mutation.PermissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.PermissionsTable,
-			Columns: []string{account.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := au.mutation.RemovedPermissionsIDs(); len(nodes) > 0 && !au.mutation.PermissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.PermissionsTable,
-			Columns: []string{account.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := au.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.PermissionsTable,
-			Columns: []string{account.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -536,6 +394,20 @@ func (auo *AccountUpdateOne) SetNillableName(s *string) *AccountUpdateOne {
 	return auo
 }
 
+// SetStatus sets the "status" field.
+func (auo *AccountUpdateOne) SetStatus(a account.Status) *AccountUpdateOne {
+	auo.mutation.SetStatus(a)
+	return auo
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (auo *AccountUpdateOne) SetNillableStatus(a *account.Status) *AccountUpdateOne {
+	if a != nil {
+		auo.SetStatus(*a)
+	}
+	return auo
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
 func (auo *AccountUpdateOne) SetTenantID(id uuid.UUID) *AccountUpdateOne {
 	auo.mutation.SetTenantID(id)
@@ -562,49 +434,19 @@ func (auo *AccountUpdateOne) AddUsers(u ...*User) *AccountUpdateOne {
 	return auo.AddUserIDs(ids...)
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (auo *AccountUpdateOne) AddRoleIDs(ids ...uuid.UUID) *AccountUpdateOne {
-	auo.mutation.AddRoleIDs(ids...)
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (auo *AccountUpdateOne) AddResourceIDs(ids ...uuid.UUID) *AccountUpdateOne {
+	auo.mutation.AddResourceIDs(ids...)
 	return auo
 }
 
-// AddRoles adds the "roles" edges to the Role entity.
-func (auo *AccountUpdateOne) AddRoles(r ...*Role) *AccountUpdateOne {
+// AddResources adds the "resources" edges to the Resource entity.
+func (auo *AccountUpdateOne) AddResources(r ...*Resource) *AccountUpdateOne {
 	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
-	return auo.AddRoleIDs(ids...)
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (auo *AccountUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *AccountUpdateOne {
-	auo.mutation.AddAccessPolicyIDs(ids...)
-	return auo
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (auo *AccountUpdateOne) AddAccessPolicies(a ...*AccessPolicy) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return auo.AddAccessPolicyIDs(ids...)
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (auo *AccountUpdateOne) AddPermissionIDs(ids ...uuid.UUID) *AccountUpdateOne {
-	auo.mutation.AddPermissionIDs(ids...)
-	return auo
-}
-
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (auo *AccountUpdateOne) AddPermissions(p ...*Permission) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return auo.AddPermissionIDs(ids...)
+	return auo.AddResourceIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -639,67 +481,25 @@ func (auo *AccountUpdateOne) RemoveUsers(u ...*User) *AccountUpdateOne {
 	return auo.RemoveUserIDs(ids...)
 }
 
-// ClearRoles clears all "roles" edges to the Role entity.
-func (auo *AccountUpdateOne) ClearRoles() *AccountUpdateOne {
-	auo.mutation.ClearRoles()
+// ClearResources clears all "resources" edges to the Resource entity.
+func (auo *AccountUpdateOne) ClearResources() *AccountUpdateOne {
+	auo.mutation.ClearResources()
 	return auo
 }
 
-// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (auo *AccountUpdateOne) RemoveRoleIDs(ids ...uuid.UUID) *AccountUpdateOne {
-	auo.mutation.RemoveRoleIDs(ids...)
+// RemoveResourceIDs removes the "resources" edge to Resource entities by IDs.
+func (auo *AccountUpdateOne) RemoveResourceIDs(ids ...uuid.UUID) *AccountUpdateOne {
+	auo.mutation.RemoveResourceIDs(ids...)
 	return auo
 }
 
-// RemoveRoles removes "roles" edges to Role entities.
-func (auo *AccountUpdateOne) RemoveRoles(r ...*Role) *AccountUpdateOne {
+// RemoveResources removes "resources" edges to Resource entities.
+func (auo *AccountUpdateOne) RemoveResources(r ...*Resource) *AccountUpdateOne {
 	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
-	return auo.RemoveRoleIDs(ids...)
-}
-
-// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
-func (auo *AccountUpdateOne) ClearAccessPolicies() *AccountUpdateOne {
-	auo.mutation.ClearAccessPolicies()
-	return auo
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (auo *AccountUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *AccountUpdateOne {
-	auo.mutation.RemoveAccessPolicyIDs(ids...)
-	return auo
-}
-
-// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
-func (auo *AccountUpdateOne) RemoveAccessPolicies(a ...*AccessPolicy) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return auo.RemoveAccessPolicyIDs(ids...)
-}
-
-// ClearPermissions clears all "permissions" edges to the Permission entity.
-func (auo *AccountUpdateOne) ClearPermissions() *AccountUpdateOne {
-	auo.mutation.ClearPermissions()
-	return auo
-}
-
-// RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
-func (auo *AccountUpdateOne) RemovePermissionIDs(ids ...uuid.UUID) *AccountUpdateOne {
-	auo.mutation.RemovePermissionIDs(ids...)
-	return auo
-}
-
-// RemovePermissions removes "permissions" edges to Permission entities.
-func (auo *AccountUpdateOne) RemovePermissions(p ...*Permission) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return auo.RemovePermissionIDs(ids...)
+	return auo.RemoveResourceIDs(ids...)
 }
 
 // Where appends a list predicates to the AccountUpdate builder.
@@ -758,6 +558,11 @@ func (auo *AccountUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Account.name": %w`, err)}
 		}
 	}
+	if v, ok := auo.mutation.Status(); ok {
+		if err := account.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Account.status": %w`, err)}
+		}
+	}
 	if auo.mutation.TenantCleared() && len(auo.mutation.TenantIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Account.tenant"`)
 	}
@@ -798,6 +603,9 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err e
 	}
 	if value, ok := auo.mutation.Name(); ok {
 		_spec.SetField(account.FieldName, field.TypeString, value)
+	}
+	if value, ok := auo.mutation.Status(); ok {
+		_spec.SetField(account.FieldStatus, field.TypeEnum, value)
 	}
 	if auo.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -873,28 +681,28 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err e
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if auo.mutation.RolesCleared() {
+	if auo.mutation.ResourcesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: []string{account.RolesColumn},
+			Table:   account.ResourcesTable,
+			Columns: account.ResourcesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.RemovedRolesIDs(); len(nodes) > 0 && !auo.mutation.RolesCleared() {
+	if nodes := auo.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !auo.mutation.ResourcesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: []string{account.RolesColumn},
+			Table:   account.ResourcesTable,
+			Columns: account.ResourcesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -902,105 +710,15 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := auo.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: []string{account.RolesColumn},
+			Table:   account.ResourcesTable,
+			Columns: account.ResourcesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if auo.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.AccessPoliciesTable,
-			Columns: []string{account.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := auo.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !auo.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.AccessPoliciesTable,
-			Columns: []string{account.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := auo.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.AccessPoliciesTable,
-			Columns: []string{account.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if auo.mutation.PermissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.PermissionsTable,
-			Columns: []string{account.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := auo.mutation.RemovedPermissionsIDs(); len(nodes) > 0 && !auo.mutation.PermissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.PermissionsTable,
-			Columns: []string{account.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := auo.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.PermissionsTable,
-			Columns: []string{account.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

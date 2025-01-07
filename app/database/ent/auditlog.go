@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -24,8 +25,18 @@ type AuditLog struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Timestamp holds the value of the "timestamp" field.
 	Timestamp time.Time `json:"timestamp,omitempty"`
-	// Operation holds the value of the "operation" field.
-	Operation string `json:"operation,omitempty"`
+	// ActorID holds the value of the "actor_id" field.
+	ActorID int `json:"actor_id,omitempty"`
+	// ActorUsername holds the value of the "actor_username" field.
+	ActorUsername string `json:"actor_username,omitempty"`
+	// Action holds the value of the "action" field.
+	Action string `json:"action,omitempty"`
+	// ResourceID holds the value of the "resource_id" field.
+	ResourceID int `json:"resource_id,omitempty"`
+	// ResourceType holds the value of the "resource_type" field.
+	ResourceType string `json:"resource_type,omitempty"`
+	// Details holds the value of the "details" field.
+	Details map[string]interface{} `json:"details,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AuditLogQuery when eager-loading is set.
 	Edges        AuditLogEdges `json:"edges"`
@@ -55,7 +66,11 @@ func (*AuditLog) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case auditlog.FieldOperation:
+		case auditlog.FieldDetails:
+			values[i] = new([]byte)
+		case auditlog.FieldActorID, auditlog.FieldResourceID:
+			values[i] = new(sql.NullInt64)
+		case auditlog.FieldActorUsername, auditlog.FieldAction, auditlog.FieldResourceType:
 			values[i] = new(sql.NullString)
 		case auditlog.FieldCreatedAt, auditlog.FieldUpdatedAt, auditlog.FieldTimestamp:
 			values[i] = new(sql.NullTime)
@@ -100,11 +115,43 @@ func (al *AuditLog) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				al.Timestamp = value.Time
 			}
-		case auditlog.FieldOperation:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field operation", values[i])
+		case auditlog.FieldActorID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field actor_id", values[i])
 			} else if value.Valid {
-				al.Operation = value.String
+				al.ActorID = int(value.Int64)
+			}
+		case auditlog.FieldActorUsername:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field actor_username", values[i])
+			} else if value.Valid {
+				al.ActorUsername = value.String
+			}
+		case auditlog.FieldAction:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field action", values[i])
+			} else if value.Valid {
+				al.Action = value.String
+			}
+		case auditlog.FieldResourceID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_id", values[i])
+			} else if value.Valid {
+				al.ResourceID = int(value.Int64)
+			}
+		case auditlog.FieldResourceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_type", values[i])
+			} else if value.Valid {
+				al.ResourceType = value.String
+			}
+		case auditlog.FieldDetails:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field details", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &al.Details); err != nil {
+					return fmt.Errorf("unmarshal field details: %w", err)
+				}
 			}
 		default:
 			al.selectValues.Set(columns[i], values[i])
@@ -156,8 +203,23 @@ func (al *AuditLog) String() string {
 	builder.WriteString("timestamp=")
 	builder.WriteString(al.Timestamp.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("operation=")
-	builder.WriteString(al.Operation)
+	builder.WriteString("actor_id=")
+	builder.WriteString(fmt.Sprintf("%v", al.ActorID))
+	builder.WriteString(", ")
+	builder.WriteString("actor_username=")
+	builder.WriteString(al.ActorUsername)
+	builder.WriteString(", ")
+	builder.WriteString("action=")
+	builder.WriteString(al.Action)
+	builder.WriteString(", ")
+	builder.WriteString("resource_id=")
+	builder.WriteString(fmt.Sprintf("%v", al.ResourceID))
+	builder.WriteString(", ")
+	builder.WriteString("resource_type=")
+	builder.WriteString(al.ResourceType)
+	builder.WriteString(", ")
+	builder.WriteString("details=")
+	builder.WriteString(fmt.Sprintf("%v", al.Details))
 	builder.WriteByte(')')
 	return builder.String()
 }

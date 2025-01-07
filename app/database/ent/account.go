@@ -25,6 +25,8 @@ type Account struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Status holds the value of the "status" field.
+	Status account.Status `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccountQuery when eager-loading is set.
 	Edges           AccountEdges `json:"edges"`
@@ -38,15 +40,11 @@ type AccountEdges struct {
 	Tenant *Tenant `json:"tenant,omitempty"`
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
-	// Roles holds the value of the roles edge.
-	Roles []*Role `json:"roles,omitempty"`
-	// AccessPolicies holds the value of the access_policies edge.
-	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
-	// Permissions holds the value of the permissions edge.
-	Permissions []*Permission `json:"permissions,omitempty"`
+	// Resources holds the value of the resources edge.
+	Resources []*Resource `json:"resources,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [3]bool
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -69,31 +67,13 @@ func (e AccountEdges) UsersOrErr() ([]*User, error) {
 	return nil, &NotLoadedError{edge: "users"}
 }
 
-// RolesOrErr returns the Roles value or an error if the edge
+// ResourcesOrErr returns the Resources value or an error if the edge
 // was not loaded in eager-loading.
-func (e AccountEdges) RolesOrErr() ([]*Role, error) {
+func (e AccountEdges) ResourcesOrErr() ([]*Resource, error) {
 	if e.loadedTypes[2] {
-		return e.Roles, nil
+		return e.Resources, nil
 	}
-	return nil, &NotLoadedError{edge: "roles"}
-}
-
-// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
-// was not loaded in eager-loading.
-func (e AccountEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
-	if e.loadedTypes[3] {
-		return e.AccessPolicies, nil
-	}
-	return nil, &NotLoadedError{edge: "access_policies"}
-}
-
-// PermissionsOrErr returns the Permissions value or an error if the edge
-// was not loaded in eager-loading.
-func (e AccountEdges) PermissionsOrErr() ([]*Permission, error) {
-	if e.loadedTypes[4] {
-		return e.Permissions, nil
-	}
-	return nil, &NotLoadedError{edge: "permissions"}
+	return nil, &NotLoadedError{edge: "resources"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -101,7 +81,7 @@ func (*Account) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case account.FieldName:
+		case account.FieldName, account.FieldStatus:
 			values[i] = new(sql.NullString)
 		case account.FieldCreatedAt, account.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -148,6 +128,12 @@ func (a *Account) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.Name = value.String
 			}
+		case account.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				a.Status = account.Status(value.String)
+			}
 		case account.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_accounts", values[i])
@@ -178,19 +164,9 @@ func (a *Account) QueryUsers() *UserQuery {
 	return NewAccountClient(a.config).QueryUsers(a)
 }
 
-// QueryRoles queries the "roles" edge of the Account entity.
-func (a *Account) QueryRoles() *RoleQuery {
-	return NewAccountClient(a.config).QueryRoles(a)
-}
-
-// QueryAccessPolicies queries the "access_policies" edge of the Account entity.
-func (a *Account) QueryAccessPolicies() *AccessPolicyQuery {
-	return NewAccountClient(a.config).QueryAccessPolicies(a)
-}
-
-// QueryPermissions queries the "permissions" edge of the Account entity.
-func (a *Account) QueryPermissions() *PermissionQuery {
-	return NewAccountClient(a.config).QueryPermissions(a)
+// QueryResources queries the "resources" edge of the Account entity.
+func (a *Account) QueryResources() *ResourceQuery {
+	return NewAccountClient(a.config).QueryResources(a)
 }
 
 // Update returns a builder for updating this Account.
@@ -224,6 +200,9 @@ func (a *Account) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(a.Name)
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", a.Status))
 	builder.WriteByte(')')
 	return builder.String()
 }

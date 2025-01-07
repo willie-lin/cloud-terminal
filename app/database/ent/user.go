@@ -49,6 +49,7 @@ type User struct {
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges         UserEdges `json:"edges"`
 	account_users *uuid.UUID
+	role_users    *uuid.UUID
 	selectValues  sql.SelectValues
 }
 
@@ -60,11 +61,9 @@ type UserEdges struct {
 	Roles []*Role `json:"roles,omitempty"`
 	// AuditLogs holds the value of the audit_logs edge.
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
-	// AccessPolicies holds the value of the access_policies edge.
-	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -96,15 +95,6 @@ func (e UserEdges) AuditLogsOrErr() ([]*AuditLog, error) {
 	return nil, &NotLoadedError{edge: "audit_logs"}
 }
 
-// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
-	if e.loadedTypes[3] {
-		return e.AccessPolicies, nil
-	}
-	return nil, &NotLoadedError{edge: "access_policies"}
-}
-
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -119,6 +109,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
 		case user.ForeignKeys[0]: // account_users
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case user.ForeignKeys[1]: // role_users
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -226,6 +218,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 				u.account_users = new(uuid.UUID)
 				*u.account_users = *value.S.(*uuid.UUID)
 			}
+		case user.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field role_users", values[i])
+			} else if value.Valid {
+				u.role_users = new(uuid.UUID)
+				*u.role_users = *value.S.(*uuid.UUID)
+			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
 		}
@@ -252,11 +251,6 @@ func (u *User) QueryRoles() *RoleQuery {
 // QueryAuditLogs queries the "audit_logs" edge of the User entity.
 func (u *User) QueryAuditLogs() *AuditLogQuery {
 	return NewUserClient(u.config).QueryAuditLogs(u)
-}
-
-// QueryAccessPolicies queries the "access_policies" edge of the User entity.
-func (u *User) QueryAccessPolicies() *AccessPolicyQuery {
-	return NewUserClient(u.config).QueryAccessPolicies(u)
 }
 
 // Update returns a builder for updating this User.

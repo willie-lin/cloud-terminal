@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -26,12 +27,12 @@ type Resource struct {
 	Name string `json:"name,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
+	// Properties holds the value of the "properties" field.
+	Properties map[string]interface{} `json:"properties,omitempty"`
 	// Value holds the value of the "value" field.
 	Value string `json:"value,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// IsDisabled holds the value of the "is_disabled" field.
-	IsDisabled bool `json:"is_disabled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ResourceQuery when eager-loading is set.
 	Edges        ResourceEdges `json:"edges"`
@@ -40,20 +41,20 @@ type Resource struct {
 
 // ResourceEdges holds the relations/edges for other nodes in the graph.
 type ResourceEdges struct {
-	// AccessPolicies holds the value of the access_policies edge.
-	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
+	// Account holds the value of the account edge.
+	Account []*Account `json:"account,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
+// AccountOrErr returns the Account value or an error if the edge
 // was not loaded in eager-loading.
-func (e ResourceEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
+func (e ResourceEdges) AccountOrErr() ([]*Account, error) {
 	if e.loadedTypes[0] {
-		return e.AccessPolicies, nil
+		return e.Account, nil
 	}
-	return nil, &NotLoadedError{edge: "access_policies"}
+	return nil, &NotLoadedError{edge: "account"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -61,8 +62,8 @@ func (*Resource) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resource.FieldIsDisabled:
-			values[i] = new(sql.NullBool)
+		case resource.FieldProperties:
+			values[i] = new([]byte)
 		case resource.FieldName, resource.FieldType, resource.FieldValue, resource.FieldDescription:
 			values[i] = new(sql.NullString)
 		case resource.FieldCreatedAt, resource.FieldUpdatedAt:
@@ -114,6 +115,14 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Type = value.String
 			}
+		case resource.FieldProperties:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field properties", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &r.Properties); err != nil {
+					return fmt.Errorf("unmarshal field properties: %w", err)
+				}
+			}
 		case resource.FieldValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field value", values[i])
@@ -125,12 +134,6 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				r.Description = value.String
-			}
-		case resource.FieldIsDisabled:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_disabled", values[i])
-			} else if value.Valid {
-				r.IsDisabled = value.Bool
 			}
 		default:
 			r.selectValues.Set(columns[i], values[i])
@@ -145,9 +148,9 @@ func (r *Resource) GetValue(name string) (ent.Value, error) {
 	return r.selectValues.Get(name)
 }
 
-// QueryAccessPolicies queries the "access_policies" edge of the Resource entity.
-func (r *Resource) QueryAccessPolicies() *AccessPolicyQuery {
-	return NewResourceClient(r.config).QueryAccessPolicies(r)
+// QueryAccount queries the "account" edge of the Resource entity.
+func (r *Resource) QueryAccount() *AccountQuery {
+	return NewResourceClient(r.config).QueryAccount(r)
 }
 
 // Update returns a builder for updating this Resource.
@@ -185,14 +188,14 @@ func (r *Resource) String() string {
 	builder.WriteString("type=")
 	builder.WriteString(r.Type)
 	builder.WriteString(", ")
+	builder.WriteString("properties=")
+	builder.WriteString(fmt.Sprintf("%v", r.Properties))
+	builder.WriteString(", ")
 	builder.WriteString("value=")
 	builder.WriteString(r.Value)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(r.Description)
-	builder.WriteString(", ")
-	builder.WriteString("is_disabled=")
-	builder.WriteString(fmt.Sprintf("%v", r.IsDisabled))
 	builder.WriteByte(')')
 	return builder.String()
 }

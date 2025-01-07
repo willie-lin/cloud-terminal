@@ -76,16 +76,6 @@ func Description(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldDescription, v))
 }
 
-// ContactEmail applies equality check predicate on the "contact_email" field. It's identical to ContactEmailEQ.
-func ContactEmail(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEQ(FieldContactEmail, v))
-}
-
-// ContactPhone applies equality check predicate on the "contact_phone" field. It's identical to ContactPhoneEQ.
-func ContactPhone(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEQ(FieldContactPhone, v))
-}
-
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldCreatedAt, v))
@@ -306,156 +296,6 @@ func DescriptionContainsFold(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// ContactEmailEQ applies the EQ predicate on the "contact_email" field.
-func ContactEmailEQ(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEQ(FieldContactEmail, v))
-}
-
-// ContactEmailNEQ applies the NEQ predicate on the "contact_email" field.
-func ContactEmailNEQ(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldNEQ(FieldContactEmail, v))
-}
-
-// ContactEmailIn applies the In predicate on the "contact_email" field.
-func ContactEmailIn(vs ...string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldIn(FieldContactEmail, vs...))
-}
-
-// ContactEmailNotIn applies the NotIn predicate on the "contact_email" field.
-func ContactEmailNotIn(vs ...string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldNotIn(FieldContactEmail, vs...))
-}
-
-// ContactEmailGT applies the GT predicate on the "contact_email" field.
-func ContactEmailGT(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldGT(FieldContactEmail, v))
-}
-
-// ContactEmailGTE applies the GTE predicate on the "contact_email" field.
-func ContactEmailGTE(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldGTE(FieldContactEmail, v))
-}
-
-// ContactEmailLT applies the LT predicate on the "contact_email" field.
-func ContactEmailLT(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldLT(FieldContactEmail, v))
-}
-
-// ContactEmailLTE applies the LTE predicate on the "contact_email" field.
-func ContactEmailLTE(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldLTE(FieldContactEmail, v))
-}
-
-// ContactEmailContains applies the Contains predicate on the "contact_email" field.
-func ContactEmailContains(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldContains(FieldContactEmail, v))
-}
-
-// ContactEmailHasPrefix applies the HasPrefix predicate on the "contact_email" field.
-func ContactEmailHasPrefix(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldHasPrefix(FieldContactEmail, v))
-}
-
-// ContactEmailHasSuffix applies the HasSuffix predicate on the "contact_email" field.
-func ContactEmailHasSuffix(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldHasSuffix(FieldContactEmail, v))
-}
-
-// ContactEmailIsNil applies the IsNil predicate on the "contact_email" field.
-func ContactEmailIsNil() predicate.Tenant {
-	return predicate.Tenant(sql.FieldIsNull(FieldContactEmail))
-}
-
-// ContactEmailNotNil applies the NotNil predicate on the "contact_email" field.
-func ContactEmailNotNil() predicate.Tenant {
-	return predicate.Tenant(sql.FieldNotNull(FieldContactEmail))
-}
-
-// ContactEmailEqualFold applies the EqualFold predicate on the "contact_email" field.
-func ContactEmailEqualFold(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEqualFold(FieldContactEmail, v))
-}
-
-// ContactEmailContainsFold applies the ContainsFold predicate on the "contact_email" field.
-func ContactEmailContainsFold(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldContainsFold(FieldContactEmail, v))
-}
-
-// ContactPhoneEQ applies the EQ predicate on the "contact_phone" field.
-func ContactPhoneEQ(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEQ(FieldContactPhone, v))
-}
-
-// ContactPhoneNEQ applies the NEQ predicate on the "contact_phone" field.
-func ContactPhoneNEQ(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldNEQ(FieldContactPhone, v))
-}
-
-// ContactPhoneIn applies the In predicate on the "contact_phone" field.
-func ContactPhoneIn(vs ...string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldIn(FieldContactPhone, vs...))
-}
-
-// ContactPhoneNotIn applies the NotIn predicate on the "contact_phone" field.
-func ContactPhoneNotIn(vs ...string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldNotIn(FieldContactPhone, vs...))
-}
-
-// ContactPhoneGT applies the GT predicate on the "contact_phone" field.
-func ContactPhoneGT(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldGT(FieldContactPhone, v))
-}
-
-// ContactPhoneGTE applies the GTE predicate on the "contact_phone" field.
-func ContactPhoneGTE(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldGTE(FieldContactPhone, v))
-}
-
-// ContactPhoneLT applies the LT predicate on the "contact_phone" field.
-func ContactPhoneLT(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldLT(FieldContactPhone, v))
-}
-
-// ContactPhoneLTE applies the LTE predicate on the "contact_phone" field.
-func ContactPhoneLTE(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldLTE(FieldContactPhone, v))
-}
-
-// ContactPhoneContains applies the Contains predicate on the "contact_phone" field.
-func ContactPhoneContains(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldContains(FieldContactPhone, v))
-}
-
-// ContactPhoneHasPrefix applies the HasPrefix predicate on the "contact_phone" field.
-func ContactPhoneHasPrefix(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldHasPrefix(FieldContactPhone, v))
-}
-
-// ContactPhoneHasSuffix applies the HasSuffix predicate on the "contact_phone" field.
-func ContactPhoneHasSuffix(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldHasSuffix(FieldContactPhone, v))
-}
-
-// ContactPhoneIsNil applies the IsNil predicate on the "contact_phone" field.
-func ContactPhoneIsNil() predicate.Tenant {
-	return predicate.Tenant(sql.FieldIsNull(FieldContactPhone))
-}
-
-// ContactPhoneNotNil applies the NotNil predicate on the "contact_phone" field.
-func ContactPhoneNotNil() predicate.Tenant {
-	return predicate.Tenant(sql.FieldNotNull(FieldContactPhone))
-}
-
-// ContactPhoneEqualFold applies the EqualFold predicate on the "contact_phone" field.
-func ContactPhoneEqualFold(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEqualFold(FieldContactPhone, v))
-}
-
-// ContactPhoneContainsFold applies the ContainsFold predicate on the "contact_phone" field.
-func ContactPhoneContainsFold(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldContainsFold(FieldContactPhone, v))
-}
-
 // StatusEQ applies the EQ predicate on the "status" field.
 func StatusEQ(v Status) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldStatus, v))
@@ -514,6 +354,75 @@ func HasAccounts() predicate.Tenant {
 func HasAccountsWith(preds ...predicate.Account) predicate.Tenant {
 	return predicate.Tenant(func(s *sql.Selector) {
 		step := newAccountsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPermissions applies the HasEdge predicate on the "permissions" edge.
+func HasPermissions() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PermissionsTable, PermissionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPermissionsWith applies the HasEdge predicate on the "permissions" edge with a given conditions (other predicates).
+func HasPermissionsWith(preds ...predicate.Permission) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newPermissionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRoles applies the HasEdge predicate on the "roles" edge.
+func HasRoles() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRolesWith applies the HasEdge predicate on the "roles" edge with a given conditions (other predicates).
+func HasRolesWith(preds ...predicate.Role) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newRolesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAccessPolicies applies the HasEdge predicate on the "access_policies" edge.
+func HasAccessPolicies() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccessPoliciesWith applies the HasEdge predicate on the "access_policies" edge with a given conditions (other predicates).
+func HasAccessPoliciesWith(preds ...predicate.AccessPolicy) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newAccessPoliciesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

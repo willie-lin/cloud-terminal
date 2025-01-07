@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
@@ -264,21 +263,6 @@ func (uu *UserUpdate) AddAuditLogs(a ...*AuditLog) *UserUpdate {
 	return uu.AddAuditLogIDs(ids...)
 }
 
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (uu *UserUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.AddAccessPolicyIDs(ids...)
-	return uu
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (uu *UserUpdate) AddAccessPolicies(a ...*AccessPolicy) *UserUpdate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uu.AddAccessPolicyIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -330,27 +314,6 @@ func (uu *UserUpdate) RemoveAuditLogs(a ...*AuditLog) *UserUpdate {
 		ids[i] = a[i].ID
 	}
 	return uu.RemoveAuditLogIDs(ids...)
-}
-
-// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
-func (uu *UserUpdate) ClearAccessPolicies() *UserUpdate {
-	uu.mutation.ClearAccessPolicies()
-	return uu
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (uu *UserUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.RemoveAccessPolicyIDs(ids...)
-	return uu
-}
-
-// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
-func (uu *UserUpdate) RemoveAccessPolicies(a ...*AccessPolicy) *UserUpdate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uu.RemoveAccessPolicyIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -521,10 +484,10 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.RolesTable,
-			Columns: user.RolesPrimaryKey,
+			Columns: []string{user.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -534,10 +497,10 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RemovedRolesIDs(); len(nodes) > 0 && !uu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.RolesTable,
-			Columns: user.RolesPrimaryKey,
+			Columns: []string{user.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -550,10 +513,10 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.RolesTable,
-			Columns: user.RolesPrimaryKey,
+			Columns: []string{user.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -602,51 +565,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   user.AccessPoliciesTable,
-			Columns: user.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !uu.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   user.AccessPoliciesTable,
-			Columns: user.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   user.AccessPoliciesTable,
-			Columns: user.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -905,21 +823,6 @@ func (uuo *UserUpdateOne) AddAuditLogs(a ...*AuditLog) *UserUpdateOne {
 	return uuo.AddAuditLogIDs(ids...)
 }
 
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (uuo *UserUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.AddAccessPolicyIDs(ids...)
-	return uuo
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (uuo *UserUpdateOne) AddAccessPolicies(a ...*AccessPolicy) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uuo.AddAccessPolicyIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -971,27 +874,6 @@ func (uuo *UserUpdateOne) RemoveAuditLogs(a ...*AuditLog) *UserUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return uuo.RemoveAuditLogIDs(ids...)
-}
-
-// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
-func (uuo *UserUpdateOne) ClearAccessPolicies() *UserUpdateOne {
-	uuo.mutation.ClearAccessPolicies()
-	return uuo
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (uuo *UserUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.RemoveAccessPolicyIDs(ids...)
-	return uuo
-}
-
-// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
-func (uuo *UserUpdateOne) RemoveAccessPolicies(a ...*AccessPolicy) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uuo.RemoveAccessPolicyIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1192,10 +1074,10 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if uuo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.RolesTable,
-			Columns: user.RolesPrimaryKey,
+			Columns: []string{user.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -1205,10 +1087,10 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if nodes := uuo.mutation.RemovedRolesIDs(); len(nodes) > 0 && !uuo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.RolesTable,
-			Columns: user.RolesPrimaryKey,
+			Columns: []string{user.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -1221,10 +1103,10 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if nodes := uuo.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.RolesTable,
-			Columns: user.RolesPrimaryKey,
+			Columns: []string{user.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -1273,51 +1155,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   user.AccessPoliciesTable,
-			Columns: user.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !uuo.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   user.AccessPoliciesTable,
-			Columns: user.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   user.AccessPoliciesTable,
-			Columns: user.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

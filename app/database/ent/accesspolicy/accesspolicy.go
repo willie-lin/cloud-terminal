@@ -26,49 +26,23 @@ const (
 	FieldDescription = "description"
 	// FieldEffect holds the string denoting the effect field in the database.
 	FieldEffect = "effect"
+	// FieldStatements holds the string denoting the statements field in the database.
+	FieldStatements = "statements"
 	// FieldResourceType holds the string denoting the resource_type field in the database.
 	FieldResourceType = "resource_type"
 	// FieldAction holds the string denoting the action field in the database.
 	FieldAction = "action"
-	// EdgeAccount holds the string denoting the account edge name in mutations.
-	EdgeAccount = "account"
-	// EdgeRoles holds the string denoting the roles edge name in mutations.
-	EdgeRoles = "roles"
-	// EdgeResources holds the string denoting the resources edge name in mutations.
-	EdgeResources = "resources"
-	// EdgePermissions holds the string denoting the permissions edge name in mutations.
-	EdgePermissions = "permissions"
-	// EdgeUsers holds the string denoting the users edge name in mutations.
-	EdgeUsers = "users"
+	// FieldImmutable holds the string denoting the immutable field in the database.
+	FieldImmutable = "immutable"
+	// EdgeTenant holds the string denoting the tenant edge name in mutations.
+	EdgeTenant = "tenant"
 	// Table holds the table name of the accesspolicy in the database.
 	Table = "access_policies"
-	// AccountTable is the table that holds the account relation/edge.
-	AccountTable = "access_policies"
-	// AccountInverseTable is the table name for the Account entity.
-	// It exists in this package in order to avoid circular dependency with the "account" package.
-	AccountInverseTable = "accounts"
-	// AccountColumn is the table column denoting the account relation/edge.
-	AccountColumn = "account_access_policies"
-	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
-	RolesTable = "role_policies"
-	// RolesInverseTable is the table name for the Role entity.
-	// It exists in this package in order to avoid circular dependency with the "role" package.
-	RolesInverseTable = "roles"
-	// ResourcesTable is the table that holds the resources relation/edge. The primary key declared below.
-	ResourcesTable = "access_policy_resources"
-	// ResourcesInverseTable is the table name for the Resource entity.
-	// It exists in this package in order to avoid circular dependency with the "resource" package.
-	ResourcesInverseTable = "resources"
-	// PermissionsTable is the table that holds the permissions relation/edge. The primary key declared below.
-	PermissionsTable = "access_policy_permissions"
-	// PermissionsInverseTable is the table name for the Permission entity.
-	// It exists in this package in order to avoid circular dependency with the "permission" package.
-	PermissionsInverseTable = "permissions"
-	// UsersTable is the table that holds the users relation/edge. The primary key declared below.
-	UsersTable = "user_policies"
-	// UsersInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	UsersInverseTable = "users"
+	// TenantTable is the table that holds the tenant relation/edge. The primary key declared below.
+	TenantTable = "tenant_access_policies"
+	// TenantInverseTable is the table name for the Tenant entity.
+	// It exists in this package in order to avoid circular dependency with the "tenant" package.
+	TenantInverseTable = "tenants"
 )
 
 // Columns holds all SQL columns for accesspolicy fields.
@@ -79,40 +53,22 @@ var Columns = []string{
 	FieldName,
 	FieldDescription,
 	FieldEffect,
+	FieldStatements,
 	FieldResourceType,
 	FieldAction,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "access_policies"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"account_access_policies",
+	FieldImmutable,
 }
 
 var (
-	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
-	// primary key for the roles relation (M2M).
-	RolesPrimaryKey = []string{"role_id", "access_policy_id"}
-	// ResourcesPrimaryKey and ResourcesColumn2 are the table columns denoting the
-	// primary key for the resources relation (M2M).
-	ResourcesPrimaryKey = []string{"access_policy_id", "resource_id"}
-	// PermissionsPrimaryKey and PermissionsColumn2 are the table columns denoting the
-	// primary key for the permissions relation (M2M).
-	PermissionsPrimaryKey = []string{"access_policy_id", "permission_id"}
-	// UsersPrimaryKey and UsersColumn2 are the table columns denoting the
-	// primary key for the users relation (M2M).
-	UsersPrimaryKey = []string{"user_id", "access_policy_id"}
+	// TenantPrimaryKey and TenantColumn2 are the table columns denoting the
+	// primary key for the tenant relation (M2M).
+	TenantPrimaryKey = []string{"tenant_id", "access_policy_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -132,6 +88,8 @@ var (
 	ResourceTypeValidator func(string) error
 	// ActionValidator is a validator for the "action" field. It is called by the builders before save.
 	ActionValidator func(string) error
+	// DefaultImmutable holds the default value on creation for the "immutable" field.
+	DefaultImmutable bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -205,100 +163,28 @@ func ByAction(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAction, opts...).ToFunc()
 }
 
-// ByAccountField orders the results by account field.
-func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByImmutable orders the results by the immutable field.
+func ByImmutable(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldImmutable, opts...).ToFunc()
+}
+
+// ByTenantCount orders the results by tenant count.
+func ByTenantCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newTenantStep(), opts...)
 	}
 }
 
-// ByRolesCount orders the results by roles count.
-func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByTenant orders the results by tenant terms.
+func ByTenant(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRolesStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByRoles orders the results by roles terms.
-func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByResourcesCount orders the results by resources count.
-func ByResourcesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newResourcesStep(), opts...)
-	}
-}
-
-// ByResources orders the results by resources terms.
-func ByResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByPermissionsCount orders the results by permissions count.
-func ByPermissionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPermissionsStep(), opts...)
-	}
-}
-
-// ByPermissions orders the results by permissions terms.
-func ByPermissions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPermissionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByUsersCount orders the results by users count.
-func ByUsersCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newUsersStep(), opts...)
-	}
-}
-
-// ByUsers orders the results by users terms.
-func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newAccountStep() *sqlgraph.Step {
+func newTenantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccountInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
-	)
-}
-func newRolesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RolesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, RolesTable, RolesPrimaryKey...),
-	)
-}
-func newResourcesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ResourcesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, ResourcesTable, ResourcesPrimaryKey...),
-	)
-}
-func newPermissionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PermissionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, PermissionsTable, PermissionsPrimaryKey...),
-	)
-}
-func newUsersStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(UsersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, UsersTable, UsersPrimaryKey...),
+		sqlgraph.To(TenantInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, TenantTable, TenantPrimaryKey...),
 	)
 }

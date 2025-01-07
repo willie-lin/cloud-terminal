@@ -23,10 +23,10 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldContactEmail holds the string denoting the contact_email field in the database.
-	FieldContactEmail = "contact_email"
-	// FieldContactPhone holds the string denoting the contact_phone field in the database.
-	FieldContactPhone = "contact_phone"
+	// FieldRegion holds the string denoting the region field in the database.
+	FieldRegion = "region"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 	// EdgeTenants holds the string denoting the tenants edge name in mutations.
 	EdgeTenants = "tenants"
 	// Table holds the table name of the platform in the database.
@@ -47,8 +47,8 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldName,
 	FieldDescription,
-	FieldContactEmail,
-	FieldContactPhone,
+	FieldRegion,
+	FieldVersion,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -102,14 +102,14 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByContactEmail orders the results by the contact_email field.
-func ByContactEmail(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldContactEmail, opts...).ToFunc()
+// ByRegion orders the results by the region field.
+func ByRegion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRegion, opts...).ToFunc()
 }
 
-// ByContactPhone orders the results by the contact_phone field.
-func ByContactPhone(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldContactPhone, opts...).ToFunc()
+// ByVersion orders the results by the version field.
+func ByVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersion, opts...).ToFunc()
 }
 
 // ByTenantsCount orders the results by tenants count.

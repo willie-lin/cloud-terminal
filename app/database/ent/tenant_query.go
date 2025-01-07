@@ -13,22 +13,28 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
 // TenantQuery is the builder for querying Tenant entities.
 type TenantQuery struct {
 	config
-	ctx          *QueryContext
-	order        []tenant.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.Tenant
-	withPlatform *PlatformQuery
-	withAccounts *AccountQuery
-	withFKs      bool
+	ctx                *QueryContext
+	order              []tenant.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.Tenant
+	withPlatform       *PlatformQuery
+	withAccounts       *AccountQuery
+	withPermissions    *PermissionQuery
+	withRoles          *RoleQuery
+	withAccessPolicies *AccessPolicyQuery
+	withFKs            bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -102,6 +108,72 @@ func (tq *TenantQuery) QueryAccounts() *AccountQuery {
 			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.AccountsTable, tenant.AccountsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPermissions chains the current query on the "permissions" edge.
+func (tq *TenantQuery) QueryPermissions() *PermissionQuery {
+	query := (&PermissionClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(permission.Table, permission.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.PermissionsTable, tenant.PermissionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRoles chains the current query on the "roles" edge.
+func (tq *TenantQuery) QueryRoles() *RoleQuery {
+	query := (&RoleClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, tenant.RolesTable, tenant.RolesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAccessPolicies chains the current query on the "access_policies" edge.
+func (tq *TenantQuery) QueryAccessPolicies() *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, tenant.AccessPoliciesTable, tenant.AccessPoliciesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -296,13 +368,16 @@ func (tq *TenantQuery) Clone() *TenantQuery {
 		return nil
 	}
 	return &TenantQuery{
-		config:       tq.config,
-		ctx:          tq.ctx.Clone(),
-		order:        append([]tenant.OrderOption{}, tq.order...),
-		inters:       append([]Interceptor{}, tq.inters...),
-		predicates:   append([]predicate.Tenant{}, tq.predicates...),
-		withPlatform: tq.withPlatform.Clone(),
-		withAccounts: tq.withAccounts.Clone(),
+		config:             tq.config,
+		ctx:                tq.ctx.Clone(),
+		order:              append([]tenant.OrderOption{}, tq.order...),
+		inters:             append([]Interceptor{}, tq.inters...),
+		predicates:         append([]predicate.Tenant{}, tq.predicates...),
+		withPlatform:       tq.withPlatform.Clone(),
+		withAccounts:       tq.withAccounts.Clone(),
+		withPermissions:    tq.withPermissions.Clone(),
+		withRoles:          tq.withRoles.Clone(),
+		withAccessPolicies: tq.withAccessPolicies.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -328,6 +403,39 @@ func (tq *TenantQuery) WithAccounts(opts ...func(*AccountQuery)) *TenantQuery {
 		opt(query)
 	}
 	tq.withAccounts = query
+	return tq
+}
+
+// WithPermissions tells the query-builder to eager-load the nodes that are connected to
+// the "permissions" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithPermissions(opts ...func(*PermissionQuery)) *TenantQuery {
+	query := (&PermissionClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withPermissions = query
+	return tq
+}
+
+// WithRoles tells the query-builder to eager-load the nodes that are connected to
+// the "roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithRoles(opts ...func(*RoleQuery)) *TenantQuery {
+	query := (&RoleClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withRoles = query
+	return tq
+}
+
+// WithAccessPolicies tells the query-builder to eager-load the nodes that are connected to
+// the "access_policies" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithAccessPolicies(opts ...func(*AccessPolicyQuery)) *TenantQuery {
+	query := (&AccessPolicyClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withAccessPolicies = query
 	return tq
 }
 
@@ -410,9 +518,12 @@ func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 		nodes       = []*Tenant{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [5]bool{
 			tq.withPlatform != nil,
 			tq.withAccounts != nil,
+			tq.withPermissions != nil,
+			tq.withRoles != nil,
+			tq.withAccessPolicies != nil,
 		}
 	)
 	if tq.withPlatform != nil {
@@ -449,6 +560,27 @@ func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 		if err := tq.loadAccounts(ctx, query, nodes,
 			func(n *Tenant) { n.Edges.Accounts = []*Account{} },
 			func(n *Tenant, e *Account) { n.Edges.Accounts = append(n.Edges.Accounts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withPermissions; query != nil {
+		if err := tq.loadPermissions(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.Permissions = []*Permission{} },
+			func(n *Tenant, e *Permission) { n.Edges.Permissions = append(n.Edges.Permissions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withRoles; query != nil {
+		if err := tq.loadRoles(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.Roles = []*Role{} },
+			func(n *Tenant, e *Role) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withAccessPolicies; query != nil {
+		if err := tq.loadAccessPolicies(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.AccessPolicies = []*AccessPolicy{} },
+			func(n *Tenant, e *AccessPolicy) { n.Edges.AccessPolicies = append(n.Edges.AccessPolicies, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -515,6 +647,159 @@ func (tq *TenantQuery) loadAccounts(ctx context.Context, query *AccountQuery, no
 			return fmt.Errorf(`unexpected referenced foreign-key "tenant_accounts" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadPermissions(ctx context.Context, query *PermissionQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *Permission)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Permission(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.PermissionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.tenant_permissions
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "tenant_permissions" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_permissions" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *Role)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Tenant)
+	nids := make(map[uuid.UUID]map[*Tenant]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(tenant.RolesTable)
+		s.Join(joinT).On(s.C(role.FieldID), joinT.C(tenant.RolesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(tenant.RolesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(tenant.RolesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Tenant]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Role](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "roles" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (tq *TenantQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicyQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *AccessPolicy)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Tenant)
+	nids := make(map[uuid.UUID]map[*Tenant]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(tenant.AccessPoliciesTable)
+		s.Join(joinT).On(s.C(accesspolicy.FieldID), joinT.C(tenant.AccessPoliciesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(tenant.AccessPoliciesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(tenant.AccessPoliciesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Tenant]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*AccessPolicy](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "access_policies" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

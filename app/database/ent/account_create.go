@@ -11,10 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
@@ -60,6 +58,20 @@ func (ac *AccountCreate) SetName(s string) *AccountCreate {
 	return ac
 }
 
+// SetStatus sets the "status" field.
+func (ac *AccountCreate) SetStatus(a account.Status) *AccountCreate {
+	ac.mutation.SetStatus(a)
+	return ac
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableStatus(a *account.Status) *AccountCreate {
+	if a != nil {
+		ac.SetStatus(*a)
+	}
+	return ac
+}
+
 // SetID sets the "id" field.
 func (ac *AccountCreate) SetID(u uuid.UUID) *AccountCreate {
 	ac.mutation.SetID(u)
@@ -100,49 +112,19 @@ func (ac *AccountCreate) AddUsers(u ...*User) *AccountCreate {
 	return ac.AddUserIDs(ids...)
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (ac *AccountCreate) AddRoleIDs(ids ...uuid.UUID) *AccountCreate {
-	ac.mutation.AddRoleIDs(ids...)
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (ac *AccountCreate) AddResourceIDs(ids ...uuid.UUID) *AccountCreate {
+	ac.mutation.AddResourceIDs(ids...)
 	return ac
 }
 
-// AddRoles adds the "roles" edges to the Role entity.
-func (ac *AccountCreate) AddRoles(r ...*Role) *AccountCreate {
+// AddResources adds the "resources" edges to the Resource entity.
+func (ac *AccountCreate) AddResources(r ...*Resource) *AccountCreate {
 	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
-	return ac.AddRoleIDs(ids...)
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (ac *AccountCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *AccountCreate {
-	ac.mutation.AddAccessPolicyIDs(ids...)
-	return ac
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (ac *AccountCreate) AddAccessPolicies(a ...*AccessPolicy) *AccountCreate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return ac.AddAccessPolicyIDs(ids...)
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (ac *AccountCreate) AddPermissionIDs(ids ...uuid.UUID) *AccountCreate {
-	ac.mutation.AddPermissionIDs(ids...)
-	return ac
-}
-
-// AddPermissions adds the "permissions" edges to the Permission entity.
-func (ac *AccountCreate) AddPermissions(p ...*Permission) *AccountCreate {
-	ids := make([]uuid.UUID, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return ac.AddPermissionIDs(ids...)
+	return ac.AddResourceIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -188,6 +170,10 @@ func (ac *AccountCreate) defaults() {
 		v := account.DefaultUpdatedAt()
 		ac.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := ac.mutation.Status(); !ok {
+		v := account.DefaultStatus
+		ac.mutation.SetStatus(v)
+	}
 	if _, ok := ac.mutation.ID(); !ok {
 		v := account.DefaultID()
 		ac.mutation.SetID(v)
@@ -208,6 +194,14 @@ func (ac *AccountCreate) check() error {
 	if v, ok := ac.mutation.Name(); ok {
 		if err := account.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Account.name": %w`, err)}
+		}
+	}
+	if _, ok := ac.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Account.status"`)}
+	}
+	if v, ok := ac.mutation.Status(); ok {
+		if err := account.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Account.status": %w`, err)}
 		}
 	}
 	if len(ac.mutation.TenantIDs()) == 0 {
@@ -260,6 +254,10 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		_spec.SetField(account.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
+	if value, ok := ac.mutation.Status(); ok {
+		_spec.SetField(account.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
+	}
 	if nodes := ac.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -293,47 +291,15 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ac.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := ac.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: []string{account.RolesColumn},
+			Table:   account.ResourcesTable,
+			Columns: account.ResourcesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ac.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.AccessPoliciesTable,
-			Columns: []string{account.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ac.mutation.PermissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.PermissionsTable,
-			Columns: []string{account.PermissionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -6,7 +6,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
@@ -16,137 +15,117 @@ import (
 	"os"
 )
 
-type PermissionTemplate struct {
-	Name         string
-	Description  string
-	Actions      []string
-	ResourceType string
-}
-
-type RoleTemplate struct {
-	Name        string
-	Description string
-	Permissions []string
-}
-
-var defaultPermissions = []PermissionTemplate{
-	{"UserManagement", "管理所有用户", []string{"create", "delete", "update", "read"}, "user"},
-	{"RoleManagement", "管理所有角色", []string{"create", "delete", "update", "read"}, "role"},
-	{"LogAccess", "访问系统日志", []string{"read"}, "log"},
-	{"ApplicationDevelopment", "开发和维护应用", []string{"read", "write", "deploy"}, "application"},
-	{"AuditLogAccess", "审计系统日志", []string{"read"}, "audit"},
-	{"PersonalDataAccess", "访问和编辑个人数据", []string{"read", "update"}, "personal_data"},
-}
-
-var defaultRoleTemplates = []RoleTemplate{
-	{"Admin", "管理员角色", []string{}}, // 管理员拥有所有权限
-	{"Developer", "开发者角色", []string{"ApplicationDevelopment", "LogAccess"}},
-	{"Auditor", "审计员角色", []string{"AuditLogAccess"}},
-	{"User", "普通用户角色", []string{"PersonalDataAccess"}},
-}
-
-func InitializeGlobalPermissions(client *ent.Client) error {
-	// 使用 privacy.DecisionContext 跳过隐私检查
-	ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
-	for _, p := range defaultPermissions {
-		//log.Printf("Checking permission: %s - %s", p.Name, p.ResourceType)
-		_, err := client.Permission.Query().
-			Where(permission.NameEQ(p.Name)).
-			Only(ctx)
-		if ent.IsNotFound(err) {
-			//log.Printf("Permission not found, creating: %s", p.Name)
-			_, err = client.Permission.Create().
-				SetName(p.Name).
-				SetDescription(p.Description).
-				SetActions(p.Actions). // 直接设置动作列表
-				SetResourceType(p.ResourceType).
-				SetIsDisabled(false).
-				Save(ctx)
-			if err != nil {
-				return fmt.Errorf("failed to create permission %s: %w", p.Name, err)
-			}
-		} else if err != nil {
-			return fmt.Errorf("failed to query permission %s: %w", p.Name, err)
-		}
-	}
-	log.Printf("Global permissions initialized successfully")
-	return nil
-}
-
-func InitializeTenantRolesAndPermissions(client *ent.Client) error {
-	// 使用 privacy.DecisionContext 跳过隐私检查
-	ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
-	allPermissions, err := client.Permission.Query().All(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to fetch all permissions: %w", err)
-	}
-	permissionMap := make(map[string]*ent.Permission, len(allPermissions))
-	for _, perm := range allPermissions {
-		permissionMap[perm.Name] = perm
-	}
-
-	for _, template := range defaultRoleTemplates {
-		role, err := client.Role.Query().Where(role.NameEQ(template.Name)).Only(ctx)
-		if err != nil && !ent.IsNotFound(err) {
-			return fmt.Errorf("failed to query role %s: %w", template.Name, err)
-		}
-
-		if ent.IsNotFound(err) {
-			role, err = client.Role.Create().
-				SetName(template.Name).
-				SetDescription(template.Description).
-				SetIsDisabled(false).
-				SetIsDefault(true).
-				Save(ctx)
-			if err != nil {
-				return fmt.Errorf("failed to create role %s: %w", template.Name, err)
-			}
-			log.Printf("Created role: %s", role.Name)
-		} else {
-			log.Printf("Role %s already exists", template.Name)
-		}
-
-		var permissionNames []string
-
-		if template.Name == "Admin" {
-			permissionNames = make([]string, 0, len(permissionMap))
-			for k := range permissionMap {
-				permissionNames = append(permissionNames, k)
-			}
-		} else {
-			permissionNames = template.Permissions
-		}
-		var permissionsToAdd []*ent.Permission
-		for _, permName := range permissionNames {
-			perm, ok := permissionMap[permName]
-			if !ok {
-				log.Printf("Permission %s not found for role %s", permName, template.Name)
-				continue
-			}
-			permissionsToAdd = append(permissionsToAdd, perm)
-		}
-		if len(permissionsToAdd) > 0 {
-			log.Printf("Adding %d permissions to role %s", len(permissionsToAdd), role.Name)
-			err = client.Role.UpdateOne(role).Exec(ctx)
-			if err != nil {
-				return fmt.Errorf("failed to associate permissions with role %s: %w", role.Name, err)
-			}
-		}
-	}
-	return nil
-}
+//
+//func InitPermissions(client *ent.Client, account *ent.Account) error {
+//	ctx := context.Background()
+//
+//	permissionsToCreate := []struct {
+//		Name        string
+//		Description string
+//	}{
+//		// 租户管理权限
+//		{"tenant:create", "允许创建租户"},
+//		{"tenant:read", "允许读取租户信息"},
+//		{"tenant:update", "允许更新租户信息"},
+//		{"tenant:delete", "允许删除租户"},
+//		{"tenant:list", "允许列出所有租户"},
+//
+//		// 账户管理权限 (例如，如果需要区分账户级别的权限)
+//		{"account:create", "允许创建账户信息"},
+//		{"account:read", "允许读取账户信息"},
+//		{"account:update", "允许更新账户信息"},
+//		{"account:delete", "允许删除账户信息"},
+//		{"account:list", "允许列出所有账户信息"},
+//
+//		// 用户管理权限
+//		{"user:create", "允许创建用户"},
+//		{"user:read", "允许读取用户信息"},
+//		{"user:update", "允许更新用户信息"},
+//		{"user:delete", "允许删除用户"},
+//		{"user:list", "允许列出所有用户"},
+//
+//		// 角色管理权限
+//		{"role:create", "允许创建角色"},
+//		{"role:read", "允许读取角色信息"},
+//		{"role:update", "允许更新角色信息"},
+//		{"role:delete", "允许删除角色"},
+//		{"role:list", "允许列出所有角色"},
+//		{"role:assign", "允许为用户分配角色"},
+//		{"role:unassign", "允许取消用户分配角色"},
+//
+//		// 权限管理权限
+//		{"permission:create", "允许创建权限"},
+//		{"permission:read", "允许读取权限信息"},
+//		{"permission:update", "允许更新权限信息"},
+//		{"permission:delete", "允许删除权限"},
+//		{"permission:list", "允许列出所有权限"},
+//
+//		// 策略管理权限
+//		{"policy:create", "允许创建访问策略"},
+//		{"policy:read", "允许读取访问策略信息"},
+//		{"policy:update", "允许更新访问策略信息"},
+//		{"policy:delete", "允许删除访问策略"},
+//		{"policy:list", "允许列出所有策略"},
+//		{"policy:attach", "允许将策略附加到主体"}, // 新增
+//		{"policy:detach", "允许将策略从主体分离"}, // 新增
+//
+//		// 资源管理权限 (例如，如果需要区分账户级别的权限)
+//		{"resource:create", "允许创建资源信息"},
+//		{"resource:read", "允许读取资源信息"},
+//		{"resource:update", "允许更新资源信息"},
+//		{"resource:delete", "允许删除资源信息"},
+//		{"resource:list", "允许列出所有资源信息"},
+//		{"resource:grant", "授予对资源的访问权限"},  // 新增，更通用
+//		{"resource:revoke", "撤销对资源的访问权限"}, // 新增，更通用
+//
+//		// 自管理权限
+//		{"user:self-update", "允许用户更新自己的信息"},
+//
+//		// 审计日志权限
+//		{"audit:read", "允许读取审计日志"},
+//	}
+//
+//	for _, p := range permissionsToCreate {
+//		//existingPermission, err := client.Permission.Query().Where(permission.NameEQ(p.Name)).Where(permission.HasAccountWith(account.IDEQ(account.ID))).Only(ctx)
+//		existingPermission, err := client.Permission.Query().
+//			Where(
+//				permission.NameEQ(p.Name),
+//				//permission.HasAccountWith(account.IDEQ(system.ID)),
+//			).
+//			Only(ctx)
+//
+//		if err != nil && !ent.IsNotFound(err) {
+//			return fmt.Errorf("query permission %s failed: %w", p.Name, err)
+//		}
+//
+//		if ent.IsNotFound(err) {
+//			_, err := client.Permission.Create().SetName(p.Name).SetDescription(p.Description).SetAccount(account).Save(ctx)
+//			if err != nil {
+//				return fmt.Errorf("create permission %s failed: %w", p.Name, err)
+//			}
+//			log.Printf("Created permission: %s for account: %v", p.Name, account.ID)
+//		} else {
+//			log.Printf("Permission: %s already exists for account: %v, ID: %v", p.Name, account.ID, existingPermission.ID)
+//		}
+//	}
+//
+//	return nil
+//}
 
 func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	// 使用 privacy.DecisionContext 跳过隐私检查
 	ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
+	platformName := "CloudSecPlatform" // 或者其他你想要的默认平台名称
 
 	// 0. 检查或创建 Platform
-	defaultPlatform, err := client.Platform.Query().Where(platform.NameEQ("CloudSecPlatform")).Only(ctx)
+	platform, err := client.Platform.Query().Where(platform.NameEQ(platformName)).Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return err
 	}
 	if ent.IsNotFound(err) {
-		defaultPlatform, err = client.Platform.Create().SetName("CloudSecPlatform").Save(ctx)
+		platform, err = client.Platform.Create().
+			SetName(platformName).
+			Save(ctx)
 		if err != nil {
 			return err
 		}
@@ -156,123 +135,145 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	}
 
 	// 1. 检查或创建 "management" 租户（用于管理）
-	managementTenant, err := client.Tenant.Query().Where(tenant.NameEQ("management")).Only(ctx)
+	managementTenantName := "management"
+	managementTenant, err := client.Tenant.Query().Where(tenant.NameEQ(managementTenantName)).Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return err
 	}
 	if ent.IsNotFound(err) {
 		managementTenant, err = client.Tenant.Create().
-			SetName("management").
-			SetPlatform(defaultPlatform).
+			SetName(managementTenantName).
+			SetPlatform(platform).
 			Save(ctx)
 		if err != nil {
 			return err
 		}
-		log.Print("Created management tenant")
+		log.Printf("Created management tenant for %s platform", platformName)
 	} else {
-		log.Print("Management tenant already exists.")
+		log.Printf("Management tenant already exists for %s platform.", platformName)
 	}
 
 	// 2. 检查或创建 "default" 租户（用于普通业务）
-	_, err = client.Tenant.Query().Where(tenant.NameEQ("default")).Only(ctx)
+	defaultTenantName := "default"
+	_, err = client.Tenant.Query().Where(tenant.NameEQ(defaultTenantName)).Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return err
 	}
 	if ent.IsNotFound(err) {
 		_, err = client.Tenant.Create().
-			SetName("default").
-			SetPlatform(defaultPlatform).
+			SetName(defaultTenantName).
+			SetPlatform(platform).
 			Save(ctx)
 		if err != nil {
 			return err
 		}
-		log.Print("Created default tenant")
+		log.Print("Created default tenant for %s platform", platformName)
 	} else {
-		log.Print("Default tenant already exists.")
+		log.Print("Default tenant already exists for %s platform.", platformName)
 	}
 
 	// 3. 检查或创建 "system" Account，并关联到 "management" Tenant
-	systemAccount, err := client.Account.Query().Where(account.NameEQ("system")).Only(ctx)
+	accountName := "system"
+	systemAccount, err := client.Account.
+		Query().
+		Where(account.NameEQ(accountName)).
+		Where(account.HasTenantWith(tenant.IDEQ(managementTenant.ID))).
+		Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return err
 	}
 	if ent.IsNotFound(err) {
-		systemAccount, err = client.Account.Create().SetName("system").SetTenant(managementTenant).Save(ctx)
+		systemAccount, err = client.Account.Create().
+			SetName(accountName).
+			SetTenant(managementTenant).
+			Save(ctx)
 		if err != nil {
 			return err
 		}
-		log.Print("Created system account")
+		log.Printf("Created system account for %s platform", platformName)
 	} else {
-		log.Print("System account already exists.")
+		log.Printf("System account already exists for %s platform.", platformName)
 	}
 
-	roles := []string{"super_admin", "platform_admin", "tenant_admin"}
+	// 4. 创建平台角色，租户角色，和超级管理员账户
+	rolesToCreate := []string{"super_admin", "platform_admin", "tenant_admin"}
 
-	for _, roleName := range roles {
-		_, err := client.Role.Query().Where(role.NameEQ(roleName)).Only(ctx)
+	for _, roleName := range rolesToCreate {
+		_, err := client.Role.Query().Where(role.NameEQ(roleName)).Where(role.HasTenantWith(tenant.NameEQ(managementTenant.Name))).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
-			return err // 其他错误，直接返回
+			return fmt.Errorf("query role %s failed: %w", roleName, err)
 		}
 		if ent.IsNotFound(err) {
-			// 角色不存在，创建它
-			_, err = client.Role.Create().
-				SetName(roleName).
-				SetAccount(systemAccount).
-				Save(ctx)
+			_, err := client.Role.Create().SetName(roleName).AddTenant(managementTenant).Save(ctx)
 			if err != nil {
-				return err
+				return fmt.Errorf("create role %s failed: %w", roleName, err)
 			}
-			log.Printf("Created role: %s", roleName)
+			log.Printf("Created role: %s for platform: %s", roleName, platformName)
 		} else {
-			log.Printf("Role already exist: %s", roleName)
+			log.Printf("Role: %s already exists for platform: %s", roleName, platformName)
 		}
-
 	}
 
-	// 创建初始 Super Admin 用户
-	superAdminUser, err := client.User.Query().Where(user.UsernameEQ("SuperAdmin")).Only(ctx)
+	// 5. 创建超级管理员用户
+	superAdminUsername := "SuperAdmin"
+	superAdminUser, err := client.User.Query().
+		Where(user.UsernameEQ(superAdminUsername)).
+		Where(user.HasAccountWith(account.IDEQ(systemAccount.ID))). // 关联到 system account
+		Only(ctx)
+
 	if err != nil && !ent.IsNotFound(err) {
-		return err
+		return fmt.Errorf("query super admin user failed: %w", err)
 	}
-
 	if ent.IsNotFound(err) {
 		initialPassword := os.Getenv("INITIAL_SUPERADMIN_PASSWORD")
 		if initialPassword == "" {
-			initialPassword = "67727a41b5b1d4dfca981e4045b1bb2f1e7fef0e3e8825c028949d186cad4c00" //设置一个默认密码，但是一定要提示用户修改
-			log.Print("WARNING: INITIAL_SUPERADMIN_PASSWORD env not set, use default password 'changeme', please change it ASAP!")
-
+			initialPassword = "67727a41b5b1d4dfca981e4045b1bb2f1e7fef0e3e8825c028949d186cad4c00"
+			log.Printf("WARNING: INITIAL_SUPERADMIN_PASSWORD env not set, using default password, please change it ASAP for platform: %s!", platformName)
+		} else {
+			log.Printf("Using INITIAL_SUPERADMIN_PASSWORD from env for platform: %s", platformName)
 		}
-		//hashedPassword, err := bcrypt.GenerateFromPassword([]byte(initialPassword), bcrypt.DefaultCost)
-		fmt.Println(initialPassword)
 		hashedPassword, err := utils.GenerateFromPassword([]byte(initialPassword), utils.DefaultCost)
-		fmt.Println(hashedPassword)
-
 		if err != nil {
-			return err
+			return fmt.Errorf("hash password failed: %w", err)
 		}
+
 		superAdminUser, err = client.User.Create().
-			SetUsername("SuperAdmin").
+			SetUsername(superAdminUsername).
 			SetPassword(string(hashedPassword)).
-			SetEmail("superadmin@example.com"). // 设置一个默认邮箱
+			SetEmail("superadmin@example.com").
 			SetPhoneNumber("19288888888").
 			SetAccount(systemAccount).
 			Save(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("create super admin failed: %w", err)
 		}
-		log.Print("Created initial Super Admin user: superadmin")
+		log.Printf("Created initial Super Admin user: superadmin for platform: %s", platformName)
 
-		superAdminRole, err := client.Role.Query().Where(role.NameEQ("super_admin")).Only(ctx)
-		if err != nil {
-			return err
-		}
-		err = superAdminUser.Update().AddRoles(superAdminRole).Exec(ctx)
-		if err != nil {
-			return err
-		}
 	} else {
-		log.Print("Initial Super Admin user already exists.")
+		log.Printf("Initial Super Admin user already exists for platform: %s", platformName)
 	}
 
+	// 5. 将超级管理员用户关联到 super_admin 角色
+	superAdminRole, err := client.Role.Query().Where(role.NameEQ("super_admin")).Where(role.HasTenantWith(tenant.IDEQ(managementTenant.ID))).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("query super admin role failed: %w", err)
+	}
+	// 检查是否已关联
+	exists, err := client.User.Query().
+		Where(user.IDEQ(superAdminUser.ID)).
+		Where(user.HasRolesWith(role.IDEQ(superAdminRole.ID))).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("checking user role existence: %w", err)
+	}
+	if !exists { // 如果未关联，则关联
+		_, err = superAdminUser.Update().AddRoles(superAdminRole).Save(ctx)
+		if err != nil {
+			return fmt.Errorf("关联超级管理员角色失败: %w", err)
+		}
+		log.Printf("Super admin user associated to super_admin role")
+	} else {
+		log.Printf("Super admin user already associated to super_admin role")
+	}
 	return nil
 }

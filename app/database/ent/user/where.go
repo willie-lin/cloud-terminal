@@ -864,7 +864,7 @@ func HasRoles() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -897,29 +897,6 @@ func HasAuditLogs() predicate.User {
 func HasAuditLogsWith(preds ...predicate.AuditLog) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newAuditLogsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasAccessPolicies applies the HasEdge predicate on the "access_policies" edge.
-func HasAccessPolicies() predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasAccessPoliciesWith applies the HasEdge predicate on the "access_policies" edge with a given conditions (other predicates).
-func HasAccessPoliciesWith(preds ...predicate.AccessPolicy) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := newAccessPoliciesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -34,13 +34,13 @@ func (Role) Fields() []ent.Field {
 // Edges of the Role.
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).Ref("roles").Unique().Required(),
-		edge.From("users", User.Type).Ref("roles"), // 角色被多个用户拥有
-		edge.To("access_policies", AccessPolicy.Type).StorageKey(edge.Table("role_policies")),
-
+		edge.From("tenant", Tenant.Type).Ref("roles").Required(),
+		edge.To("permissions", Permission.Type),
+		edge.To("users", User.Type),
+		//edge.From("account", Account.Type).Ref("roles").Unique().Required(),
+		//edge.To("access_policies", AccessPolicy.Type),
 		edge.To("child_roles", Role.Type).From("parent_role"), // 自引用：一个 Role 可以有多个子 Role
-
-		//edge.To("permissions", Permission.Type),       // 角色拥有多个权限
+		//edge.To("permissions", Permission.Type),               // 通过中间表关联权限
 	}
 }
 

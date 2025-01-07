@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 )
 
 // AccessPolicy is the model entity for the AccessPolicy schema.
@@ -29,79 +29,36 @@ type AccessPolicy struct {
 	Description string `json:"description,omitempty"`
 	// Effect holds the value of the "effect" field.
 	Effect accesspolicy.Effect `json:"effect,omitempty"`
+	// Statements holds the value of the "statements" field.
+	Statements []map[string]interface{} `json:"statements,omitempty"`
 	// ResourceType holds the value of the "resource_type" field.
 	ResourceType string `json:"resource_type,omitempty"`
 	// Action holds the value of the "action" field.
 	Action string `json:"action,omitempty"`
+	// Immutable holds the value of the "immutable" field.
+	Immutable bool `json:"immutable,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccessPolicyQuery when eager-loading is set.
-	Edges                   AccessPolicyEdges `json:"edges"`
-	account_access_policies *uuid.UUID
-	selectValues            sql.SelectValues
+	Edges        AccessPolicyEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // AccessPolicyEdges holds the relations/edges for other nodes in the graph.
 type AccessPolicyEdges struct {
-	// Account holds the value of the account edge.
-	Account *Account `json:"account,omitempty"`
-	// Roles holds the value of the roles edge.
-	Roles []*Role `json:"roles,omitempty"`
-	// Resources holds the value of the resources edge.
-	Resources []*Resource `json:"resources,omitempty"`
-	// Permissions holds the value of the permissions edge.
-	Permissions []*Permission `json:"permissions,omitempty"`
-	// Users holds the value of the users edge.
-	Users []*User `json:"users,omitempty"`
+	// Tenant holds the value of the tenant edge.
+	Tenant []*Tenant `json:"tenant,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [1]bool
 }
 
-// AccountOrErr returns the Account value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e AccessPolicyEdges) AccountOrErr() (*Account, error) {
-	if e.Account != nil {
-		return e.Account, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: account.Label}
-	}
-	return nil, &NotLoadedError{edge: "account"}
-}
-
-// RolesOrErr returns the Roles value or an error if the edge
+// TenantOrErr returns the Tenant value or an error if the edge
 // was not loaded in eager-loading.
-func (e AccessPolicyEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[1] {
-		return e.Roles, nil
+func (e AccessPolicyEdges) TenantOrErr() ([]*Tenant, error) {
+	if e.loadedTypes[0] {
+		return e.Tenant, nil
 	}
-	return nil, &NotLoadedError{edge: "roles"}
-}
-
-// ResourcesOrErr returns the Resources value or an error if the edge
-// was not loaded in eager-loading.
-func (e AccessPolicyEdges) ResourcesOrErr() ([]*Resource, error) {
-	if e.loadedTypes[2] {
-		return e.Resources, nil
-	}
-	return nil, &NotLoadedError{edge: "resources"}
-}
-
-// PermissionsOrErr returns the Permissions value or an error if the edge
-// was not loaded in eager-loading.
-func (e AccessPolicyEdges) PermissionsOrErr() ([]*Permission, error) {
-	if e.loadedTypes[3] {
-		return e.Permissions, nil
-	}
-	return nil, &NotLoadedError{edge: "permissions"}
-}
-
-// UsersOrErr returns the Users value or an error if the edge
-// was not loaded in eager-loading.
-func (e AccessPolicyEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[4] {
-		return e.Users, nil
-	}
-	return nil, &NotLoadedError{edge: "users"}
+	return nil, &NotLoadedError{edge: "tenant"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -109,14 +66,16 @@ func (*AccessPolicy) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case accesspolicy.FieldStatements:
+			values[i] = new([]byte)
+		case accesspolicy.FieldImmutable:
+			values[i] = new(sql.NullBool)
 		case accesspolicy.FieldName, accesspolicy.FieldDescription, accesspolicy.FieldEffect, accesspolicy.FieldResourceType, accesspolicy.FieldAction:
 			values[i] = new(sql.NullString)
 		case accesspolicy.FieldCreatedAt, accesspolicy.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case accesspolicy.FieldID:
 			values[i] = new(uuid.UUID)
-		case accesspolicy.ForeignKeys[0]: // account_access_policies
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -168,6 +127,14 @@ func (ap *AccessPolicy) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ap.Effect = accesspolicy.Effect(value.String)
 			}
+		case accesspolicy.FieldStatements:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field statements", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &ap.Statements); err != nil {
+					return fmt.Errorf("unmarshal field statements: %w", err)
+				}
+			}
 		case accesspolicy.FieldResourceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_type", values[i])
@@ -180,12 +147,11 @@ func (ap *AccessPolicy) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ap.Action = value.String
 			}
-		case accesspolicy.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field account_access_policies", values[i])
+		case accesspolicy.FieldImmutable:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field immutable", values[i])
 			} else if value.Valid {
-				ap.account_access_policies = new(uuid.UUID)
-				*ap.account_access_policies = *value.S.(*uuid.UUID)
+				ap.Immutable = value.Bool
 			}
 		default:
 			ap.selectValues.Set(columns[i], values[i])
@@ -200,29 +166,9 @@ func (ap *AccessPolicy) Value(name string) (ent.Value, error) {
 	return ap.selectValues.Get(name)
 }
 
-// QueryAccount queries the "account" edge of the AccessPolicy entity.
-func (ap *AccessPolicy) QueryAccount() *AccountQuery {
-	return NewAccessPolicyClient(ap.config).QueryAccount(ap)
-}
-
-// QueryRoles queries the "roles" edge of the AccessPolicy entity.
-func (ap *AccessPolicy) QueryRoles() *RoleQuery {
-	return NewAccessPolicyClient(ap.config).QueryRoles(ap)
-}
-
-// QueryResources queries the "resources" edge of the AccessPolicy entity.
-func (ap *AccessPolicy) QueryResources() *ResourceQuery {
-	return NewAccessPolicyClient(ap.config).QueryResources(ap)
-}
-
-// QueryPermissions queries the "permissions" edge of the AccessPolicy entity.
-func (ap *AccessPolicy) QueryPermissions() *PermissionQuery {
-	return NewAccessPolicyClient(ap.config).QueryPermissions(ap)
-}
-
-// QueryUsers queries the "users" edge of the AccessPolicy entity.
-func (ap *AccessPolicy) QueryUsers() *UserQuery {
-	return NewAccessPolicyClient(ap.config).QueryUsers(ap)
+// QueryTenant queries the "tenant" edge of the AccessPolicy entity.
+func (ap *AccessPolicy) QueryTenant() *TenantQuery {
+	return NewAccessPolicyClient(ap.config).QueryTenant(ap)
 }
 
 // Update returns a builder for updating this AccessPolicy.
@@ -263,11 +209,17 @@ func (ap *AccessPolicy) String() string {
 	builder.WriteString("effect=")
 	builder.WriteString(fmt.Sprintf("%v", ap.Effect))
 	builder.WriteString(", ")
+	builder.WriteString("statements=")
+	builder.WriteString(fmt.Sprintf("%v", ap.Statements))
+	builder.WriteString(", ")
 	builder.WriteString("resource_type=")
 	builder.WriteString(ap.ResourceType)
 	builder.WriteString(", ")
 	builder.WriteString("action=")
 	builder.WriteString(ap.Action)
+	builder.WriteString(", ")
+	builder.WriteString("immutable=")
+	builder.WriteString(fmt.Sprintf("%v", ap.Immutable))
 	builder.WriteByte(')')
 	return builder.String()
 }

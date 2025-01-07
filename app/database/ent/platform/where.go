@@ -76,14 +76,14 @@ func Description(v string) predicate.Platform {
 	return predicate.Platform(sql.FieldEQ(FieldDescription, v))
 }
 
-// ContactEmail applies equality check predicate on the "contact_email" field. It's identical to ContactEmailEQ.
-func ContactEmail(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldContactEmail, v))
+// Region applies equality check predicate on the "region" field. It's identical to RegionEQ.
+func Region(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldRegion, v))
 }
 
-// ContactPhone applies equality check predicate on the "contact_phone" field. It's identical to ContactPhoneEQ.
-func ContactPhone(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldContactPhone, v))
+// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
+func Version(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldVersion, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -306,154 +306,154 @@ func DescriptionContainsFold(v string) predicate.Platform {
 	return predicate.Platform(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// ContactEmailEQ applies the EQ predicate on the "contact_email" field.
-func ContactEmailEQ(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldContactEmail, v))
+// RegionEQ applies the EQ predicate on the "region" field.
+func RegionEQ(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldRegion, v))
 }
 
-// ContactEmailNEQ applies the NEQ predicate on the "contact_email" field.
-func ContactEmailNEQ(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldNEQ(FieldContactEmail, v))
+// RegionNEQ applies the NEQ predicate on the "region" field.
+func RegionNEQ(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldRegion, v))
 }
 
-// ContactEmailIn applies the In predicate on the "contact_email" field.
-func ContactEmailIn(vs ...string) predicate.Platform {
-	return predicate.Platform(sql.FieldIn(FieldContactEmail, vs...))
+// RegionIn applies the In predicate on the "region" field.
+func RegionIn(vs ...string) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldRegion, vs...))
 }
 
-// ContactEmailNotIn applies the NotIn predicate on the "contact_email" field.
-func ContactEmailNotIn(vs ...string) predicate.Platform {
-	return predicate.Platform(sql.FieldNotIn(FieldContactEmail, vs...))
+// RegionNotIn applies the NotIn predicate on the "region" field.
+func RegionNotIn(vs ...string) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldRegion, vs...))
 }
 
-// ContactEmailGT applies the GT predicate on the "contact_email" field.
-func ContactEmailGT(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldGT(FieldContactEmail, v))
+// RegionGT applies the GT predicate on the "region" field.
+func RegionGT(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldGT(FieldRegion, v))
 }
 
-// ContactEmailGTE applies the GTE predicate on the "contact_email" field.
-func ContactEmailGTE(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldGTE(FieldContactEmail, v))
+// RegionGTE applies the GTE predicate on the "region" field.
+func RegionGTE(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldGTE(FieldRegion, v))
 }
 
-// ContactEmailLT applies the LT predicate on the "contact_email" field.
-func ContactEmailLT(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldLT(FieldContactEmail, v))
+// RegionLT applies the LT predicate on the "region" field.
+func RegionLT(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldLT(FieldRegion, v))
 }
 
-// ContactEmailLTE applies the LTE predicate on the "contact_email" field.
-func ContactEmailLTE(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldLTE(FieldContactEmail, v))
+// RegionLTE applies the LTE predicate on the "region" field.
+func RegionLTE(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldLTE(FieldRegion, v))
 }
 
-// ContactEmailContains applies the Contains predicate on the "contact_email" field.
-func ContactEmailContains(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldContains(FieldContactEmail, v))
+// RegionContains applies the Contains predicate on the "region" field.
+func RegionContains(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldContains(FieldRegion, v))
 }
 
-// ContactEmailHasPrefix applies the HasPrefix predicate on the "contact_email" field.
-func ContactEmailHasPrefix(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldHasPrefix(FieldContactEmail, v))
+// RegionHasPrefix applies the HasPrefix predicate on the "region" field.
+func RegionHasPrefix(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldHasPrefix(FieldRegion, v))
 }
 
-// ContactEmailHasSuffix applies the HasSuffix predicate on the "contact_email" field.
-func ContactEmailHasSuffix(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldHasSuffix(FieldContactEmail, v))
+// RegionHasSuffix applies the HasSuffix predicate on the "region" field.
+func RegionHasSuffix(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldHasSuffix(FieldRegion, v))
 }
 
-// ContactEmailIsNil applies the IsNil predicate on the "contact_email" field.
-func ContactEmailIsNil() predicate.Platform {
-	return predicate.Platform(sql.FieldIsNull(FieldContactEmail))
+// RegionIsNil applies the IsNil predicate on the "region" field.
+func RegionIsNil() predicate.Platform {
+	return predicate.Platform(sql.FieldIsNull(FieldRegion))
 }
 
-// ContactEmailNotNil applies the NotNil predicate on the "contact_email" field.
-func ContactEmailNotNil() predicate.Platform {
-	return predicate.Platform(sql.FieldNotNull(FieldContactEmail))
+// RegionNotNil applies the NotNil predicate on the "region" field.
+func RegionNotNil() predicate.Platform {
+	return predicate.Platform(sql.FieldNotNull(FieldRegion))
 }
 
-// ContactEmailEqualFold applies the EqualFold predicate on the "contact_email" field.
-func ContactEmailEqualFold(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldEqualFold(FieldContactEmail, v))
+// RegionEqualFold applies the EqualFold predicate on the "region" field.
+func RegionEqualFold(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEqualFold(FieldRegion, v))
 }
 
-// ContactEmailContainsFold applies the ContainsFold predicate on the "contact_email" field.
-func ContactEmailContainsFold(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldContainsFold(FieldContactEmail, v))
+// RegionContainsFold applies the ContainsFold predicate on the "region" field.
+func RegionContainsFold(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldContainsFold(FieldRegion, v))
 }
 
-// ContactPhoneEQ applies the EQ predicate on the "contact_phone" field.
-func ContactPhoneEQ(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldContactPhone, v))
+// VersionEQ applies the EQ predicate on the "version" field.
+func VersionEQ(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldVersion, v))
 }
 
-// ContactPhoneNEQ applies the NEQ predicate on the "contact_phone" field.
-func ContactPhoneNEQ(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldNEQ(FieldContactPhone, v))
+// VersionNEQ applies the NEQ predicate on the "version" field.
+func VersionNEQ(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldVersion, v))
 }
 
-// ContactPhoneIn applies the In predicate on the "contact_phone" field.
-func ContactPhoneIn(vs ...string) predicate.Platform {
-	return predicate.Platform(sql.FieldIn(FieldContactPhone, vs...))
+// VersionIn applies the In predicate on the "version" field.
+func VersionIn(vs ...string) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldVersion, vs...))
 }
 
-// ContactPhoneNotIn applies the NotIn predicate on the "contact_phone" field.
-func ContactPhoneNotIn(vs ...string) predicate.Platform {
-	return predicate.Platform(sql.FieldNotIn(FieldContactPhone, vs...))
+// VersionNotIn applies the NotIn predicate on the "version" field.
+func VersionNotIn(vs ...string) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldVersion, vs...))
 }
 
-// ContactPhoneGT applies the GT predicate on the "contact_phone" field.
-func ContactPhoneGT(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldGT(FieldContactPhone, v))
+// VersionGT applies the GT predicate on the "version" field.
+func VersionGT(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldGT(FieldVersion, v))
 }
 
-// ContactPhoneGTE applies the GTE predicate on the "contact_phone" field.
-func ContactPhoneGTE(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldGTE(FieldContactPhone, v))
+// VersionGTE applies the GTE predicate on the "version" field.
+func VersionGTE(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldGTE(FieldVersion, v))
 }
 
-// ContactPhoneLT applies the LT predicate on the "contact_phone" field.
-func ContactPhoneLT(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldLT(FieldContactPhone, v))
+// VersionLT applies the LT predicate on the "version" field.
+func VersionLT(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldLT(FieldVersion, v))
 }
 
-// ContactPhoneLTE applies the LTE predicate on the "contact_phone" field.
-func ContactPhoneLTE(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldLTE(FieldContactPhone, v))
+// VersionLTE applies the LTE predicate on the "version" field.
+func VersionLTE(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldLTE(FieldVersion, v))
 }
 
-// ContactPhoneContains applies the Contains predicate on the "contact_phone" field.
-func ContactPhoneContains(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldContains(FieldContactPhone, v))
+// VersionContains applies the Contains predicate on the "version" field.
+func VersionContains(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldContains(FieldVersion, v))
 }
 
-// ContactPhoneHasPrefix applies the HasPrefix predicate on the "contact_phone" field.
-func ContactPhoneHasPrefix(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldHasPrefix(FieldContactPhone, v))
+// VersionHasPrefix applies the HasPrefix predicate on the "version" field.
+func VersionHasPrefix(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldHasPrefix(FieldVersion, v))
 }
 
-// ContactPhoneHasSuffix applies the HasSuffix predicate on the "contact_phone" field.
-func ContactPhoneHasSuffix(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldHasSuffix(FieldContactPhone, v))
+// VersionHasSuffix applies the HasSuffix predicate on the "version" field.
+func VersionHasSuffix(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldHasSuffix(FieldVersion, v))
 }
 
-// ContactPhoneIsNil applies the IsNil predicate on the "contact_phone" field.
-func ContactPhoneIsNil() predicate.Platform {
-	return predicate.Platform(sql.FieldIsNull(FieldContactPhone))
+// VersionIsNil applies the IsNil predicate on the "version" field.
+func VersionIsNil() predicate.Platform {
+	return predicate.Platform(sql.FieldIsNull(FieldVersion))
 }
 
-// ContactPhoneNotNil applies the NotNil predicate on the "contact_phone" field.
-func ContactPhoneNotNil() predicate.Platform {
-	return predicate.Platform(sql.FieldNotNull(FieldContactPhone))
+// VersionNotNil applies the NotNil predicate on the "version" field.
+func VersionNotNil() predicate.Platform {
+	return predicate.Platform(sql.FieldNotNull(FieldVersion))
 }
 
-// ContactPhoneEqualFold applies the EqualFold predicate on the "contact_phone" field.
-func ContactPhoneEqualFold(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldEqualFold(FieldContactPhone, v))
+// VersionEqualFold applies the EqualFold predicate on the "version" field.
+func VersionEqualFold(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEqualFold(FieldVersion, v))
 }
 
-// ContactPhoneContainsFold applies the ContainsFold predicate on the "contact_phone" field.
-func ContactPhoneContainsFold(v string) predicate.Platform {
-	return predicate.Platform(sql.FieldContainsFold(FieldContactPhone, v))
+// VersionContainsFold applies the ContainsFold predicate on the "version" field.
+func VersionContainsFold(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldContainsFold(FieldVersion, v))
 }
 
 // HasTenants applies the HasEdge predicate on the "tenants" edge.

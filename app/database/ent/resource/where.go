@@ -86,11 +86,6 @@ func Description(v string) predicate.Resource {
 	return predicate.Resource(sql.FieldEQ(FieldDescription, v))
 }
 
-// IsDisabled applies equality check predicate on the "is_disabled" field. It's identical to IsDisabledEQ.
-func IsDisabled(v bool) predicate.Resource {
-	return predicate.Resource(sql.FieldEQ(FieldIsDisabled, v))
-}
-
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Resource {
 	return predicate.Resource(sql.FieldEQ(FieldCreatedAt, v))
@@ -301,6 +296,16 @@ func TypeContainsFold(v string) predicate.Resource {
 	return predicate.Resource(sql.FieldContainsFold(FieldType, v))
 }
 
+// PropertiesIsNil applies the IsNil predicate on the "properties" field.
+func PropertiesIsNil() predicate.Resource {
+	return predicate.Resource(sql.FieldIsNull(FieldProperties))
+}
+
+// PropertiesNotNil applies the NotNil predicate on the "properties" field.
+func PropertiesNotNil() predicate.Resource {
+	return predicate.Resource(sql.FieldNotNull(FieldProperties))
+}
+
 // ValueEQ applies the EQ predicate on the "value" field.
 func ValueEQ(v string) predicate.Resource {
 	return predicate.Resource(sql.FieldEQ(FieldValue, v))
@@ -441,31 +446,21 @@ func DescriptionContainsFold(v string) predicate.Resource {
 	return predicate.Resource(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// IsDisabledEQ applies the EQ predicate on the "is_disabled" field.
-func IsDisabledEQ(v bool) predicate.Resource {
-	return predicate.Resource(sql.FieldEQ(FieldIsDisabled, v))
-}
-
-// IsDisabledNEQ applies the NEQ predicate on the "is_disabled" field.
-func IsDisabledNEQ(v bool) predicate.Resource {
-	return predicate.Resource(sql.FieldNEQ(FieldIsDisabled, v))
-}
-
-// HasAccessPolicies applies the HasEdge predicate on the "access_policies" edge.
-func HasAccessPolicies() predicate.Resource {
+// HasAccount applies the HasEdge predicate on the "account" edge.
+func HasAccount() predicate.Resource {
 	return predicate.Resource(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, AccountTable, AccountPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasAccessPoliciesWith applies the HasEdge predicate on the "access_policies" edge with a given conditions (other predicates).
-func HasAccessPoliciesWith(preds ...predicate.AccessPolicy) predicate.Resource {
+// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
+func HasAccountWith(preds ...predicate.Account) predicate.Resource {
 	return predicate.Resource(func(s *sql.Selector) {
-		step := newAccessPoliciesStep()
+		step := newAccountStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

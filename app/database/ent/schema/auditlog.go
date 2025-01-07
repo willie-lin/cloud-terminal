@@ -24,7 +24,12 @@ func (AuditLog) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.Time("timestamp").Default(time.Now),
-		field.String("operation"),
+		field.Int("actor_id"),
+		field.String("actor_username"),
+		field.String("action"),
+		field.Int("resource_id").Optional(),
+		field.String("resource_type").Optional(),
+		field.JSON("details", map[string]interface{}{}).Optional(), // 使用 JSON 存储操作详情
 	}
 }
 

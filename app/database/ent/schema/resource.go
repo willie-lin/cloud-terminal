@@ -23,18 +23,19 @@ func (Resource) Mixin() []ent.Mixin {
 func (Resource) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
-		field.String("name").Unique().NotEmpty(), // 资源的名称，例如"Database1"
-		field.String("type").NotEmpty(),          // 资源类型，例如"Database", "File", "IP"
-		field.String("value").NotEmpty(),         // 资源的具体值，例如数据库连接字符串，文件路径，IP地址
-		field.String("description").Optional(),   // 资源的描述
-		field.Bool("is_disabled").Default(false), // 标记角色是否被禁用
+		field.String("name").Unique().NotEmpty(),                      // 资源的名称，例如"Database1"
+		field.String("type").NotEmpty(),                               // 资源类型，例如"Database", "File", "IP"
+		field.JSON("properties", map[string]interface{}{}).Optional(), // 存储资源的其他属性，例如配置信息
+		field.String("value").NotEmpty(),                              // 资源的具体值，例如数据库连接字符串，文件路径，IP地址
+		field.String("description").Optional(),                        // 资源的描述
 	}
 }
 
 // Edges of the Resource.
 func (Resource) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("access_policies", AccessPolicy.Type).Ref("resources"),
+		edge.From("account", Account.Type).Ref("resources").Required(), // 资源属于哪个 Account
+
 	}
 }
 

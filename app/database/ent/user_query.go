@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
@@ -24,15 +23,14 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                *QueryContext
-	order              []user.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.User
-	withAccount        *AccountQuery
-	withRoles          *RoleQuery
-	withAuditLogs      *AuditLogQuery
-	withAccessPolicies *AccessPolicyQuery
-	withFKs            bool
+	ctx           *QueryContext
+	order         []user.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.User
+	withAccount   *AccountQuery
+	withRoles     *RoleQuery
+	withAuditLogs *AuditLogQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -105,7 +103,7 @@ func (uq *UserQuery) QueryRoles() *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.RolesTable, user.RolesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.RolesTable, user.RolesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -128,28 +126,6 @@ func (uq *UserQuery) QueryAuditLogs() *AuditLogQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(auditlog.Table, auditlog.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, user.AuditLogsTable, user.AuditLogsPrimaryKey...),
-		)
-		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryAccessPolicies chains the current query on the "access_policies" edge.
-func (uq *UserQuery) QueryAccessPolicies() *AccessPolicyQuery {
-	query := (&AccessPolicyClient{config: uq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := uq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := uq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.AccessPoliciesTable, user.AccessPoliciesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -344,15 +320,14 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:             uq.config,
-		ctx:                uq.ctx.Clone(),
-		order:              append([]user.OrderOption{}, uq.order...),
-		inters:             append([]Interceptor{}, uq.inters...),
-		predicates:         append([]predicate.User{}, uq.predicates...),
-		withAccount:        uq.withAccount.Clone(),
-		withRoles:          uq.withRoles.Clone(),
-		withAuditLogs:      uq.withAuditLogs.Clone(),
-		withAccessPolicies: uq.withAccessPolicies.Clone(),
+		config:        uq.config,
+		ctx:           uq.ctx.Clone(),
+		order:         append([]user.OrderOption{}, uq.order...),
+		inters:        append([]Interceptor{}, uq.inters...),
+		predicates:    append([]predicate.User{}, uq.predicates...),
+		withAccount:   uq.withAccount.Clone(),
+		withRoles:     uq.withRoles.Clone(),
+		withAuditLogs: uq.withAuditLogs.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -389,17 +364,6 @@ func (uq *UserQuery) WithAuditLogs(opts ...func(*AuditLogQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withAuditLogs = query
-	return uq
-}
-
-// WithAccessPolicies tells the query-builder to eager-load the nodes that are connected to
-// the "access_policies" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithAccessPolicies(opts ...func(*AccessPolicyQuery)) *UserQuery {
-	query := (&AccessPolicyClient{config: uq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	uq.withAccessPolicies = query
 	return uq
 }
 
@@ -482,11 +446,10 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [3]bool{
 			uq.withAccount != nil,
 			uq.withRoles != nil,
 			uq.withAuditLogs != nil,
-			uq.withAccessPolicies != nil,
 		}
 	)
 	if uq.withAccount != nil {
@@ -533,13 +496,6 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
-	if query := uq.withAccessPolicies; query != nil {
-		if err := uq.loadAccessPolicies(ctx, query, nodes,
-			func(n *User) { n.Edges.AccessPolicies = []*AccessPolicy{} },
-			func(n *User, e *AccessPolicy) { n.Edges.AccessPolicies = append(n.Edges.AccessPolicies, e) }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
@@ -576,63 +532,33 @@ func (uq *UserQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes
 	return nil
 }
 func (uq *UserQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*User, init func(*User), assign func(*User, *Role)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*User)
-	nids := make(map[uuid.UUID]map[*User]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(user.RolesTable)
-		s.Join(joinT).On(s.C(role.FieldID), joinT.C(user.RolesPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(user.RolesPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(user.RolesPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(uuid.UUID)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Role](ctx, query, qr, query.inters)
+	query.withFKs = true
+	query.Where(predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.RolesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.user_roles
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_roles" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "roles" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "user_roles" returned %v for node %v`, *fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -690,67 +616,6 @@ func (uq *UserQuery) loadAuditLogs(ctx context.Context, query *AuditLogQuery, no
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "audit_logs" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
-	}
-	return nil
-}
-func (uq *UserQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicyQuery, nodes []*User, init func(*User), assign func(*User, *AccessPolicy)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*User)
-	nids := make(map[uuid.UUID]map[*User]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(user.AccessPoliciesTable)
-		s.Join(joinT).On(s.C(accesspolicy.FieldID), joinT.C(user.AccessPoliciesPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(user.AccessPoliciesPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(user.AccessPoliciesPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(uuid.UUID)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*AccessPolicy](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "access_policies" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)

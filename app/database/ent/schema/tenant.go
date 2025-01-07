@@ -25,8 +25,6 @@ func (Tenant) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
-		field.String("contact_email").Optional(),
-		field.String("contact_phone").Optional(),
 		field.Enum("status").Values("active", "inactive", "suspended").Default("active"),
 	}
 }
@@ -36,6 +34,9 @@ func (Tenant) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("platform", Platform.Type).Ref("tenants").Unique().Required(), // 多对一关系：一个 Tenant 属于一个 Platform
 		edge.To("accounts", Account.Type),                                       // 一对多关系：一个 Tenant 可以有多个 Account
+		edge.To("permissions", Permission.Type),
+		edge.To("roles", Role.Type),
+		edge.To("access_policies", AccessPolicy.Type),
 	}
 }
 

@@ -11,7 +11,7 @@ function EditUserInfo({ user, onEditUser,  onUserChange, onClose }) {
     const [avatar, setAvatar] = useState(user ? user.avatar : '');
 
     const [nickname, setNickname] = useState(user ? user.nickname : '');
-    const [phone, setPhone] = useState(user ? user.phone : '');
+    const [phone, setPhone] = useState(user ? user.phone_number : '');
     const [bio, setBio] = useState(user ? user.bio : '');
 
     const [file, setFile] = useState(null); // 添加一个新的 state 来存储文件

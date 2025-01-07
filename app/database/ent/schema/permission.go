@@ -35,8 +35,11 @@ func (Permission) Fields() []ent.Field {
 // Edges of the Permission.
 func (Permission) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).Ref("permissions").Unique().Required(),
-		edge.From("access_policies", AccessPolicy.Type).Ref("permissions"),
+		edge.From("tenant", Tenant.Type).Ref("permissions").Unique().Required(),
+		//edge.From("access_policies", AccessPolicy.Type).Ref("permissions"),
+		//edge.To("permissions", Permission.Type), // 通过中间表关联权限
+		edge.To("roles", Role.Type),
+		//edge.To("access_policies", AccessPolicy.Type),
 	}
 }
 

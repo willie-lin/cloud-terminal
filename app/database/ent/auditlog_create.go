@@ -64,9 +64,55 @@ func (alc *AuditLogCreate) SetNillableTimestamp(t *time.Time) *AuditLogCreate {
 	return alc
 }
 
-// SetOperation sets the "operation" field.
-func (alc *AuditLogCreate) SetOperation(s string) *AuditLogCreate {
-	alc.mutation.SetOperation(s)
+// SetActorID sets the "actor_id" field.
+func (alc *AuditLogCreate) SetActorID(i int) *AuditLogCreate {
+	alc.mutation.SetActorID(i)
+	return alc
+}
+
+// SetActorUsername sets the "actor_username" field.
+func (alc *AuditLogCreate) SetActorUsername(s string) *AuditLogCreate {
+	alc.mutation.SetActorUsername(s)
+	return alc
+}
+
+// SetAction sets the "action" field.
+func (alc *AuditLogCreate) SetAction(s string) *AuditLogCreate {
+	alc.mutation.SetAction(s)
+	return alc
+}
+
+// SetResourceID sets the "resource_id" field.
+func (alc *AuditLogCreate) SetResourceID(i int) *AuditLogCreate {
+	alc.mutation.SetResourceID(i)
+	return alc
+}
+
+// SetNillableResourceID sets the "resource_id" field if the given value is not nil.
+func (alc *AuditLogCreate) SetNillableResourceID(i *int) *AuditLogCreate {
+	if i != nil {
+		alc.SetResourceID(*i)
+	}
+	return alc
+}
+
+// SetResourceType sets the "resource_type" field.
+func (alc *AuditLogCreate) SetResourceType(s string) *AuditLogCreate {
+	alc.mutation.SetResourceType(s)
+	return alc
+}
+
+// SetNillableResourceType sets the "resource_type" field if the given value is not nil.
+func (alc *AuditLogCreate) SetNillableResourceType(s *string) *AuditLogCreate {
+	if s != nil {
+		alc.SetResourceType(*s)
+	}
+	return alc
+}
+
+// SetDetails sets the "details" field.
+func (alc *AuditLogCreate) SetDetails(m map[string]interface{}) *AuditLogCreate {
+	alc.mutation.SetDetails(m)
 	return alc
 }
 
@@ -163,8 +209,14 @@ func (alc *AuditLogCreate) check() error {
 	if _, ok := alc.mutation.Timestamp(); !ok {
 		return &ValidationError{Name: "timestamp", err: errors.New(`ent: missing required field "AuditLog.timestamp"`)}
 	}
-	if _, ok := alc.mutation.Operation(); !ok {
-		return &ValidationError{Name: "operation", err: errors.New(`ent: missing required field "AuditLog.operation"`)}
+	if _, ok := alc.mutation.ActorID(); !ok {
+		return &ValidationError{Name: "actor_id", err: errors.New(`ent: missing required field "AuditLog.actor_id"`)}
+	}
+	if _, ok := alc.mutation.ActorUsername(); !ok {
+		return &ValidationError{Name: "actor_username", err: errors.New(`ent: missing required field "AuditLog.actor_username"`)}
+	}
+	if _, ok := alc.mutation.Action(); !ok {
+		return &ValidationError{Name: "action", err: errors.New(`ent: missing required field "AuditLog.action"`)}
 	}
 	if len(alc.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "AuditLog.user"`)}
@@ -216,9 +268,29 @@ func (alc *AuditLogCreate) createSpec() (*AuditLog, *sqlgraph.CreateSpec) {
 		_spec.SetField(auditlog.FieldTimestamp, field.TypeTime, value)
 		_node.Timestamp = value
 	}
-	if value, ok := alc.mutation.Operation(); ok {
-		_spec.SetField(auditlog.FieldOperation, field.TypeString, value)
-		_node.Operation = value
+	if value, ok := alc.mutation.ActorID(); ok {
+		_spec.SetField(auditlog.FieldActorID, field.TypeInt, value)
+		_node.ActorID = value
+	}
+	if value, ok := alc.mutation.ActorUsername(); ok {
+		_spec.SetField(auditlog.FieldActorUsername, field.TypeString, value)
+		_node.ActorUsername = value
+	}
+	if value, ok := alc.mutation.Action(); ok {
+		_spec.SetField(auditlog.FieldAction, field.TypeString, value)
+		_node.Action = value
+	}
+	if value, ok := alc.mutation.ResourceID(); ok {
+		_spec.SetField(auditlog.FieldResourceID, field.TypeInt, value)
+		_node.ResourceID = value
+	}
+	if value, ok := alc.mutation.ResourceType(); ok {
+		_spec.SetField(auditlog.FieldResourceType, field.TypeString, value)
+		_node.ResourceType = value
+	}
+	if value, ok := alc.mutation.Details(); ok {
+		_spec.SetField(auditlog.FieldDetails, field.TypeJSON, value)
+		_node.Details = value
 	}
 	if nodes := alc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

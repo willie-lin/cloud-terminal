@@ -27,10 +27,6 @@ type Tenant struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// ContactEmail holds the value of the "contact_email" field.
-	ContactEmail string `json:"contact_email,omitempty"`
-	// ContactPhone holds the value of the "contact_phone" field.
-	ContactPhone string `json:"contact_phone,omitempty"`
 	// Status holds the value of the "status" field.
 	Status tenant.Status `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -46,9 +42,15 @@ type TenantEdges struct {
 	Platform *Platform `json:"platform,omitempty"`
 	// Accounts holds the value of the accounts edge.
 	Accounts []*Account `json:"accounts,omitempty"`
+	// Permissions holds the value of the permissions edge.
+	Permissions []*Permission `json:"permissions,omitempty"`
+	// Roles holds the value of the roles edge.
+	Roles []*Role `json:"roles,omitempty"`
+	// AccessPolicies holds the value of the access_policies edge.
+	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [5]bool
 }
 
 // PlatformOrErr returns the Platform value or an error if the edge
@@ -71,12 +73,39 @@ func (e TenantEdges) AccountsOrErr() ([]*Account, error) {
 	return nil, &NotLoadedError{edge: "accounts"}
 }
 
+// PermissionsOrErr returns the Permissions value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) PermissionsOrErr() ([]*Permission, error) {
+	if e.loadedTypes[2] {
+		return e.Permissions, nil
+	}
+	return nil, &NotLoadedError{edge: "permissions"}
+}
+
+// RolesOrErr returns the Roles value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) RolesOrErr() ([]*Role, error) {
+	if e.loadedTypes[3] {
+		return e.Roles, nil
+	}
+	return nil, &NotLoadedError{edge: "roles"}
+}
+
+// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
+	if e.loadedTypes[4] {
+		return e.AccessPolicies, nil
+	}
+	return nil, &NotLoadedError{edge: "access_policies"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Tenant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tenant.FieldName, tenant.FieldDescription, tenant.FieldContactEmail, tenant.FieldContactPhone, tenant.FieldStatus:
+		case tenant.FieldName, tenant.FieldDescription, tenant.FieldStatus:
 			values[i] = new(sql.NullString)
 		case tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -129,18 +158,6 @@ func (t *Tenant) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Description = value.String
 			}
-		case tenant.FieldContactEmail:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field contact_email", values[i])
-			} else if value.Valid {
-				t.ContactEmail = value.String
-			}
-		case tenant.FieldContactPhone:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field contact_phone", values[i])
-			} else if value.Valid {
-				t.ContactPhone = value.String
-			}
 		case tenant.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
@@ -177,6 +194,21 @@ func (t *Tenant) QueryAccounts() *AccountQuery {
 	return NewTenantClient(t.config).QueryAccounts(t)
 }
 
+// QueryPermissions queries the "permissions" edge of the Tenant entity.
+func (t *Tenant) QueryPermissions() *PermissionQuery {
+	return NewTenantClient(t.config).QueryPermissions(t)
+}
+
+// QueryRoles queries the "roles" edge of the Tenant entity.
+func (t *Tenant) QueryRoles() *RoleQuery {
+	return NewTenantClient(t.config).QueryRoles(t)
+}
+
+// QueryAccessPolicies queries the "access_policies" edge of the Tenant entity.
+func (t *Tenant) QueryAccessPolicies() *AccessPolicyQuery {
+	return NewTenantClient(t.config).QueryAccessPolicies(t)
+}
+
 // Update returns a builder for updating this Tenant.
 // Note that you need to call Tenant.Unwrap() before calling this method if this Tenant
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -211,12 +243,6 @@ func (t *Tenant) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(t.Description)
-	builder.WriteString(", ")
-	builder.WriteString("contact_email=")
-	builder.WriteString(t.ContactEmail)
-	builder.WriteString(", ")
-	builder.WriteString("contact_phone=")
-	builder.WriteString(t.ContactPhone)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", t.Status))

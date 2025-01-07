@@ -21,8 +21,18 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldTimestamp holds the string denoting the timestamp field in the database.
 	FieldTimestamp = "timestamp"
-	// FieldOperation holds the string denoting the operation field in the database.
-	FieldOperation = "operation"
+	// FieldActorID holds the string denoting the actor_id field in the database.
+	FieldActorID = "actor_id"
+	// FieldActorUsername holds the string denoting the actor_username field in the database.
+	FieldActorUsername = "actor_username"
+	// FieldAction holds the string denoting the action field in the database.
+	FieldAction = "action"
+	// FieldResourceID holds the string denoting the resource_id field in the database.
+	FieldResourceID = "resource_id"
+	// FieldResourceType holds the string denoting the resource_type field in the database.
+	FieldResourceType = "resource_type"
+	// FieldDetails holds the string denoting the details field in the database.
+	FieldDetails = "details"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// Table holds the table name of the auditlog in the database.
@@ -40,7 +50,12 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldTimestamp,
-	FieldOperation,
+	FieldActorID,
+	FieldActorUsername,
+	FieldAction,
+	FieldResourceID,
+	FieldResourceType,
+	FieldDetails,
 }
 
 var (
@@ -95,9 +110,29 @@ func ByTimestamp(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTimestamp, opts...).ToFunc()
 }
 
-// ByOperation orders the results by the operation field.
-func ByOperation(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOperation, opts...).ToFunc()
+// ByActorID orders the results by the actor_id field.
+func ByActorID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActorID, opts...).ToFunc()
+}
+
+// ByActorUsername orders the results by the actor_username field.
+func ByActorUsername(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActorUsername, opts...).ToFunc()
+}
+
+// ByAction orders the results by the action field.
+func ByAction(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAction, opts...).ToFunc()
+}
+
+// ByResourceID orders the results by the resource_id field.
+func ByResourceID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResourceID, opts...).ToFunc()
+}
+
+// ByResourceType orders the results by the resource_type field.
+func ByResourceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResourceType, opts...).ToFunc()
 }
 
 // ByUserCount orders the results by user count.

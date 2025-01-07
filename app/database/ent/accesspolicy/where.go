@@ -86,6 +86,11 @@ func Action(v string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldAction, v))
 }
 
+// Immutable applies equality check predicate on the "immutable" field. It's identical to ImmutableEQ.
+func Immutable(v bool) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEQ(FieldImmutable, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldCreatedAt, v))
@@ -456,113 +461,31 @@ func ActionContainsFold(v string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldContainsFold(FieldAction, v))
 }
 
-// HasAccount applies the HasEdge predicate on the "account" edge.
-func HasAccount() predicate.AccessPolicy {
+// ImmutableEQ applies the EQ predicate on the "immutable" field.
+func ImmutableEQ(v bool) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEQ(FieldImmutable, v))
+}
+
+// ImmutableNEQ applies the NEQ predicate on the "immutable" field.
+func ImmutableNEQ(v bool) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNEQ(FieldImmutable, v))
+}
+
+// HasTenant applies the HasEdge predicate on the "tenant" edge.
+func HasTenant() predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, TenantTable, TenantPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
-func HasAccountWith(preds ...predicate.Account) predicate.AccessPolicy {
+// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
+func HasTenantWith(preds ...predicate.Tenant) predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newAccountStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasRoles applies the HasEdge predicate on the "roles" edge.
-func HasRoles() predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, RolesTable, RolesPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasRolesWith applies the HasEdge predicate on the "roles" edge with a given conditions (other predicates).
-func HasRolesWith(preds ...predicate.Role) predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newRolesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasResources applies the HasEdge predicate on the "resources" edge.
-func HasResources() predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, ResourcesTable, ResourcesPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasResourcesWith applies the HasEdge predicate on the "resources" edge with a given conditions (other predicates).
-func HasResourcesWith(preds ...predicate.Resource) predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newResourcesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasPermissions applies the HasEdge predicate on the "permissions" edge.
-func HasPermissions() predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, PermissionsTable, PermissionsPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasPermissionsWith applies the HasEdge predicate on the "permissions" edge with a given conditions (other predicates).
-func HasPermissionsWith(preds ...predicate.Permission) predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newPermissionsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasUsers applies the HasEdge predicate on the "users" edge.
-func HasUsers() predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, UsersTable, UsersPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasUsersWith applies the HasEdge predicate on the "users" edge with a given conditions (other predicates).
-func HasUsersWith(preds ...predicate.User) predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newUsersStep()
+		step := newTenantStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -42,13 +42,17 @@ func init() {
 	// accesspolicy.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	accesspolicy.NameValidator = accesspolicyDescName.Validators[0].(func(string) error)
 	// accesspolicyDescResourceType is the schema descriptor for resource_type field.
-	accesspolicyDescResourceType := accesspolicyFields[4].Descriptor()
+	accesspolicyDescResourceType := accesspolicyFields[5].Descriptor()
 	// accesspolicy.ResourceTypeValidator is a validator for the "resource_type" field. It is called by the builders before save.
 	accesspolicy.ResourceTypeValidator = accesspolicyDescResourceType.Validators[0].(func(string) error)
 	// accesspolicyDescAction is the schema descriptor for action field.
-	accesspolicyDescAction := accesspolicyFields[5].Descriptor()
+	accesspolicyDescAction := accesspolicyFields[6].Descriptor()
 	// accesspolicy.ActionValidator is a validator for the "action" field. It is called by the builders before save.
 	accesspolicy.ActionValidator = accesspolicyDescAction.Validators[0].(func(string) error)
+	// accesspolicyDescImmutable is the schema descriptor for immutable field.
+	accesspolicyDescImmutable := accesspolicyFields[7].Descriptor()
+	// accesspolicy.DefaultImmutable holds the default value on creation for the immutable field.
+	accesspolicy.DefaultImmutable = accesspolicyDescImmutable.Default.(bool)
 	// accesspolicyDescID is the schema descriptor for id field.
 	accesspolicyDescID := accesspolicyFields[0].Descriptor()
 	// accesspolicy.DefaultID holds the default value on creation for the id field.
@@ -173,13 +177,9 @@ func init() {
 	// resource.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	resource.TypeValidator = resourceDescType.Validators[0].(func(string) error)
 	// resourceDescValue is the schema descriptor for value field.
-	resourceDescValue := resourceFields[3].Descriptor()
+	resourceDescValue := resourceFields[4].Descriptor()
 	// resource.ValueValidator is a validator for the "value" field. It is called by the builders before save.
 	resource.ValueValidator = resourceDescValue.Validators[0].(func(string) error)
-	// resourceDescIsDisabled is the schema descriptor for is_disabled field.
-	resourceDescIsDisabled := resourceFields[5].Descriptor()
-	// resource.DefaultIsDisabled holds the default value on creation for the is_disabled field.
-	resource.DefaultIsDisabled = resourceDescIsDisabled.Default.(bool)
 	// resourceDescID is the schema descriptor for id field.
 	resourceDescID := resourceFields[0].Descriptor()
 	// resource.DefaultID holds the default value on creation for the id field.

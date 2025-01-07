@@ -70,43 +70,43 @@ func (pu *PlatformUpdate) ClearDescription() *PlatformUpdate {
 	return pu
 }
 
-// SetContactEmail sets the "contact_email" field.
-func (pu *PlatformUpdate) SetContactEmail(s string) *PlatformUpdate {
-	pu.mutation.SetContactEmail(s)
+// SetRegion sets the "region" field.
+func (pu *PlatformUpdate) SetRegion(s string) *PlatformUpdate {
+	pu.mutation.SetRegion(s)
 	return pu
 }
 
-// SetNillableContactEmail sets the "contact_email" field if the given value is not nil.
-func (pu *PlatformUpdate) SetNillableContactEmail(s *string) *PlatformUpdate {
+// SetNillableRegion sets the "region" field if the given value is not nil.
+func (pu *PlatformUpdate) SetNillableRegion(s *string) *PlatformUpdate {
 	if s != nil {
-		pu.SetContactEmail(*s)
+		pu.SetRegion(*s)
 	}
 	return pu
 }
 
-// ClearContactEmail clears the value of the "contact_email" field.
-func (pu *PlatformUpdate) ClearContactEmail() *PlatformUpdate {
-	pu.mutation.ClearContactEmail()
+// ClearRegion clears the value of the "region" field.
+func (pu *PlatformUpdate) ClearRegion() *PlatformUpdate {
+	pu.mutation.ClearRegion()
 	return pu
 }
 
-// SetContactPhone sets the "contact_phone" field.
-func (pu *PlatformUpdate) SetContactPhone(s string) *PlatformUpdate {
-	pu.mutation.SetContactPhone(s)
+// SetVersion sets the "version" field.
+func (pu *PlatformUpdate) SetVersion(s string) *PlatformUpdate {
+	pu.mutation.SetVersion(s)
 	return pu
 }
 
-// SetNillableContactPhone sets the "contact_phone" field if the given value is not nil.
-func (pu *PlatformUpdate) SetNillableContactPhone(s *string) *PlatformUpdate {
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (pu *PlatformUpdate) SetNillableVersion(s *string) *PlatformUpdate {
 	if s != nil {
-		pu.SetContactPhone(*s)
+		pu.SetVersion(*s)
 	}
 	return pu
 }
 
-// ClearContactPhone clears the value of the "contact_phone" field.
-func (pu *PlatformUpdate) ClearContactPhone() *PlatformUpdate {
-	pu.mutation.ClearContactPhone()
+// ClearVersion clears the value of the "version" field.
+func (pu *PlatformUpdate) ClearVersion() *PlatformUpdate {
+	pu.mutation.ClearVersion()
 	return pu
 }
 
@@ -221,17 +221,17 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if pu.mutation.DescriptionCleared() {
 		_spec.ClearField(platform.FieldDescription, field.TypeString)
 	}
-	if value, ok := pu.mutation.ContactEmail(); ok {
-		_spec.SetField(platform.FieldContactEmail, field.TypeString, value)
+	if value, ok := pu.mutation.Region(); ok {
+		_spec.SetField(platform.FieldRegion, field.TypeString, value)
 	}
-	if pu.mutation.ContactEmailCleared() {
-		_spec.ClearField(platform.FieldContactEmail, field.TypeString)
+	if pu.mutation.RegionCleared() {
+		_spec.ClearField(platform.FieldRegion, field.TypeString)
 	}
-	if value, ok := pu.mutation.ContactPhone(); ok {
-		_spec.SetField(platform.FieldContactPhone, field.TypeString, value)
+	if value, ok := pu.mutation.Version(); ok {
+		_spec.SetField(platform.FieldVersion, field.TypeString, value)
 	}
-	if pu.mutation.ContactPhoneCleared() {
-		_spec.ClearField(platform.FieldContactPhone, field.TypeString)
+	if pu.mutation.VersionCleared() {
+		_spec.ClearField(platform.FieldVersion, field.TypeString)
 	}
 	if pu.mutation.TenantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -338,43 +338,43 @@ func (puo *PlatformUpdateOne) ClearDescription() *PlatformUpdateOne {
 	return puo
 }
 
-// SetContactEmail sets the "contact_email" field.
-func (puo *PlatformUpdateOne) SetContactEmail(s string) *PlatformUpdateOne {
-	puo.mutation.SetContactEmail(s)
+// SetRegion sets the "region" field.
+func (puo *PlatformUpdateOne) SetRegion(s string) *PlatformUpdateOne {
+	puo.mutation.SetRegion(s)
 	return puo
 }
 
-// SetNillableContactEmail sets the "contact_email" field if the given value is not nil.
-func (puo *PlatformUpdateOne) SetNillableContactEmail(s *string) *PlatformUpdateOne {
+// SetNillableRegion sets the "region" field if the given value is not nil.
+func (puo *PlatformUpdateOne) SetNillableRegion(s *string) *PlatformUpdateOne {
 	if s != nil {
-		puo.SetContactEmail(*s)
+		puo.SetRegion(*s)
 	}
 	return puo
 }
 
-// ClearContactEmail clears the value of the "contact_email" field.
-func (puo *PlatformUpdateOne) ClearContactEmail() *PlatformUpdateOne {
-	puo.mutation.ClearContactEmail()
+// ClearRegion clears the value of the "region" field.
+func (puo *PlatformUpdateOne) ClearRegion() *PlatformUpdateOne {
+	puo.mutation.ClearRegion()
 	return puo
 }
 
-// SetContactPhone sets the "contact_phone" field.
-func (puo *PlatformUpdateOne) SetContactPhone(s string) *PlatformUpdateOne {
-	puo.mutation.SetContactPhone(s)
+// SetVersion sets the "version" field.
+func (puo *PlatformUpdateOne) SetVersion(s string) *PlatformUpdateOne {
+	puo.mutation.SetVersion(s)
 	return puo
 }
 
-// SetNillableContactPhone sets the "contact_phone" field if the given value is not nil.
-func (puo *PlatformUpdateOne) SetNillableContactPhone(s *string) *PlatformUpdateOne {
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (puo *PlatformUpdateOne) SetNillableVersion(s *string) *PlatformUpdateOne {
 	if s != nil {
-		puo.SetContactPhone(*s)
+		puo.SetVersion(*s)
 	}
 	return puo
 }
 
-// ClearContactPhone clears the value of the "contact_phone" field.
-func (puo *PlatformUpdateOne) ClearContactPhone() *PlatformUpdateOne {
-	puo.mutation.ClearContactPhone()
+// ClearVersion clears the value of the "version" field.
+func (puo *PlatformUpdateOne) ClearVersion() *PlatformUpdateOne {
+	puo.mutation.ClearVersion()
 	return puo
 }
 
@@ -519,17 +519,17 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	if puo.mutation.DescriptionCleared() {
 		_spec.ClearField(platform.FieldDescription, field.TypeString)
 	}
-	if value, ok := puo.mutation.ContactEmail(); ok {
-		_spec.SetField(platform.FieldContactEmail, field.TypeString, value)
+	if value, ok := puo.mutation.Region(); ok {
+		_spec.SetField(platform.FieldRegion, field.TypeString, value)
 	}
-	if puo.mutation.ContactEmailCleared() {
-		_spec.ClearField(platform.FieldContactEmail, field.TypeString)
+	if puo.mutation.RegionCleared() {
+		_spec.ClearField(platform.FieldRegion, field.TypeString)
 	}
-	if value, ok := puo.mutation.ContactPhone(); ok {
-		_spec.SetField(platform.FieldContactPhone, field.TypeString, value)
+	if value, ok := puo.mutation.Version(); ok {
+		_spec.SetField(platform.FieldVersion, field.TypeString, value)
 	}
-	if puo.mutation.ContactPhoneCleared() {
-		_spec.ClearField(platform.FieldContactPhone, field.TypeString)
+	if puo.mutation.VersionCleared() {
+		_spec.ClearField(platform.FieldVersion, field.TypeString)
 	}
 	if puo.mutation.TenantsCleared() {
 		edge := &sqlgraph.EdgeSpec{

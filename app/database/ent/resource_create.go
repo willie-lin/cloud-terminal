@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 )
 
@@ -62,6 +62,12 @@ func (rc *ResourceCreate) SetType(s string) *ResourceCreate {
 	return rc
 }
 
+// SetProperties sets the "properties" field.
+func (rc *ResourceCreate) SetProperties(m map[string]interface{}) *ResourceCreate {
+	rc.mutation.SetProperties(m)
+	return rc
+}
+
 // SetValue sets the "value" field.
 func (rc *ResourceCreate) SetValue(s string) *ResourceCreate {
 	rc.mutation.SetValue(s)
@@ -82,20 +88,6 @@ func (rc *ResourceCreate) SetNillableDescription(s *string) *ResourceCreate {
 	return rc
 }
 
-// SetIsDisabled sets the "is_disabled" field.
-func (rc *ResourceCreate) SetIsDisabled(b bool) *ResourceCreate {
-	rc.mutation.SetIsDisabled(b)
-	return rc
-}
-
-// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
-func (rc *ResourceCreate) SetNillableIsDisabled(b *bool) *ResourceCreate {
-	if b != nil {
-		rc.SetIsDisabled(*b)
-	}
-	return rc
-}
-
 // SetID sets the "id" field.
 func (rc *ResourceCreate) SetID(u uuid.UUID) *ResourceCreate {
 	rc.mutation.SetID(u)
@@ -110,19 +102,19 @@ func (rc *ResourceCreate) SetNillableID(u *uuid.UUID) *ResourceCreate {
 	return rc
 }
 
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (rc *ResourceCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *ResourceCreate {
-	rc.mutation.AddAccessPolicyIDs(ids...)
+// AddAccountIDs adds the "account" edge to the Account entity by IDs.
+func (rc *ResourceCreate) AddAccountIDs(ids ...uuid.UUID) *ResourceCreate {
+	rc.mutation.AddAccountIDs(ids...)
 	return rc
 }
 
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (rc *ResourceCreate) AddAccessPolicies(a ...*AccessPolicy) *ResourceCreate {
+// AddAccount adds the "account" edges to the Account entity.
+func (rc *ResourceCreate) AddAccount(a ...*Account) *ResourceCreate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return rc.AddAccessPolicyIDs(ids...)
+	return rc.AddAccountIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -168,10 +160,6 @@ func (rc *ResourceCreate) defaults() {
 		v := resource.DefaultUpdatedAt()
 		rc.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := rc.mutation.IsDisabled(); !ok {
-		v := resource.DefaultIsDisabled
-		rc.mutation.SetIsDisabled(v)
-	}
 	if _, ok := rc.mutation.ID(); !ok {
 		v := resource.DefaultID()
 		rc.mutation.SetID(v)
@@ -210,8 +198,8 @@ func (rc *ResourceCreate) check() error {
 			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "Resource.value": %w`, err)}
 		}
 	}
-	if _, ok := rc.mutation.IsDisabled(); !ok {
-		return &ValidationError{Name: "is_disabled", err: errors.New(`ent: missing required field "Resource.is_disabled"`)}
+	if len(rc.mutation.AccountIDs()) == 0 {
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "Resource.account"`)}
 	}
 	return nil
 }
@@ -264,6 +252,10 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
+	if value, ok := rc.mutation.Properties(); ok {
+		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)
+		_node.Properties = value
+	}
 	if value, ok := rc.mutation.Value(); ok {
 		_spec.SetField(resource.FieldValue, field.TypeString, value)
 		_node.Value = value
@@ -272,19 +264,15 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := rc.mutation.IsDisabled(); ok {
-		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
-		_node.IsDisabled = value
-	}
-	if nodes := rc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+	if nodes := rc.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.AccessPoliciesTable,
-			Columns: resource.AccessPoliciesPrimaryKey,
+			Table:   resource.AccountTable,
+			Columns: resource.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

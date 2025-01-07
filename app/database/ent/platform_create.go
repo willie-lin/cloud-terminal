@@ -70,30 +70,30 @@ func (pc *PlatformCreate) SetNillableDescription(s *string) *PlatformCreate {
 	return pc
 }
 
-// SetContactEmail sets the "contact_email" field.
-func (pc *PlatformCreate) SetContactEmail(s string) *PlatformCreate {
-	pc.mutation.SetContactEmail(s)
+// SetRegion sets the "region" field.
+func (pc *PlatformCreate) SetRegion(s string) *PlatformCreate {
+	pc.mutation.SetRegion(s)
 	return pc
 }
 
-// SetNillableContactEmail sets the "contact_email" field if the given value is not nil.
-func (pc *PlatformCreate) SetNillableContactEmail(s *string) *PlatformCreate {
+// SetNillableRegion sets the "region" field if the given value is not nil.
+func (pc *PlatformCreate) SetNillableRegion(s *string) *PlatformCreate {
 	if s != nil {
-		pc.SetContactEmail(*s)
+		pc.SetRegion(*s)
 	}
 	return pc
 }
 
-// SetContactPhone sets the "contact_phone" field.
-func (pc *PlatformCreate) SetContactPhone(s string) *PlatformCreate {
-	pc.mutation.SetContactPhone(s)
+// SetVersion sets the "version" field.
+func (pc *PlatformCreate) SetVersion(s string) *PlatformCreate {
+	pc.mutation.SetVersion(s)
 	return pc
 }
 
-// SetNillableContactPhone sets the "contact_phone" field if the given value is not nil.
-func (pc *PlatformCreate) SetNillableContactPhone(s *string) *PlatformCreate {
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (pc *PlatformCreate) SetNillableVersion(s *string) *PlatformCreate {
 	if s != nil {
-		pc.SetContactPhone(*s)
+		pc.SetVersion(*s)
 	}
 	return pc
 }
@@ -243,13 +243,13 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		_spec.SetField(platform.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := pc.mutation.ContactEmail(); ok {
-		_spec.SetField(platform.FieldContactEmail, field.TypeString, value)
-		_node.ContactEmail = value
+	if value, ok := pc.mutation.Region(); ok {
+		_spec.SetField(platform.FieldRegion, field.TypeString, value)
+		_node.Region = value
 	}
-	if value, ok := pc.mutation.ContactPhone(); ok {
-		_spec.SetField(platform.FieldContactPhone, field.TypeString, value)
-		_node.ContactPhone = value
+	if value, ok := pc.mutation.Version(); ok {
+		_spec.SetField(platform.FieldVersion, field.TypeString, value)
+		_node.Version = value
 	}
 	if nodes := pc.mutation.TenantsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

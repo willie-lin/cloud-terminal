@@ -3,6 +3,7 @@
 package account
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -21,16 +22,14 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// EdgeTenant holds the string denoting the tenant edge name in mutations.
 	EdgeTenant = "tenant"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
-	// EdgeRoles holds the string denoting the roles edge name in mutations.
-	EdgeRoles = "roles"
-	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
-	EdgeAccessPolicies = "access_policies"
-	// EdgePermissions holds the string denoting the permissions edge name in mutations.
-	EdgePermissions = "permissions"
+	// EdgeResources holds the string denoting the resources edge name in mutations.
+	EdgeResources = "resources"
 	// Table holds the table name of the account in the database.
 	Table = "accounts"
 	// TenantTable is the table that holds the tenant relation/edge.
@@ -47,27 +46,11 @@ const (
 	UsersInverseTable = "users"
 	// UsersColumn is the table column denoting the users relation/edge.
 	UsersColumn = "account_users"
-	// RolesTable is the table that holds the roles relation/edge.
-	RolesTable = "roles"
-	// RolesInverseTable is the table name for the Role entity.
-	// It exists in this package in order to avoid circular dependency with the "role" package.
-	RolesInverseTable = "roles"
-	// RolesColumn is the table column denoting the roles relation/edge.
-	RolesColumn = "account_roles"
-	// AccessPoliciesTable is the table that holds the access_policies relation/edge.
-	AccessPoliciesTable = "access_policies"
-	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
-	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
-	AccessPoliciesInverseTable = "access_policies"
-	// AccessPoliciesColumn is the table column denoting the access_policies relation/edge.
-	AccessPoliciesColumn = "account_access_policies"
-	// PermissionsTable is the table that holds the permissions relation/edge.
-	PermissionsTable = "permissions"
-	// PermissionsInverseTable is the table name for the Permission entity.
-	// It exists in this package in order to avoid circular dependency with the "permission" package.
-	PermissionsInverseTable = "permissions"
-	// PermissionsColumn is the table column denoting the permissions relation/edge.
-	PermissionsColumn = "account_permissions"
+	// ResourcesTable is the table that holds the resources relation/edge. The primary key declared below.
+	ResourcesTable = "account_resources"
+	// ResourcesInverseTable is the table name for the Resource entity.
+	// It exists in this package in order to avoid circular dependency with the "resource" package.
+	ResourcesInverseTable = "resources"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -76,6 +59,7 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldName,
+	FieldStatus,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "accounts"
@@ -83,6 +67,12 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"tenant_accounts",
 }
+
+var (
+	// ResourcesPrimaryKey and ResourcesColumn2 are the table columns denoting the
+	// primary key for the resources relation (M2M).
+	ResourcesPrimaryKey = []string{"account_id", "resource_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -112,6 +102,33 @@ var (
 	DefaultID func() uuid.UUID
 )
 
+// Status defines the type for the "status" enum field.
+type Status string
+
+// StatusActive is the default value of the Status enum.
+const DefaultStatus = StatusActive
+
+// Status values.
+const (
+	StatusActive    Status = "active"
+	StatusSuspended Status = "suspended"
+	StatusDeleted   Status = "deleted"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusActive, StatusSuspended, StatusDeleted:
+		return nil
+	default:
+		return fmt.Errorf("account: invalid enum value for status field: %q", s)
+	}
+}
+
 // OrderOption defines the ordering options for the Account queries.
 type OrderOption func(*sql.Selector)
 
@@ -135,6 +152,11 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
 // ByTenantField orders the results by tenant field.
 func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -156,45 +178,17 @@ func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByRolesCount orders the results by roles count.
-func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByResourcesCount orders the results by resources count.
+func ByResourcesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRolesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newResourcesStep(), opts...)
 	}
 }
 
-// ByRoles orders the results by roles terms.
-func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByResources orders the results by resources terms.
+func ByResources(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByAccessPoliciesCount orders the results by access_policies count.
-func ByAccessPoliciesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAccessPoliciesStep(), opts...)
-	}
-}
-
-// ByAccessPolicies orders the results by access_policies terms.
-func ByAccessPolicies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccessPoliciesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByPermissionsCount orders the results by permissions count.
-func ByPermissionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPermissionsStep(), opts...)
-	}
-}
-
-// ByPermissions orders the results by permissions terms.
-func ByPermissions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPermissionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newResourcesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newTenantStep() *sqlgraph.Step {
@@ -211,24 +205,10 @@ func newUsersStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
 	)
 }
-func newRolesStep() *sqlgraph.Step {
+func newResourcesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RolesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
-	)
-}
-func newAccessPoliciesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AccessPoliciesTable, AccessPoliciesColumn),
-	)
-}
-func newPermissionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PermissionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, PermissionsTable, PermissionsColumn),
+		sqlgraph.To(ResourcesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ResourcesTable, ResourcesPrimaryKey...),
 	)
 }

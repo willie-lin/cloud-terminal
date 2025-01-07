@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/resource"
 )
@@ -64,6 +64,18 @@ func (ru *ResourceUpdate) SetNillableType(s *string) *ResourceUpdate {
 	return ru
 }
 
+// SetProperties sets the "properties" field.
+func (ru *ResourceUpdate) SetProperties(m map[string]interface{}) *ResourceUpdate {
+	ru.mutation.SetProperties(m)
+	return ru
+}
+
+// ClearProperties clears the value of the "properties" field.
+func (ru *ResourceUpdate) ClearProperties() *ResourceUpdate {
+	ru.mutation.ClearProperties()
+	return ru
+}
+
 // SetValue sets the "value" field.
 func (ru *ResourceUpdate) SetValue(s string) *ResourceUpdate {
 	ru.mutation.SetValue(s)
@@ -98,33 +110,19 @@ func (ru *ResourceUpdate) ClearDescription() *ResourceUpdate {
 	return ru
 }
 
-// SetIsDisabled sets the "is_disabled" field.
-func (ru *ResourceUpdate) SetIsDisabled(b bool) *ResourceUpdate {
-	ru.mutation.SetIsDisabled(b)
+// AddAccountIDs adds the "account" edge to the Account entity by IDs.
+func (ru *ResourceUpdate) AddAccountIDs(ids ...uuid.UUID) *ResourceUpdate {
+	ru.mutation.AddAccountIDs(ids...)
 	return ru
 }
 
-// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
-func (ru *ResourceUpdate) SetNillableIsDisabled(b *bool) *ResourceUpdate {
-	if b != nil {
-		ru.SetIsDisabled(*b)
-	}
-	return ru
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (ru *ResourceUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *ResourceUpdate {
-	ru.mutation.AddAccessPolicyIDs(ids...)
-	return ru
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (ru *ResourceUpdate) AddAccessPolicies(a ...*AccessPolicy) *ResourceUpdate {
+// AddAccount adds the "account" edges to the Account entity.
+func (ru *ResourceUpdate) AddAccount(a ...*Account) *ResourceUpdate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return ru.AddAccessPolicyIDs(ids...)
+	return ru.AddAccountIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -132,25 +130,25 @@ func (ru *ResourceUpdate) Mutation() *ResourceMutation {
 	return ru.mutation
 }
 
-// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
-func (ru *ResourceUpdate) ClearAccessPolicies() *ResourceUpdate {
-	ru.mutation.ClearAccessPolicies()
+// ClearAccount clears all "account" edges to the Account entity.
+func (ru *ResourceUpdate) ClearAccount() *ResourceUpdate {
+	ru.mutation.ClearAccount()
 	return ru
 }
 
-// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (ru *ResourceUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *ResourceUpdate {
-	ru.mutation.RemoveAccessPolicyIDs(ids...)
+// RemoveAccountIDs removes the "account" edge to Account entities by IDs.
+func (ru *ResourceUpdate) RemoveAccountIDs(ids ...uuid.UUID) *ResourceUpdate {
+	ru.mutation.RemoveAccountIDs(ids...)
 	return ru
 }
 
-// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
-func (ru *ResourceUpdate) RemoveAccessPolicies(a ...*AccessPolicy) *ResourceUpdate {
+// RemoveAccount removes "account" edges to Account entities.
+func (ru *ResourceUpdate) RemoveAccount(a ...*Account) *ResourceUpdate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return ru.RemoveAccessPolicyIDs(ids...)
+	return ru.RemoveAccountIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -230,6 +228,12 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 	}
+	if value, ok := ru.mutation.Properties(); ok {
+		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)
+	}
+	if ru.mutation.PropertiesCleared() {
+		_spec.ClearField(resource.FieldProperties, field.TypeJSON)
+	}
 	if value, ok := ru.mutation.Value(); ok {
 		_spec.SetField(resource.FieldValue, field.TypeString, value)
 	}
@@ -239,31 +243,28 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if ru.mutation.DescriptionCleared() {
 		_spec.ClearField(resource.FieldDescription, field.TypeString)
 	}
-	if value, ok := ru.mutation.IsDisabled(); ok {
-		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
-	}
-	if ru.mutation.AccessPoliciesCleared() {
+	if ru.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.AccessPoliciesTable,
-			Columns: resource.AccessPoliciesPrimaryKey,
+			Table:   resource.AccountTable,
+			Columns: resource.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ru.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !ru.mutation.AccessPoliciesCleared() {
+	if nodes := ru.mutation.RemovedAccountIDs(); len(nodes) > 0 && !ru.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.AccessPoliciesTable,
-			Columns: resource.AccessPoliciesPrimaryKey,
+			Table:   resource.AccountTable,
+			Columns: resource.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -271,15 +272,15 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ru.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+	if nodes := ru.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.AccessPoliciesTable,
-			Columns: resource.AccessPoliciesPrimaryKey,
+			Table:   resource.AccountTable,
+			Columns: resource.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -341,6 +342,18 @@ func (ruo *ResourceUpdateOne) SetNillableType(s *string) *ResourceUpdateOne {
 	return ruo
 }
 
+// SetProperties sets the "properties" field.
+func (ruo *ResourceUpdateOne) SetProperties(m map[string]interface{}) *ResourceUpdateOne {
+	ruo.mutation.SetProperties(m)
+	return ruo
+}
+
+// ClearProperties clears the value of the "properties" field.
+func (ruo *ResourceUpdateOne) ClearProperties() *ResourceUpdateOne {
+	ruo.mutation.ClearProperties()
+	return ruo
+}
+
 // SetValue sets the "value" field.
 func (ruo *ResourceUpdateOne) SetValue(s string) *ResourceUpdateOne {
 	ruo.mutation.SetValue(s)
@@ -375,33 +388,19 @@ func (ruo *ResourceUpdateOne) ClearDescription() *ResourceUpdateOne {
 	return ruo
 }
 
-// SetIsDisabled sets the "is_disabled" field.
-func (ruo *ResourceUpdateOne) SetIsDisabled(b bool) *ResourceUpdateOne {
-	ruo.mutation.SetIsDisabled(b)
+// AddAccountIDs adds the "account" edge to the Account entity by IDs.
+func (ruo *ResourceUpdateOne) AddAccountIDs(ids ...uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.AddAccountIDs(ids...)
 	return ruo
 }
 
-// SetNillableIsDisabled sets the "is_disabled" field if the given value is not nil.
-func (ruo *ResourceUpdateOne) SetNillableIsDisabled(b *bool) *ResourceUpdateOne {
-	if b != nil {
-		ruo.SetIsDisabled(*b)
-	}
-	return ruo
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (ruo *ResourceUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *ResourceUpdateOne {
-	ruo.mutation.AddAccessPolicyIDs(ids...)
-	return ruo
-}
-
-// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
-func (ruo *ResourceUpdateOne) AddAccessPolicies(a ...*AccessPolicy) *ResourceUpdateOne {
+// AddAccount adds the "account" edges to the Account entity.
+func (ruo *ResourceUpdateOne) AddAccount(a ...*Account) *ResourceUpdateOne {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return ruo.AddAccessPolicyIDs(ids...)
+	return ruo.AddAccountIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -409,25 +408,25 @@ func (ruo *ResourceUpdateOne) Mutation() *ResourceMutation {
 	return ruo.mutation
 }
 
-// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
-func (ruo *ResourceUpdateOne) ClearAccessPolicies() *ResourceUpdateOne {
-	ruo.mutation.ClearAccessPolicies()
+// ClearAccount clears all "account" edges to the Account entity.
+func (ruo *ResourceUpdateOne) ClearAccount() *ResourceUpdateOne {
+	ruo.mutation.ClearAccount()
 	return ruo
 }
 
-// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (ruo *ResourceUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *ResourceUpdateOne {
-	ruo.mutation.RemoveAccessPolicyIDs(ids...)
+// RemoveAccountIDs removes the "account" edge to Account entities by IDs.
+func (ruo *ResourceUpdateOne) RemoveAccountIDs(ids ...uuid.UUID) *ResourceUpdateOne {
+	ruo.mutation.RemoveAccountIDs(ids...)
 	return ruo
 }
 
-// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
-func (ruo *ResourceUpdateOne) RemoveAccessPolicies(a ...*AccessPolicy) *ResourceUpdateOne {
+// RemoveAccount removes "account" edges to Account entities.
+func (ruo *ResourceUpdateOne) RemoveAccount(a ...*Account) *ResourceUpdateOne {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return ruo.RemoveAccessPolicyIDs(ids...)
+	return ruo.RemoveAccountIDs(ids...)
 }
 
 // Where appends a list predicates to the ResourceUpdate builder.
@@ -537,6 +536,12 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 	if value, ok := ruo.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 	}
+	if value, ok := ruo.mutation.Properties(); ok {
+		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)
+	}
+	if ruo.mutation.PropertiesCleared() {
+		_spec.ClearField(resource.FieldProperties, field.TypeJSON)
+	}
 	if value, ok := ruo.mutation.Value(); ok {
 		_spec.SetField(resource.FieldValue, field.TypeString, value)
 	}
@@ -546,31 +551,28 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 	if ruo.mutation.DescriptionCleared() {
 		_spec.ClearField(resource.FieldDescription, field.TypeString)
 	}
-	if value, ok := ruo.mutation.IsDisabled(); ok {
-		_spec.SetField(resource.FieldIsDisabled, field.TypeBool, value)
-	}
-	if ruo.mutation.AccessPoliciesCleared() {
+	if ruo.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.AccessPoliciesTable,
-			Columns: resource.AccessPoliciesPrimaryKey,
+			Table:   resource.AccountTable,
+			Columns: resource.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ruo.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !ruo.mutation.AccessPoliciesCleared() {
+	if nodes := ruo.mutation.RemovedAccountIDs(); len(nodes) > 0 && !ruo.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.AccessPoliciesTable,
-			Columns: resource.AccessPoliciesPrimaryKey,
+			Table:   resource.AccountTable,
+			Columns: resource.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -578,15 +580,15 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ruo.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+	if nodes := ruo.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   resource.AccessPoliciesTable,
-			Columns: resource.AccessPoliciesPrimaryKey,
+			Table:   resource.AccountTable,
+			Columns: resource.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

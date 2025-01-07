@@ -47,34 +47,26 @@ const (
 // AccessPolicyMutation represents an operation that mutates the AccessPolicy nodes in the graph.
 type AccessPolicyMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *uuid.UUID
-	created_at         *time.Time
-	updated_at         *time.Time
-	name               *string
-	description        *string
-	effect             *accesspolicy.Effect
-	resource_type      *string
-	action             *string
-	clearedFields      map[string]struct{}
-	account            *uuid.UUID
-	clearedaccount     bool
-	roles              map[uuid.UUID]struct{}
-	removedroles       map[uuid.UUID]struct{}
-	clearedroles       bool
-	resources          map[uuid.UUID]struct{}
-	removedresources   map[uuid.UUID]struct{}
-	clearedresources   bool
-	permissions        map[uuid.UUID]struct{}
-	removedpermissions map[uuid.UUID]struct{}
-	clearedpermissions bool
-	users              map[uuid.UUID]struct{}
-	removedusers       map[uuid.UUID]struct{}
-	clearedusers       bool
-	done               bool
-	oldValue           func(context.Context) (*AccessPolicy, error)
-	predicates         []predicate.AccessPolicy
+	op               Op
+	typ              string
+	id               *uuid.UUID
+	created_at       *time.Time
+	updated_at       *time.Time
+	name             *string
+	description      *string
+	effect           *accesspolicy.Effect
+	statements       *[]map[string]interface{}
+	appendstatements []map[string]interface{}
+	resource_type    *string
+	action           *string
+	immutable        *bool
+	clearedFields    map[string]struct{}
+	tenant           map[uuid.UUID]struct{}
+	removedtenant    map[uuid.UUID]struct{}
+	clearedtenant    bool
+	done             bool
+	oldValue         func(context.Context) (*AccessPolicy, error)
+	predicates       []predicate.AccessPolicy
 }
 
 var _ ent.Mutation = (*AccessPolicyMutation)(nil)
@@ -374,6 +366,57 @@ func (m *AccessPolicyMutation) ResetEffect() {
 	m.effect = nil
 }
 
+// SetStatements sets the "statements" field.
+func (m *AccessPolicyMutation) SetStatements(value []map[string]interface{}) {
+	m.statements = &value
+	m.appendstatements = nil
+}
+
+// Statements returns the value of the "statements" field in the mutation.
+func (m *AccessPolicyMutation) Statements() (r []map[string]interface{}, exists bool) {
+	v := m.statements
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatements returns the old "statements" field's value of the AccessPolicy entity.
+// If the AccessPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessPolicyMutation) OldStatements(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatements is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatements requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatements: %w", err)
+	}
+	return oldValue.Statements, nil
+}
+
+// AppendStatements adds value to the "statements" field.
+func (m *AccessPolicyMutation) AppendStatements(value []map[string]interface{}) {
+	m.appendstatements = append(m.appendstatements, value...)
+}
+
+// AppendedStatements returns the list of values that were appended to the "statements" field in this mutation.
+func (m *AccessPolicyMutation) AppendedStatements() ([]map[string]interface{}, bool) {
+	if len(m.appendstatements) == 0 {
+		return nil, false
+	}
+	return m.appendstatements, true
+}
+
+// ResetStatements resets all changes to the "statements" field.
+func (m *AccessPolicyMutation) ResetStatements() {
+	m.statements = nil
+	m.appendstatements = nil
+}
+
 // SetResourceType sets the "resource_type" field.
 func (m *AccessPolicyMutation) SetResourceType(s string) {
 	m.resource_type = &s
@@ -446,259 +489,94 @@ func (m *AccessPolicyMutation) ResetAction() {
 	m.action = nil
 }
 
-// SetAccountID sets the "account" edge to the Account entity by id.
-func (m *AccessPolicyMutation) SetAccountID(id uuid.UUID) {
-	m.account = &id
+// SetImmutable sets the "immutable" field.
+func (m *AccessPolicyMutation) SetImmutable(b bool) {
+	m.immutable = &b
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (m *AccessPolicyMutation) ClearAccount() {
-	m.clearedaccount = true
-}
-
-// AccountCleared reports if the "account" edge to the Account entity was cleared.
-func (m *AccessPolicyMutation) AccountCleared() bool {
-	return m.clearedaccount
-}
-
-// AccountID returns the "account" edge ID in the mutation.
-func (m *AccessPolicyMutation) AccountID() (id uuid.UUID, exists bool) {
-	if m.account != nil {
-		return *m.account, true
+// Immutable returns the value of the "immutable" field in the mutation.
+func (m *AccessPolicyMutation) Immutable() (r bool, exists bool) {
+	v := m.immutable
+	if v == nil {
+		return
 	}
-	return
+	return *v, true
 }
 
-// AccountIDs returns the "account" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// AccountID instead. It exists only for internal usage by the builders.
-func (m *AccessPolicyMutation) AccountIDs() (ids []uuid.UUID) {
-	if id := m.account; id != nil {
-		ids = append(ids, *id)
+// OldImmutable returns the old "immutable" field's value of the AccessPolicy entity.
+// If the AccessPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessPolicyMutation) OldImmutable(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImmutable is only allowed on UpdateOne operations")
 	}
-	return
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImmutable requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImmutable: %w", err)
+	}
+	return oldValue.Immutable, nil
 }
 
-// ResetAccount resets all changes to the "account" edge.
-func (m *AccessPolicyMutation) ResetAccount() {
-	m.account = nil
-	m.clearedaccount = false
+// ResetImmutable resets all changes to the "immutable" field.
+func (m *AccessPolicyMutation) ResetImmutable() {
+	m.immutable = nil
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by ids.
-func (m *AccessPolicyMutation) AddRoleIDs(ids ...uuid.UUID) {
-	if m.roles == nil {
-		m.roles = make(map[uuid.UUID]struct{})
+// AddTenantIDs adds the "tenant" edge to the Tenant entity by ids.
+func (m *AccessPolicyMutation) AddTenantIDs(ids ...uuid.UUID) {
+	if m.tenant == nil {
+		m.tenant = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		m.roles[ids[i]] = struct{}{}
+		m.tenant[ids[i]] = struct{}{}
 	}
 }
 
-// ClearRoles clears the "roles" edge to the Role entity.
-func (m *AccessPolicyMutation) ClearRoles() {
-	m.clearedroles = true
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (m *AccessPolicyMutation) ClearTenant() {
+	m.clearedtenant = true
 }
 
-// RolesCleared reports if the "roles" edge to the Role entity was cleared.
-func (m *AccessPolicyMutation) RolesCleared() bool {
-	return m.clearedroles
+// TenantCleared reports if the "tenant" edge to the Tenant entity was cleared.
+func (m *AccessPolicyMutation) TenantCleared() bool {
+	return m.clearedtenant
 }
 
-// RemoveRoleIDs removes the "roles" edge to the Role entity by IDs.
-func (m *AccessPolicyMutation) RemoveRoleIDs(ids ...uuid.UUID) {
-	if m.removedroles == nil {
-		m.removedroles = make(map[uuid.UUID]struct{})
+// RemoveTenantIDs removes the "tenant" edge to the Tenant entity by IDs.
+func (m *AccessPolicyMutation) RemoveTenantIDs(ids ...uuid.UUID) {
+	if m.removedtenant == nil {
+		m.removedtenant = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		delete(m.roles, ids[i])
-		m.removedroles[ids[i]] = struct{}{}
+		delete(m.tenant, ids[i])
+		m.removedtenant[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedRoles returns the removed IDs of the "roles" edge to the Role entity.
-func (m *AccessPolicyMutation) RemovedRolesIDs() (ids []uuid.UUID) {
-	for id := range m.removedroles {
+// RemovedTenant returns the removed IDs of the "tenant" edge to the Tenant entity.
+func (m *AccessPolicyMutation) RemovedTenantIDs() (ids []uuid.UUID) {
+	for id := range m.removedtenant {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// RolesIDs returns the "roles" edge IDs in the mutation.
-func (m *AccessPolicyMutation) RolesIDs() (ids []uuid.UUID) {
-	for id := range m.roles {
+// TenantIDs returns the "tenant" edge IDs in the mutation.
+func (m *AccessPolicyMutation) TenantIDs() (ids []uuid.UUID) {
+	for id := range m.tenant {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetRoles resets all changes to the "roles" edge.
-func (m *AccessPolicyMutation) ResetRoles() {
-	m.roles = nil
-	m.clearedroles = false
-	m.removedroles = nil
-}
-
-// AddResourceIDs adds the "resources" edge to the Resource entity by ids.
-func (m *AccessPolicyMutation) AddResourceIDs(ids ...uuid.UUID) {
-	if m.resources == nil {
-		m.resources = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.resources[ids[i]] = struct{}{}
-	}
-}
-
-// ClearResources clears the "resources" edge to the Resource entity.
-func (m *AccessPolicyMutation) ClearResources() {
-	m.clearedresources = true
-}
-
-// ResourcesCleared reports if the "resources" edge to the Resource entity was cleared.
-func (m *AccessPolicyMutation) ResourcesCleared() bool {
-	return m.clearedresources
-}
-
-// RemoveResourceIDs removes the "resources" edge to the Resource entity by IDs.
-func (m *AccessPolicyMutation) RemoveResourceIDs(ids ...uuid.UUID) {
-	if m.removedresources == nil {
-		m.removedresources = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.resources, ids[i])
-		m.removedresources[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedResources returns the removed IDs of the "resources" edge to the Resource entity.
-func (m *AccessPolicyMutation) RemovedResourcesIDs() (ids []uuid.UUID) {
-	for id := range m.removedresources {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResourcesIDs returns the "resources" edge IDs in the mutation.
-func (m *AccessPolicyMutation) ResourcesIDs() (ids []uuid.UUID) {
-	for id := range m.resources {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetResources resets all changes to the "resources" edge.
-func (m *AccessPolicyMutation) ResetResources() {
-	m.resources = nil
-	m.clearedresources = false
-	m.removedresources = nil
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by ids.
-func (m *AccessPolicyMutation) AddPermissionIDs(ids ...uuid.UUID) {
-	if m.permissions == nil {
-		m.permissions = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.permissions[ids[i]] = struct{}{}
-	}
-}
-
-// ClearPermissions clears the "permissions" edge to the Permission entity.
-func (m *AccessPolicyMutation) ClearPermissions() {
-	m.clearedpermissions = true
-}
-
-// PermissionsCleared reports if the "permissions" edge to the Permission entity was cleared.
-func (m *AccessPolicyMutation) PermissionsCleared() bool {
-	return m.clearedpermissions
-}
-
-// RemovePermissionIDs removes the "permissions" edge to the Permission entity by IDs.
-func (m *AccessPolicyMutation) RemovePermissionIDs(ids ...uuid.UUID) {
-	if m.removedpermissions == nil {
-		m.removedpermissions = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.permissions, ids[i])
-		m.removedpermissions[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedPermissions returns the removed IDs of the "permissions" edge to the Permission entity.
-func (m *AccessPolicyMutation) RemovedPermissionsIDs() (ids []uuid.UUID) {
-	for id := range m.removedpermissions {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// PermissionsIDs returns the "permissions" edge IDs in the mutation.
-func (m *AccessPolicyMutation) PermissionsIDs() (ids []uuid.UUID) {
-	for id := range m.permissions {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetPermissions resets all changes to the "permissions" edge.
-func (m *AccessPolicyMutation) ResetPermissions() {
-	m.permissions = nil
-	m.clearedpermissions = false
-	m.removedpermissions = nil
-}
-
-// AddUserIDs adds the "users" edge to the User entity by ids.
-func (m *AccessPolicyMutation) AddUserIDs(ids ...uuid.UUID) {
-	if m.users == nil {
-		m.users = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.users[ids[i]] = struct{}{}
-	}
-}
-
-// ClearUsers clears the "users" edge to the User entity.
-func (m *AccessPolicyMutation) ClearUsers() {
-	m.clearedusers = true
-}
-
-// UsersCleared reports if the "users" edge to the User entity was cleared.
-func (m *AccessPolicyMutation) UsersCleared() bool {
-	return m.clearedusers
-}
-
-// RemoveUserIDs removes the "users" edge to the User entity by IDs.
-func (m *AccessPolicyMutation) RemoveUserIDs(ids ...uuid.UUID) {
-	if m.removedusers == nil {
-		m.removedusers = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.users, ids[i])
-		m.removedusers[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedUsers returns the removed IDs of the "users" edge to the User entity.
-func (m *AccessPolicyMutation) RemovedUsersIDs() (ids []uuid.UUID) {
-	for id := range m.removedusers {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// UsersIDs returns the "users" edge IDs in the mutation.
-func (m *AccessPolicyMutation) UsersIDs() (ids []uuid.UUID) {
-	for id := range m.users {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetUsers resets all changes to the "users" edge.
-func (m *AccessPolicyMutation) ResetUsers() {
-	m.users = nil
-	m.clearedusers = false
-	m.removedusers = nil
+// ResetTenant resets all changes to the "tenant" edge.
+func (m *AccessPolicyMutation) ResetTenant() {
+	m.tenant = nil
+	m.clearedtenant = false
+	m.removedtenant = nil
 }
 
 // Where appends a list predicates to the AccessPolicyMutation builder.
@@ -735,7 +613,7 @@ func (m *AccessPolicyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccessPolicyMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 9)
 	if m.created_at != nil {
 		fields = append(fields, accesspolicy.FieldCreatedAt)
 	}
@@ -751,11 +629,17 @@ func (m *AccessPolicyMutation) Fields() []string {
 	if m.effect != nil {
 		fields = append(fields, accesspolicy.FieldEffect)
 	}
+	if m.statements != nil {
+		fields = append(fields, accesspolicy.FieldStatements)
+	}
 	if m.resource_type != nil {
 		fields = append(fields, accesspolicy.FieldResourceType)
 	}
 	if m.action != nil {
 		fields = append(fields, accesspolicy.FieldAction)
+	}
+	if m.immutable != nil {
+		fields = append(fields, accesspolicy.FieldImmutable)
 	}
 	return fields
 }
@@ -775,10 +659,14 @@ func (m *AccessPolicyMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case accesspolicy.FieldEffect:
 		return m.Effect()
+	case accesspolicy.FieldStatements:
+		return m.Statements()
 	case accesspolicy.FieldResourceType:
 		return m.ResourceType()
 	case accesspolicy.FieldAction:
 		return m.Action()
+	case accesspolicy.FieldImmutable:
+		return m.Immutable()
 	}
 	return nil, false
 }
@@ -798,10 +686,14 @@ func (m *AccessPolicyMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldDescription(ctx)
 	case accesspolicy.FieldEffect:
 		return m.OldEffect(ctx)
+	case accesspolicy.FieldStatements:
+		return m.OldStatements(ctx)
 	case accesspolicy.FieldResourceType:
 		return m.OldResourceType(ctx)
 	case accesspolicy.FieldAction:
 		return m.OldAction(ctx)
+	case accesspolicy.FieldImmutable:
+		return m.OldImmutable(ctx)
 	}
 	return nil, fmt.Errorf("unknown AccessPolicy field %s", name)
 }
@@ -846,6 +738,13 @@ func (m *AccessPolicyMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEffect(v)
 		return nil
+	case accesspolicy.FieldStatements:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatements(v)
+		return nil
 	case accesspolicy.FieldResourceType:
 		v, ok := value.(string)
 		if !ok {
@@ -859,6 +758,13 @@ func (m *AccessPolicyMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAction(v)
+		return nil
+	case accesspolicy.FieldImmutable:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImmutable(v)
 		return nil
 	}
 	return fmt.Errorf("unknown AccessPolicy field %s", name)
@@ -933,11 +839,17 @@ func (m *AccessPolicyMutation) ResetField(name string) error {
 	case accesspolicy.FieldEffect:
 		m.ResetEffect()
 		return nil
+	case accesspolicy.FieldStatements:
+		m.ResetStatements()
+		return nil
 	case accesspolicy.FieldResourceType:
 		m.ResetResourceType()
 		return nil
 	case accesspolicy.FieldAction:
 		m.ResetAction()
+		return nil
+	case accesspolicy.FieldImmutable:
+		m.ResetImmutable()
 		return nil
 	}
 	return fmt.Errorf("unknown AccessPolicy field %s", name)
@@ -945,21 +857,9 @@ func (m *AccessPolicyMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AccessPolicyMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
-	if m.account != nil {
-		edges = append(edges, accesspolicy.EdgeAccount)
-	}
-	if m.roles != nil {
-		edges = append(edges, accesspolicy.EdgeRoles)
-	}
-	if m.resources != nil {
-		edges = append(edges, accesspolicy.EdgeResources)
-	}
-	if m.permissions != nil {
-		edges = append(edges, accesspolicy.EdgePermissions)
-	}
-	if m.users != nil {
-		edges = append(edges, accesspolicy.EdgeUsers)
+	edges := make([]string, 0, 1)
+	if m.tenant != nil {
+		edges = append(edges, accesspolicy.EdgeTenant)
 	}
 	return edges
 }
@@ -968,31 +868,9 @@ func (m *AccessPolicyMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *AccessPolicyMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case accesspolicy.EdgeAccount:
-		if id := m.account; id != nil {
-			return []ent.Value{*id}
-		}
-	case accesspolicy.EdgeRoles:
-		ids := make([]ent.Value, 0, len(m.roles))
-		for id := range m.roles {
-			ids = append(ids, id)
-		}
-		return ids
-	case accesspolicy.EdgeResources:
-		ids := make([]ent.Value, 0, len(m.resources))
-		for id := range m.resources {
-			ids = append(ids, id)
-		}
-		return ids
-	case accesspolicy.EdgePermissions:
-		ids := make([]ent.Value, 0, len(m.permissions))
-		for id := range m.permissions {
-			ids = append(ids, id)
-		}
-		return ids
-	case accesspolicy.EdgeUsers:
-		ids := make([]ent.Value, 0, len(m.users))
-		for id := range m.users {
+	case accesspolicy.EdgeTenant:
+		ids := make([]ent.Value, 0, len(m.tenant))
+		for id := range m.tenant {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1002,18 +880,9 @@ func (m *AccessPolicyMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccessPolicyMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
-	if m.removedroles != nil {
-		edges = append(edges, accesspolicy.EdgeRoles)
-	}
-	if m.removedresources != nil {
-		edges = append(edges, accesspolicy.EdgeResources)
-	}
-	if m.removedpermissions != nil {
-		edges = append(edges, accesspolicy.EdgePermissions)
-	}
-	if m.removedusers != nil {
-		edges = append(edges, accesspolicy.EdgeUsers)
+	edges := make([]string, 0, 1)
+	if m.removedtenant != nil {
+		edges = append(edges, accesspolicy.EdgeTenant)
 	}
 	return edges
 }
@@ -1022,27 +891,9 @@ func (m *AccessPolicyMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *AccessPolicyMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case accesspolicy.EdgeRoles:
-		ids := make([]ent.Value, 0, len(m.removedroles))
-		for id := range m.removedroles {
-			ids = append(ids, id)
-		}
-		return ids
-	case accesspolicy.EdgeResources:
-		ids := make([]ent.Value, 0, len(m.removedresources))
-		for id := range m.removedresources {
-			ids = append(ids, id)
-		}
-		return ids
-	case accesspolicy.EdgePermissions:
-		ids := make([]ent.Value, 0, len(m.removedpermissions))
-		for id := range m.removedpermissions {
-			ids = append(ids, id)
-		}
-		return ids
-	case accesspolicy.EdgeUsers:
-		ids := make([]ent.Value, 0, len(m.removedusers))
-		for id := range m.removedusers {
+	case accesspolicy.EdgeTenant:
+		ids := make([]ent.Value, 0, len(m.removedtenant))
+		for id := range m.removedtenant {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1052,21 +903,9 @@ func (m *AccessPolicyMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AccessPolicyMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
-	if m.clearedaccount {
-		edges = append(edges, accesspolicy.EdgeAccount)
-	}
-	if m.clearedroles {
-		edges = append(edges, accesspolicy.EdgeRoles)
-	}
-	if m.clearedresources {
-		edges = append(edges, accesspolicy.EdgeResources)
-	}
-	if m.clearedpermissions {
-		edges = append(edges, accesspolicy.EdgePermissions)
-	}
-	if m.clearedusers {
-		edges = append(edges, accesspolicy.EdgeUsers)
+	edges := make([]string, 0, 1)
+	if m.clearedtenant {
+		edges = append(edges, accesspolicy.EdgeTenant)
 	}
 	return edges
 }
@@ -1075,16 +914,8 @@ func (m *AccessPolicyMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *AccessPolicyMutation) EdgeCleared(name string) bool {
 	switch name {
-	case accesspolicy.EdgeAccount:
-		return m.clearedaccount
-	case accesspolicy.EdgeRoles:
-		return m.clearedroles
-	case accesspolicy.EdgeResources:
-		return m.clearedresources
-	case accesspolicy.EdgePermissions:
-		return m.clearedpermissions
-	case accesspolicy.EdgeUsers:
-		return m.clearedusers
+	case accesspolicy.EdgeTenant:
+		return m.clearedtenant
 	}
 	return false
 }
@@ -1093,9 +924,6 @@ func (m *AccessPolicyMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *AccessPolicyMutation) ClearEdge(name string) error {
 	switch name {
-	case accesspolicy.EdgeAccount:
-		m.ClearAccount()
-		return nil
 	}
 	return fmt.Errorf("unknown AccessPolicy unique edge %s", name)
 }
@@ -1104,20 +932,8 @@ func (m *AccessPolicyMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *AccessPolicyMutation) ResetEdge(name string) error {
 	switch name {
-	case accesspolicy.EdgeAccount:
-		m.ResetAccount()
-		return nil
-	case accesspolicy.EdgeRoles:
-		m.ResetRoles()
-		return nil
-	case accesspolicy.EdgeResources:
-		m.ResetResources()
-		return nil
-	case accesspolicy.EdgePermissions:
-		m.ResetPermissions()
-		return nil
-	case accesspolicy.EdgeUsers:
-		m.ResetUsers()
+	case accesspolicy.EdgeTenant:
+		m.ResetTenant()
 		return nil
 	}
 	return fmt.Errorf("unknown AccessPolicy edge %s", name)
@@ -1126,30 +942,25 @@ func (m *AccessPolicyMutation) ResetEdge(name string) error {
 // AccountMutation represents an operation that mutates the Account nodes in the graph.
 type AccountMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *uuid.UUID
-	created_at             *time.Time
-	updated_at             *time.Time
-	name                   *string
-	clearedFields          map[string]struct{}
-	tenant                 *uuid.UUID
-	clearedtenant          bool
-	users                  map[uuid.UUID]struct{}
-	removedusers           map[uuid.UUID]struct{}
-	clearedusers           bool
-	roles                  map[uuid.UUID]struct{}
-	removedroles           map[uuid.UUID]struct{}
-	clearedroles           bool
-	access_policies        map[uuid.UUID]struct{}
-	removedaccess_policies map[uuid.UUID]struct{}
-	clearedaccess_policies bool
-	permissions            map[uuid.UUID]struct{}
-	removedpermissions     map[uuid.UUID]struct{}
-	clearedpermissions     bool
-	done                   bool
-	oldValue               func(context.Context) (*Account, error)
-	predicates             []predicate.Account
+	op               Op
+	typ              string
+	id               *uuid.UUID
+	created_at       *time.Time
+	updated_at       *time.Time
+	name             *string
+	status           *account.Status
+	clearedFields    map[string]struct{}
+	tenant           *uuid.UUID
+	clearedtenant    bool
+	users            map[uuid.UUID]struct{}
+	removedusers     map[uuid.UUID]struct{}
+	clearedusers     bool
+	resources        map[uuid.UUID]struct{}
+	removedresources map[uuid.UUID]struct{}
+	clearedresources bool
+	done             bool
+	oldValue         func(context.Context) (*Account, error)
+	predicates       []predicate.Account
 }
 
 var _ ent.Mutation = (*AccountMutation)(nil)
@@ -1364,6 +1175,42 @@ func (m *AccountMutation) ResetName() {
 	m.name = nil
 }
 
+// SetStatus sets the "status" field.
+func (m *AccountMutation) SetStatus(a account.Status) {
+	m.status = &a
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *AccountMutation) Status() (r account.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldStatus(ctx context.Context) (v account.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *AccountMutation) ResetStatus() {
+	m.status = nil
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by id.
 func (m *AccountMutation) SetTenantID(id uuid.UUID) {
 	m.tenant = &id
@@ -1457,166 +1304,58 @@ func (m *AccountMutation) ResetUsers() {
 	m.removedusers = nil
 }
 
-// AddRoleIDs adds the "roles" edge to the Role entity by ids.
-func (m *AccountMutation) AddRoleIDs(ids ...uuid.UUID) {
-	if m.roles == nil {
-		m.roles = make(map[uuid.UUID]struct{})
+// AddResourceIDs adds the "resources" edge to the Resource entity by ids.
+func (m *AccountMutation) AddResourceIDs(ids ...uuid.UUID) {
+	if m.resources == nil {
+		m.resources = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		m.roles[ids[i]] = struct{}{}
+		m.resources[ids[i]] = struct{}{}
 	}
 }
 
-// ClearRoles clears the "roles" edge to the Role entity.
-func (m *AccountMutation) ClearRoles() {
-	m.clearedroles = true
+// ClearResources clears the "resources" edge to the Resource entity.
+func (m *AccountMutation) ClearResources() {
+	m.clearedresources = true
 }
 
-// RolesCleared reports if the "roles" edge to the Role entity was cleared.
-func (m *AccountMutation) RolesCleared() bool {
-	return m.clearedroles
+// ResourcesCleared reports if the "resources" edge to the Resource entity was cleared.
+func (m *AccountMutation) ResourcesCleared() bool {
+	return m.clearedresources
 }
 
-// RemoveRoleIDs removes the "roles" edge to the Role entity by IDs.
-func (m *AccountMutation) RemoveRoleIDs(ids ...uuid.UUID) {
-	if m.removedroles == nil {
-		m.removedroles = make(map[uuid.UUID]struct{})
+// RemoveResourceIDs removes the "resources" edge to the Resource entity by IDs.
+func (m *AccountMutation) RemoveResourceIDs(ids ...uuid.UUID) {
+	if m.removedresources == nil {
+		m.removedresources = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		delete(m.roles, ids[i])
-		m.removedroles[ids[i]] = struct{}{}
+		delete(m.resources, ids[i])
+		m.removedresources[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedRoles returns the removed IDs of the "roles" edge to the Role entity.
-func (m *AccountMutation) RemovedRolesIDs() (ids []uuid.UUID) {
-	for id := range m.removedroles {
+// RemovedResources returns the removed IDs of the "resources" edge to the Resource entity.
+func (m *AccountMutation) RemovedResourcesIDs() (ids []uuid.UUID) {
+	for id := range m.removedresources {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// RolesIDs returns the "roles" edge IDs in the mutation.
-func (m *AccountMutation) RolesIDs() (ids []uuid.UUID) {
-	for id := range m.roles {
+// ResourcesIDs returns the "resources" edge IDs in the mutation.
+func (m *AccountMutation) ResourcesIDs() (ids []uuid.UUID) {
+	for id := range m.resources {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetRoles resets all changes to the "roles" edge.
-func (m *AccountMutation) ResetRoles() {
-	m.roles = nil
-	m.clearedroles = false
-	m.removedroles = nil
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
-func (m *AccountMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.access_policies == nil {
-		m.access_policies = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.access_policies[ids[i]] = struct{}{}
-	}
-}
-
-// ClearAccessPolicies clears the "access_policies" edge to the AccessPolicy entity.
-func (m *AccountMutation) ClearAccessPolicies() {
-	m.clearedaccess_policies = true
-}
-
-// AccessPoliciesCleared reports if the "access_policies" edge to the AccessPolicy entity was cleared.
-func (m *AccountMutation) AccessPoliciesCleared() bool {
-	return m.clearedaccess_policies
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
-func (m *AccountMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.removedaccess_policies == nil {
-		m.removedaccess_policies = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.access_policies, ids[i])
-		m.removedaccess_policies[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
-func (m *AccountMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.removedaccess_policies {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
-func (m *AccountMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.access_policies {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetAccessPolicies resets all changes to the "access_policies" edge.
-func (m *AccountMutation) ResetAccessPolicies() {
-	m.access_policies = nil
-	m.clearedaccess_policies = false
-	m.removedaccess_policies = nil
-}
-
-// AddPermissionIDs adds the "permissions" edge to the Permission entity by ids.
-func (m *AccountMutation) AddPermissionIDs(ids ...uuid.UUID) {
-	if m.permissions == nil {
-		m.permissions = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.permissions[ids[i]] = struct{}{}
-	}
-}
-
-// ClearPermissions clears the "permissions" edge to the Permission entity.
-func (m *AccountMutation) ClearPermissions() {
-	m.clearedpermissions = true
-}
-
-// PermissionsCleared reports if the "permissions" edge to the Permission entity was cleared.
-func (m *AccountMutation) PermissionsCleared() bool {
-	return m.clearedpermissions
-}
-
-// RemovePermissionIDs removes the "permissions" edge to the Permission entity by IDs.
-func (m *AccountMutation) RemovePermissionIDs(ids ...uuid.UUID) {
-	if m.removedpermissions == nil {
-		m.removedpermissions = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.permissions, ids[i])
-		m.removedpermissions[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedPermissions returns the removed IDs of the "permissions" edge to the Permission entity.
-func (m *AccountMutation) RemovedPermissionsIDs() (ids []uuid.UUID) {
-	for id := range m.removedpermissions {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// PermissionsIDs returns the "permissions" edge IDs in the mutation.
-func (m *AccountMutation) PermissionsIDs() (ids []uuid.UUID) {
-	for id := range m.permissions {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetPermissions resets all changes to the "permissions" edge.
-func (m *AccountMutation) ResetPermissions() {
-	m.permissions = nil
-	m.clearedpermissions = false
-	m.removedpermissions = nil
+// ResetResources resets all changes to the "resources" edge.
+func (m *AccountMutation) ResetResources() {
+	m.resources = nil
+	m.clearedresources = false
+	m.removedresources = nil
 }
 
 // Where appends a list predicates to the AccountMutation builder.
@@ -1653,7 +1392,7 @@ func (m *AccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccountMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.created_at != nil {
 		fields = append(fields, account.FieldCreatedAt)
 	}
@@ -1662,6 +1401,9 @@ func (m *AccountMutation) Fields() []string {
 	}
 	if m.name != nil {
 		fields = append(fields, account.FieldName)
+	}
+	if m.status != nil {
+		fields = append(fields, account.FieldStatus)
 	}
 	return fields
 }
@@ -1677,6 +1419,8 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdatedAt()
 	case account.FieldName:
 		return m.Name()
+	case account.FieldStatus:
+		return m.Status()
 	}
 	return nil, false
 }
@@ -1692,6 +1436,8 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldUpdatedAt(ctx)
 	case account.FieldName:
 		return m.OldName(ctx)
+	case account.FieldStatus:
+		return m.OldStatus(ctx)
 	}
 	return nil, fmt.Errorf("unknown Account field %s", name)
 }
@@ -1721,6 +1467,13 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
+		return nil
+	case account.FieldStatus:
+		v, ok := value.(account.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Account field %s", name)
@@ -1780,27 +1533,24 @@ func (m *AccountMutation) ResetField(name string) error {
 	case account.FieldName:
 		m.ResetName()
 		return nil
+	case account.FieldStatus:
+		m.ResetStatus()
+		return nil
 	}
 	return fmt.Errorf("unknown Account field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 3)
 	if m.tenant != nil {
 		edges = append(edges, account.EdgeTenant)
 	}
 	if m.users != nil {
 		edges = append(edges, account.EdgeUsers)
 	}
-	if m.roles != nil {
-		edges = append(edges, account.EdgeRoles)
-	}
-	if m.access_policies != nil {
-		edges = append(edges, account.EdgeAccessPolicies)
-	}
-	if m.permissions != nil {
-		edges = append(edges, account.EdgePermissions)
+	if m.resources != nil {
+		edges = append(edges, account.EdgeResources)
 	}
 	return edges
 }
@@ -1819,21 +1569,9 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case account.EdgeRoles:
-		ids := make([]ent.Value, 0, len(m.roles))
-		for id := range m.roles {
-			ids = append(ids, id)
-		}
-		return ids
-	case account.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.access_policies))
-		for id := range m.access_policies {
-			ids = append(ids, id)
-		}
-		return ids
-	case account.EdgePermissions:
-		ids := make([]ent.Value, 0, len(m.permissions))
-		for id := range m.permissions {
+	case account.EdgeResources:
+		ids := make([]ent.Value, 0, len(m.resources))
+		for id := range m.resources {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1843,18 +1581,12 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 3)
 	if m.removedusers != nil {
 		edges = append(edges, account.EdgeUsers)
 	}
-	if m.removedroles != nil {
-		edges = append(edges, account.EdgeRoles)
-	}
-	if m.removedaccess_policies != nil {
-		edges = append(edges, account.EdgeAccessPolicies)
-	}
-	if m.removedpermissions != nil {
-		edges = append(edges, account.EdgePermissions)
+	if m.removedresources != nil {
+		edges = append(edges, account.EdgeResources)
 	}
 	return edges
 }
@@ -1869,21 +1601,9 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case account.EdgeRoles:
-		ids := make([]ent.Value, 0, len(m.removedroles))
-		for id := range m.removedroles {
-			ids = append(ids, id)
-		}
-		return ids
-	case account.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.removedaccess_policies))
-		for id := range m.removedaccess_policies {
-			ids = append(ids, id)
-		}
-		return ids
-	case account.EdgePermissions:
-		ids := make([]ent.Value, 0, len(m.removedpermissions))
-		for id := range m.removedpermissions {
+	case account.EdgeResources:
+		ids := make([]ent.Value, 0, len(m.removedresources))
+		for id := range m.removedresources {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1893,21 +1613,15 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 3)
 	if m.clearedtenant {
 		edges = append(edges, account.EdgeTenant)
 	}
 	if m.clearedusers {
 		edges = append(edges, account.EdgeUsers)
 	}
-	if m.clearedroles {
-		edges = append(edges, account.EdgeRoles)
-	}
-	if m.clearedaccess_policies {
-		edges = append(edges, account.EdgeAccessPolicies)
-	}
-	if m.clearedpermissions {
-		edges = append(edges, account.EdgePermissions)
+	if m.clearedresources {
+		edges = append(edges, account.EdgeResources)
 	}
 	return edges
 }
@@ -1920,12 +1634,8 @@ func (m *AccountMutation) EdgeCleared(name string) bool {
 		return m.clearedtenant
 	case account.EdgeUsers:
 		return m.clearedusers
-	case account.EdgeRoles:
-		return m.clearedroles
-	case account.EdgeAccessPolicies:
-		return m.clearedaccess_policies
-	case account.EdgePermissions:
-		return m.clearedpermissions
+	case account.EdgeResources:
+		return m.clearedresources
 	}
 	return false
 }
@@ -1951,14 +1661,8 @@ func (m *AccountMutation) ResetEdge(name string) error {
 	case account.EdgeUsers:
 		m.ResetUsers()
 		return nil
-	case account.EdgeRoles:
-		m.ResetRoles()
-		return nil
-	case account.EdgeAccessPolicies:
-		m.ResetAccessPolicies()
-		return nil
-	case account.EdgePermissions:
-		m.ResetPermissions()
+	case account.EdgeResources:
+		m.ResetResources()
 		return nil
 	}
 	return fmt.Errorf("unknown Account edge %s", name)
@@ -1967,20 +1671,27 @@ func (m *AccountMutation) ResetEdge(name string) error {
 // AuditLogMutation represents an operation that mutates the AuditLog nodes in the graph.
 type AuditLogMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	created_at    *time.Time
-	updated_at    *time.Time
-	timestamp     *time.Time
-	operation     *string
-	clearedFields map[string]struct{}
-	user          map[uuid.UUID]struct{}
-	removeduser   map[uuid.UUID]struct{}
-	cleareduser   bool
-	done          bool
-	oldValue      func(context.Context) (*AuditLog, error)
-	predicates    []predicate.AuditLog
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	created_at     *time.Time
+	updated_at     *time.Time
+	timestamp      *time.Time
+	actor_id       *int
+	addactor_id    *int
+	actor_username *string
+	action         *string
+	resource_id    *int
+	addresource_id *int
+	resource_type  *string
+	details        *map[string]interface{}
+	clearedFields  map[string]struct{}
+	user           map[uuid.UUID]struct{}
+	removeduser    map[uuid.UUID]struct{}
+	cleareduser    bool
+	done           bool
+	oldValue       func(context.Context) (*AuditLog, error)
+	predicates     []predicate.AuditLog
 }
 
 var _ ent.Mutation = (*AuditLogMutation)(nil)
@@ -2195,40 +1906,300 @@ func (m *AuditLogMutation) ResetTimestamp() {
 	m.timestamp = nil
 }
 
-// SetOperation sets the "operation" field.
-func (m *AuditLogMutation) SetOperation(s string) {
-	m.operation = &s
+// SetActorID sets the "actor_id" field.
+func (m *AuditLogMutation) SetActorID(i int) {
+	m.actor_id = &i
+	m.addactor_id = nil
 }
 
-// Operation returns the value of the "operation" field in the mutation.
-func (m *AuditLogMutation) Operation() (r string, exists bool) {
-	v := m.operation
+// ActorID returns the value of the "actor_id" field in the mutation.
+func (m *AuditLogMutation) ActorID() (r int, exists bool) {
+	v := m.actor_id
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldOperation returns the old "operation" field's value of the AuditLog entity.
+// OldActorID returns the old "actor_id" field's value of the AuditLog entity.
 // If the AuditLog object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AuditLogMutation) OldOperation(ctx context.Context) (v string, err error) {
+func (m *AuditLogMutation) OldActorID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldOperation is only allowed on UpdateOne operations")
+		return v, errors.New("OldActorID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldOperation requires an ID field in the mutation")
+		return v, errors.New("OldActorID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldOperation: %w", err)
+		return v, fmt.Errorf("querying old value for OldActorID: %w", err)
 	}
-	return oldValue.Operation, nil
+	return oldValue.ActorID, nil
 }
 
-// ResetOperation resets all changes to the "operation" field.
-func (m *AuditLogMutation) ResetOperation() {
-	m.operation = nil
+// AddActorID adds i to the "actor_id" field.
+func (m *AuditLogMutation) AddActorID(i int) {
+	if m.addactor_id != nil {
+		*m.addactor_id += i
+	} else {
+		m.addactor_id = &i
+	}
+}
+
+// AddedActorID returns the value that was added to the "actor_id" field in this mutation.
+func (m *AuditLogMutation) AddedActorID() (r int, exists bool) {
+	v := m.addactor_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetActorID resets all changes to the "actor_id" field.
+func (m *AuditLogMutation) ResetActorID() {
+	m.actor_id = nil
+	m.addactor_id = nil
+}
+
+// SetActorUsername sets the "actor_username" field.
+func (m *AuditLogMutation) SetActorUsername(s string) {
+	m.actor_username = &s
+}
+
+// ActorUsername returns the value of the "actor_username" field in the mutation.
+func (m *AuditLogMutation) ActorUsername() (r string, exists bool) {
+	v := m.actor_username
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActorUsername returns the old "actor_username" field's value of the AuditLog entity.
+// If the AuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AuditLogMutation) OldActorUsername(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActorUsername is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActorUsername requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActorUsername: %w", err)
+	}
+	return oldValue.ActorUsername, nil
+}
+
+// ResetActorUsername resets all changes to the "actor_username" field.
+func (m *AuditLogMutation) ResetActorUsername() {
+	m.actor_username = nil
+}
+
+// SetAction sets the "action" field.
+func (m *AuditLogMutation) SetAction(s string) {
+	m.action = &s
+}
+
+// Action returns the value of the "action" field in the mutation.
+func (m *AuditLogMutation) Action() (r string, exists bool) {
+	v := m.action
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAction returns the old "action" field's value of the AuditLog entity.
+// If the AuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AuditLogMutation) OldAction(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAction is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAction requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAction: %w", err)
+	}
+	return oldValue.Action, nil
+}
+
+// ResetAction resets all changes to the "action" field.
+func (m *AuditLogMutation) ResetAction() {
+	m.action = nil
+}
+
+// SetResourceID sets the "resource_id" field.
+func (m *AuditLogMutation) SetResourceID(i int) {
+	m.resource_id = &i
+	m.addresource_id = nil
+}
+
+// ResourceID returns the value of the "resource_id" field in the mutation.
+func (m *AuditLogMutation) ResourceID() (r int, exists bool) {
+	v := m.resource_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceID returns the old "resource_id" field's value of the AuditLog entity.
+// If the AuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AuditLogMutation) OldResourceID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceID: %w", err)
+	}
+	return oldValue.ResourceID, nil
+}
+
+// AddResourceID adds i to the "resource_id" field.
+func (m *AuditLogMutation) AddResourceID(i int) {
+	if m.addresource_id != nil {
+		*m.addresource_id += i
+	} else {
+		m.addresource_id = &i
+	}
+}
+
+// AddedResourceID returns the value that was added to the "resource_id" field in this mutation.
+func (m *AuditLogMutation) AddedResourceID() (r int, exists bool) {
+	v := m.addresource_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearResourceID clears the value of the "resource_id" field.
+func (m *AuditLogMutation) ClearResourceID() {
+	m.resource_id = nil
+	m.addresource_id = nil
+	m.clearedFields[auditlog.FieldResourceID] = struct{}{}
+}
+
+// ResourceIDCleared returns if the "resource_id" field was cleared in this mutation.
+func (m *AuditLogMutation) ResourceIDCleared() bool {
+	_, ok := m.clearedFields[auditlog.FieldResourceID]
+	return ok
+}
+
+// ResetResourceID resets all changes to the "resource_id" field.
+func (m *AuditLogMutation) ResetResourceID() {
+	m.resource_id = nil
+	m.addresource_id = nil
+	delete(m.clearedFields, auditlog.FieldResourceID)
+}
+
+// SetResourceType sets the "resource_type" field.
+func (m *AuditLogMutation) SetResourceType(s string) {
+	m.resource_type = &s
+}
+
+// ResourceType returns the value of the "resource_type" field in the mutation.
+func (m *AuditLogMutation) ResourceType() (r string, exists bool) {
+	v := m.resource_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceType returns the old "resource_type" field's value of the AuditLog entity.
+// If the AuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AuditLogMutation) OldResourceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceType: %w", err)
+	}
+	return oldValue.ResourceType, nil
+}
+
+// ClearResourceType clears the value of the "resource_type" field.
+func (m *AuditLogMutation) ClearResourceType() {
+	m.resource_type = nil
+	m.clearedFields[auditlog.FieldResourceType] = struct{}{}
+}
+
+// ResourceTypeCleared returns if the "resource_type" field was cleared in this mutation.
+func (m *AuditLogMutation) ResourceTypeCleared() bool {
+	_, ok := m.clearedFields[auditlog.FieldResourceType]
+	return ok
+}
+
+// ResetResourceType resets all changes to the "resource_type" field.
+func (m *AuditLogMutation) ResetResourceType() {
+	m.resource_type = nil
+	delete(m.clearedFields, auditlog.FieldResourceType)
+}
+
+// SetDetails sets the "details" field.
+func (m *AuditLogMutation) SetDetails(value map[string]interface{}) {
+	m.details = &value
+}
+
+// Details returns the value of the "details" field in the mutation.
+func (m *AuditLogMutation) Details() (r map[string]interface{}, exists bool) {
+	v := m.details
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDetails returns the old "details" field's value of the AuditLog entity.
+// If the AuditLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AuditLogMutation) OldDetails(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDetails is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDetails requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDetails: %w", err)
+	}
+	return oldValue.Details, nil
+}
+
+// ClearDetails clears the value of the "details" field.
+func (m *AuditLogMutation) ClearDetails() {
+	m.details = nil
+	m.clearedFields[auditlog.FieldDetails] = struct{}{}
+}
+
+// DetailsCleared returns if the "details" field was cleared in this mutation.
+func (m *AuditLogMutation) DetailsCleared() bool {
+	_, ok := m.clearedFields[auditlog.FieldDetails]
+	return ok
+}
+
+// ResetDetails resets all changes to the "details" field.
+func (m *AuditLogMutation) ResetDetails() {
+	m.details = nil
+	delete(m.clearedFields, auditlog.FieldDetails)
 }
 
 // AddUserIDs adds the "user" edge to the User entity by ids.
@@ -2319,7 +2290,7 @@ func (m *AuditLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AuditLogMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 9)
 	if m.created_at != nil {
 		fields = append(fields, auditlog.FieldCreatedAt)
 	}
@@ -2329,8 +2300,23 @@ func (m *AuditLogMutation) Fields() []string {
 	if m.timestamp != nil {
 		fields = append(fields, auditlog.FieldTimestamp)
 	}
-	if m.operation != nil {
-		fields = append(fields, auditlog.FieldOperation)
+	if m.actor_id != nil {
+		fields = append(fields, auditlog.FieldActorID)
+	}
+	if m.actor_username != nil {
+		fields = append(fields, auditlog.FieldActorUsername)
+	}
+	if m.action != nil {
+		fields = append(fields, auditlog.FieldAction)
+	}
+	if m.resource_id != nil {
+		fields = append(fields, auditlog.FieldResourceID)
+	}
+	if m.resource_type != nil {
+		fields = append(fields, auditlog.FieldResourceType)
+	}
+	if m.details != nil {
+		fields = append(fields, auditlog.FieldDetails)
 	}
 	return fields
 }
@@ -2346,8 +2332,18 @@ func (m *AuditLogMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdatedAt()
 	case auditlog.FieldTimestamp:
 		return m.Timestamp()
-	case auditlog.FieldOperation:
-		return m.Operation()
+	case auditlog.FieldActorID:
+		return m.ActorID()
+	case auditlog.FieldActorUsername:
+		return m.ActorUsername()
+	case auditlog.FieldAction:
+		return m.Action()
+	case auditlog.FieldResourceID:
+		return m.ResourceID()
+	case auditlog.FieldResourceType:
+		return m.ResourceType()
+	case auditlog.FieldDetails:
+		return m.Details()
 	}
 	return nil, false
 }
@@ -2363,8 +2359,18 @@ func (m *AuditLogMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldUpdatedAt(ctx)
 	case auditlog.FieldTimestamp:
 		return m.OldTimestamp(ctx)
-	case auditlog.FieldOperation:
-		return m.OldOperation(ctx)
+	case auditlog.FieldActorID:
+		return m.OldActorID(ctx)
+	case auditlog.FieldActorUsername:
+		return m.OldActorUsername(ctx)
+	case auditlog.FieldAction:
+		return m.OldAction(ctx)
+	case auditlog.FieldResourceID:
+		return m.OldResourceID(ctx)
+	case auditlog.FieldResourceType:
+		return m.OldResourceType(ctx)
+	case auditlog.FieldDetails:
+		return m.OldDetails(ctx)
 	}
 	return nil, fmt.Errorf("unknown AuditLog field %s", name)
 }
@@ -2395,12 +2401,47 @@ func (m *AuditLogMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetTimestamp(v)
 		return nil
-	case auditlog.FieldOperation:
+	case auditlog.FieldActorID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActorID(v)
+		return nil
+	case auditlog.FieldActorUsername:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetOperation(v)
+		m.SetActorUsername(v)
+		return nil
+	case auditlog.FieldAction:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAction(v)
+		return nil
+	case auditlog.FieldResourceID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceID(v)
+		return nil
+	case auditlog.FieldResourceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceType(v)
+		return nil
+	case auditlog.FieldDetails:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDetails(v)
 		return nil
 	}
 	return fmt.Errorf("unknown AuditLog field %s", name)
@@ -2409,13 +2450,26 @@ func (m *AuditLogMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *AuditLogMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addactor_id != nil {
+		fields = append(fields, auditlog.FieldActorID)
+	}
+	if m.addresource_id != nil {
+		fields = append(fields, auditlog.FieldResourceID)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *AuditLogMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case auditlog.FieldActorID:
+		return m.AddedActorID()
+	case auditlog.FieldResourceID:
+		return m.AddedResourceID()
+	}
 	return nil, false
 }
 
@@ -2424,6 +2478,20 @@ func (m *AuditLogMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *AuditLogMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case auditlog.FieldActorID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddActorID(v)
+		return nil
+	case auditlog.FieldResourceID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResourceID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown AuditLog numeric field %s", name)
 }
@@ -2431,7 +2499,17 @@ func (m *AuditLogMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *AuditLogMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(auditlog.FieldResourceID) {
+		fields = append(fields, auditlog.FieldResourceID)
+	}
+	if m.FieldCleared(auditlog.FieldResourceType) {
+		fields = append(fields, auditlog.FieldResourceType)
+	}
+	if m.FieldCleared(auditlog.FieldDetails) {
+		fields = append(fields, auditlog.FieldDetails)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -2444,6 +2522,17 @@ func (m *AuditLogMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *AuditLogMutation) ClearField(name string) error {
+	switch name {
+	case auditlog.FieldResourceID:
+		m.ClearResourceID()
+		return nil
+	case auditlog.FieldResourceType:
+		m.ClearResourceType()
+		return nil
+	case auditlog.FieldDetails:
+		m.ClearDetails()
+		return nil
+	}
 	return fmt.Errorf("unknown AuditLog nullable field %s", name)
 }
 
@@ -2460,8 +2549,23 @@ func (m *AuditLogMutation) ResetField(name string) error {
 	case auditlog.FieldTimestamp:
 		m.ResetTimestamp()
 		return nil
-	case auditlog.FieldOperation:
-		m.ResetOperation()
+	case auditlog.FieldActorID:
+		m.ResetActorID()
+		return nil
+	case auditlog.FieldActorUsername:
+		m.ResetActorUsername()
+		return nil
+	case auditlog.FieldAction:
+		m.ResetAction()
+		return nil
+	case auditlog.FieldResourceID:
+		m.ResetResourceID()
+		return nil
+	case auditlog.FieldResourceType:
+		m.ResetResourceType()
+		return nil
+	case auditlog.FieldDetails:
+		m.ResetDetails()
 		return nil
 	}
 	return fmt.Errorf("unknown AuditLog field %s", name)
@@ -2554,26 +2658,26 @@ func (m *AuditLogMutation) ResetEdge(name string) error {
 // PermissionMutation represents an operation that mutates the Permission nodes in the graph.
 type PermissionMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *uuid.UUID
-	created_at             *time.Time
-	updated_at             *time.Time
-	name                   *string
-	actions                *[]string
-	appendactions          []string
-	resource_type          *string
-	description            *string
-	is_disabled            *bool
-	clearedFields          map[string]struct{}
-	account                *uuid.UUID
-	clearedaccount         bool
-	access_policies        map[uuid.UUID]struct{}
-	removedaccess_policies map[uuid.UUID]struct{}
-	clearedaccess_policies bool
-	done                   bool
-	oldValue               func(context.Context) (*Permission, error)
-	predicates             []predicate.Permission
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	name          *string
+	actions       *[]string
+	appendactions []string
+	resource_type *string
+	description   *string
+	is_disabled   *bool
+	clearedFields map[string]struct{}
+	tenant        *uuid.UUID
+	clearedtenant bool
+	roles         map[uuid.UUID]struct{}
+	removedroles  map[uuid.UUID]struct{}
+	clearedroles  bool
+	done          bool
+	oldValue      func(context.Context) (*Permission, error)
+	predicates    []predicate.Permission
 }
 
 var _ ent.Mutation = (*PermissionMutation)(nil)
@@ -2960,97 +3064,97 @@ func (m *PermissionMutation) ResetIsDisabled() {
 	m.is_disabled = nil
 }
 
-// SetAccountID sets the "account" edge to the Account entity by id.
-func (m *PermissionMutation) SetAccountID(id uuid.UUID) {
-	m.account = &id
+// SetTenantID sets the "tenant" edge to the Tenant entity by id.
+func (m *PermissionMutation) SetTenantID(id uuid.UUID) {
+	m.tenant = &id
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (m *PermissionMutation) ClearAccount() {
-	m.clearedaccount = true
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (m *PermissionMutation) ClearTenant() {
+	m.clearedtenant = true
 }
 
-// AccountCleared reports if the "account" edge to the Account entity was cleared.
-func (m *PermissionMutation) AccountCleared() bool {
-	return m.clearedaccount
+// TenantCleared reports if the "tenant" edge to the Tenant entity was cleared.
+func (m *PermissionMutation) TenantCleared() bool {
+	return m.clearedtenant
 }
 
-// AccountID returns the "account" edge ID in the mutation.
-func (m *PermissionMutation) AccountID() (id uuid.UUID, exists bool) {
-	if m.account != nil {
-		return *m.account, true
+// TenantID returns the "tenant" edge ID in the mutation.
+func (m *PermissionMutation) TenantID() (id uuid.UUID, exists bool) {
+	if m.tenant != nil {
+		return *m.tenant, true
 	}
 	return
 }
 
-// AccountIDs returns the "account" edge IDs in the mutation.
+// TenantIDs returns the "tenant" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// AccountID instead. It exists only for internal usage by the builders.
-func (m *PermissionMutation) AccountIDs() (ids []uuid.UUID) {
-	if id := m.account; id != nil {
+// TenantID instead. It exists only for internal usage by the builders.
+func (m *PermissionMutation) TenantIDs() (ids []uuid.UUID) {
+	if id := m.tenant; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetAccount resets all changes to the "account" edge.
-func (m *PermissionMutation) ResetAccount() {
-	m.account = nil
-	m.clearedaccount = false
+// ResetTenant resets all changes to the "tenant" edge.
+func (m *PermissionMutation) ResetTenant() {
+	m.tenant = nil
+	m.clearedtenant = false
 }
 
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
-func (m *PermissionMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.access_policies == nil {
-		m.access_policies = make(map[uuid.UUID]struct{})
+// AddRoleIDs adds the "roles" edge to the Role entity by ids.
+func (m *PermissionMutation) AddRoleIDs(ids ...uuid.UUID) {
+	if m.roles == nil {
+		m.roles = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		m.access_policies[ids[i]] = struct{}{}
+		m.roles[ids[i]] = struct{}{}
 	}
 }
 
-// ClearAccessPolicies clears the "access_policies" edge to the AccessPolicy entity.
-func (m *PermissionMutation) ClearAccessPolicies() {
-	m.clearedaccess_policies = true
+// ClearRoles clears the "roles" edge to the Role entity.
+func (m *PermissionMutation) ClearRoles() {
+	m.clearedroles = true
 }
 
-// AccessPoliciesCleared reports if the "access_policies" edge to the AccessPolicy entity was cleared.
-func (m *PermissionMutation) AccessPoliciesCleared() bool {
-	return m.clearedaccess_policies
+// RolesCleared reports if the "roles" edge to the Role entity was cleared.
+func (m *PermissionMutation) RolesCleared() bool {
+	return m.clearedroles
 }
 
-// RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
-func (m *PermissionMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.removedaccess_policies == nil {
-		m.removedaccess_policies = make(map[uuid.UUID]struct{})
+// RemoveRoleIDs removes the "roles" edge to the Role entity by IDs.
+func (m *PermissionMutation) RemoveRoleIDs(ids ...uuid.UUID) {
+	if m.removedroles == nil {
+		m.removedroles = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		delete(m.access_policies, ids[i])
-		m.removedaccess_policies[ids[i]] = struct{}{}
+		delete(m.roles, ids[i])
+		m.removedroles[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
-func (m *PermissionMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.removedaccess_policies {
+// RemovedRoles returns the removed IDs of the "roles" edge to the Role entity.
+func (m *PermissionMutation) RemovedRolesIDs() (ids []uuid.UUID) {
+	for id := range m.removedroles {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
-func (m *PermissionMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.access_policies {
+// RolesIDs returns the "roles" edge IDs in the mutation.
+func (m *PermissionMutation) RolesIDs() (ids []uuid.UUID) {
+	for id := range m.roles {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetAccessPolicies resets all changes to the "access_policies" edge.
-func (m *PermissionMutation) ResetAccessPolicies() {
-	m.access_policies = nil
-	m.clearedaccess_policies = false
-	m.removedaccess_policies = nil
+// ResetRoles resets all changes to the "roles" edge.
+func (m *PermissionMutation) ResetRoles() {
+	m.roles = nil
+	m.clearedroles = false
+	m.removedroles = nil
 }
 
 // Where appends a list predicates to the PermissionMutation builder.
@@ -3298,11 +3402,11 @@ func (m *PermissionMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *PermissionMutation) AddedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.account != nil {
-		edges = append(edges, permission.EdgeAccount)
+	if m.tenant != nil {
+		edges = append(edges, permission.EdgeTenant)
 	}
-	if m.access_policies != nil {
-		edges = append(edges, permission.EdgeAccessPolicies)
+	if m.roles != nil {
+		edges = append(edges, permission.EdgeRoles)
 	}
 	return edges
 }
@@ -3311,13 +3415,13 @@ func (m *PermissionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *PermissionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case permission.EdgeAccount:
-		if id := m.account; id != nil {
+	case permission.EdgeTenant:
+		if id := m.tenant; id != nil {
 			return []ent.Value{*id}
 		}
-	case permission.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.access_policies))
-		for id := range m.access_policies {
+	case permission.EdgeRoles:
+		ids := make([]ent.Value, 0, len(m.roles))
+		for id := range m.roles {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3328,8 +3432,8 @@ func (m *PermissionMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PermissionMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedaccess_policies != nil {
-		edges = append(edges, permission.EdgeAccessPolicies)
+	if m.removedroles != nil {
+		edges = append(edges, permission.EdgeRoles)
 	}
 	return edges
 }
@@ -3338,9 +3442,9 @@ func (m *PermissionMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *PermissionMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case permission.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.removedaccess_policies))
-		for id := range m.removedaccess_policies {
+	case permission.EdgeRoles:
+		ids := make([]ent.Value, 0, len(m.removedroles))
+		for id := range m.removedroles {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3351,11 +3455,11 @@ func (m *PermissionMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *PermissionMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.clearedaccount {
-		edges = append(edges, permission.EdgeAccount)
+	if m.clearedtenant {
+		edges = append(edges, permission.EdgeTenant)
 	}
-	if m.clearedaccess_policies {
-		edges = append(edges, permission.EdgeAccessPolicies)
+	if m.clearedroles {
+		edges = append(edges, permission.EdgeRoles)
 	}
 	return edges
 }
@@ -3364,10 +3468,10 @@ func (m *PermissionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *PermissionMutation) EdgeCleared(name string) bool {
 	switch name {
-	case permission.EdgeAccount:
-		return m.clearedaccount
-	case permission.EdgeAccessPolicies:
-		return m.clearedaccess_policies
+	case permission.EdgeTenant:
+		return m.clearedtenant
+	case permission.EdgeRoles:
+		return m.clearedroles
 	}
 	return false
 }
@@ -3376,8 +3480,8 @@ func (m *PermissionMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *PermissionMutation) ClearEdge(name string) error {
 	switch name {
-	case permission.EdgeAccount:
-		m.ClearAccount()
+	case permission.EdgeTenant:
+		m.ClearTenant()
 		return nil
 	}
 	return fmt.Errorf("unknown Permission unique edge %s", name)
@@ -3387,11 +3491,11 @@ func (m *PermissionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *PermissionMutation) ResetEdge(name string) error {
 	switch name {
-	case permission.EdgeAccount:
-		m.ResetAccount()
+	case permission.EdgeTenant:
+		m.ResetTenant()
 		return nil
-	case permission.EdgeAccessPolicies:
-		m.ResetAccessPolicies()
+	case permission.EdgeRoles:
+		m.ResetRoles()
 		return nil
 	}
 	return fmt.Errorf("unknown Permission edge %s", name)
@@ -3407,8 +3511,8 @@ type PlatformMutation struct {
 	updated_at     *time.Time
 	name           *string
 	description    *string
-	contact_email  *string
-	contact_phone  *string
+	region         *string
+	version        *string
 	clearedFields  map[string]struct{}
 	tenants        map[uuid.UUID]struct{}
 	removedtenants map[uuid.UUID]struct{}
@@ -3679,102 +3783,102 @@ func (m *PlatformMutation) ResetDescription() {
 	delete(m.clearedFields, platform.FieldDescription)
 }
 
-// SetContactEmail sets the "contact_email" field.
-func (m *PlatformMutation) SetContactEmail(s string) {
-	m.contact_email = &s
+// SetRegion sets the "region" field.
+func (m *PlatformMutation) SetRegion(s string) {
+	m.region = &s
 }
 
-// ContactEmail returns the value of the "contact_email" field in the mutation.
-func (m *PlatformMutation) ContactEmail() (r string, exists bool) {
-	v := m.contact_email
+// Region returns the value of the "region" field in the mutation.
+func (m *PlatformMutation) Region() (r string, exists bool) {
+	v := m.region
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldContactEmail returns the old "contact_email" field's value of the Platform entity.
+// OldRegion returns the old "region" field's value of the Platform entity.
 // If the Platform object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlatformMutation) OldContactEmail(ctx context.Context) (v string, err error) {
+func (m *PlatformMutation) OldRegion(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldContactEmail is only allowed on UpdateOne operations")
+		return v, errors.New("OldRegion is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldContactEmail requires an ID field in the mutation")
+		return v, errors.New("OldRegion requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldContactEmail: %w", err)
+		return v, fmt.Errorf("querying old value for OldRegion: %w", err)
 	}
-	return oldValue.ContactEmail, nil
+	return oldValue.Region, nil
 }
 
-// ClearContactEmail clears the value of the "contact_email" field.
-func (m *PlatformMutation) ClearContactEmail() {
-	m.contact_email = nil
-	m.clearedFields[platform.FieldContactEmail] = struct{}{}
+// ClearRegion clears the value of the "region" field.
+func (m *PlatformMutation) ClearRegion() {
+	m.region = nil
+	m.clearedFields[platform.FieldRegion] = struct{}{}
 }
 
-// ContactEmailCleared returns if the "contact_email" field was cleared in this mutation.
-func (m *PlatformMutation) ContactEmailCleared() bool {
-	_, ok := m.clearedFields[platform.FieldContactEmail]
+// RegionCleared returns if the "region" field was cleared in this mutation.
+func (m *PlatformMutation) RegionCleared() bool {
+	_, ok := m.clearedFields[platform.FieldRegion]
 	return ok
 }
 
-// ResetContactEmail resets all changes to the "contact_email" field.
-func (m *PlatformMutation) ResetContactEmail() {
-	m.contact_email = nil
-	delete(m.clearedFields, platform.FieldContactEmail)
+// ResetRegion resets all changes to the "region" field.
+func (m *PlatformMutation) ResetRegion() {
+	m.region = nil
+	delete(m.clearedFields, platform.FieldRegion)
 }
 
-// SetContactPhone sets the "contact_phone" field.
-func (m *PlatformMutation) SetContactPhone(s string) {
-	m.contact_phone = &s
+// SetVersion sets the "version" field.
+func (m *PlatformMutation) SetVersion(s string) {
+	m.version = &s
 }
 
-// ContactPhone returns the value of the "contact_phone" field in the mutation.
-func (m *PlatformMutation) ContactPhone() (r string, exists bool) {
-	v := m.contact_phone
+// Version returns the value of the "version" field in the mutation.
+func (m *PlatformMutation) Version() (r string, exists bool) {
+	v := m.version
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldContactPhone returns the old "contact_phone" field's value of the Platform entity.
+// OldVersion returns the old "version" field's value of the Platform entity.
 // If the Platform object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlatformMutation) OldContactPhone(ctx context.Context) (v string, err error) {
+func (m *PlatformMutation) OldVersion(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldContactPhone is only allowed on UpdateOne operations")
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldContactPhone requires an ID field in the mutation")
+		return v, errors.New("OldVersion requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldContactPhone: %w", err)
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
 	}
-	return oldValue.ContactPhone, nil
+	return oldValue.Version, nil
 }
 
-// ClearContactPhone clears the value of the "contact_phone" field.
-func (m *PlatformMutation) ClearContactPhone() {
-	m.contact_phone = nil
-	m.clearedFields[platform.FieldContactPhone] = struct{}{}
+// ClearVersion clears the value of the "version" field.
+func (m *PlatformMutation) ClearVersion() {
+	m.version = nil
+	m.clearedFields[platform.FieldVersion] = struct{}{}
 }
 
-// ContactPhoneCleared returns if the "contact_phone" field was cleared in this mutation.
-func (m *PlatformMutation) ContactPhoneCleared() bool {
-	_, ok := m.clearedFields[platform.FieldContactPhone]
+// VersionCleared returns if the "version" field was cleared in this mutation.
+func (m *PlatformMutation) VersionCleared() bool {
+	_, ok := m.clearedFields[platform.FieldVersion]
 	return ok
 }
 
-// ResetContactPhone resets all changes to the "contact_phone" field.
-func (m *PlatformMutation) ResetContactPhone() {
-	m.contact_phone = nil
-	delete(m.clearedFields, platform.FieldContactPhone)
+// ResetVersion resets all changes to the "version" field.
+func (m *PlatformMutation) ResetVersion() {
+	m.version = nil
+	delete(m.clearedFields, platform.FieldVersion)
 }
 
 // AddTenantIDs adds the "tenants" edge to the Tenant entity by ids.
@@ -3878,11 +3982,11 @@ func (m *PlatformMutation) Fields() []string {
 	if m.description != nil {
 		fields = append(fields, platform.FieldDescription)
 	}
-	if m.contact_email != nil {
-		fields = append(fields, platform.FieldContactEmail)
+	if m.region != nil {
+		fields = append(fields, platform.FieldRegion)
 	}
-	if m.contact_phone != nil {
-		fields = append(fields, platform.FieldContactPhone)
+	if m.version != nil {
+		fields = append(fields, platform.FieldVersion)
 	}
 	return fields
 }
@@ -3900,10 +4004,10 @@ func (m *PlatformMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case platform.FieldDescription:
 		return m.Description()
-	case platform.FieldContactEmail:
-		return m.ContactEmail()
-	case platform.FieldContactPhone:
-		return m.ContactPhone()
+	case platform.FieldRegion:
+		return m.Region()
+	case platform.FieldVersion:
+		return m.Version()
 	}
 	return nil, false
 }
@@ -3921,10 +4025,10 @@ func (m *PlatformMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldName(ctx)
 	case platform.FieldDescription:
 		return m.OldDescription(ctx)
-	case platform.FieldContactEmail:
-		return m.OldContactEmail(ctx)
-	case platform.FieldContactPhone:
-		return m.OldContactPhone(ctx)
+	case platform.FieldRegion:
+		return m.OldRegion(ctx)
+	case platform.FieldVersion:
+		return m.OldVersion(ctx)
 	}
 	return nil, fmt.Errorf("unknown Platform field %s", name)
 }
@@ -3962,19 +4066,19 @@ func (m *PlatformMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDescription(v)
 		return nil
-	case platform.FieldContactEmail:
+	case platform.FieldRegion:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetContactEmail(v)
+		m.SetRegion(v)
 		return nil
-	case platform.FieldContactPhone:
+	case platform.FieldVersion:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetContactPhone(v)
+		m.SetVersion(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Platform field %s", name)
@@ -4009,11 +4113,11 @@ func (m *PlatformMutation) ClearedFields() []string {
 	if m.FieldCleared(platform.FieldDescription) {
 		fields = append(fields, platform.FieldDescription)
 	}
-	if m.FieldCleared(platform.FieldContactEmail) {
-		fields = append(fields, platform.FieldContactEmail)
+	if m.FieldCleared(platform.FieldRegion) {
+		fields = append(fields, platform.FieldRegion)
 	}
-	if m.FieldCleared(platform.FieldContactPhone) {
-		fields = append(fields, platform.FieldContactPhone)
+	if m.FieldCleared(platform.FieldVersion) {
+		fields = append(fields, platform.FieldVersion)
 	}
 	return fields
 }
@@ -4032,11 +4136,11 @@ func (m *PlatformMutation) ClearField(name string) error {
 	case platform.FieldDescription:
 		m.ClearDescription()
 		return nil
-	case platform.FieldContactEmail:
-		m.ClearContactEmail()
+	case platform.FieldRegion:
+		m.ClearRegion()
 		return nil
-	case platform.FieldContactPhone:
-		m.ClearContactPhone()
+	case platform.FieldVersion:
+		m.ClearVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown Platform nullable field %s", name)
@@ -4058,11 +4162,11 @@ func (m *PlatformMutation) ResetField(name string) error {
 	case platform.FieldDescription:
 		m.ResetDescription()
 		return nil
-	case platform.FieldContactEmail:
-		m.ResetContactEmail()
+	case platform.FieldRegion:
+		m.ResetRegion()
 		return nil
-	case platform.FieldContactPhone:
-		m.ResetContactPhone()
+	case platform.FieldVersion:
+		m.ResetVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown Platform field %s", name)
@@ -4155,23 +4259,23 @@ func (m *PlatformMutation) ResetEdge(name string) error {
 // ResourceMutation represents an operation that mutates the Resource nodes in the graph.
 type ResourceMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *uuid.UUID
-	created_at             *time.Time
-	updated_at             *time.Time
-	name                   *string
-	_type                  *string
-	value                  *string
-	description            *string
-	is_disabled            *bool
-	clearedFields          map[string]struct{}
-	access_policies        map[uuid.UUID]struct{}
-	removedaccess_policies map[uuid.UUID]struct{}
-	clearedaccess_policies bool
-	done                   bool
-	oldValue               func(context.Context) (*Resource, error)
-	predicates             []predicate.Resource
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	created_at     *time.Time
+	updated_at     *time.Time
+	name           *string
+	_type          *string
+	properties     *map[string]interface{}
+	value          *string
+	description    *string
+	clearedFields  map[string]struct{}
+	account        map[uuid.UUID]struct{}
+	removedaccount map[uuid.UUID]struct{}
+	clearedaccount bool
+	done           bool
+	oldValue       func(context.Context) (*Resource, error)
+	predicates     []predicate.Resource
 }
 
 var _ ent.Mutation = (*ResourceMutation)(nil)
@@ -4422,6 +4526,55 @@ func (m *ResourceMutation) ResetType() {
 	m._type = nil
 }
 
+// SetProperties sets the "properties" field.
+func (m *ResourceMutation) SetProperties(value map[string]interface{}) {
+	m.properties = &value
+}
+
+// Properties returns the value of the "properties" field in the mutation.
+func (m *ResourceMutation) Properties() (r map[string]interface{}, exists bool) {
+	v := m.properties
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProperties returns the old "properties" field's value of the Resource entity.
+// If the Resource object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResourceMutation) OldProperties(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProperties is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProperties requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProperties: %w", err)
+	}
+	return oldValue.Properties, nil
+}
+
+// ClearProperties clears the value of the "properties" field.
+func (m *ResourceMutation) ClearProperties() {
+	m.properties = nil
+	m.clearedFields[resource.FieldProperties] = struct{}{}
+}
+
+// PropertiesCleared returns if the "properties" field was cleared in this mutation.
+func (m *ResourceMutation) PropertiesCleared() bool {
+	_, ok := m.clearedFields[resource.FieldProperties]
+	return ok
+}
+
+// ResetProperties resets all changes to the "properties" field.
+func (m *ResourceMutation) ResetProperties() {
+	m.properties = nil
+	delete(m.clearedFields, resource.FieldProperties)
+}
+
 // SetValue sets the "value" field.
 func (m *ResourceMutation) SetValue(s string) {
 	m.value = &s
@@ -4507,94 +4660,58 @@ func (m *ResourceMutation) ResetDescription() {
 	delete(m.clearedFields, resource.FieldDescription)
 }
 
-// SetIsDisabled sets the "is_disabled" field.
-func (m *ResourceMutation) SetIsDisabled(b bool) {
-	m.is_disabled = &b
-}
-
-// IsDisabled returns the value of the "is_disabled" field in the mutation.
-func (m *ResourceMutation) IsDisabled() (r bool, exists bool) {
-	v := m.is_disabled
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldIsDisabled returns the old "is_disabled" field's value of the Resource entity.
-// If the Resource object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResourceMutation) OldIsDisabled(ctx context.Context) (v bool, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIsDisabled is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIsDisabled requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIsDisabled: %w", err)
-	}
-	return oldValue.IsDisabled, nil
-}
-
-// ResetIsDisabled resets all changes to the "is_disabled" field.
-func (m *ResourceMutation) ResetIsDisabled() {
-	m.is_disabled = nil
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
-func (m *ResourceMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.access_policies == nil {
-		m.access_policies = make(map[uuid.UUID]struct{})
+// AddAccountIDs adds the "account" edge to the Account entity by ids.
+func (m *ResourceMutation) AddAccountIDs(ids ...uuid.UUID) {
+	if m.account == nil {
+		m.account = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		m.access_policies[ids[i]] = struct{}{}
+		m.account[ids[i]] = struct{}{}
 	}
 }
 
-// ClearAccessPolicies clears the "access_policies" edge to the AccessPolicy entity.
-func (m *ResourceMutation) ClearAccessPolicies() {
-	m.clearedaccess_policies = true
+// ClearAccount clears the "account" edge to the Account entity.
+func (m *ResourceMutation) ClearAccount() {
+	m.clearedaccount = true
 }
 
-// AccessPoliciesCleared reports if the "access_policies" edge to the AccessPolicy entity was cleared.
-func (m *ResourceMutation) AccessPoliciesCleared() bool {
-	return m.clearedaccess_policies
+// AccountCleared reports if the "account" edge to the Account entity was cleared.
+func (m *ResourceMutation) AccountCleared() bool {
+	return m.clearedaccount
 }
 
-// RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
-func (m *ResourceMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.removedaccess_policies == nil {
-		m.removedaccess_policies = make(map[uuid.UUID]struct{})
+// RemoveAccountIDs removes the "account" edge to the Account entity by IDs.
+func (m *ResourceMutation) RemoveAccountIDs(ids ...uuid.UUID) {
+	if m.removedaccount == nil {
+		m.removedaccount = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		delete(m.access_policies, ids[i])
-		m.removedaccess_policies[ids[i]] = struct{}{}
+		delete(m.account, ids[i])
+		m.removedaccount[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
-func (m *ResourceMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.removedaccess_policies {
+// RemovedAccount returns the removed IDs of the "account" edge to the Account entity.
+func (m *ResourceMutation) RemovedAccountIDs() (ids []uuid.UUID) {
+	for id := range m.removedaccount {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
-func (m *ResourceMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.access_policies {
+// AccountIDs returns the "account" edge IDs in the mutation.
+func (m *ResourceMutation) AccountIDs() (ids []uuid.UUID) {
+	for id := range m.account {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetAccessPolicies resets all changes to the "access_policies" edge.
-func (m *ResourceMutation) ResetAccessPolicies() {
-	m.access_policies = nil
-	m.clearedaccess_policies = false
-	m.removedaccess_policies = nil
+// ResetAccount resets all changes to the "account" edge.
+func (m *ResourceMutation) ResetAccount() {
+	m.account = nil
+	m.clearedaccount = false
+	m.removedaccount = nil
 }
 
 // Where appends a list predicates to the ResourceMutation builder.
@@ -4644,14 +4761,14 @@ func (m *ResourceMutation) Fields() []string {
 	if m._type != nil {
 		fields = append(fields, resource.FieldType)
 	}
+	if m.properties != nil {
+		fields = append(fields, resource.FieldProperties)
+	}
 	if m.value != nil {
 		fields = append(fields, resource.FieldValue)
 	}
 	if m.description != nil {
 		fields = append(fields, resource.FieldDescription)
-	}
-	if m.is_disabled != nil {
-		fields = append(fields, resource.FieldIsDisabled)
 	}
 	return fields
 }
@@ -4669,12 +4786,12 @@ func (m *ResourceMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case resource.FieldType:
 		return m.GetType()
+	case resource.FieldProperties:
+		return m.Properties()
 	case resource.FieldValue:
 		return m.Value()
 	case resource.FieldDescription:
 		return m.Description()
-	case resource.FieldIsDisabled:
-		return m.IsDisabled()
 	}
 	return nil, false
 }
@@ -4692,12 +4809,12 @@ func (m *ResourceMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldName(ctx)
 	case resource.FieldType:
 		return m.OldType(ctx)
+	case resource.FieldProperties:
+		return m.OldProperties(ctx)
 	case resource.FieldValue:
 		return m.OldValue(ctx)
 	case resource.FieldDescription:
 		return m.OldDescription(ctx)
-	case resource.FieldIsDisabled:
-		return m.OldIsDisabled(ctx)
 	}
 	return nil, fmt.Errorf("unknown Resource field %s", name)
 }
@@ -4735,6 +4852,13 @@ func (m *ResourceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetType(v)
 		return nil
+	case resource.FieldProperties:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProperties(v)
+		return nil
 	case resource.FieldValue:
 		v, ok := value.(string)
 		if !ok {
@@ -4748,13 +4872,6 @@ func (m *ResourceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
-		return nil
-	case resource.FieldIsDisabled:
-		v, ok := value.(bool)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetIsDisabled(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Resource field %s", name)
@@ -4786,6 +4903,9 @@ func (m *ResourceMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *ResourceMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(resource.FieldProperties) {
+		fields = append(fields, resource.FieldProperties)
+	}
 	if m.FieldCleared(resource.FieldDescription) {
 		fields = append(fields, resource.FieldDescription)
 	}
@@ -4803,6 +4923,9 @@ func (m *ResourceMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *ResourceMutation) ClearField(name string) error {
 	switch name {
+	case resource.FieldProperties:
+		m.ClearProperties()
+		return nil
 	case resource.FieldDescription:
 		m.ClearDescription()
 		return nil
@@ -4826,14 +4949,14 @@ func (m *ResourceMutation) ResetField(name string) error {
 	case resource.FieldType:
 		m.ResetType()
 		return nil
+	case resource.FieldProperties:
+		m.ResetProperties()
+		return nil
 	case resource.FieldValue:
 		m.ResetValue()
 		return nil
 	case resource.FieldDescription:
 		m.ResetDescription()
-		return nil
-	case resource.FieldIsDisabled:
-		m.ResetIsDisabled()
 		return nil
 	}
 	return fmt.Errorf("unknown Resource field %s", name)
@@ -4842,8 +4965,8 @@ func (m *ResourceMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ResourceMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.access_policies != nil {
-		edges = append(edges, resource.EdgeAccessPolicies)
+	if m.account != nil {
+		edges = append(edges, resource.EdgeAccount)
 	}
 	return edges
 }
@@ -4852,9 +4975,9 @@ func (m *ResourceMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *ResourceMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case resource.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.access_policies))
-		for id := range m.access_policies {
+	case resource.EdgeAccount:
+		ids := make([]ent.Value, 0, len(m.account))
+		for id := range m.account {
 			ids = append(ids, id)
 		}
 		return ids
@@ -4865,8 +4988,8 @@ func (m *ResourceMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ResourceMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedaccess_policies != nil {
-		edges = append(edges, resource.EdgeAccessPolicies)
+	if m.removedaccount != nil {
+		edges = append(edges, resource.EdgeAccount)
 	}
 	return edges
 }
@@ -4875,9 +4998,9 @@ func (m *ResourceMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *ResourceMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case resource.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.removedaccess_policies))
-		for id := range m.removedaccess_policies {
+	case resource.EdgeAccount:
+		ids := make([]ent.Value, 0, len(m.removedaccount))
+		for id := range m.removedaccount {
 			ids = append(ids, id)
 		}
 		return ids
@@ -4888,8 +5011,8 @@ func (m *ResourceMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ResourceMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedaccess_policies {
-		edges = append(edges, resource.EdgeAccessPolicies)
+	if m.clearedaccount {
+		edges = append(edges, resource.EdgeAccount)
 	}
 	return edges
 }
@@ -4898,8 +5021,8 @@ func (m *ResourceMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *ResourceMutation) EdgeCleared(name string) bool {
 	switch name {
-	case resource.EdgeAccessPolicies:
-		return m.clearedaccess_policies
+	case resource.EdgeAccount:
+		return m.clearedaccount
 	}
 	return false
 }
@@ -4916,8 +5039,8 @@ func (m *ResourceMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ResourceMutation) ResetEdge(name string) error {
 	switch name {
-	case resource.EdgeAccessPolicies:
-		m.ResetAccessPolicies()
+	case resource.EdgeAccount:
+		m.ResetAccount()
 		return nil
 	}
 	return fmt.Errorf("unknown Resource edge %s", name)
@@ -4926,33 +5049,34 @@ func (m *ResourceMutation) ResetEdge(name string) error {
 // RoleMutation represents an operation that mutates the Role nodes in the graph.
 type RoleMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *uuid.UUID
-	created_at             *time.Time
-	updated_at             *time.Time
-	name                   *string
-	description            *string
-	is_disabled            *bool
-	is_default             *bool
-	clearedFields          map[string]struct{}
-	account                *uuid.UUID
-	clearedaccount         bool
-	users                  map[uuid.UUID]struct{}
-	removedusers           map[uuid.UUID]struct{}
-	clearedusers           bool
-	access_policies        map[uuid.UUID]struct{}
-	removedaccess_policies map[uuid.UUID]struct{}
-	clearedaccess_policies bool
-	parent_role            map[uuid.UUID]struct{}
-	removedparent_role     map[uuid.UUID]struct{}
-	clearedparent_role     bool
-	child_roles            map[uuid.UUID]struct{}
-	removedchild_roles     map[uuid.UUID]struct{}
-	clearedchild_roles     bool
-	done                   bool
-	oldValue               func(context.Context) (*Role, error)
-	predicates             []predicate.Role
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	created_at         *time.Time
+	updated_at         *time.Time
+	name               *string
+	description        *string
+	is_disabled        *bool
+	is_default         *bool
+	clearedFields      map[string]struct{}
+	tenant             map[uuid.UUID]struct{}
+	removedtenant      map[uuid.UUID]struct{}
+	clearedtenant      bool
+	permissions        map[uuid.UUID]struct{}
+	removedpermissions map[uuid.UUID]struct{}
+	clearedpermissions bool
+	users              map[uuid.UUID]struct{}
+	removedusers       map[uuid.UUID]struct{}
+	clearedusers       bool
+	parent_role        map[uuid.UUID]struct{}
+	removedparent_role map[uuid.UUID]struct{}
+	clearedparent_role bool
+	child_roles        map[uuid.UUID]struct{}
+	removedchild_roles map[uuid.UUID]struct{}
+	clearedchild_roles bool
+	done               bool
+	oldValue           func(context.Context) (*Role, error)
+	predicates         []predicate.Role
 }
 
 var _ ent.Mutation = (*RoleMutation)(nil)
@@ -5288,43 +5412,112 @@ func (m *RoleMutation) ResetIsDefault() {
 	m.is_default = nil
 }
 
-// SetAccountID sets the "account" edge to the Account entity by id.
-func (m *RoleMutation) SetAccountID(id uuid.UUID) {
-	m.account = &id
+// AddTenantIDs adds the "tenant" edge to the Tenant entity by ids.
+func (m *RoleMutation) AddTenantIDs(ids ...uuid.UUID) {
+	if m.tenant == nil {
+		m.tenant = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.tenant[ids[i]] = struct{}{}
+	}
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
-func (m *RoleMutation) ClearAccount() {
-	m.clearedaccount = true
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (m *RoleMutation) ClearTenant() {
+	m.clearedtenant = true
 }
 
-// AccountCleared reports if the "account" edge to the Account entity was cleared.
-func (m *RoleMutation) AccountCleared() bool {
-	return m.clearedaccount
+// TenantCleared reports if the "tenant" edge to the Tenant entity was cleared.
+func (m *RoleMutation) TenantCleared() bool {
+	return m.clearedtenant
 }
 
-// AccountID returns the "account" edge ID in the mutation.
-func (m *RoleMutation) AccountID() (id uuid.UUID, exists bool) {
-	if m.account != nil {
-		return *m.account, true
+// RemoveTenantIDs removes the "tenant" edge to the Tenant entity by IDs.
+func (m *RoleMutation) RemoveTenantIDs(ids ...uuid.UUID) {
+	if m.removedtenant == nil {
+		m.removedtenant = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.tenant, ids[i])
+		m.removedtenant[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTenant returns the removed IDs of the "tenant" edge to the Tenant entity.
+func (m *RoleMutation) RemovedTenantIDs() (ids []uuid.UUID) {
+	for id := range m.removedtenant {
+		ids = append(ids, id)
 	}
 	return
 }
 
-// AccountIDs returns the "account" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// AccountID instead. It exists only for internal usage by the builders.
-func (m *RoleMutation) AccountIDs() (ids []uuid.UUID) {
-	if id := m.account; id != nil {
-		ids = append(ids, *id)
+// TenantIDs returns the "tenant" edge IDs in the mutation.
+func (m *RoleMutation) TenantIDs() (ids []uuid.UUID) {
+	for id := range m.tenant {
+		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetAccount resets all changes to the "account" edge.
-func (m *RoleMutation) ResetAccount() {
-	m.account = nil
-	m.clearedaccount = false
+// ResetTenant resets all changes to the "tenant" edge.
+func (m *RoleMutation) ResetTenant() {
+	m.tenant = nil
+	m.clearedtenant = false
+	m.removedtenant = nil
+}
+
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by ids.
+func (m *RoleMutation) AddPermissionIDs(ids ...uuid.UUID) {
+	if m.permissions == nil {
+		m.permissions = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.permissions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPermissions clears the "permissions" edge to the Permission entity.
+func (m *RoleMutation) ClearPermissions() {
+	m.clearedpermissions = true
+}
+
+// PermissionsCleared reports if the "permissions" edge to the Permission entity was cleared.
+func (m *RoleMutation) PermissionsCleared() bool {
+	return m.clearedpermissions
+}
+
+// RemovePermissionIDs removes the "permissions" edge to the Permission entity by IDs.
+func (m *RoleMutation) RemovePermissionIDs(ids ...uuid.UUID) {
+	if m.removedpermissions == nil {
+		m.removedpermissions = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.permissions, ids[i])
+		m.removedpermissions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPermissions returns the removed IDs of the "permissions" edge to the Permission entity.
+func (m *RoleMutation) RemovedPermissionsIDs() (ids []uuid.UUID) {
+	for id := range m.removedpermissions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PermissionsIDs returns the "permissions" edge IDs in the mutation.
+func (m *RoleMutation) PermissionsIDs() (ids []uuid.UUID) {
+	for id := range m.permissions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPermissions resets all changes to the "permissions" edge.
+func (m *RoleMutation) ResetPermissions() {
+	m.permissions = nil
+	m.clearedpermissions = false
+	m.removedpermissions = nil
 }
 
 // AddUserIDs adds the "users" edge to the User entity by ids.
@@ -5379,60 +5572,6 @@ func (m *RoleMutation) ResetUsers() {
 	m.users = nil
 	m.clearedusers = false
 	m.removedusers = nil
-}
-
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
-func (m *RoleMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.access_policies == nil {
-		m.access_policies = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.access_policies[ids[i]] = struct{}{}
-	}
-}
-
-// ClearAccessPolicies clears the "access_policies" edge to the AccessPolicy entity.
-func (m *RoleMutation) ClearAccessPolicies() {
-	m.clearedaccess_policies = true
-}
-
-// AccessPoliciesCleared reports if the "access_policies" edge to the AccessPolicy entity was cleared.
-func (m *RoleMutation) AccessPoliciesCleared() bool {
-	return m.clearedaccess_policies
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
-func (m *RoleMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.removedaccess_policies == nil {
-		m.removedaccess_policies = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.access_policies, ids[i])
-		m.removedaccess_policies[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
-func (m *RoleMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.removedaccess_policies {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
-func (m *RoleMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.access_policies {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetAccessPolicies resets all changes to the "access_policies" edge.
-func (m *RoleMutation) ResetAccessPolicies() {
-	m.access_policies = nil
-	m.clearedaccess_policies = false
-	m.removedaccess_policies = nil
 }
 
 // AddParentRoleIDs adds the "parent_role" edge to the Role entity by ids.
@@ -5771,14 +5910,14 @@ func (m *RoleMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RoleMutation) AddedEdges() []string {
 	edges := make([]string, 0, 5)
-	if m.account != nil {
-		edges = append(edges, role.EdgeAccount)
+	if m.tenant != nil {
+		edges = append(edges, role.EdgeTenant)
+	}
+	if m.permissions != nil {
+		edges = append(edges, role.EdgePermissions)
 	}
 	if m.users != nil {
 		edges = append(edges, role.EdgeUsers)
-	}
-	if m.access_policies != nil {
-		edges = append(edges, role.EdgeAccessPolicies)
 	}
 	if m.parent_role != nil {
 		edges = append(edges, role.EdgeParentRole)
@@ -5793,19 +5932,21 @@ func (m *RoleMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *RoleMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case role.EdgeAccount:
-		if id := m.account; id != nil {
-			return []ent.Value{*id}
-		}
-	case role.EdgeUsers:
-		ids := make([]ent.Value, 0, len(m.users))
-		for id := range m.users {
+	case role.EdgeTenant:
+		ids := make([]ent.Value, 0, len(m.tenant))
+		for id := range m.tenant {
 			ids = append(ids, id)
 		}
 		return ids
-	case role.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.access_policies))
-		for id := range m.access_policies {
+	case role.EdgePermissions:
+		ids := make([]ent.Value, 0, len(m.permissions))
+		for id := range m.permissions {
+			ids = append(ids, id)
+		}
+		return ids
+	case role.EdgeUsers:
+		ids := make([]ent.Value, 0, len(m.users))
+		for id := range m.users {
 			ids = append(ids, id)
 		}
 		return ids
@@ -5828,11 +5969,14 @@ func (m *RoleMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RoleMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 5)
+	if m.removedtenant != nil {
+		edges = append(edges, role.EdgeTenant)
+	}
+	if m.removedpermissions != nil {
+		edges = append(edges, role.EdgePermissions)
+	}
 	if m.removedusers != nil {
 		edges = append(edges, role.EdgeUsers)
-	}
-	if m.removedaccess_policies != nil {
-		edges = append(edges, role.EdgeAccessPolicies)
 	}
 	if m.removedparent_role != nil {
 		edges = append(edges, role.EdgeParentRole)
@@ -5847,15 +5991,21 @@ func (m *RoleMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *RoleMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case role.EdgeUsers:
-		ids := make([]ent.Value, 0, len(m.removedusers))
-		for id := range m.removedusers {
+	case role.EdgeTenant:
+		ids := make([]ent.Value, 0, len(m.removedtenant))
+		for id := range m.removedtenant {
 			ids = append(ids, id)
 		}
 		return ids
-	case role.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.removedaccess_policies))
-		for id := range m.removedaccess_policies {
+	case role.EdgePermissions:
+		ids := make([]ent.Value, 0, len(m.removedpermissions))
+		for id := range m.removedpermissions {
+			ids = append(ids, id)
+		}
+		return ids
+	case role.EdgeUsers:
+		ids := make([]ent.Value, 0, len(m.removedusers))
+		for id := range m.removedusers {
 			ids = append(ids, id)
 		}
 		return ids
@@ -5878,14 +6028,14 @@ func (m *RoleMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RoleMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 5)
-	if m.clearedaccount {
-		edges = append(edges, role.EdgeAccount)
+	if m.clearedtenant {
+		edges = append(edges, role.EdgeTenant)
+	}
+	if m.clearedpermissions {
+		edges = append(edges, role.EdgePermissions)
 	}
 	if m.clearedusers {
 		edges = append(edges, role.EdgeUsers)
-	}
-	if m.clearedaccess_policies {
-		edges = append(edges, role.EdgeAccessPolicies)
 	}
 	if m.clearedparent_role {
 		edges = append(edges, role.EdgeParentRole)
@@ -5900,12 +6050,12 @@ func (m *RoleMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *RoleMutation) EdgeCleared(name string) bool {
 	switch name {
-	case role.EdgeAccount:
-		return m.clearedaccount
+	case role.EdgeTenant:
+		return m.clearedtenant
+	case role.EdgePermissions:
+		return m.clearedpermissions
 	case role.EdgeUsers:
 		return m.clearedusers
-	case role.EdgeAccessPolicies:
-		return m.clearedaccess_policies
 	case role.EdgeParentRole:
 		return m.clearedparent_role
 	case role.EdgeChildRoles:
@@ -5918,9 +6068,6 @@ func (m *RoleMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *RoleMutation) ClearEdge(name string) error {
 	switch name {
-	case role.EdgeAccount:
-		m.ClearAccount()
-		return nil
 	}
 	return fmt.Errorf("unknown Role unique edge %s", name)
 }
@@ -5929,14 +6076,14 @@ func (m *RoleMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *RoleMutation) ResetEdge(name string) error {
 	switch name {
-	case role.EdgeAccount:
-		m.ResetAccount()
+	case role.EdgeTenant:
+		m.ResetTenant()
+		return nil
+	case role.EdgePermissions:
+		m.ResetPermissions()
 		return nil
 	case role.EdgeUsers:
 		m.ResetUsers()
-		return nil
-	case role.EdgeAccessPolicies:
-		m.ResetAccessPolicies()
 		return nil
 	case role.EdgeParentRole:
 		m.ResetParentRole()
@@ -5951,25 +6098,32 @@ func (m *RoleMutation) ResetEdge(name string) error {
 // TenantMutation represents an operation that mutates the Tenant nodes in the graph.
 type TenantMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *uuid.UUID
-	created_at      *time.Time
-	updated_at      *time.Time
-	name            *string
-	description     *string
-	contact_email   *string
-	contact_phone   *string
-	status          *tenant.Status
-	clearedFields   map[string]struct{}
-	platform        *uuid.UUID
-	clearedplatform bool
-	accounts        map[uuid.UUID]struct{}
-	removedaccounts map[uuid.UUID]struct{}
-	clearedaccounts bool
-	done            bool
-	oldValue        func(context.Context) (*Tenant, error)
-	predicates      []predicate.Tenant
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	created_at             *time.Time
+	updated_at             *time.Time
+	name                   *string
+	description            *string
+	status                 *tenant.Status
+	clearedFields          map[string]struct{}
+	platform               *uuid.UUID
+	clearedplatform        bool
+	accounts               map[uuid.UUID]struct{}
+	removedaccounts        map[uuid.UUID]struct{}
+	clearedaccounts        bool
+	permissions            map[uuid.UUID]struct{}
+	removedpermissions     map[uuid.UUID]struct{}
+	clearedpermissions     bool
+	roles                  map[uuid.UUID]struct{}
+	removedroles           map[uuid.UUID]struct{}
+	clearedroles           bool
+	access_policies        map[uuid.UUID]struct{}
+	removedaccess_policies map[uuid.UUID]struct{}
+	clearedaccess_policies bool
+	done                   bool
+	oldValue               func(context.Context) (*Tenant, error)
+	predicates             []predicate.Tenant
 }
 
 var _ ent.Mutation = (*TenantMutation)(nil)
@@ -6233,104 +6387,6 @@ func (m *TenantMutation) ResetDescription() {
 	delete(m.clearedFields, tenant.FieldDescription)
 }
 
-// SetContactEmail sets the "contact_email" field.
-func (m *TenantMutation) SetContactEmail(s string) {
-	m.contact_email = &s
-}
-
-// ContactEmail returns the value of the "contact_email" field in the mutation.
-func (m *TenantMutation) ContactEmail() (r string, exists bool) {
-	v := m.contact_email
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldContactEmail returns the old "contact_email" field's value of the Tenant entity.
-// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TenantMutation) OldContactEmail(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldContactEmail is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldContactEmail requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldContactEmail: %w", err)
-	}
-	return oldValue.ContactEmail, nil
-}
-
-// ClearContactEmail clears the value of the "contact_email" field.
-func (m *TenantMutation) ClearContactEmail() {
-	m.contact_email = nil
-	m.clearedFields[tenant.FieldContactEmail] = struct{}{}
-}
-
-// ContactEmailCleared returns if the "contact_email" field was cleared in this mutation.
-func (m *TenantMutation) ContactEmailCleared() bool {
-	_, ok := m.clearedFields[tenant.FieldContactEmail]
-	return ok
-}
-
-// ResetContactEmail resets all changes to the "contact_email" field.
-func (m *TenantMutation) ResetContactEmail() {
-	m.contact_email = nil
-	delete(m.clearedFields, tenant.FieldContactEmail)
-}
-
-// SetContactPhone sets the "contact_phone" field.
-func (m *TenantMutation) SetContactPhone(s string) {
-	m.contact_phone = &s
-}
-
-// ContactPhone returns the value of the "contact_phone" field in the mutation.
-func (m *TenantMutation) ContactPhone() (r string, exists bool) {
-	v := m.contact_phone
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldContactPhone returns the old "contact_phone" field's value of the Tenant entity.
-// If the Tenant object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TenantMutation) OldContactPhone(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldContactPhone is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldContactPhone requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldContactPhone: %w", err)
-	}
-	return oldValue.ContactPhone, nil
-}
-
-// ClearContactPhone clears the value of the "contact_phone" field.
-func (m *TenantMutation) ClearContactPhone() {
-	m.contact_phone = nil
-	m.clearedFields[tenant.FieldContactPhone] = struct{}{}
-}
-
-// ContactPhoneCleared returns if the "contact_phone" field was cleared in this mutation.
-func (m *TenantMutation) ContactPhoneCleared() bool {
-	_, ok := m.clearedFields[tenant.FieldContactPhone]
-	return ok
-}
-
-// ResetContactPhone resets all changes to the "contact_phone" field.
-func (m *TenantMutation) ResetContactPhone() {
-	m.contact_phone = nil
-	delete(m.clearedFields, tenant.FieldContactPhone)
-}
-
 // SetStatus sets the "status" field.
 func (m *TenantMutation) SetStatus(t tenant.Status) {
 	m.status = &t
@@ -6460,6 +6516,168 @@ func (m *TenantMutation) ResetAccounts() {
 	m.removedaccounts = nil
 }
 
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by ids.
+func (m *TenantMutation) AddPermissionIDs(ids ...uuid.UUID) {
+	if m.permissions == nil {
+		m.permissions = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.permissions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPermissions clears the "permissions" edge to the Permission entity.
+func (m *TenantMutation) ClearPermissions() {
+	m.clearedpermissions = true
+}
+
+// PermissionsCleared reports if the "permissions" edge to the Permission entity was cleared.
+func (m *TenantMutation) PermissionsCleared() bool {
+	return m.clearedpermissions
+}
+
+// RemovePermissionIDs removes the "permissions" edge to the Permission entity by IDs.
+func (m *TenantMutation) RemovePermissionIDs(ids ...uuid.UUID) {
+	if m.removedpermissions == nil {
+		m.removedpermissions = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.permissions, ids[i])
+		m.removedpermissions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPermissions returns the removed IDs of the "permissions" edge to the Permission entity.
+func (m *TenantMutation) RemovedPermissionsIDs() (ids []uuid.UUID) {
+	for id := range m.removedpermissions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PermissionsIDs returns the "permissions" edge IDs in the mutation.
+func (m *TenantMutation) PermissionsIDs() (ids []uuid.UUID) {
+	for id := range m.permissions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPermissions resets all changes to the "permissions" edge.
+func (m *TenantMutation) ResetPermissions() {
+	m.permissions = nil
+	m.clearedpermissions = false
+	m.removedpermissions = nil
+}
+
+// AddRoleIDs adds the "roles" edge to the Role entity by ids.
+func (m *TenantMutation) AddRoleIDs(ids ...uuid.UUID) {
+	if m.roles == nil {
+		m.roles = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.roles[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRoles clears the "roles" edge to the Role entity.
+func (m *TenantMutation) ClearRoles() {
+	m.clearedroles = true
+}
+
+// RolesCleared reports if the "roles" edge to the Role entity was cleared.
+func (m *TenantMutation) RolesCleared() bool {
+	return m.clearedroles
+}
+
+// RemoveRoleIDs removes the "roles" edge to the Role entity by IDs.
+func (m *TenantMutation) RemoveRoleIDs(ids ...uuid.UUID) {
+	if m.removedroles == nil {
+		m.removedroles = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.roles, ids[i])
+		m.removedroles[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRoles returns the removed IDs of the "roles" edge to the Role entity.
+func (m *TenantMutation) RemovedRolesIDs() (ids []uuid.UUID) {
+	for id := range m.removedroles {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RolesIDs returns the "roles" edge IDs in the mutation.
+func (m *TenantMutation) RolesIDs() (ids []uuid.UUID) {
+	for id := range m.roles {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRoles resets all changes to the "roles" edge.
+func (m *TenantMutation) ResetRoles() {
+	m.roles = nil
+	m.clearedroles = false
+	m.removedroles = nil
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
+func (m *TenantMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
+	if m.access_policies == nil {
+		m.access_policies = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.access_policies[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAccessPolicies clears the "access_policies" edge to the AccessPolicy entity.
+func (m *TenantMutation) ClearAccessPolicies() {
+	m.clearedaccess_policies = true
+}
+
+// AccessPoliciesCleared reports if the "access_policies" edge to the AccessPolicy entity was cleared.
+func (m *TenantMutation) AccessPoliciesCleared() bool {
+	return m.clearedaccess_policies
+}
+
+// RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
+func (m *TenantMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
+	if m.removedaccess_policies == nil {
+		m.removedaccess_policies = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.access_policies, ids[i])
+		m.removedaccess_policies[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
+func (m *TenantMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
+	for id := range m.removedaccess_policies {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
+func (m *TenantMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
+	for id := range m.access_policies {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAccessPolicies resets all changes to the "access_policies" edge.
+func (m *TenantMutation) ResetAccessPolicies() {
+	m.access_policies = nil
+	m.clearedaccess_policies = false
+	m.removedaccess_policies = nil
+}
+
 // Where appends a list predicates to the TenantMutation builder.
 func (m *TenantMutation) Where(ps ...predicate.Tenant) {
 	m.predicates = append(m.predicates, ps...)
@@ -6494,7 +6712,7 @@ func (m *TenantMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TenantMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, tenant.FieldCreatedAt)
 	}
@@ -6506,12 +6724,6 @@ func (m *TenantMutation) Fields() []string {
 	}
 	if m.description != nil {
 		fields = append(fields, tenant.FieldDescription)
-	}
-	if m.contact_email != nil {
-		fields = append(fields, tenant.FieldContactEmail)
-	}
-	if m.contact_phone != nil {
-		fields = append(fields, tenant.FieldContactPhone)
 	}
 	if m.status != nil {
 		fields = append(fields, tenant.FieldStatus)
@@ -6532,10 +6744,6 @@ func (m *TenantMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case tenant.FieldDescription:
 		return m.Description()
-	case tenant.FieldContactEmail:
-		return m.ContactEmail()
-	case tenant.FieldContactPhone:
-		return m.ContactPhone()
 	case tenant.FieldStatus:
 		return m.Status()
 	}
@@ -6555,10 +6763,6 @@ func (m *TenantMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldName(ctx)
 	case tenant.FieldDescription:
 		return m.OldDescription(ctx)
-	case tenant.FieldContactEmail:
-		return m.OldContactEmail(ctx)
-	case tenant.FieldContactPhone:
-		return m.OldContactPhone(ctx)
 	case tenant.FieldStatus:
 		return m.OldStatus(ctx)
 	}
@@ -6597,20 +6801,6 @@ func (m *TenantMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
-		return nil
-	case tenant.FieldContactEmail:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetContactEmail(v)
-		return nil
-	case tenant.FieldContactPhone:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetContactPhone(v)
 		return nil
 	case tenant.FieldStatus:
 		v, ok := value.(tenant.Status)
@@ -6652,12 +6842,6 @@ func (m *TenantMutation) ClearedFields() []string {
 	if m.FieldCleared(tenant.FieldDescription) {
 		fields = append(fields, tenant.FieldDescription)
 	}
-	if m.FieldCleared(tenant.FieldContactEmail) {
-		fields = append(fields, tenant.FieldContactEmail)
-	}
-	if m.FieldCleared(tenant.FieldContactPhone) {
-		fields = append(fields, tenant.FieldContactPhone)
-	}
 	return fields
 }
 
@@ -6674,12 +6858,6 @@ func (m *TenantMutation) ClearField(name string) error {
 	switch name {
 	case tenant.FieldDescription:
 		m.ClearDescription()
-		return nil
-	case tenant.FieldContactEmail:
-		m.ClearContactEmail()
-		return nil
-	case tenant.FieldContactPhone:
-		m.ClearContactPhone()
 		return nil
 	}
 	return fmt.Errorf("unknown Tenant nullable field %s", name)
@@ -6701,12 +6879,6 @@ func (m *TenantMutation) ResetField(name string) error {
 	case tenant.FieldDescription:
 		m.ResetDescription()
 		return nil
-	case tenant.FieldContactEmail:
-		m.ResetContactEmail()
-		return nil
-	case tenant.FieldContactPhone:
-		m.ResetContactPhone()
-		return nil
 	case tenant.FieldStatus:
 		m.ResetStatus()
 		return nil
@@ -6716,12 +6888,21 @@ func (m *TenantMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TenantMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 5)
 	if m.platform != nil {
 		edges = append(edges, tenant.EdgePlatform)
 	}
 	if m.accounts != nil {
 		edges = append(edges, tenant.EdgeAccounts)
+	}
+	if m.permissions != nil {
+		edges = append(edges, tenant.EdgePermissions)
+	}
+	if m.roles != nil {
+		edges = append(edges, tenant.EdgeRoles)
+	}
+	if m.access_policies != nil {
+		edges = append(edges, tenant.EdgeAccessPolicies)
 	}
 	return edges
 }
@@ -6740,15 +6921,42 @@ func (m *TenantMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tenant.EdgePermissions:
+		ids := make([]ent.Value, 0, len(m.permissions))
+		for id := range m.permissions {
+			ids = append(ids, id)
+		}
+		return ids
+	case tenant.EdgeRoles:
+		ids := make([]ent.Value, 0, len(m.roles))
+		for id := range m.roles {
+			ids = append(ids, id)
+		}
+		return ids
+	case tenant.EdgeAccessPolicies:
+		ids := make([]ent.Value, 0, len(m.access_policies))
+		for id := range m.access_policies {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TenantMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 5)
 	if m.removedaccounts != nil {
 		edges = append(edges, tenant.EdgeAccounts)
+	}
+	if m.removedpermissions != nil {
+		edges = append(edges, tenant.EdgePermissions)
+	}
+	if m.removedroles != nil {
+		edges = append(edges, tenant.EdgeRoles)
+	}
+	if m.removedaccess_policies != nil {
+		edges = append(edges, tenant.EdgeAccessPolicies)
 	}
 	return edges
 }
@@ -6763,18 +6971,45 @@ func (m *TenantMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tenant.EdgePermissions:
+		ids := make([]ent.Value, 0, len(m.removedpermissions))
+		for id := range m.removedpermissions {
+			ids = append(ids, id)
+		}
+		return ids
+	case tenant.EdgeRoles:
+		ids := make([]ent.Value, 0, len(m.removedroles))
+		for id := range m.removedroles {
+			ids = append(ids, id)
+		}
+		return ids
+	case tenant.EdgeAccessPolicies:
+		ids := make([]ent.Value, 0, len(m.removedaccess_policies))
+		for id := range m.removedaccess_policies {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TenantMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 5)
 	if m.clearedplatform {
 		edges = append(edges, tenant.EdgePlatform)
 	}
 	if m.clearedaccounts {
 		edges = append(edges, tenant.EdgeAccounts)
+	}
+	if m.clearedpermissions {
+		edges = append(edges, tenant.EdgePermissions)
+	}
+	if m.clearedroles {
+		edges = append(edges, tenant.EdgeRoles)
+	}
+	if m.clearedaccess_policies {
+		edges = append(edges, tenant.EdgeAccessPolicies)
 	}
 	return edges
 }
@@ -6787,6 +7022,12 @@ func (m *TenantMutation) EdgeCleared(name string) bool {
 		return m.clearedplatform
 	case tenant.EdgeAccounts:
 		return m.clearedaccounts
+	case tenant.EdgePermissions:
+		return m.clearedpermissions
+	case tenant.EdgeRoles:
+		return m.clearedroles
+	case tenant.EdgeAccessPolicies:
+		return m.clearedaccess_policies
 	}
 	return false
 }
@@ -6812,6 +7053,15 @@ func (m *TenantMutation) ResetEdge(name string) error {
 	case tenant.EdgeAccounts:
 		m.ResetAccounts()
 		return nil
+	case tenant.EdgePermissions:
+		m.ResetPermissions()
+		return nil
+	case tenant.EdgeRoles:
+		m.ResetRoles()
+		return nil
+	case tenant.EdgeAccessPolicies:
+		m.ResetAccessPolicies()
+		return nil
 	}
 	return fmt.Errorf("unknown Tenant edge %s", name)
 }
@@ -6819,37 +7069,34 @@ func (m *TenantMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *uuid.UUID
-	created_at             *time.Time
-	updated_at             *time.Time
-	avatar                 *string
-	nickname               *string
-	bio                    *string
-	username               *string
-	password               *string
-	email                  *string
-	phone_number           *string
-	totp_secret            *string
-	online                 *bool
-	status                 *user.Status
-	last_login_time        *time.Time
-	clearedFields          map[string]struct{}
-	account                *uuid.UUID
-	clearedaccount         bool
-	roles                  map[uuid.UUID]struct{}
-	removedroles           map[uuid.UUID]struct{}
-	clearedroles           bool
-	audit_logs             map[uuid.UUID]struct{}
-	removedaudit_logs      map[uuid.UUID]struct{}
-	clearedaudit_logs      bool
-	access_policies        map[uuid.UUID]struct{}
-	removedaccess_policies map[uuid.UUID]struct{}
-	clearedaccess_policies bool
-	done                   bool
-	oldValue               func(context.Context) (*User, error)
-	predicates             []predicate.User
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	created_at        *time.Time
+	updated_at        *time.Time
+	avatar            *string
+	nickname          *string
+	bio               *string
+	username          *string
+	password          *string
+	email             *string
+	phone_number      *string
+	totp_secret       *string
+	online            *bool
+	status            *user.Status
+	last_login_time   *time.Time
+	clearedFields     map[string]struct{}
+	account           *uuid.UUID
+	clearedaccount    bool
+	roles             map[uuid.UUID]struct{}
+	removedroles      map[uuid.UUID]struct{}
+	clearedroles      bool
+	audit_logs        map[uuid.UUID]struct{}
+	removedaudit_logs map[uuid.UUID]struct{}
+	clearedaudit_logs bool
+	done              bool
+	oldValue          func(context.Context) (*User, error)
+	predicates        []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -7636,60 +7883,6 @@ func (m *UserMutation) ResetAuditLogs() {
 	m.removedaudit_logs = nil
 }
 
-// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
-func (m *UserMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.access_policies == nil {
-		m.access_policies = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.access_policies[ids[i]] = struct{}{}
-	}
-}
-
-// ClearAccessPolicies clears the "access_policies" edge to the AccessPolicy entity.
-func (m *UserMutation) ClearAccessPolicies() {
-	m.clearedaccess_policies = true
-}
-
-// AccessPoliciesCleared reports if the "access_policies" edge to the AccessPolicy entity was cleared.
-func (m *UserMutation) AccessPoliciesCleared() bool {
-	return m.clearedaccess_policies
-}
-
-// RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
-func (m *UserMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
-	if m.removedaccess_policies == nil {
-		m.removedaccess_policies = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.access_policies, ids[i])
-		m.removedaccess_policies[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
-func (m *UserMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.removedaccess_policies {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
-func (m *UserMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
-	for id := range m.access_policies {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetAccessPolicies resets all changes to the "access_policies" edge.
-func (m *UserMutation) ResetAccessPolicies() {
-	m.access_policies = nil
-	m.clearedaccess_policies = false
-	m.removedaccess_policies = nil
-}
-
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -8060,7 +8253,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.account != nil {
 		edges = append(edges, user.EdgeAccount)
 	}
@@ -8069,9 +8262,6 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.audit_logs != nil {
 		edges = append(edges, user.EdgeAuditLogs)
-	}
-	if m.access_policies != nil {
-		edges = append(edges, user.EdgeAccessPolicies)
 	}
 	return edges
 }
@@ -8096,27 +8286,18 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case user.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.access_policies))
-		for id := range m.access_policies {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.removedroles != nil {
 		edges = append(edges, user.EdgeRoles)
 	}
 	if m.removedaudit_logs != nil {
 		edges = append(edges, user.EdgeAuditLogs)
-	}
-	if m.removedaccess_policies != nil {
-		edges = append(edges, user.EdgeAccessPolicies)
 	}
 	return edges
 }
@@ -8137,19 +8318,13 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case user.EdgeAccessPolicies:
-		ids := make([]ent.Value, 0, len(m.removedaccess_policies))
-		for id := range m.removedaccess_policies {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.clearedaccount {
 		edges = append(edges, user.EdgeAccount)
 	}
@@ -8158,9 +8333,6 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedaudit_logs {
 		edges = append(edges, user.EdgeAuditLogs)
-	}
-	if m.clearedaccess_policies {
-		edges = append(edges, user.EdgeAccessPolicies)
 	}
 	return edges
 }
@@ -8175,8 +8347,6 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedroles
 	case user.EdgeAuditLogs:
 		return m.clearedaudit_logs
-	case user.EdgeAccessPolicies:
-		return m.clearedaccess_policies
 	}
 	return false
 }
@@ -8204,9 +8374,6 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeAuditLogs:
 		m.ResetAuditLogs()
-		return nil
-	case user.EdgeAccessPolicies:
-		m.ResetAccessPolicies()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

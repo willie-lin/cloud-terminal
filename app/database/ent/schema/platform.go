@@ -24,8 +24,8 @@ func (Platform) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
-		field.String("contact_email").Optional(),
-		field.String("contact_phone").Optional(),
+		field.String("region").Optional(),
+		field.String("version").Optional(),
 	}
 }
 

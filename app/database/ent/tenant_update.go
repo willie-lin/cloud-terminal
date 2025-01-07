@@ -12,9 +12,12 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
@@ -71,46 +74,6 @@ func (tu *TenantUpdate) ClearDescription() *TenantUpdate {
 	return tu
 }
 
-// SetContactEmail sets the "contact_email" field.
-func (tu *TenantUpdate) SetContactEmail(s string) *TenantUpdate {
-	tu.mutation.SetContactEmail(s)
-	return tu
-}
-
-// SetNillableContactEmail sets the "contact_email" field if the given value is not nil.
-func (tu *TenantUpdate) SetNillableContactEmail(s *string) *TenantUpdate {
-	if s != nil {
-		tu.SetContactEmail(*s)
-	}
-	return tu
-}
-
-// ClearContactEmail clears the value of the "contact_email" field.
-func (tu *TenantUpdate) ClearContactEmail() *TenantUpdate {
-	tu.mutation.ClearContactEmail()
-	return tu
-}
-
-// SetContactPhone sets the "contact_phone" field.
-func (tu *TenantUpdate) SetContactPhone(s string) *TenantUpdate {
-	tu.mutation.SetContactPhone(s)
-	return tu
-}
-
-// SetNillableContactPhone sets the "contact_phone" field if the given value is not nil.
-func (tu *TenantUpdate) SetNillableContactPhone(s *string) *TenantUpdate {
-	if s != nil {
-		tu.SetContactPhone(*s)
-	}
-	return tu
-}
-
-// ClearContactPhone clears the value of the "contact_phone" field.
-func (tu *TenantUpdate) ClearContactPhone() *TenantUpdate {
-	tu.mutation.ClearContactPhone()
-	return tu
-}
-
 // SetStatus sets the "status" field.
 func (tu *TenantUpdate) SetStatus(t tenant.Status) *TenantUpdate {
 	tu.mutation.SetStatus(t)
@@ -151,6 +114,51 @@ func (tu *TenantUpdate) AddAccounts(a ...*Account) *TenantUpdate {
 	return tu.AddAccountIDs(ids...)
 }
 
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
+func (tu *TenantUpdate) AddPermissionIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.AddPermissionIDs(ids...)
+	return tu
+}
+
+// AddPermissions adds the "permissions" edges to the Permission entity.
+func (tu *TenantUpdate) AddPermissions(p ...*Permission) *TenantUpdate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return tu.AddPermissionIDs(ids...)
+}
+
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (tu *TenantUpdate) AddRoleIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.AddRoleIDs(ids...)
+	return tu
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (tu *TenantUpdate) AddRoles(r ...*Role) *TenantUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tu.AddRoleIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (tu *TenantUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.AddAccessPolicyIDs(ids...)
+	return tu
+}
+
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (tu *TenantUpdate) AddAccessPolicies(a ...*AccessPolicy) *TenantUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tu.AddAccessPolicyIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tu *TenantUpdate) Mutation() *TenantMutation {
 	return tu.mutation
@@ -181,6 +189,69 @@ func (tu *TenantUpdate) RemoveAccounts(a ...*Account) *TenantUpdate {
 		ids[i] = a[i].ID
 	}
 	return tu.RemoveAccountIDs(ids...)
+}
+
+// ClearPermissions clears all "permissions" edges to the Permission entity.
+func (tu *TenantUpdate) ClearPermissions() *TenantUpdate {
+	tu.mutation.ClearPermissions()
+	return tu
+}
+
+// RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
+func (tu *TenantUpdate) RemovePermissionIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.RemovePermissionIDs(ids...)
+	return tu
+}
+
+// RemovePermissions removes "permissions" edges to Permission entities.
+func (tu *TenantUpdate) RemovePermissions(p ...*Permission) *TenantUpdate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return tu.RemovePermissionIDs(ids...)
+}
+
+// ClearRoles clears all "roles" edges to the Role entity.
+func (tu *TenantUpdate) ClearRoles() *TenantUpdate {
+	tu.mutation.ClearRoles()
+	return tu
+}
+
+// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
+func (tu *TenantUpdate) RemoveRoleIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.RemoveRoleIDs(ids...)
+	return tu
+}
+
+// RemoveRoles removes "roles" edges to Role entities.
+func (tu *TenantUpdate) RemoveRoles(r ...*Role) *TenantUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tu.RemoveRoleIDs(ids...)
+}
+
+// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
+func (tu *TenantUpdate) ClearAccessPolicies() *TenantUpdate {
+	tu.mutation.ClearAccessPolicies()
+	return tu
+}
+
+// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
+func (tu *TenantUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdate {
+	tu.mutation.RemoveAccessPolicyIDs(ids...)
+	return tu
+}
+
+// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
+func (tu *TenantUpdate) RemoveAccessPolicies(a ...*AccessPolicy) *TenantUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tu.RemoveAccessPolicyIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -261,18 +332,6 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if tu.mutation.DescriptionCleared() {
 		_spec.ClearField(tenant.FieldDescription, field.TypeString)
 	}
-	if value, ok := tu.mutation.ContactEmail(); ok {
-		_spec.SetField(tenant.FieldContactEmail, field.TypeString, value)
-	}
-	if tu.mutation.ContactEmailCleared() {
-		_spec.ClearField(tenant.FieldContactEmail, field.TypeString)
-	}
-	if value, ok := tu.mutation.ContactPhone(); ok {
-		_spec.SetField(tenant.FieldContactPhone, field.TypeString, value)
-	}
-	if tu.mutation.ContactPhoneCleared() {
-		_spec.ClearField(tenant.FieldContactPhone, field.TypeString)
-	}
 	if value, ok := tu.mutation.Status(); ok {
 		_spec.SetField(tenant.FieldStatus, field.TypeEnum, value)
 	}
@@ -350,6 +409,141 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.PermissionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedPermissionsIDs(); len(nodes) > 0 && !tu.mutation.PermissionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.PermissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedRolesIDs(); len(nodes) > 0 && !tu.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.AccessPoliciesTable,
+			Columns: tenant.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !tu.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.AccessPoliciesTable,
+			Columns: tenant.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.AccessPoliciesTable,
+			Columns: tenant.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tenant.Label}
@@ -410,46 +604,6 @@ func (tuo *TenantUpdateOne) ClearDescription() *TenantUpdateOne {
 	return tuo
 }
 
-// SetContactEmail sets the "contact_email" field.
-func (tuo *TenantUpdateOne) SetContactEmail(s string) *TenantUpdateOne {
-	tuo.mutation.SetContactEmail(s)
-	return tuo
-}
-
-// SetNillableContactEmail sets the "contact_email" field if the given value is not nil.
-func (tuo *TenantUpdateOne) SetNillableContactEmail(s *string) *TenantUpdateOne {
-	if s != nil {
-		tuo.SetContactEmail(*s)
-	}
-	return tuo
-}
-
-// ClearContactEmail clears the value of the "contact_email" field.
-func (tuo *TenantUpdateOne) ClearContactEmail() *TenantUpdateOne {
-	tuo.mutation.ClearContactEmail()
-	return tuo
-}
-
-// SetContactPhone sets the "contact_phone" field.
-func (tuo *TenantUpdateOne) SetContactPhone(s string) *TenantUpdateOne {
-	tuo.mutation.SetContactPhone(s)
-	return tuo
-}
-
-// SetNillableContactPhone sets the "contact_phone" field if the given value is not nil.
-func (tuo *TenantUpdateOne) SetNillableContactPhone(s *string) *TenantUpdateOne {
-	if s != nil {
-		tuo.SetContactPhone(*s)
-	}
-	return tuo
-}
-
-// ClearContactPhone clears the value of the "contact_phone" field.
-func (tuo *TenantUpdateOne) ClearContactPhone() *TenantUpdateOne {
-	tuo.mutation.ClearContactPhone()
-	return tuo
-}
-
 // SetStatus sets the "status" field.
 func (tuo *TenantUpdateOne) SetStatus(t tenant.Status) *TenantUpdateOne {
 	tuo.mutation.SetStatus(t)
@@ -490,6 +644,51 @@ func (tuo *TenantUpdateOne) AddAccounts(a ...*Account) *TenantUpdateOne {
 	return tuo.AddAccountIDs(ids...)
 }
 
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
+func (tuo *TenantUpdateOne) AddPermissionIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.AddPermissionIDs(ids...)
+	return tuo
+}
+
+// AddPermissions adds the "permissions" edges to the Permission entity.
+func (tuo *TenantUpdateOne) AddPermissions(p ...*Permission) *TenantUpdateOne {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return tuo.AddPermissionIDs(ids...)
+}
+
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (tuo *TenantUpdateOne) AddRoleIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.AddRoleIDs(ids...)
+	return tuo
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (tuo *TenantUpdateOne) AddRoles(r ...*Role) *TenantUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tuo.AddRoleIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (tuo *TenantUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.AddAccessPolicyIDs(ids...)
+	return tuo
+}
+
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (tuo *TenantUpdateOne) AddAccessPolicies(a ...*AccessPolicy) *TenantUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tuo.AddAccessPolicyIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tuo *TenantUpdateOne) Mutation() *TenantMutation {
 	return tuo.mutation
@@ -520,6 +719,69 @@ func (tuo *TenantUpdateOne) RemoveAccounts(a ...*Account) *TenantUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return tuo.RemoveAccountIDs(ids...)
+}
+
+// ClearPermissions clears all "permissions" edges to the Permission entity.
+func (tuo *TenantUpdateOne) ClearPermissions() *TenantUpdateOne {
+	tuo.mutation.ClearPermissions()
+	return tuo
+}
+
+// RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
+func (tuo *TenantUpdateOne) RemovePermissionIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.RemovePermissionIDs(ids...)
+	return tuo
+}
+
+// RemovePermissions removes "permissions" edges to Permission entities.
+func (tuo *TenantUpdateOne) RemovePermissions(p ...*Permission) *TenantUpdateOne {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return tuo.RemovePermissionIDs(ids...)
+}
+
+// ClearRoles clears all "roles" edges to the Role entity.
+func (tuo *TenantUpdateOne) ClearRoles() *TenantUpdateOne {
+	tuo.mutation.ClearRoles()
+	return tuo
+}
+
+// RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
+func (tuo *TenantUpdateOne) RemoveRoleIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.RemoveRoleIDs(ids...)
+	return tuo
+}
+
+// RemoveRoles removes "roles" edges to Role entities.
+func (tuo *TenantUpdateOne) RemoveRoles(r ...*Role) *TenantUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tuo.RemoveRoleIDs(ids...)
+}
+
+// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
+func (tuo *TenantUpdateOne) ClearAccessPolicies() *TenantUpdateOne {
+	tuo.mutation.ClearAccessPolicies()
+	return tuo
+}
+
+// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
+func (tuo *TenantUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.RemoveAccessPolicyIDs(ids...)
+	return tuo
+}
+
+// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
+func (tuo *TenantUpdateOne) RemoveAccessPolicies(a ...*AccessPolicy) *TenantUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tuo.RemoveAccessPolicyIDs(ids...)
 }
 
 // Where appends a list predicates to the TenantUpdate builder.
@@ -630,18 +892,6 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 	if tuo.mutation.DescriptionCleared() {
 		_spec.ClearField(tenant.FieldDescription, field.TypeString)
 	}
-	if value, ok := tuo.mutation.ContactEmail(); ok {
-		_spec.SetField(tenant.FieldContactEmail, field.TypeString, value)
-	}
-	if tuo.mutation.ContactEmailCleared() {
-		_spec.ClearField(tenant.FieldContactEmail, field.TypeString)
-	}
-	if value, ok := tuo.mutation.ContactPhone(); ok {
-		_spec.SetField(tenant.FieldContactPhone, field.TypeString, value)
-	}
-	if tuo.mutation.ContactPhoneCleared() {
-		_spec.ClearField(tenant.FieldContactPhone, field.TypeString)
-	}
 	if value, ok := tuo.mutation.Status(); ok {
 		_spec.SetField(tenant.FieldStatus, field.TypeEnum, value)
 	}
@@ -712,6 +962,141 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.PermissionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedPermissionsIDs(); len(nodes) > 0 && !tuo.mutation.PermissionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.PermissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedRolesIDs(); len(nodes) > 0 && !tuo.mutation.RolesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.AccessPoliciesTable,
+			Columns: tenant.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !tuo.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.AccessPoliciesTable,
+			Columns: tenant.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.AccessPoliciesTable,
+			Columns: tenant.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

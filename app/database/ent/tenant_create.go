@@ -11,8 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/permission"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
 
@@ -71,34 +74,6 @@ func (tc *TenantCreate) SetNillableDescription(s *string) *TenantCreate {
 	return tc
 }
 
-// SetContactEmail sets the "contact_email" field.
-func (tc *TenantCreate) SetContactEmail(s string) *TenantCreate {
-	tc.mutation.SetContactEmail(s)
-	return tc
-}
-
-// SetNillableContactEmail sets the "contact_email" field if the given value is not nil.
-func (tc *TenantCreate) SetNillableContactEmail(s *string) *TenantCreate {
-	if s != nil {
-		tc.SetContactEmail(*s)
-	}
-	return tc
-}
-
-// SetContactPhone sets the "contact_phone" field.
-func (tc *TenantCreate) SetContactPhone(s string) *TenantCreate {
-	tc.mutation.SetContactPhone(s)
-	return tc
-}
-
-// SetNillableContactPhone sets the "contact_phone" field if the given value is not nil.
-func (tc *TenantCreate) SetNillableContactPhone(s *string) *TenantCreate {
-	if s != nil {
-		tc.SetContactPhone(*s)
-	}
-	return tc
-}
-
 // SetStatus sets the "status" field.
 func (tc *TenantCreate) SetStatus(t tenant.Status) *TenantCreate {
 	tc.mutation.SetStatus(t)
@@ -151,6 +126,51 @@ func (tc *TenantCreate) AddAccounts(a ...*Account) *TenantCreate {
 		ids[i] = a[i].ID
 	}
 	return tc.AddAccountIDs(ids...)
+}
+
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
+func (tc *TenantCreate) AddPermissionIDs(ids ...uuid.UUID) *TenantCreate {
+	tc.mutation.AddPermissionIDs(ids...)
+	return tc
+}
+
+// AddPermissions adds the "permissions" edges to the Permission entity.
+func (tc *TenantCreate) AddPermissions(p ...*Permission) *TenantCreate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return tc.AddPermissionIDs(ids...)
+}
+
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (tc *TenantCreate) AddRoleIDs(ids ...uuid.UUID) *TenantCreate {
+	tc.mutation.AddRoleIDs(ids...)
+	return tc
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (tc *TenantCreate) AddRoles(r ...*Role) *TenantCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tc.AddRoleIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (tc *TenantCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *TenantCreate {
+	tc.mutation.AddAccessPolicyIDs(ids...)
+	return tc
+}
+
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (tc *TenantCreate) AddAccessPolicies(a ...*AccessPolicy) *TenantCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tc.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -284,14 +304,6 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 		_spec.SetField(tenant.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := tc.mutation.ContactEmail(); ok {
-		_spec.SetField(tenant.FieldContactEmail, field.TypeString, value)
-		_node.ContactEmail = value
-	}
-	if value, ok := tc.mutation.ContactPhone(); ok {
-		_spec.SetField(tenant.FieldContactPhone, field.TypeString, value)
-		_node.ContactPhone = value
-	}
 	if value, ok := tc.mutation.Status(); ok {
 		_spec.SetField(tenant.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
@@ -322,6 +334,54 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.PermissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.PermissionsTable,
+			Columns: []string{tenant.PermissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.RolesTable,
+			Columns: tenant.RolesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   tenant.AccessPoliciesTable,
+			Columns: tenant.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

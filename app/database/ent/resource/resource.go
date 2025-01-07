@@ -23,21 +23,21 @@ const (
 	FieldName = "name"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
+	// FieldProperties holds the string denoting the properties field in the database.
+	FieldProperties = "properties"
 	// FieldValue holds the string denoting the value field in the database.
 	FieldValue = "value"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldIsDisabled holds the string denoting the is_disabled field in the database.
-	FieldIsDisabled = "is_disabled"
-	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
-	EdgeAccessPolicies = "access_policies"
+	// EdgeAccount holds the string denoting the account edge name in mutations.
+	EdgeAccount = "account"
 	// Table holds the table name of the resource in the database.
 	Table = "resources"
-	// AccessPoliciesTable is the table that holds the access_policies relation/edge. The primary key declared below.
-	AccessPoliciesTable = "access_policy_resources"
-	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
-	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
-	AccessPoliciesInverseTable = "access_policies"
+	// AccountTable is the table that holds the account relation/edge. The primary key declared below.
+	AccountTable = "account_resources"
+	// AccountInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountInverseTable = "accounts"
 )
 
 // Columns holds all SQL columns for resource fields.
@@ -47,15 +47,15 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldName,
 	FieldType,
+	FieldProperties,
 	FieldValue,
 	FieldDescription,
-	FieldIsDisabled,
 }
 
 var (
-	// AccessPoliciesPrimaryKey and AccessPoliciesColumn2 are the table columns denoting the
-	// primary key for the access_policies relation (M2M).
-	AccessPoliciesPrimaryKey = []string{"access_policy_id", "resource_id"}
+	// AccountPrimaryKey and AccountColumn2 are the table columns denoting the
+	// primary key for the account relation (M2M).
+	AccountPrimaryKey = []string{"account_id", "resource_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -81,8 +81,6 @@ var (
 	TypeValidator func(string) error
 	// ValueValidator is a validator for the "value" field. It is called by the builders before save.
 	ValueValidator func(string) error
-	// DefaultIsDisabled holds the default value on creation for the "is_disabled" field.
-	DefaultIsDisabled bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -125,28 +123,23 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByIsDisabled orders the results by the is_disabled field.
-func ByIsDisabled(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsDisabled, opts...).ToFunc()
-}
-
-// ByAccessPoliciesCount orders the results by access_policies count.
-func ByAccessPoliciesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByAccountCount orders the results by account count.
+func ByAccountCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAccessPoliciesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newAccountStep(), opts...)
 	}
 }
 
-// ByAccessPolicies orders the results by access_policies terms.
-func ByAccessPolicies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByAccount orders the results by account terms.
+func ByAccount(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccessPoliciesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newAccessPoliciesStep() *sqlgraph.Step {
+func newAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
+		sqlgraph.To(AccountInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, AccountTable, AccountPrimaryKey...),
 	)
 }

@@ -27,35 +27,37 @@ const (
 	FieldIsDisabled = "is_disabled"
 	// FieldIsDefault holds the string denoting the is_default field in the database.
 	FieldIsDefault = "is_default"
-	// EdgeAccount holds the string denoting the account edge name in mutations.
-	EdgeAccount = "account"
+	// EdgeTenant holds the string denoting the tenant edge name in mutations.
+	EdgeTenant = "tenant"
+	// EdgePermissions holds the string denoting the permissions edge name in mutations.
+	EdgePermissions = "permissions"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
-	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
-	EdgeAccessPolicies = "access_policies"
 	// EdgeParentRole holds the string denoting the parent_role edge name in mutations.
 	EdgeParentRole = "parent_role"
 	// EdgeChildRoles holds the string denoting the child_roles edge name in mutations.
 	EdgeChildRoles = "child_roles"
 	// Table holds the table name of the role in the database.
 	Table = "roles"
-	// AccountTable is the table that holds the account relation/edge.
-	AccountTable = "roles"
-	// AccountInverseTable is the table name for the Account entity.
-	// It exists in this package in order to avoid circular dependency with the "account" package.
-	AccountInverseTable = "accounts"
-	// AccountColumn is the table column denoting the account relation/edge.
-	AccountColumn = "account_roles"
-	// UsersTable is the table that holds the users relation/edge. The primary key declared below.
-	UsersTable = "user_roles"
+	// TenantTable is the table that holds the tenant relation/edge. The primary key declared below.
+	TenantTable = "tenant_roles"
+	// TenantInverseTable is the table name for the Tenant entity.
+	// It exists in this package in order to avoid circular dependency with the "tenant" package.
+	TenantInverseTable = "tenants"
+	// PermissionsTable is the table that holds the permissions relation/edge.
+	PermissionsTable = "permissions"
+	// PermissionsInverseTable is the table name for the Permission entity.
+	// It exists in this package in order to avoid circular dependency with the "permission" package.
+	PermissionsInverseTable = "permissions"
+	// PermissionsColumn is the table column denoting the permissions relation/edge.
+	PermissionsColumn = "role_permissions"
+	// UsersTable is the table that holds the users relation/edge.
+	UsersTable = "users"
 	// UsersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UsersInverseTable = "users"
-	// AccessPoliciesTable is the table that holds the access_policies relation/edge. The primary key declared below.
-	AccessPoliciesTable = "role_policies"
-	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
-	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
-	AccessPoliciesInverseTable = "access_policies"
+	// UsersColumn is the table column denoting the users relation/edge.
+	UsersColumn = "role_users"
 	// ParentRoleTable is the table that holds the parent_role relation/edge. The primary key declared below.
 	ParentRoleTable = "role_child_roles"
 	// ChildRolesTable is the table that holds the child_roles relation/edge. The primary key declared below.
@@ -76,16 +78,14 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "roles"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"account_roles",
+	"permission_roles",
+	"user_roles",
 }
 
 var (
-	// UsersPrimaryKey and UsersColumn2 are the table columns denoting the
-	// primary key for the users relation (M2M).
-	UsersPrimaryKey = []string{"user_id", "role_id"}
-	// AccessPoliciesPrimaryKey and AccessPoliciesColumn2 are the table columns denoting the
-	// primary key for the access_policies relation (M2M).
-	AccessPoliciesPrimaryKey = []string{"role_id", "access_policy_id"}
+	// TenantPrimaryKey and TenantColumn2 are the table columns denoting the
+	// primary key for the tenant relation (M2M).
+	TenantPrimaryKey = []string{"tenant_id", "role_id"}
 	// ParentRolePrimaryKey and ParentRoleColumn2 are the table columns denoting the
 	// primary key for the parent_role relation (M2M).
 	ParentRolePrimaryKey = []string{"role_id", "parent_role_id"}
@@ -164,10 +164,31 @@ func ByIsDefault(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsDefault, opts...).ToFunc()
 }
 
-// ByAccountField orders the results by account field.
-func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByTenantCount orders the results by tenant count.
+func ByTenantCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newTenantStep(), opts...)
+	}
+}
+
+// ByTenant orders the results by tenant terms.
+func ByTenant(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPermissionsCount orders the results by permissions count.
+func ByPermissionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPermissionsStep(), opts...)
+	}
+}
+
+// ByPermissions orders the results by permissions terms.
+func ByPermissions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPermissionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -182,20 +203,6 @@ func ByUsersCount(opts ...sql.OrderTermOption) OrderOption {
 func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByAccessPoliciesCount orders the results by access_policies count.
-func ByAccessPoliciesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAccessPoliciesStep(), opts...)
-	}
-}
-
-// ByAccessPolicies orders the results by access_policies terms.
-func ByAccessPolicies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccessPoliciesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -226,25 +233,25 @@ func ByChildRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newChildRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newAccountStep() *sqlgraph.Step {
+func newTenantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccountInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+		sqlgraph.To(TenantInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, TenantTable, TenantPrimaryKey...),
+	)
+}
+func newPermissionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PermissionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PermissionsTable, PermissionsColumn),
 	)
 }
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, UsersTable, UsersPrimaryKey...),
-	)
-}
-func newAccessPoliciesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
 	)
 }
 func newParentRoleStep() *sqlgraph.Step {

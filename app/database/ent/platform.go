@@ -26,10 +26,10 @@ type Platform struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// ContactEmail holds the value of the "contact_email" field.
-	ContactEmail string `json:"contact_email,omitempty"`
-	// ContactPhone holds the value of the "contact_phone" field.
-	ContactPhone string `json:"contact_phone,omitempty"`
+	// Region holds the value of the "region" field.
+	Region string `json:"region,omitempty"`
+	// Version holds the value of the "version" field.
+	Version string `json:"version,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PlatformQuery when eager-loading is set.
 	Edges        PlatformEdges `json:"edges"`
@@ -59,7 +59,7 @@ func (*Platform) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case platform.FieldName, platform.FieldDescription, platform.FieldContactEmail, platform.FieldContactPhone:
+		case platform.FieldName, platform.FieldDescription, platform.FieldRegion, platform.FieldVersion:
 			values[i] = new(sql.NullString)
 		case platform.FieldCreatedAt, platform.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -110,17 +110,17 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pl.Description = value.String
 			}
-		case platform.FieldContactEmail:
+		case platform.FieldRegion:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field contact_email", values[i])
+				return fmt.Errorf("unexpected type %T for field region", values[i])
 			} else if value.Valid {
-				pl.ContactEmail = value.String
+				pl.Region = value.String
 			}
-		case platform.FieldContactPhone:
+		case platform.FieldVersion:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field contact_phone", values[i])
+				return fmt.Errorf("unexpected type %T for field version", values[i])
 			} else if value.Valid {
-				pl.ContactPhone = value.String
+				pl.Version = value.String
 			}
 		default:
 			pl.selectValues.Set(columns[i], values[i])
@@ -175,11 +175,11 @@ func (pl *Platform) String() string {
 	builder.WriteString("description=")
 	builder.WriteString(pl.Description)
 	builder.WriteString(", ")
-	builder.WriteString("contact_email=")
-	builder.WriteString(pl.ContactEmail)
+	builder.WriteString("region=")
+	builder.WriteString(pl.Region)
 	builder.WriteString(", ")
-	builder.WriteString("contact_phone=")
-	builder.WriteString(pl.ContactPhone)
+	builder.WriteString("version=")
+	builder.WriteString(pl.Version)
 	builder.WriteByte(')')
 	return builder.String()
 }
