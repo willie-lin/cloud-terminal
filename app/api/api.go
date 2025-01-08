@@ -248,7 +248,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(sa.ID)
 
 		// 查询租户信息，通过边查询获取用户关联的租户
-		tenant, err := us.QueryAccount().QueryTenant().Only(ctx)
+		tenant, err := sa.QueryTenant().Only(ctx)
 		if ent.IsNotFound(err) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Tenant not found"})
 		} else if err != nil {
@@ -259,7 +259,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 获取用户的第一个角色ID
 		//role, err := us.QueryRoles().First(context.Background())
-		r, err := us.QueryAccount().QueryRoles().Only(ctx)
+		r, err := sa.QueryRoles().Only(ctx)
 		//role, err := us.QueryRoles().All(ctx)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)

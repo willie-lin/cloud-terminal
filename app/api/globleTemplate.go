@@ -198,27 +198,48 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	}
 
 	// 4. 创建平台角色，租户角色，和超级管理员账户
-	rolesToCreate := []string{"super_admin", "platform_admin", "tenant_admin"}
+	//rolesToCreate := []string{"super_admin", "platform_admin", "tenant_admin"}
+	//
+	//for _, roleName := range rolesToCreate {
+	//	//_, err := client.Role.Query().Where(role.NameEQ(roleName)).Where(role.HasTenantWith(tenant.NameEQ(managementTenant.Name))).Only(ctx)
+	//	r, err := client.Role.Query().Where(role.NameEQ(roleName)).Only(ctx)
+	//	if err != nil && !ent.IsNotFound(err) {
+	//		return fmt.Errorf("query role %s failed: %w", roleName, err)
+	//	}
+	//	if ent.IsNotFound(err) {
+	//		r, err = client.Role.Create().SetName(roleName).Save(ctx)
+	//		if err != nil {
+	//			return fmt.Errorf("create role %s failed: %w", roleName, err)
+	//		}
+	//		_, err = systemAccount.Update().AddRoles(r).Save(ctx)
+	//		if err != nil {
+	//			return fmt.Errorf("关联 system 账户和 role %s 角色失败: %w", err)
+	//		}
+	//		log.Printf("Created role: %s (ID: %v)", r.Name, r.ID)
+	//	} else {
+	//		log.Printf("Role: %s (ID: %v) already exists.", r.Name, r.ID)
+	//	}
+	//}
 
-	for _, roleName := range rolesToCreate {
-		//_, err := client.Role.Query().Where(role.NameEQ(roleName)).Where(role.HasTenantWith(tenant.NameEQ(managementTenant.Name))).Only(ctx)
-		r, err := client.Role.Query().Where(role.NameEQ(roleName)).Only(ctx)
-		if err != nil && !ent.IsNotFound(err) {
-			return fmt.Errorf("query role %s failed: %w", roleName, err)
+	desiredRoleName := "super_admin" // Replace with your desired role name
+
+	r, err := client.Role.Query().Where(role.NameEQ(desiredRoleName)).Only(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return fmt.Errorf("query role %s failed: %w", desiredRoleName, err)
+	}
+
+	if ent.IsNotFound(err) {
+		r, err = client.Role.Create().SetName(desiredRoleName).Save(ctx)
+		if err != nil {
+			return fmt.Errorf("create role %s failed: %w", desiredRoleName, err)
 		}
-		if ent.IsNotFound(err) {
-			r, err = client.Role.Create().SetName(roleName).Save(ctx)
-			if err != nil {
-				return fmt.Errorf("create role %s failed: %w", roleName, err)
-			}
-			_, err = systemAccount.Update().AddRoles(r).Save(ctx)
-			if err != nil {
-				return fmt.Errorf("关联 system 账户和 role %s 角色失败: %w", err)
-			}
-			log.Printf("Created role: %s (ID: %v)", r.Name, r.ID)
-		} else {
-			log.Printf("Role: %s (ID: %v) already exists.", r.Name, r.ID)
+		_, err = systemAccount.Update().AddRoles(r).Save(ctx)
+		if err != nil {
+			return fmt.Errorf("关联 system 账户和 role %s 角色失败: %w", err)
 		}
+		log.Printf("Created role: %s (ID: %v)", r.Name, r.ID)
+	} else {
+		log.Printf("Role: %s (ID: %v) already exists.", r.Name, r.ID)
 	}
 
 	// 5. 创建超级管理员策略
