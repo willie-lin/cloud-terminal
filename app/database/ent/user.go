@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -60,6 +61,7 @@ type User struct {
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges         UserEdges `json:"edges"`
 	account_users *uuid.UUID
+	user_role     *uuid.UUID
 	selectValues  sql.SelectValues
 }
 
@@ -67,11 +69,13 @@ type User struct {
 type UserEdges struct {
 	// Account holds the value of the account edge.
 	Account *Account `json:"account,omitempty"`
+	// Role holds the value of the role edge.
+	Role *Role `json:"role,omitempty"`
 	// AuditLogs holds the value of the audit_logs edge.
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -85,10 +89,21 @@ func (e UserEdges) AccountOrErr() (*Account, error) {
 	return nil, &NotLoadedError{edge: "account"}
 }
 
+// RoleOrErr returns the Role value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) RoleOrErr() (*Role, error) {
+	if e.Role != nil {
+		return e.Role, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: role.Label}
+	}
+	return nil, &NotLoadedError{edge: "role"}
+}
+
 // AuditLogsOrErr returns the AuditLogs value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) AuditLogsOrErr() ([]*AuditLog, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.AuditLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "audit_logs"}
@@ -112,6 +127,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
 		case user.ForeignKeys[0]: // account_users
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case user.ForeignKeys[1]: // user_role
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -251,6 +268,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 				u.account_users = new(uuid.UUID)
 				*u.account_users = *value.S.(*uuid.UUID)
 			}
+		case user.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field user_role", values[i])
+			} else if value.Valid {
+				u.user_role = new(uuid.UUID)
+				*u.user_role = *value.S.(*uuid.UUID)
+			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
 		}
@@ -267,6 +291,11 @@ func (u *User) Value(name string) (ent.Value, error) {
 // QueryAccount queries the "account" edge of the User entity.
 func (u *User) QueryAccount() *AccountQuery {
 	return NewUserClient(u.config).QueryAccount(u)
+}
+
+// QueryRole queries the "role" edge of the User entity.
+func (u *User) QueryRole() *RoleQuery {
+	return NewUserClient(u.config).QueryRole(u)
 }
 
 // QueryAuditLogs queries the "audit_logs" edge of the User entity.

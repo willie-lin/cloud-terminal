@@ -258,7 +258,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 获取用户的第一个角色ID
 		//role, err := us.QueryRoles().First(context.Background())
-		r, err := sa.QueryRoles().Only(ctx)
+		r, err := us.QueryRole().Only(ctx)
+		//r, err := sa.QueryRoles().Only(ctx)
 		//role, err := us.QueryRoles().All(ctx)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)

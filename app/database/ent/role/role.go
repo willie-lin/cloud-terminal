@@ -29,6 +29,8 @@ const (
 	FieldIsDefault = "is_default"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
+	// EdgeUsers holds the string denoting the users edge name in mutations.
+	EdgeUsers = "users"
 	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
 	EdgeAccessPolicies = "access_policies"
 	// EdgeParentRole holds the string denoting the parent_role edge name in mutations.
@@ -44,6 +46,13 @@ const (
 	AccountInverseTable = "accounts"
 	// AccountColumn is the table column denoting the account relation/edge.
 	AccountColumn = "account_roles"
+	// UsersTable is the table that holds the users relation/edge.
+	UsersTable = "users"
+	// UsersInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UsersInverseTable = "users"
+	// UsersColumn is the table column denoting the users relation/edge.
+	UsersColumn = "user_role"
 	// AccessPoliciesTable is the table that holds the access_policies relation/edge.
 	AccessPoliciesTable = "access_policies"
 	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
@@ -161,6 +170,20 @@ func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
+// ByUsersCount orders the results by users count.
+func ByUsersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUsersStep(), opts...)
+	}
+}
+
+// ByUsers orders the results by users terms.
+func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByAccessPoliciesCount orders the results by access_policies count.
 func ByAccessPoliciesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -207,6 +230,13 @@ func newAccountStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccountInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+	)
+}
+func newUsersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UsersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, UsersTable, UsersColumn),
 	)
 }
 func newAccessPoliciesStep() *sqlgraph.Step {

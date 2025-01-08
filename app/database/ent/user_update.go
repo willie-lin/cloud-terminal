@@ -15,6 +15,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -313,6 +314,17 @@ func (uu *UserUpdate) SetAccount(a *Account) *UserUpdate {
 	return uu.SetAccountID(a.ID)
 }
 
+// SetRoleID sets the "role" edge to the Role entity by ID.
+func (uu *UserUpdate) SetRoleID(id uuid.UUID) *UserUpdate {
+	uu.mutation.SetRoleID(id)
+	return uu
+}
+
+// SetRole sets the "role" edge to the Role entity.
+func (uu *UserUpdate) SetRole(r *Role) *UserUpdate {
+	return uu.SetRoleID(r.ID)
+}
+
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
 func (uu *UserUpdate) AddAuditLogIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.AddAuditLogIDs(ids...)
@@ -336,6 +348,12 @@ func (uu *UserUpdate) Mutation() *UserMutation {
 // ClearAccount clears the "account" edge to the Account entity.
 func (uu *UserUpdate) ClearAccount() *UserUpdate {
 	uu.mutation.ClearAccount()
+	return uu
+}
+
+// ClearRole clears the "role" edge to the Role entity.
+func (uu *UserUpdate) ClearRole() *UserUpdate {
+	uu.mutation.ClearRole()
 	return uu
 }
 
@@ -430,6 +448,9 @@ func (uu *UserUpdate) check() error {
 	}
 	if uu.mutation.AccountCleared() && len(uu.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "User.account"`)
+	}
+	if uu.mutation.RoleCleared() && len(uu.mutation.RoleIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "User.role"`)
 	}
 	return nil
 }
@@ -543,6 +564,35 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.RoleCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.RoleTable,
+			Columns: []string{user.RoleColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RoleIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.RoleTable,
+			Columns: []string{user.RoleColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -897,6 +947,17 @@ func (uuo *UserUpdateOne) SetAccount(a *Account) *UserUpdateOne {
 	return uuo.SetAccountID(a.ID)
 }
 
+// SetRoleID sets the "role" edge to the Role entity by ID.
+func (uuo *UserUpdateOne) SetRoleID(id uuid.UUID) *UserUpdateOne {
+	uuo.mutation.SetRoleID(id)
+	return uuo
+}
+
+// SetRole sets the "role" edge to the Role entity.
+func (uuo *UserUpdateOne) SetRole(r *Role) *UserUpdateOne {
+	return uuo.SetRoleID(r.ID)
+}
+
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
 func (uuo *UserUpdateOne) AddAuditLogIDs(ids ...uuid.UUID) *UserUpdateOne {
 	uuo.mutation.AddAuditLogIDs(ids...)
@@ -920,6 +981,12 @@ func (uuo *UserUpdateOne) Mutation() *UserMutation {
 // ClearAccount clears the "account" edge to the Account entity.
 func (uuo *UserUpdateOne) ClearAccount() *UserUpdateOne {
 	uuo.mutation.ClearAccount()
+	return uuo
+}
+
+// ClearRole clears the "role" edge to the Role entity.
+func (uuo *UserUpdateOne) ClearRole() *UserUpdateOne {
+	uuo.mutation.ClearRole()
 	return uuo
 }
 
@@ -1027,6 +1094,9 @@ func (uuo *UserUpdateOne) check() error {
 	}
 	if uuo.mutation.AccountCleared() && len(uuo.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "User.account"`)
+	}
+	if uuo.mutation.RoleCleared() && len(uuo.mutation.RoleIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "User.role"`)
 	}
 	return nil
 }
@@ -1157,6 +1227,35 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.RoleCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.RoleTable,
+			Columns: []string{user.RoleColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RoleIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.RoleTable,
+			Columns: []string{user.RoleColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

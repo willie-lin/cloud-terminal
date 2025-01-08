@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/auditlog"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
@@ -268,6 +269,17 @@ func (uc *UserCreate) SetAccount(a *Account) *UserCreate {
 	return uc.SetAccountID(a.ID)
 }
 
+// SetRoleID sets the "role" edge to the Role entity by ID.
+func (uc *UserCreate) SetRoleID(id uuid.UUID) *UserCreate {
+	uc.mutation.SetRoleID(id)
+	return uc
+}
+
+// SetRole sets the "role" edge to the Role entity.
+func (uc *UserCreate) SetRole(r *Role) *UserCreate {
+	return uc.SetRoleID(r.ID)
+}
+
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
 func (uc *UserCreate) AddAuditLogIDs(ids ...uuid.UUID) *UserCreate {
 	uc.mutation.AddAuditLogIDs(ids...)
@@ -428,6 +440,9 @@ func (uc *UserCreate) check() error {
 	if len(uc.mutation.AccountIDs()) == 0 {
 		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "User.account"`)}
 	}
+	if len(uc.mutation.RoleIDs()) == 0 {
+		return &ValidationError{Name: "role", err: errors.New(`ent: missing required edge "User.role"`)}
+	}
 	return nil
 }
 
@@ -550,6 +565,23 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.account_users = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.RoleIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.RoleTable,
+			Columns: []string{user.RoleColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_role = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.AuditLogsIDs(); len(nodes) > 0 {

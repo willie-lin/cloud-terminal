@@ -17,6 +17,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
 // RoleQuery is the builder for querying Role entities.
@@ -27,6 +28,7 @@ type RoleQuery struct {
 	inters             []Interceptor
 	predicates         []predicate.Role
 	withAccount        *AccountQuery
+	withUsers          *UserQuery
 	withAccessPolicies *AccessPolicyQuery
 	withParentRole     *RoleQuery
 	withChildRoles     *RoleQuery
@@ -82,6 +84,28 @@ func (rq *RoleQuery) QueryAccount() *AccountQuery {
 			sqlgraph.From(role.Table, role.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountTable, role.AccountColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUsers chains the current query on the "users" edge.
+func (rq *RoleQuery) QueryUsers() *UserQuery {
+	query := (&UserClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, role.UsersTable, role.UsersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -348,6 +372,7 @@ func (rq *RoleQuery) Clone() *RoleQuery {
 		inters:             append([]Interceptor{}, rq.inters...),
 		predicates:         append([]predicate.Role{}, rq.predicates...),
 		withAccount:        rq.withAccount.Clone(),
+		withUsers:          rq.withUsers.Clone(),
 		withAccessPolicies: rq.withAccessPolicies.Clone(),
 		withParentRole:     rq.withParentRole.Clone(),
 		withChildRoles:     rq.withChildRoles.Clone(),
@@ -365,6 +390,17 @@ func (rq *RoleQuery) WithAccount(opts ...func(*AccountQuery)) *RoleQuery {
 		opt(query)
 	}
 	rq.withAccount = query
+	return rq
+}
+
+// WithUsers tells the query-builder to eager-load the nodes that are connected to
+// the "users" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RoleQuery) WithUsers(opts ...func(*UserQuery)) *RoleQuery {
+	query := (&UserClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withUsers = query
 	return rq
 }
 
@@ -480,8 +516,9 @@ func (rq *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 		nodes       = []*Role{}
 		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			rq.withAccount != nil,
+			rq.withUsers != nil,
 			rq.withAccessPolicies != nil,
 			rq.withParentRole != nil,
 			rq.withChildRoles != nil,
@@ -514,6 +551,13 @@ func (rq *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 	if query := rq.withAccount; query != nil {
 		if err := rq.loadAccount(ctx, query, nodes, nil,
 			func(n *Role, e *Account) { n.Edges.Account = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withUsers; query != nil {
+		if err := rq.loadUsers(ctx, query, nodes,
+			func(n *Role) { n.Edges.Users = []*User{} },
+			func(n *Role, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -570,6 +614,37 @@ func (rq *RoleQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (rq *RoleQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*Role, init func(*Role), assign func(*Role, *User)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Role)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.User(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(role.UsersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_role
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_role" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_role" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

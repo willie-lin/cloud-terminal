@@ -999,6 +999,29 @@ func HasAccountWith(preds ...predicate.Account) predicate.User {
 	})
 }
 
+// HasRole applies the HasEdge predicate on the "role" edge.
+func HasRole() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, RoleTable, RoleColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRoleWith applies the HasEdge predicate on the "role" edge with a given conditions (other predicates).
+func HasRoleWith(preds ...predicate.Role) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newRoleStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasAuditLogs applies the HasEdge predicate on the "audit_logs" edge.
 func HasAuditLogs() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

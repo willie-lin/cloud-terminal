@@ -220,6 +220,7 @@ var (
 		{Name: "last_login_time", Type: field.TypeTime},
 		{Name: "social_logins", Type: field.TypeJSON, Nullable: true},
 		{Name: "account_users", Type: field.TypeUUID},
+		{Name: "user_role", Type: field.TypeUUID},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -231,6 +232,12 @@ var (
 				Symbol:     "users_accounts_users",
 				Columns:    []*schema.Column{UsersColumns[19]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "users_roles_role",
+				Columns:    []*schema.Column{UsersColumns[20]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
@@ -398,6 +405,7 @@ func init() {
 	RolesTable.ForeignKeys[1].RefTable = AccountsTable
 	TenantsTable.ForeignKeys[0].RefTable = PlatformsTable
 	UsersTable.ForeignKeys[0].RefTable = AccountsTable
+	UsersTable.ForeignKeys[1].RefTable = RolesTable
 	AccountResourcesTable.ForeignKeys[0].RefTable = AccountsTable
 	AccountResourcesTable.ForeignKeys[1].RefTable = ResourcesTable
 	ResourceParentTable.ForeignKeys[0].RefTable = ResourcesTable

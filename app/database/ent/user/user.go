@@ -54,6 +54,8 @@ const (
 	FieldSocialLogins = "social_logins"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
+	// EdgeRole holds the string denoting the role edge name in mutations.
+	EdgeRole = "role"
 	// EdgeAuditLogs holds the string denoting the audit_logs edge name in mutations.
 	EdgeAuditLogs = "audit_logs"
 	// Table holds the table name of the user in the database.
@@ -65,6 +67,13 @@ const (
 	AccountInverseTable = "accounts"
 	// AccountColumn is the table column denoting the account relation/edge.
 	AccountColumn = "account_users"
+	// RoleTable is the table that holds the role relation/edge.
+	RoleTable = "users"
+	// RoleInverseTable is the table name for the Role entity.
+	// It exists in this package in order to avoid circular dependency with the "role" package.
+	RoleInverseTable = "roles"
+	// RoleColumn is the table column denoting the role relation/edge.
+	RoleColumn = "user_role"
 	// AuditLogsTable is the table that holds the audit_logs relation/edge. The primary key declared below.
 	AuditLogsTable = "user_audit_logs"
 	// AuditLogsInverseTable is the table name for the AuditLog entity.
@@ -99,6 +108,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"account_users",
+	"user_role",
 }
 
 var (
@@ -282,6 +292,13 @@ func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
+// ByRoleField orders the results by role field.
+func ByRoleField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRoleStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByAuditLogsCount orders the results by audit_logs count.
 func ByAuditLogsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -300,6 +317,13 @@ func newAccountStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccountInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+	)
+}
+func newRoleStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RoleInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, RoleTable, RoleColumn),
 	)
 }
 func newAuditLogsStep() *sqlgraph.Step {
