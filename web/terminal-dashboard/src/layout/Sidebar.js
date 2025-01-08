@@ -9,6 +9,7 @@ import {
     PresentationChartBarIcon,
     UserCircleIcon,
     Cog6ToothIcon,
+    CommandLineIcon,
     InboxIcon,
     PowerIcon,} from "@heroicons/react/24/solid";
 import {Link} from "react-router-dom";
@@ -17,12 +18,9 @@ import {
     ChevronDownIcon,
     ChevronRightIcon,
     CubeTransparentIcon,
-    UserIcon
+    UserIcon,
 } from "@heroicons/react/16/solid";
 import { useTheme } from './ThemeContext';
-
-
-
 
 function Sidebar({ email, onLogout }) {
     const [open, setOpen] = React.useState(0);
@@ -170,47 +168,13 @@ function Sidebar({ email, onLogout }) {
                         </List>
                     </AccordionBody>
                 </Accordion>
-                {/*</ListItem>*/}
-                {/*)}*/}
-                {/*    {user.role === 'Super Admin' && (*/}
-                {/*        <ListItem className="p-0" selected={open === 2}>*/}
-                {/*            <AccordionHeader onClick={() => handleOpen(2)} className="border-b-0 p-3">*/}
-                {/*                <ListItemPrefix>*/}
-                {/*                    <UserIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>*/}
-                {/*                </ListItemPrefix>*/}
-                {/*                <Typography className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
-                {/*                    User Management*/}
-                {/*                </Typography>*/}
-                {/*            </AccordionHeader>*/}
-                {/*            <AccordionBody className="py-1">*/}
-                {/*                <List className="p-0">*/}
-                {/*                    <ListItem>*/}
-                {/*                        <ListItemPrefix>*/}
-                {/*                            <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>*/}
-                {/*                        </ListItemPrefix>*/}
-                {/*                        User Permissions*/}
-                {/*                    </ListItem>*/}
-                {/*                    <ListItem>*/}
-                {/*                        <ListItemPrefix>*/}
-                {/*                            <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>*/}
-                {/*                        </ListItemPrefix>*/}
-                {/*                        User Roles*/}
-                {/*                    </ListItem>*/}
-                {/*                </List>*/}
-                {/*            </AccordionBody>*/}
-                {/*        </ListItem>*/}
-                {/*    )}*/}
 
                 <hr className={`my-2 ${isDarkMode ? 'border-gray-600' : 'border-blue-gray-50'}`}/>
                 <ListItem
                     // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
                     className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                     <ListItemPrefix>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                             stroke="currentColor" className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}>
-                            <path strokeLinecap="round" strokeLinejoin="round"
-                                  d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z"/>
-                        </svg>
+                        <CommandLineIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
                     </ListItemPrefix>
                     Cloud Terminal
                 </ListItem>

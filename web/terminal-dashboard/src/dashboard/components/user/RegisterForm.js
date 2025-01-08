@@ -142,7 +142,7 @@ function RegisterForm({ onRegister }) {
                             onChange={(e) => setPassword(e.target.value)}
                         />
                         {registerError && (
-                            <Alert color="red" className="mb-4">
+                            <Alert color="red" className="mb-4" open={true}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
                                         <i className="fas fa-info-circle mr-2"></i>
@@ -168,7 +168,7 @@ function RegisterForm({ onRegister }) {
                         />
                     </div>
                     {passwordError && (
-                        <Alert color="red" className="mb-4">
+                        <Alert color="red" className="mb-4" open={true}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
                                     <i className="fas fa-info-circle mr-2"></i>

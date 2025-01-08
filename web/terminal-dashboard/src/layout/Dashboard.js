@@ -31,9 +31,9 @@ function Dashboard() {
                     </div>
 
                     <main className="flex-grow overflow-x-hidden overflow-y-auto">
-                        <div className="container mx-auto px-4 py-8 max-w-full">
+                        {/*<div className="container mx-auto px-4 py-8 max-w-full">*/}
                             <Outlet />
-                        </div>
+                        {/*</div>*/}
                     </main>
 
                     <div className={`${
@@ -44,7 +44,6 @@ function Dashboard() {
                 </div>
             </div>
     );
-
 }
 
 export default Dashboard;

@@ -130,7 +130,7 @@ export function ResetPasswordForm({ onResetPassword }) {
                         )}
 
                         {resetPasswordError && (
-                            <Alert color="red" className="mb-4">
+                            <Alert color="red" className="mb-4" open={true}>
                                 <div className="flex items-center">
                                     <span className="text-sm">{resetPasswordError}</span>
                                 </div>

@@ -87,13 +87,13 @@ function useTwoFactorAuth() {
 
 function TwoFactorAuthPage({ user }) {
     const { userInfo, qrCode, qrGenerated, isConfirmed, loading, error, otp, setOtp, generateQRCode, confirm2FAHandler } = useTwoFactorAuth(user.email);
-
     return (
-    // <section className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-        <div className="w-full flex flex-col items-center lg:w-3/5 bg-gray-100">
-            <Card className="w-full max-w-md mt-[10%]">
-                <div className="text-center p-6">
-                    <Typography variant="h2" className="font-bold mb-4">Two-Factor Authentication</Typography>
+        <div className="w-full ">
+            {/*<div className="w-full flex flex-col items-center lg:w-3/5 mt-12 bg-gray-100 p-4">*/}
+                <Card className="w-full shadow-lg rounded-lg">
+            {/*<Card className="w-full max-w-md p-6 shadow-lg rounded-lg">*/}
+                <div className="text-center mb-6">
+                    <Typography variant="h2" className="font-bold mb-4">MFA Authentication</Typography>
                     <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">
                         {isConfirmed ? "Your account is protected with 2FA" : "Enhance your account security with 2FA"}
                     </Typography>
@@ -101,12 +101,12 @@ function TwoFactorAuthPage({ user }) {
 
                 <div className="p-6">
                     {error && (
-                        <Alert color="red" className="mb-4">
+                        <Alert color="red" className="mb-4" open={true}>
                             {error}
                         </Alert>
                     )}
                     {loading && (
-                        <Alert color="blue-gray" className="mb-4">
+                        <Alert color="blue-gray" className="mb-4" open={true}>
                             Loading...
                         </Alert>
                     )}
@@ -117,17 +117,15 @@ function TwoFactorAuthPage({ user }) {
                     )}
                     {!loading && (
                         isConfirmed ? (
-                            <Alert
-                                icon={<ShieldCheckIcon className="h-6 w-6" />}
-                                className="mb-2"
-                            >
-                                ✅Two-factor authentication is enabled!
+                            <Alert icon={<ShieldCheckIcon className="h-6 w-6"/>} className="mb-2" open={true}>
+                                ✅ Two-factor authentication is enabled!
                             </Alert>
                         ) : (
                             <>
                                 {!qrGenerated && (
                                     <Typography color="gray" className="mb-3">
-                                        You haven't turned on two-factor authentication, which improves the security of your account.
+                                        You haven't turned on MFA authentication, which improves the security of your
+                                        account.
                                     </Typography>
                                 )}
                                 {!qrGenerated && (
@@ -135,10 +133,10 @@ function TwoFactorAuthPage({ user }) {
                                         type="button"
                                         color="lightBlue"
                                         onClick={generateQRCode}
-                                        className="flex items-center justify-center gap-2 mt-2"
+                                        className="flex items-center justify-center gap-2 mt-2 w-full"
                                     >
-                                        <QrCodeIcon className="h-5 w-5" />
-                                        Generate two-factor authentication QR code
+                                        <QrCodeIcon className="h-5 w-5"/>
+                                        Generate MFA QR Code
                                     </Button>
                                 )}
                                 {qrGenerated && qrCode && (
@@ -154,8 +152,8 @@ function TwoFactorAuthPage({ user }) {
                                             onChange={(e) => setOtp(e.target.value)}
                                             placeholder="Enter your one-time password"
                                             className="!border !border-gray-300 bg-white text-gray-900 shadow-lg ring-transparent placeholder:text-gray-500 focus:!border-gray-900 focus:ring-4 focus:ring-gray-900"
-                                            labelProps={{ className: "hidden" }}
-                                            containerProps={{ className: "min-w-[100px]" }}
+                                            labelProps={{className: "hidden"}}
+                                            containerProps={{className: "min-w-[100px]"}}
                                         />
                                         <Button
                                             type="button"
@@ -163,8 +161,8 @@ function TwoFactorAuthPage({ user }) {
                                             onClick={confirm2FAHandler}
                                             className="flex items-center justify-center gap-2 w-full mt-4"
                                         >
-                                            <LockOpenIcon className="h-5 w-5" />
-                                            Confirm two-factor authentication
+                                            <LockOpenIcon className="h-5 w-5"/>
+                                            Confirm MFA Authentication
                                         </Button>
                                     </div>
                                 )}
@@ -173,9 +171,9 @@ function TwoFactorAuthPage({ user }) {
                     )}
                 </div>
 
-                <CardFooter className="pt-0">
+                <CardFooter className="text-center pt-0">
                     <Typography variant="small" className="mt-6 flex justify-center">
-                        Need help?
+                        Need Help?
                         <Typography
                             as="a"
                             href="#"
@@ -189,8 +187,7 @@ function TwoFactorAuthPage({ user }) {
                 </CardFooter>
             </Card>
         </div>
-    // </section>
-);
+    );
 }
 
 export default TwoFactorAuthPage;

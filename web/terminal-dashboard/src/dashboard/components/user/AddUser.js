@@ -109,7 +109,7 @@ function AddUserForm({ onAddUser, onClose }) {
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                             {addUserError && (
-                                <Alert color="red" className="mb-4">
+                                <Alert color="red" className="mb-4" open={true}>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center">
                                             <i className="fas fa-info-circle mr-2"></i>
