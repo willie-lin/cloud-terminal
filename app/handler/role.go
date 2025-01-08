@@ -6,7 +6,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
 )
@@ -54,8 +53,8 @@ func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// GetAllRolesByTenant 查询当前租户下的用户，管理员登陆时查询所有
-func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
+// GetAllRolesByAccountTenant GetAllRolesByTenant 查询当前租户下的用户，管理员登陆时查询所有
+func GetAllRolesByAccountTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		v := viewer.FromContext(c.Request().Context())
 		if v == nil {
@@ -69,7 +68,7 @@ func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
 
 		var roles []*ent.Role
 		var err error
-		if roleName == "admin" || roleName == "superadmin" {
+		if roleName == "admin" || roleName == "super_admin" {
 			roles, err = client.Role.Query().
 				//Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
 				All(c.Request().Context())
@@ -78,7 +77,7 @@ func GetAllRolesByTenant(client *ent.Client) echo.HandlerFunc {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
 			}
 		} else {
-			roles, err = client.Role.Query().Where(role.HasUsersWith(user.IDEQ(v.UserID))).All(c.Request().Context())
+			roles, err = client.Role.Query().Where(role.HasAccount()).All(c.Request().Context())
 			if err != nil {
 				log.Printf("Error querying roles for user %s: %v", v.UserID, err)
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})

@@ -14,7 +14,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
 
 // RoleCreate is the builder for creating a Role entity.
@@ -131,21 +130,6 @@ func (rc *RoleCreate) SetNillableAccountID(id *uuid.UUID) *RoleCreate {
 // SetAccount sets the "account" edge to the Account entity.
 func (rc *RoleCreate) SetAccount(a *Account) *RoleCreate {
 	return rc.SetAccountID(a.ID)
-}
-
-// AddUserIDs adds the "users" edge to the User entity by IDs.
-func (rc *RoleCreate) AddUserIDs(ids ...uuid.UUID) *RoleCreate {
-	rc.mutation.AddUserIDs(ids...)
-	return rc
-}
-
-// AddUsers adds the "users" edges to the User entity.
-func (rc *RoleCreate) AddUsers(u ...*User) *RoleCreate {
-	ids := make([]uuid.UUID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return rc.AddUserIDs(ids...)
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
@@ -346,22 +330,6 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.account_roles = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := rc.mutation.UsersIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {

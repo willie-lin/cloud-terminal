@@ -10,7 +10,6 @@ import (
 	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"net/http"
@@ -138,34 +137,34 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		//检查管理员角色是否存在，如果不存在则创建
 		//adminRole, err := client.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
 
-		adminRole, err := tx.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
-
-		if ent.IsNotFound(err) {
-			err := tx.Rollback()
-			if err != nil {
-				return err
-			}
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "admin role is not found"})
-		}
-		if err = tx.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
-			err := tx.Rollback()
-			if err != nil {
-				return err
-			}
-			log.Printf("Error assigning super admin role to user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "add role to user failed"})
-		}
-
-		if err := tx.Commit(); err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "commit transaction error"})
-		}
+		//adminRole, err := tx.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
+		//
+		//if ent.IsNotFound(err) {
+		//	err := tx.Rollback()
+		//	if err != nil {
+		//		return err
+		//	}
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "admin role is not found"})
+		//}
+		//if err = tx.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
+		//	err := tx.Rollback()
+		//	if err != nil {
+		//		return err
+		//	}
+		//	log.Printf("Error assigning super admin role to user: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "add role to user failed"})
+		//}
+		//
+		//if err := tx.Commit(); err != nil {
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "commit transaction error"})
+		//}
 
 		//if err = client.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
 		//	log.Printf("Error assigning super admin role to user: %v", err)
 		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning super admin role"})
 		//}
-		//return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
-		return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
+		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
+		//return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
 	}
 }
 

@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -425,52 +424,5 @@ func UpdateUserByUUID(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, "Error updating user")
 		}
 		return c.JSON(http.StatusOK, user)
-	}
-}
-
-// AssignRoleToUser 创建一个单独的 API 来为用户分配角色：
-func AssignRoleToUser(client *ent.Client) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		v := viewer.FromContext(c.Request().Context())
-		if v == nil || v.RoleName != "superadmin" && v.RoleName != "admin" {
-			log.Printf("No viewer found in context or not authorized")
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-		}
-
-		type AssignRoleDTO struct {
-			UserID uuid.UUID `json:"user_id"`
-			RoleID uuid.UUID `json:"role_id"`
-		}
-
-		var dto AssignRoleDTO
-		if err := c.Bind(&dto); err != nil {
-			log.Printf("Error binding role assignment: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
-		}
-
-		// 检查用户是否存在
-		user, err := client.User.Get(c.Request().Context(), dto.UserID)
-		if err != nil {
-			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "User not found"})
-		}
-
-		// 检查角色是否存在
-		role, err := client.Role.Query().Where(role.IDEQ(dto.RoleID)).Only(c.Request().Context())
-		if err != nil {
-			log.Printf("Role not found: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Role not found"})
-		}
-
-		// 关联用户和角色
-		err = client.User.UpdateOne(user).
-			AddRoles(role).
-			Exec(c.Request().Context())
-		if err != nil {
-			log.Printf("Error assigning role to user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to assign role to user"})
-		}
-
-		return c.JSON(http.StatusOK, map[string]string{"message": "Role assigned to user successfully"})
 	}
 }

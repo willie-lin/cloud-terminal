@@ -139,7 +139,6 @@ var (
 		{Name: "is_default", Type: field.TypeBool, Default: false},
 		{Name: "access_policy_roles", Type: field.TypeUUID, Nullable: true},
 		{Name: "account_roles", Type: field.TypeUUID, Nullable: true},
-		{Name: "user_roles", Type: field.TypeUUID, Nullable: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
@@ -157,12 +156,6 @@ var (
 				Symbol:     "roles_accounts_roles",
 				Columns:    []*schema.Column{RolesColumns[8]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "roles_users_roles",
-				Columns:    []*schema.Column{RolesColumns[9]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -227,7 +220,6 @@ var (
 		{Name: "last_login_time", Type: field.TypeTime},
 		{Name: "social_logins", Type: field.TypeJSON, Nullable: true},
 		{Name: "account_users", Type: field.TypeUUID},
-		{Name: "role_users", Type: field.TypeUUID, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -240,12 +232,6 @@ var (
 				Columns:    []*schema.Column{UsersColumns[19]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "users_roles_users",
-				Columns:    []*schema.Column{UsersColumns[20]},
-				RefColumns: []*schema.Column{RolesColumns[0]},
-				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -410,10 +396,8 @@ func init() {
 	AccountsTable.ForeignKeys[0].RefTable = TenantsTable
 	RolesTable.ForeignKeys[0].RefTable = AccessPoliciesTable
 	RolesTable.ForeignKeys[1].RefTable = AccountsTable
-	RolesTable.ForeignKeys[2].RefTable = UsersTable
 	TenantsTable.ForeignKeys[0].RefTable = PlatformsTable
 	UsersTable.ForeignKeys[0].RefTable = AccountsTable
-	UsersTable.ForeignKeys[1].RefTable = RolesTable
 	AccountResourcesTable.ForeignKeys[0].RefTable = AccountsTable
 	AccountResourcesTable.ForeignKeys[1].RefTable = ResourcesTable
 	ResourceParentTable.ForeignKeys[0].RefTable = ResourcesTable
