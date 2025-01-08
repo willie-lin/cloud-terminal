@@ -372,6 +372,22 @@ func (c *AccessPolicyClient) GetX(ctx context.Context, id uuid.UUID) *AccessPoli
 	return obj
 }
 
+// QueryAccount queries the account edge of a AccessPolicy.
+func (c *AccessPolicyClient) QueryAccount(ap *AccessPolicy) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ap.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, accesspolicy.AccountTable, accesspolicy.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryRoles queries the roles edge of a AccessPolicy.
 func (c *AccessPolicyClient) QueryRoles(ap *AccessPolicy) *RoleQuery {
 	query := (&RoleClient{config: c.config}).Query()
@@ -529,7 +545,7 @@ func (c *AccountClient) QueryTenant(a *Account) *TenantQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(account.Table, account.FieldID, id),
 			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, account.TenantTable, account.TenantColumn),
+			sqlgraph.Edge(sqlgraph.O2O, true, account.TenantTable, account.TenantColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -553,6 +569,22 @@ func (c *AccountClient) QueryUsers(a *Account) *UserQuery {
 	return query
 }
 
+// QueryRoles queries the roles edge of a Account.
+func (c *AccountClient) QueryRoles(a *Account) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.RolesTable, account.RolesColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryResources queries the resources edge of a Account.
 func (c *AccountClient) QueryResources(a *Account) *ResourceQuery {
 	query := (&ResourceClient{config: c.config}).Query()
@@ -562,6 +594,22 @@ func (c *AccountClient) QueryResources(a *Account) *ResourceQuery {
 			sqlgraph.From(account.Table, account.FieldID, id),
 			sqlgraph.To(resource.Table, resource.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, account.ResourcesTable, account.ResourcesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessPolicies queries the access_policies edge of a Account.
+func (c *AccountClient) QueryAccessPolicies(a *Account) *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, id),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.AccessPoliciesTable, account.AccessPoliciesColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -1197,6 +1245,22 @@ func (c *RoleClient) GetX(ctx context.Context, id uuid.UUID) *Role {
 	return obj
 }
 
+// QueryAccount queries the account edge of a Role.
+func (c *RoleClient) QueryAccount(r *Role) *AccountQuery {
+	query := (&AccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountTable, role.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUsers queries the users edge of a Role.
 func (c *RoleClient) QueryUsers(r *Role) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
@@ -1206,6 +1270,22 @@ func (c *RoleClient) QueryUsers(r *Role) *UserQuery {
 			sqlgraph.From(role.Table, role.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, role.UsersTable, role.UsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessPolicies queries the access_policies edge of a Role.
+func (c *RoleClient) QueryAccessPolicies(r *Role) *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, role.AccessPoliciesTable, role.AccessPoliciesColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -1402,7 +1482,7 @@ func (c *TenantClient) QueryAccounts(t *Tenant) *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(tenant.Table, tenant.FieldID, id),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.AccountsTable, tenant.AccountsColumn),
+			sqlgraph.Edge(sqlgraph.O2O, false, tenant.AccountsTable, tenant.AccountsColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil

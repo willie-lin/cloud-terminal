@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 )
@@ -21,11 +22,13 @@ import (
 // AccessPolicyQuery is the builder for querying AccessPolicy entities.
 type AccessPolicyQuery struct {
 	config
-	ctx        *QueryContext
-	order      []accesspolicy.OrderOption
-	inters     []Interceptor
-	predicates []predicate.AccessPolicy
-	withRoles  *RoleQuery
+	ctx         *QueryContext
+	order       []accesspolicy.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.AccessPolicy
+	withAccount *AccountQuery
+	withRoles   *RoleQuery
+	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -60,6 +63,28 @@ func (apq *AccessPolicyQuery) Unique(unique bool) *AccessPolicyQuery {
 func (apq *AccessPolicyQuery) Order(o ...accesspolicy.OrderOption) *AccessPolicyQuery {
 	apq.order = append(apq.order, o...)
 	return apq
+}
+
+// QueryAccount chains the current query on the "account" edge.
+func (apq *AccessPolicyQuery) QueryAccount() *AccountQuery {
+	query := (&AccountClient{config: apq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := apq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := apq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, accesspolicy.AccountTable, accesspolicy.AccountColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(apq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryRoles chains the current query on the "roles" edge.
@@ -271,16 +296,28 @@ func (apq *AccessPolicyQuery) Clone() *AccessPolicyQuery {
 		return nil
 	}
 	return &AccessPolicyQuery{
-		config:     apq.config,
-		ctx:        apq.ctx.Clone(),
-		order:      append([]accesspolicy.OrderOption{}, apq.order...),
-		inters:     append([]Interceptor{}, apq.inters...),
-		predicates: append([]predicate.AccessPolicy{}, apq.predicates...),
-		withRoles:  apq.withRoles.Clone(),
+		config:      apq.config,
+		ctx:         apq.ctx.Clone(),
+		order:       append([]accesspolicy.OrderOption{}, apq.order...),
+		inters:      append([]Interceptor{}, apq.inters...),
+		predicates:  append([]predicate.AccessPolicy{}, apq.predicates...),
+		withAccount: apq.withAccount.Clone(),
+		withRoles:   apq.withRoles.Clone(),
 		// clone intermediate query.
 		sql:  apq.sql.Clone(),
 		path: apq.path,
 	}
+}
+
+// WithAccount tells the query-builder to eager-load the nodes that are connected to
+// the "account" edge. The optional arguments are used to configure the query builder of the edge.
+func (apq *AccessPolicyQuery) WithAccount(opts ...func(*AccountQuery)) *AccessPolicyQuery {
+	query := (&AccountClient{config: apq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	apq.withAccount = query
+	return apq
 }
 
 // WithRoles tells the query-builder to eager-load the nodes that are connected to
@@ -371,11 +408,19 @@ func (apq *AccessPolicyQuery) prepareQuery(ctx context.Context) error {
 func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*AccessPolicy, error) {
 	var (
 		nodes       = []*AccessPolicy{}
+		withFKs     = apq.withFKs
 		_spec       = apq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
+			apq.withAccount != nil,
 			apq.withRoles != nil,
 		}
 	)
+	if apq.withAccount != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, accesspolicy.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*AccessPolicy).scanValues(nil, columns)
 	}
@@ -394,6 +439,12 @@ func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := apq.withAccount; query != nil {
+		if err := apq.loadAccount(ctx, query, nodes, nil,
+			func(n *AccessPolicy, e *Account) { n.Edges.Account = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := apq.withRoles; query != nil {
 		if err := apq.loadRoles(ctx, query, nodes,
 			func(n *AccessPolicy) { n.Edges.Roles = []*Role{} },
@@ -404,6 +455,38 @@ func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	return nodes, nil
 }
 
+func (apq *AccessPolicyQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Account)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*AccessPolicy)
+	for i := range nodes {
+		if nodes[i].account_access_policies == nil {
+			continue
+		}
+		fk := *nodes[i].account_access_policies
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(account.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "account_access_policies" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (apq *AccessPolicyQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Role)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[uuid.UUID]*AccessPolicy)

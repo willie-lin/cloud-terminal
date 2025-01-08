@@ -23,8 +23,8 @@ const (
 	FieldName = "name"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
-	// FieldArn holds the string denoting the arn field in the database.
-	FieldArn = "arn"
+	// FieldRrn holds the string denoting the rrn field in the database.
+	FieldRrn = "rrn"
 	// FieldProperties holds the string denoting the properties field in the database.
 	FieldProperties = "properties"
 	// FieldTags holds the string denoting the tags field in the database.
@@ -57,7 +57,7 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldName,
 	FieldType,
-	FieldArn,
+	FieldRrn,
 	FieldProperties,
 	FieldTags,
 	FieldDescription,
@@ -96,8 +96,8 @@ var (
 	NameValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
-	// ArnValidator is a validator for the "arn" field. It is called by the builders before save.
-	ArnValidator func(string) error
+	// RrnValidator is a validator for the "rrn" field. It is called by the builders before save.
+	RrnValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -130,9 +130,9 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
-// ByArn orders the results by the arn field.
-func ByArn(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldArn, opts...).ToFunc()
+// ByRrn orders the results by the rrn field.
+func ByRrn(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRrn, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.

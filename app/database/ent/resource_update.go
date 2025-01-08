@@ -64,16 +64,16 @@ func (ru *ResourceUpdate) SetNillableType(s *string) *ResourceUpdate {
 	return ru
 }
 
-// SetArn sets the "arn" field.
-func (ru *ResourceUpdate) SetArn(s string) *ResourceUpdate {
-	ru.mutation.SetArn(s)
+// SetRrn sets the "rrn" field.
+func (ru *ResourceUpdate) SetRrn(s string) *ResourceUpdate {
+	ru.mutation.SetRrn(s)
 	return ru
 }
 
-// SetNillableArn sets the "arn" field if the given value is not nil.
-func (ru *ResourceUpdate) SetNillableArn(s *string) *ResourceUpdate {
+// SetNillableRrn sets the "rrn" field if the given value is not nil.
+func (ru *ResourceUpdate) SetNillableRrn(s *string) *ResourceUpdate {
 	if s != nil {
-		ru.SetArn(*s)
+		ru.SetRrn(*s)
 	}
 	return ru
 }
@@ -283,9 +283,9 @@ func (ru *ResourceUpdate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if v, ok := ru.mutation.Arn(); ok {
-		if err := resource.ArnValidator(v); err != nil {
-			return &ValidationError{Name: "arn", err: fmt.Errorf(`ent: validator failed for field "Resource.arn": %w`, err)}
+	if v, ok := ru.mutation.Rrn(); ok {
+		if err := resource.RrnValidator(v); err != nil {
+			return &ValidationError{Name: "rrn", err: fmt.Errorf(`ent: validator failed for field "Resource.rrn": %w`, err)}
 		}
 	}
 	return nil
@@ -312,8 +312,8 @@ func (ru *ResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 	}
-	if value, ok := ru.mutation.Arn(); ok {
-		_spec.SetField(resource.FieldArn, field.TypeString, value)
+	if value, ok := ru.mutation.Rrn(); ok {
+		_spec.SetField(resource.FieldRrn, field.TypeString, value)
 	}
 	if value, ok := ru.mutation.Properties(); ok {
 		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)
@@ -522,16 +522,16 @@ func (ruo *ResourceUpdateOne) SetNillableType(s *string) *ResourceUpdateOne {
 	return ruo
 }
 
-// SetArn sets the "arn" field.
-func (ruo *ResourceUpdateOne) SetArn(s string) *ResourceUpdateOne {
-	ruo.mutation.SetArn(s)
+// SetRrn sets the "rrn" field.
+func (ruo *ResourceUpdateOne) SetRrn(s string) *ResourceUpdateOne {
+	ruo.mutation.SetRrn(s)
 	return ruo
 }
 
-// SetNillableArn sets the "arn" field if the given value is not nil.
-func (ruo *ResourceUpdateOne) SetNillableArn(s *string) *ResourceUpdateOne {
+// SetNillableRrn sets the "rrn" field if the given value is not nil.
+func (ruo *ResourceUpdateOne) SetNillableRrn(s *string) *ResourceUpdateOne {
 	if s != nil {
-		ruo.SetArn(*s)
+		ruo.SetRrn(*s)
 	}
 	return ruo
 }
@@ -754,9 +754,9 @@ func (ruo *ResourceUpdateOne) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if v, ok := ruo.mutation.Arn(); ok {
-		if err := resource.ArnValidator(v); err != nil {
-			return &ValidationError{Name: "arn", err: fmt.Errorf(`ent: validator failed for field "Resource.arn": %w`, err)}
+	if v, ok := ruo.mutation.Rrn(); ok {
+		if err := resource.RrnValidator(v); err != nil {
+			return &ValidationError{Name: "rrn", err: fmt.Errorf(`ent: validator failed for field "Resource.rrn": %w`, err)}
 		}
 	}
 	return nil
@@ -800,8 +800,8 @@ func (ruo *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err
 	if value, ok := ruo.mutation.GetType(); ok {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 	}
-	if value, ok := ruo.mutation.Arn(); ok {
-		_spec.SetField(resource.FieldArn, field.TypeString, value)
+	if value, ok := ruo.mutation.Rrn(); ok {
+		_spec.SetField(resource.FieldRrn, field.TypeString, value)
 	}
 	if value, ok := ruo.mutation.Properties(); ok {
 		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)

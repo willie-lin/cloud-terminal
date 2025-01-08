@@ -27,8 +27,8 @@ type Resource struct {
 	Name string `json:"name,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
-	// Arn holds the value of the "arn" field.
-	Arn string `json:"arn,omitempty"`
+	// Rrn holds the value of the "rrn" field.
+	Rrn string `json:"rrn,omitempty"`
 	// Properties holds the value of the "properties" field.
 	Properties map[string]interface{} `json:"properties,omitempty"`
 	// Tags holds the value of the "tags" field.
@@ -88,7 +88,7 @@ func (*Resource) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case resource.FieldProperties, resource.FieldTags:
 			values[i] = new([]byte)
-		case resource.FieldName, resource.FieldType, resource.FieldArn, resource.FieldDescription:
+		case resource.FieldName, resource.FieldType, resource.FieldRrn, resource.FieldDescription:
 			values[i] = new(sql.NullString)
 		case resource.FieldCreatedAt, resource.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -139,11 +139,11 @@ func (r *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Type = value.String
 			}
-		case resource.FieldArn:
+		case resource.FieldRrn:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field arn", values[i])
+				return fmt.Errorf("unexpected type %T for field rrn", values[i])
 			} else if value.Valid {
-				r.Arn = value.String
+				r.Rrn = value.String
 			}
 		case resource.FieldProperties:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -230,8 +230,8 @@ func (r *Resource) String() string {
 	builder.WriteString("type=")
 	builder.WriteString(r.Type)
 	builder.WriteString(", ")
-	builder.WriteString("arn=")
-	builder.WriteString(r.Arn)
+	builder.WriteString("rrn=")
+	builder.WriteString(r.Rrn)
 	builder.WriteString(", ")
 	builder.WriteString("properties=")
 	builder.WriteString(fmt.Sprintf("%v", r.Properties))

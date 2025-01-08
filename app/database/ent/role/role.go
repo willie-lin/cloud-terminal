@@ -27,14 +27,25 @@ const (
 	FieldIsDisabled = "is_disabled"
 	// FieldIsDefault holds the string denoting the is_default field in the database.
 	FieldIsDefault = "is_default"
+	// EdgeAccount holds the string denoting the account edge name in mutations.
+	EdgeAccount = "account"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
+	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
+	EdgeAccessPolicies = "access_policies"
 	// EdgeParentRole holds the string denoting the parent_role edge name in mutations.
 	EdgeParentRole = "parent_role"
 	// EdgeChildRoles holds the string denoting the child_roles edge name in mutations.
 	EdgeChildRoles = "child_roles"
 	// Table holds the table name of the role in the database.
 	Table = "roles"
+	// AccountTable is the table that holds the account relation/edge.
+	AccountTable = "roles"
+	// AccountInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountInverseTable = "accounts"
+	// AccountColumn is the table column denoting the account relation/edge.
+	AccountColumn = "account_roles"
 	// UsersTable is the table that holds the users relation/edge.
 	UsersTable = "users"
 	// UsersInverseTable is the table name for the User entity.
@@ -42,6 +53,13 @@ const (
 	UsersInverseTable = "users"
 	// UsersColumn is the table column denoting the users relation/edge.
 	UsersColumn = "role_users"
+	// AccessPoliciesTable is the table that holds the access_policies relation/edge.
+	AccessPoliciesTable = "access_policies"
+	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
+	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
+	AccessPoliciesInverseTable = "access_policies"
+	// AccessPoliciesColumn is the table column denoting the access_policies relation/edge.
+	AccessPoliciesColumn = "role_access_policies"
 	// ParentRoleTable is the table that holds the parent_role relation/edge. The primary key declared below.
 	ParentRoleTable = "role_child_roles"
 	// ChildRolesTable is the table that holds the child_roles relation/edge. The primary key declared below.
@@ -63,6 +81,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"access_policy_roles",
+	"account_roles",
 	"user_roles",
 }
 
@@ -145,6 +164,13 @@ func ByIsDefault(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsDefault, opts...).ToFunc()
 }
 
+// ByAccountField orders the results by account field.
+func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByUsersCount orders the results by users count.
 func ByUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -156,6 +182,20 @@ func ByUsersCount(opts ...sql.OrderTermOption) OrderOption {
 func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAccessPoliciesCount orders the results by access_policies count.
+func ByAccessPoliciesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAccessPoliciesStep(), opts...)
+	}
+}
+
+// ByAccessPolicies orders the results by access_policies terms.
+func ByAccessPolicies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccessPoliciesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -186,11 +226,25 @@ func ByChildRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newChildRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+func newAccountStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccountInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+	)
+}
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
+	)
+}
+func newAccessPoliciesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AccessPoliciesTable, AccessPoliciesColumn),
 	)
 }
 func newParentRoleStep() *sqlgraph.Step {

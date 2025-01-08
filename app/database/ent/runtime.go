@@ -41,11 +41,11 @@ func init() {
 	// accesspolicy.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	accesspolicy.NameValidator = accesspolicyDescName.Validators[0].(func(string) error)
 	// accesspolicyDescStatements is the schema descriptor for statements field.
-	accesspolicyDescStatements := accesspolicyFields[4].Descriptor()
+	accesspolicyDescStatements := accesspolicyFields[3].Descriptor()
 	// accesspolicy.DefaultStatements holds the default value on creation for the statements field.
-	accesspolicy.DefaultStatements = accesspolicyDescStatements.Default.(schema.PolicyStatement)
+	accesspolicy.DefaultStatements = accesspolicyDescStatements.Default.([]schema.PolicyStatement)
 	// accesspolicyDescImmutable is the schema descriptor for immutable field.
-	accesspolicyDescImmutable := accesspolicyFields[5].Descriptor()
+	accesspolicyDescImmutable := accesspolicyFields[4].Descriptor()
 	// accesspolicy.DefaultImmutable holds the default value on creation for the immutable field.
 	accesspolicy.DefaultImmutable = accesspolicyDescImmutable.Default.(bool)
 	// accesspolicyDescID is the schema descriptor for id field.
@@ -148,10 +148,10 @@ func init() {
 	resourceDescType := resourceFields[2].Descriptor()
 	// resource.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	resource.TypeValidator = resourceDescType.Validators[0].(func(string) error)
-	// resourceDescArn is the schema descriptor for arn field.
-	resourceDescArn := resourceFields[3].Descriptor()
-	// resource.ArnValidator is a validator for the "arn" field. It is called by the builders before save.
-	resource.ArnValidator = resourceDescArn.Validators[0].(func(string) error)
+	// resourceDescRrn is the schema descriptor for rrn field.
+	resourceDescRrn := resourceFields[3].Descriptor()
+	// resource.RrnValidator is a validator for the "rrn" field. It is called by the builders before save.
+	resource.RrnValidator = resourceDescRrn.Validators[0].(func(string) error)
 	// resourceDescID is the schema descriptor for id field.
 	resourceDescID := resourceFields[0].Descriptor()
 	// resource.DefaultID holds the default value on creation for the id field.

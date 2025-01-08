@@ -24,7 +24,7 @@ func (Role) Mixin() []ent.Mixin {
 func (Role) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
-		field.String("name").Unique().NotEmpty(),
+		field.String("name").NotEmpty(),
 		field.String("description").Optional(),
 		field.Bool("is_disabled").Default(false), // 标记角色是否被禁用
 		field.Bool("is_default").Default(false),
@@ -34,7 +34,9 @@ func (Role) Fields() []ent.Field {
 // Edges of the Role.
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.From("account", Account.Type).Ref("roles").Unique(),
 		edge.To("users", User.Type),
+		edge.To("access_policies", AccessPolicy.Type),
 		edge.To("child_roles", Role.Type).From("parent_role"), // 自引用：一个 Role 可以有多个子 Role
 	}
 }

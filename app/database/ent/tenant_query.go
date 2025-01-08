@@ -103,7 +103,7 @@ func (tq *TenantQuery) QueryAccounts() *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.AccountsTable, tenant.AccountsColumn),
+			sqlgraph.Edge(sqlgraph.O2O, false, tenant.AccountsTable, tenant.AccountsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -483,9 +483,8 @@ func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 		}
 	}
 	if query := tq.withAccounts; query != nil {
-		if err := tq.loadAccounts(ctx, query, nodes,
-			func(n *Tenant) { n.Edges.Accounts = []*Account{} },
-			func(n *Tenant, e *Account) { n.Edges.Accounts = append(n.Edges.Accounts, e) }); err != nil {
+		if err := tq.loadAccounts(ctx, query, nodes, nil,
+			func(n *Tenant, e *Account) { n.Edges.Accounts = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -537,9 +536,6 @@ func (tq *TenantQuery) loadAccounts(ctx context.Context, query *AccountQuery, no
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
 	}
 	query.withFKs = true
 	query.Where(predicate.Account(func(s *sql.Selector) {

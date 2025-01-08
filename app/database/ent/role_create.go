@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 )
@@ -112,6 +114,25 @@ func (rc *RoleCreate) SetNillableID(u *uuid.UUID) *RoleCreate {
 	return rc
 }
 
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (rc *RoleCreate) SetAccountID(id uuid.UUID) *RoleCreate {
+	rc.mutation.SetAccountID(id)
+	return rc
+}
+
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (rc *RoleCreate) SetNillableAccountID(id *uuid.UUID) *RoleCreate {
+	if id != nil {
+		rc = rc.SetAccountID(*id)
+	}
+	return rc
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (rc *RoleCreate) SetAccount(a *Account) *RoleCreate {
+	return rc.SetAccountID(a.ID)
+}
+
 // AddUserIDs adds the "users" edge to the User entity by IDs.
 func (rc *RoleCreate) AddUserIDs(ids ...uuid.UUID) *RoleCreate {
 	rc.mutation.AddUserIDs(ids...)
@@ -125,6 +146,21 @@ func (rc *RoleCreate) AddUsers(u ...*User) *RoleCreate {
 		ids[i] = u[i].ID
 	}
 	return rc.AddUserIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (rc *RoleCreate) AddAccessPolicyIDs(ids ...uuid.UUID) *RoleCreate {
+	rc.mutation.AddAccessPolicyIDs(ids...)
+	return rc
+}
+
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (rc *RoleCreate) AddAccessPolicies(a ...*AccessPolicy) *RoleCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return rc.AddAccessPolicyIDs(ids...)
 }
 
 // AddParentRoleIDs adds the "parent_role" edge to the Role entity by IDs.
@@ -295,6 +331,23 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
 		_node.IsDefault = value
 	}
+	if nodes := rc.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   role.AccountTable,
+			Columns: []string{role.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.account_roles = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := rc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -304,6 +357,22 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.AccessPoliciesTable,
+			Columns: []string{role.AccessPoliciesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

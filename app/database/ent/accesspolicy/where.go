@@ -301,26 +301,6 @@ func DescriptionContainsFold(v string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// EffectEQ applies the EQ predicate on the "effect" field.
-func EffectEQ(v Effect) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldEQ(FieldEffect, v))
-}
-
-// EffectNEQ applies the NEQ predicate on the "effect" field.
-func EffectNEQ(v Effect) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldNEQ(FieldEffect, v))
-}
-
-// EffectIn applies the In predicate on the "effect" field.
-func EffectIn(vs ...Effect) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldIn(FieldEffect, vs...))
-}
-
-// EffectNotIn applies the NotIn predicate on the "effect" field.
-func EffectNotIn(vs ...Effect) predicate.AccessPolicy {
-	return predicate.AccessPolicy(sql.FieldNotIn(FieldEffect, vs...))
-}
-
 // ImmutableEQ applies the EQ predicate on the "immutable" field.
 func ImmutableEQ(v bool) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldImmutable, v))
@@ -329,6 +309,29 @@ func ImmutableEQ(v bool) predicate.AccessPolicy {
 // ImmutableNEQ applies the NEQ predicate on the "immutable" field.
 func ImmutableNEQ(v bool) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldNEQ(FieldImmutable, v))
+}
+
+// HasAccount applies the HasEdge predicate on the "account" edge.
+func HasAccount() predicate.AccessPolicy {
+	return predicate.AccessPolicy(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
+func HasAccountWith(preds ...predicate.Account) predicate.AccessPolicy {
+	return predicate.AccessPolicy(func(s *sql.Selector) {
+		step := newAccountStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // HasRoles applies the HasEdge predicate on the "roles" edge.

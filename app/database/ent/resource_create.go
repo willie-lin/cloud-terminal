@@ -62,9 +62,9 @@ func (rc *ResourceCreate) SetType(s string) *ResourceCreate {
 	return rc
 }
 
-// SetArn sets the "arn" field.
-func (rc *ResourceCreate) SetArn(s string) *ResourceCreate {
-	rc.mutation.SetArn(s)
+// SetRrn sets the "rrn" field.
+func (rc *ResourceCreate) SetRrn(s string) *ResourceCreate {
+	rc.mutation.SetRrn(s)
 	return rc
 }
 
@@ -226,12 +226,12 @@ func (rc *ResourceCreate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
 	}
-	if _, ok := rc.mutation.Arn(); !ok {
-		return &ValidationError{Name: "arn", err: errors.New(`ent: missing required field "Resource.arn"`)}
+	if _, ok := rc.mutation.Rrn(); !ok {
+		return &ValidationError{Name: "rrn", err: errors.New(`ent: missing required field "Resource.rrn"`)}
 	}
-	if v, ok := rc.mutation.Arn(); ok {
-		if err := resource.ArnValidator(v); err != nil {
-			return &ValidationError{Name: "arn", err: fmt.Errorf(`ent: validator failed for field "Resource.arn": %w`, err)}
+	if v, ok := rc.mutation.Rrn(); ok {
+		if err := resource.RrnValidator(v); err != nil {
+			return &ValidationError{Name: "rrn", err: fmt.Errorf(`ent: validator failed for field "Resource.rrn": %w`, err)}
 		}
 	}
 	if len(rc.mutation.AccountIDs()) == 0 {
@@ -288,9 +288,9 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := rc.mutation.Arn(); ok {
-		_spec.SetField(resource.FieldArn, field.TypeString, value)
-		_node.Arn = value
+	if value, ok := rc.mutation.Rrn(); ok {
+		_spec.SetField(resource.FieldRrn, field.TypeString, value)
+		_node.Rrn = value
 	}
 	if value, ok := rc.mutation.Properties(); ok {
 		_spec.SetField(resource.FieldProperties, field.TypeJSON, value)

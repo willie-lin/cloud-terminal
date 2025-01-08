@@ -42,11 +42,15 @@ type AccountEdges struct {
 	Tenant *Tenant `json:"tenant,omitempty"`
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
+	// Roles holds the value of the roles edge.
+	Roles []*Role `json:"roles,omitempty"`
 	// Resources holds the value of the resources edge.
 	Resources []*Resource `json:"resources,omitempty"`
+	// AccessPolicies holds the value of the access_policies edge.
+	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -69,13 +73,31 @@ func (e AccountEdges) UsersOrErr() ([]*User, error) {
 	return nil, &NotLoadedError{edge: "users"}
 }
 
+// RolesOrErr returns the Roles value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccountEdges) RolesOrErr() ([]*Role, error) {
+	if e.loadedTypes[2] {
+		return e.Roles, nil
+	}
+	return nil, &NotLoadedError{edge: "roles"}
+}
+
 // ResourcesOrErr returns the Resources value or an error if the edge
 // was not loaded in eager-loading.
 func (e AccountEdges) ResourcesOrErr() ([]*Resource, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Resources, nil
 	}
 	return nil, &NotLoadedError{edge: "resources"}
+}
+
+// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccountEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
+	if e.loadedTypes[4] {
+		return e.AccessPolicies, nil
+	}
+	return nil, &NotLoadedError{edge: "access_policies"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -172,9 +194,19 @@ func (a *Account) QueryUsers() *UserQuery {
 	return NewAccountClient(a.config).QueryUsers(a)
 }
 
+// QueryRoles queries the "roles" edge of the Account entity.
+func (a *Account) QueryRoles() *RoleQuery {
+	return NewAccountClient(a.config).QueryRoles(a)
+}
+
 // QueryResources queries the "resources" edge of the Account entity.
 func (a *Account) QueryResources() *ResourceQuery {
 	return NewAccountClient(a.config).QueryResources(a)
+}
+
+// QueryAccessPolicies queries the "access_policies" edge of the Account entity.
+func (a *Account) QueryAccessPolicies() *AccessPolicyQuery {
+	return NewAccountClient(a.config).QueryAccessPolicies(a)
 }
 
 // Update returns a builder for updating this Account.

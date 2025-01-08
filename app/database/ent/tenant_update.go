@@ -97,19 +97,23 @@ func (tu *TenantUpdate) SetPlatform(p *Platform) *TenantUpdate {
 	return tu.SetPlatformID(p.ID)
 }
 
-// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
-func (tu *TenantUpdate) AddAccountIDs(ids ...uuid.UUID) *TenantUpdate {
-	tu.mutation.AddAccountIDs(ids...)
+// SetAccountsID sets the "accounts" edge to the Account entity by ID.
+func (tu *TenantUpdate) SetAccountsID(id uuid.UUID) *TenantUpdate {
+	tu.mutation.SetAccountsID(id)
 	return tu
 }
 
-// AddAccounts adds the "accounts" edges to the Account entity.
-func (tu *TenantUpdate) AddAccounts(a ...*Account) *TenantUpdate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableAccountsID sets the "accounts" edge to the Account entity by ID if the given value is not nil.
+func (tu *TenantUpdate) SetNillableAccountsID(id *uuid.UUID) *TenantUpdate {
+	if id != nil {
+		tu = tu.SetAccountsID(*id)
 	}
-	return tu.AddAccountIDs(ids...)
+	return tu
+}
+
+// SetAccounts sets the "accounts" edge to the Account entity.
+func (tu *TenantUpdate) SetAccounts(a *Account) *TenantUpdate {
+	return tu.SetAccountsID(a.ID)
 }
 
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
@@ -138,25 +142,10 @@ func (tu *TenantUpdate) ClearPlatform() *TenantUpdate {
 	return tu
 }
 
-// ClearAccounts clears all "accounts" edges to the Account entity.
+// ClearAccounts clears the "accounts" edge to the Account entity.
 func (tu *TenantUpdate) ClearAccounts() *TenantUpdate {
 	tu.mutation.ClearAccounts()
 	return tu
-}
-
-// RemoveAccountIDs removes the "accounts" edge to Account entities by IDs.
-func (tu *TenantUpdate) RemoveAccountIDs(ids ...uuid.UUID) *TenantUpdate {
-	tu.mutation.RemoveAccountIDs(ids...)
-	return tu
-}
-
-// RemoveAccounts removes "accounts" edges to Account entities.
-func (tu *TenantUpdate) RemoveAccounts(a ...*Account) *TenantUpdate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return tu.RemoveAccountIDs(ids...)
 }
 
 // ClearAuditLogs clears all "audit_logs" edges to the AuditLog entity.
@@ -292,7 +281,7 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if tu.mutation.AccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   tenant.AccountsTable,
 			Columns: []string{tenant.AccountsColumn},
@@ -300,28 +289,12 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.RemovedAccountsIDs(); len(nodes) > 0 && !tu.mutation.AccountsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.AccountsTable,
-			Columns: []string{tenant.AccountsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := tu.mutation.AccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   tenant.AccountsTable,
 			Columns: []string{tenant.AccountsColumn},
@@ -465,19 +438,23 @@ func (tuo *TenantUpdateOne) SetPlatform(p *Platform) *TenantUpdateOne {
 	return tuo.SetPlatformID(p.ID)
 }
 
-// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
-func (tuo *TenantUpdateOne) AddAccountIDs(ids ...uuid.UUID) *TenantUpdateOne {
-	tuo.mutation.AddAccountIDs(ids...)
+// SetAccountsID sets the "accounts" edge to the Account entity by ID.
+func (tuo *TenantUpdateOne) SetAccountsID(id uuid.UUID) *TenantUpdateOne {
+	tuo.mutation.SetAccountsID(id)
 	return tuo
 }
 
-// AddAccounts adds the "accounts" edges to the Account entity.
-func (tuo *TenantUpdateOne) AddAccounts(a ...*Account) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableAccountsID sets the "accounts" edge to the Account entity by ID if the given value is not nil.
+func (tuo *TenantUpdateOne) SetNillableAccountsID(id *uuid.UUID) *TenantUpdateOne {
+	if id != nil {
+		tuo = tuo.SetAccountsID(*id)
 	}
-	return tuo.AddAccountIDs(ids...)
+	return tuo
+}
+
+// SetAccounts sets the "accounts" edge to the Account entity.
+func (tuo *TenantUpdateOne) SetAccounts(a *Account) *TenantUpdateOne {
+	return tuo.SetAccountsID(a.ID)
 }
 
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
@@ -506,25 +483,10 @@ func (tuo *TenantUpdateOne) ClearPlatform() *TenantUpdateOne {
 	return tuo
 }
 
-// ClearAccounts clears all "accounts" edges to the Account entity.
+// ClearAccounts clears the "accounts" edge to the Account entity.
 func (tuo *TenantUpdateOne) ClearAccounts() *TenantUpdateOne {
 	tuo.mutation.ClearAccounts()
 	return tuo
-}
-
-// RemoveAccountIDs removes the "accounts" edge to Account entities by IDs.
-func (tuo *TenantUpdateOne) RemoveAccountIDs(ids ...uuid.UUID) *TenantUpdateOne {
-	tuo.mutation.RemoveAccountIDs(ids...)
-	return tuo
-}
-
-// RemoveAccounts removes "accounts" edges to Account entities.
-func (tuo *TenantUpdateOne) RemoveAccounts(a ...*Account) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return tuo.RemoveAccountIDs(ids...)
 }
 
 // ClearAuditLogs clears all "audit_logs" edges to the AuditLog entity.
@@ -690,7 +652,7 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 	}
 	if tuo.mutation.AccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   tenant.AccountsTable,
 			Columns: []string{tenant.AccountsColumn},
@@ -698,28 +660,12 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.RemovedAccountsIDs(); len(nodes) > 0 && !tuo.mutation.AccountsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.AccountsTable,
-			Columns: []string{tenant.AccountsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := tuo.mutation.AccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   tenant.AccountsTable,
 			Columns: []string{tenant.AccountsColumn},

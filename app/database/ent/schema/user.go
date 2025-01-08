@@ -49,7 +49,8 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("account", Account.Type).Ref("users").Unique().Required(), // 多对一关系：一个 User 属于一个 Account
-		edge.To("roles", Role.Type),                                         // 用户可以拥有多个角色
+		//edge.To("access_policies", AccessPolicy.Type),
+		edge.To("roles", Role.Type), // 用户可以拥有多个角色
 		edge.To("audit_logs", AuditLog.Type),
 	}
 }

@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
@@ -98,6 +100,25 @@ func (ru *RoleUpdate) SetNillableIsDefault(b *bool) *RoleUpdate {
 	return ru
 }
 
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (ru *RoleUpdate) SetAccountID(id uuid.UUID) *RoleUpdate {
+	ru.mutation.SetAccountID(id)
+	return ru
+}
+
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (ru *RoleUpdate) SetNillableAccountID(id *uuid.UUID) *RoleUpdate {
+	if id != nil {
+		ru = ru.SetAccountID(*id)
+	}
+	return ru
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (ru *RoleUpdate) SetAccount(a *Account) *RoleUpdate {
+	return ru.SetAccountID(a.ID)
+}
+
 // AddUserIDs adds the "users" edge to the User entity by IDs.
 func (ru *RoleUpdate) AddUserIDs(ids ...uuid.UUID) *RoleUpdate {
 	ru.mutation.AddUserIDs(ids...)
@@ -111,6 +132,21 @@ func (ru *RoleUpdate) AddUsers(u ...*User) *RoleUpdate {
 		ids[i] = u[i].ID
 	}
 	return ru.AddUserIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (ru *RoleUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *RoleUpdate {
+	ru.mutation.AddAccessPolicyIDs(ids...)
+	return ru
+}
+
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (ru *RoleUpdate) AddAccessPolicies(a ...*AccessPolicy) *RoleUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ru.AddAccessPolicyIDs(ids...)
 }
 
 // AddParentRoleIDs adds the "parent_role" edge to the Role entity by IDs.
@@ -148,6 +184,12 @@ func (ru *RoleUpdate) Mutation() *RoleMutation {
 	return ru.mutation
 }
 
+// ClearAccount clears the "account" edge to the Account entity.
+func (ru *RoleUpdate) ClearAccount() *RoleUpdate {
+	ru.mutation.ClearAccount()
+	return ru
+}
+
 // ClearUsers clears all "users" edges to the User entity.
 func (ru *RoleUpdate) ClearUsers() *RoleUpdate {
 	ru.mutation.ClearUsers()
@@ -167,6 +209,27 @@ func (ru *RoleUpdate) RemoveUsers(u ...*User) *RoleUpdate {
 		ids[i] = u[i].ID
 	}
 	return ru.RemoveUserIDs(ids...)
+}
+
+// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
+func (ru *RoleUpdate) ClearAccessPolicies() *RoleUpdate {
+	ru.mutation.ClearAccessPolicies()
+	return ru
+}
+
+// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
+func (ru *RoleUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *RoleUpdate {
+	ru.mutation.RemoveAccessPolicyIDs(ids...)
+	return ru
+}
+
+// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
+func (ru *RoleUpdate) RemoveAccessPolicies(a ...*AccessPolicy) *RoleUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ru.RemoveAccessPolicyIDs(ids...)
 }
 
 // ClearParentRole clears all "parent_role" edges to the Role entity.
@@ -287,6 +350,35 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.IsDefault(); ok {
 		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
 	}
+	if ru.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   role.AccountTable,
+			Columns: []string{role.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   role.AccountTable,
+			Columns: []string{role.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if ru.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -325,6 +417,51 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.AccessPoliciesTable,
+			Columns: []string{role.AccessPoliciesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !ru.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.AccessPoliciesTable,
+			Columns: []string{role.AccessPoliciesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.AccessPoliciesTable,
+			Columns: []string{role.AccessPoliciesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -510,6 +647,25 @@ func (ruo *RoleUpdateOne) SetNillableIsDefault(b *bool) *RoleUpdateOne {
 	return ruo
 }
 
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (ruo *RoleUpdateOne) SetAccountID(id uuid.UUID) *RoleUpdateOne {
+	ruo.mutation.SetAccountID(id)
+	return ruo
+}
+
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (ruo *RoleUpdateOne) SetNillableAccountID(id *uuid.UUID) *RoleUpdateOne {
+	if id != nil {
+		ruo = ruo.SetAccountID(*id)
+	}
+	return ruo
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (ruo *RoleUpdateOne) SetAccount(a *Account) *RoleUpdateOne {
+	return ruo.SetAccountID(a.ID)
+}
+
 // AddUserIDs adds the "users" edge to the User entity by IDs.
 func (ruo *RoleUpdateOne) AddUserIDs(ids ...uuid.UUID) *RoleUpdateOne {
 	ruo.mutation.AddUserIDs(ids...)
@@ -523,6 +679,21 @@ func (ruo *RoleUpdateOne) AddUsers(u ...*User) *RoleUpdateOne {
 		ids[i] = u[i].ID
 	}
 	return ruo.AddUserIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (ruo *RoleUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *RoleUpdateOne {
+	ruo.mutation.AddAccessPolicyIDs(ids...)
+	return ruo
+}
+
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (ruo *RoleUpdateOne) AddAccessPolicies(a ...*AccessPolicy) *RoleUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ruo.AddAccessPolicyIDs(ids...)
 }
 
 // AddParentRoleIDs adds the "parent_role" edge to the Role entity by IDs.
@@ -560,6 +731,12 @@ func (ruo *RoleUpdateOne) Mutation() *RoleMutation {
 	return ruo.mutation
 }
 
+// ClearAccount clears the "account" edge to the Account entity.
+func (ruo *RoleUpdateOne) ClearAccount() *RoleUpdateOne {
+	ruo.mutation.ClearAccount()
+	return ruo
+}
+
 // ClearUsers clears all "users" edges to the User entity.
 func (ruo *RoleUpdateOne) ClearUsers() *RoleUpdateOne {
 	ruo.mutation.ClearUsers()
@@ -579,6 +756,27 @@ func (ruo *RoleUpdateOne) RemoveUsers(u ...*User) *RoleUpdateOne {
 		ids[i] = u[i].ID
 	}
 	return ruo.RemoveUserIDs(ids...)
+}
+
+// ClearAccessPolicies clears all "access_policies" edges to the AccessPolicy entity.
+func (ruo *RoleUpdateOne) ClearAccessPolicies() *RoleUpdateOne {
+	ruo.mutation.ClearAccessPolicies()
+	return ruo
+}
+
+// RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
+func (ruo *RoleUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *RoleUpdateOne {
+	ruo.mutation.RemoveAccessPolicyIDs(ids...)
+	return ruo
+}
+
+// RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
+func (ruo *RoleUpdateOne) RemoveAccessPolicies(a ...*AccessPolicy) *RoleUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ruo.RemoveAccessPolicyIDs(ids...)
 }
 
 // ClearParentRole clears all "parent_role" edges to the Role entity.
@@ -729,6 +927,35 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 	if value, ok := ruo.mutation.IsDefault(); ok {
 		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
 	}
+	if ruo.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   role.AccountTable,
+			Columns: []string{role.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   role.AccountTable,
+			Columns: []string{role.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if ruo.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -767,6 +994,51 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.AccessPoliciesTable,
+			Columns: []string{role.AccessPoliciesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !ruo.mutation.AccessPoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.AccessPoliciesTable,
+			Columns: []string{role.AccessPoliciesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   role.AccessPoliciesTable,
+			Columns: []string{role.AccessPoliciesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

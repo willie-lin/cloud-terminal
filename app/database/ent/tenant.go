@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 )
@@ -41,7 +42,7 @@ type TenantEdges struct {
 	// Platform holds the value of the platform edge.
 	Platform *Platform `json:"platform,omitempty"`
 	// Accounts holds the value of the accounts edge.
-	Accounts []*Account `json:"accounts,omitempty"`
+	Accounts *Account `json:"accounts,omitempty"`
 	// AuditLogs holds the value of the audit_logs edge.
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -61,10 +62,12 @@ func (e TenantEdges) PlatformOrErr() (*Platform, error) {
 }
 
 // AccountsOrErr returns the Accounts value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) AccountsOrErr() ([]*Account, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TenantEdges) AccountsOrErr() (*Account, error) {
+	if e.Accounts != nil {
 		return e.Accounts, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: account.Label}
 	}
 	return nil, &NotLoadedError{edge: "accounts"}
 }

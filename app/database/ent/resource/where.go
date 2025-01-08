@@ -76,9 +76,9 @@ func Type(v string) predicate.Resource {
 	return predicate.Resource(sql.FieldEQ(FieldType, v))
 }
 
-// Arn applies equality check predicate on the "arn" field. It's identical to ArnEQ.
-func Arn(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldEQ(FieldArn, v))
+// Rrn applies equality check predicate on the "rrn" field. It's identical to RrnEQ.
+func Rrn(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldEQ(FieldRrn, v))
 }
 
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
@@ -296,69 +296,69 @@ func TypeContainsFold(v string) predicate.Resource {
 	return predicate.Resource(sql.FieldContainsFold(FieldType, v))
 }
 
-// ArnEQ applies the EQ predicate on the "arn" field.
-func ArnEQ(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldEQ(FieldArn, v))
+// RrnEQ applies the EQ predicate on the "rrn" field.
+func RrnEQ(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldEQ(FieldRrn, v))
 }
 
-// ArnNEQ applies the NEQ predicate on the "arn" field.
-func ArnNEQ(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldNEQ(FieldArn, v))
+// RrnNEQ applies the NEQ predicate on the "rrn" field.
+func RrnNEQ(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldNEQ(FieldRrn, v))
 }
 
-// ArnIn applies the In predicate on the "arn" field.
-func ArnIn(vs ...string) predicate.Resource {
-	return predicate.Resource(sql.FieldIn(FieldArn, vs...))
+// RrnIn applies the In predicate on the "rrn" field.
+func RrnIn(vs ...string) predicate.Resource {
+	return predicate.Resource(sql.FieldIn(FieldRrn, vs...))
 }
 
-// ArnNotIn applies the NotIn predicate on the "arn" field.
-func ArnNotIn(vs ...string) predicate.Resource {
-	return predicate.Resource(sql.FieldNotIn(FieldArn, vs...))
+// RrnNotIn applies the NotIn predicate on the "rrn" field.
+func RrnNotIn(vs ...string) predicate.Resource {
+	return predicate.Resource(sql.FieldNotIn(FieldRrn, vs...))
 }
 
-// ArnGT applies the GT predicate on the "arn" field.
-func ArnGT(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldGT(FieldArn, v))
+// RrnGT applies the GT predicate on the "rrn" field.
+func RrnGT(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldGT(FieldRrn, v))
 }
 
-// ArnGTE applies the GTE predicate on the "arn" field.
-func ArnGTE(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldGTE(FieldArn, v))
+// RrnGTE applies the GTE predicate on the "rrn" field.
+func RrnGTE(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldGTE(FieldRrn, v))
 }
 
-// ArnLT applies the LT predicate on the "arn" field.
-func ArnLT(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldLT(FieldArn, v))
+// RrnLT applies the LT predicate on the "rrn" field.
+func RrnLT(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldLT(FieldRrn, v))
 }
 
-// ArnLTE applies the LTE predicate on the "arn" field.
-func ArnLTE(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldLTE(FieldArn, v))
+// RrnLTE applies the LTE predicate on the "rrn" field.
+func RrnLTE(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldLTE(FieldRrn, v))
 }
 
-// ArnContains applies the Contains predicate on the "arn" field.
-func ArnContains(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldContains(FieldArn, v))
+// RrnContains applies the Contains predicate on the "rrn" field.
+func RrnContains(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldContains(FieldRrn, v))
 }
 
-// ArnHasPrefix applies the HasPrefix predicate on the "arn" field.
-func ArnHasPrefix(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldHasPrefix(FieldArn, v))
+// RrnHasPrefix applies the HasPrefix predicate on the "rrn" field.
+func RrnHasPrefix(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldHasPrefix(FieldRrn, v))
 }
 
-// ArnHasSuffix applies the HasSuffix predicate on the "arn" field.
-func ArnHasSuffix(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldHasSuffix(FieldArn, v))
+// RrnHasSuffix applies the HasSuffix predicate on the "rrn" field.
+func RrnHasSuffix(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldHasSuffix(FieldRrn, v))
 }
 
-// ArnEqualFold applies the EqualFold predicate on the "arn" field.
-func ArnEqualFold(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldEqualFold(FieldArn, v))
+// RrnEqualFold applies the EqualFold predicate on the "rrn" field.
+func RrnEqualFold(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldEqualFold(FieldRrn, v))
 }
 
-// ArnContainsFold applies the ContainsFold predicate on the "arn" field.
-func ArnContainsFold(v string) predicate.Resource {
-	return predicate.Resource(sql.FieldContainsFold(FieldArn, v))
+// RrnContainsFold applies the ContainsFold predicate on the "rrn" field.
+func RrnContainsFold(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldContainsFold(FieldRrn, v))
 }
 
 // PropertiesIsNil applies the IsNil predicate on the "properties" field.

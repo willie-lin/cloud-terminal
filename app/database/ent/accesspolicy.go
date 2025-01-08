@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
 )
 
@@ -28,31 +29,44 @@ type AccessPolicy struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// Effect holds the value of the "effect" field.
-	Effect accesspolicy.Effect `json:"effect,omitempty"`
 	// Statements holds the value of the "statements" field.
-	Statements schema.PolicyStatement `json:"statements,omitempty"`
+	Statements []schema.PolicyStatement `json:"statements,omitempty"`
 	// Immutable holds the value of the "immutable" field.
 	Immutable bool `json:"immutable,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccessPolicyQuery when eager-loading is set.
-	Edges        AccessPolicyEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                   AccessPolicyEdges `json:"edges"`
+	account_access_policies *uuid.UUID
+	role_access_policies    *uuid.UUID
+	selectValues            sql.SelectValues
 }
 
 // AccessPolicyEdges holds the relations/edges for other nodes in the graph.
 type AccessPolicyEdges struct {
+	// Account holds the value of the account edge.
+	Account *Account `json:"account,omitempty"`
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
+}
+
+// AccountOrErr returns the Account value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e AccessPolicyEdges) AccountOrErr() (*Account, error) {
+	if e.Account != nil {
+		return e.Account, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: account.Label}
+	}
+	return nil, &NotLoadedError{edge: "account"}
 }
 
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e AccessPolicyEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -67,12 +81,16 @@ func (*AccessPolicy) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case accesspolicy.FieldImmutable:
 			values[i] = new(sql.NullBool)
-		case accesspolicy.FieldName, accesspolicy.FieldDescription, accesspolicy.FieldEffect:
+		case accesspolicy.FieldName, accesspolicy.FieldDescription:
 			values[i] = new(sql.NullString)
 		case accesspolicy.FieldCreatedAt, accesspolicy.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case accesspolicy.FieldID:
 			values[i] = new(uuid.UUID)
+		case accesspolicy.ForeignKeys[0]: // account_access_policies
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case accesspolicy.ForeignKeys[1]: // role_access_policies
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -118,12 +136,6 @@ func (ap *AccessPolicy) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ap.Description = value.String
 			}
-		case accesspolicy.FieldEffect:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field effect", values[i])
-			} else if value.Valid {
-				ap.Effect = accesspolicy.Effect(value.String)
-			}
 		case accesspolicy.FieldStatements:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field statements", values[i])
@@ -138,6 +150,20 @@ func (ap *AccessPolicy) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ap.Immutable = value.Bool
 			}
+		case accesspolicy.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field account_access_policies", values[i])
+			} else if value.Valid {
+				ap.account_access_policies = new(uuid.UUID)
+				*ap.account_access_policies = *value.S.(*uuid.UUID)
+			}
+		case accesspolicy.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field role_access_policies", values[i])
+			} else if value.Valid {
+				ap.role_access_policies = new(uuid.UUID)
+				*ap.role_access_policies = *value.S.(*uuid.UUID)
+			}
 		default:
 			ap.selectValues.Set(columns[i], values[i])
 		}
@@ -149,6 +175,11 @@ func (ap *AccessPolicy) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (ap *AccessPolicy) Value(name string) (ent.Value, error) {
 	return ap.selectValues.Get(name)
+}
+
+// QueryAccount queries the "account" edge of the AccessPolicy entity.
+func (ap *AccessPolicy) QueryAccount() *AccountQuery {
+	return NewAccessPolicyClient(ap.config).QueryAccount(ap)
 }
 
 // QueryRoles queries the "roles" edge of the AccessPolicy entity.
@@ -190,9 +221,6 @@ func (ap *AccessPolicy) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(ap.Description)
-	builder.WriteString(", ")
-	builder.WriteString("effect=")
-	builder.WriteString(fmt.Sprintf("%v", ap.Effect))
 	builder.WriteString(", ")
 	builder.WriteString("statements=")
 	builder.WriteString(fmt.Sprintf("%v", ap.Statements))

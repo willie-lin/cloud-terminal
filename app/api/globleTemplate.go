@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/platform"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -84,7 +86,7 @@ import (
 //		// 审计日志权限
 //		{"audit:read", "允许读取审计日志"},
 //	}
-
+//
 //	for _, p := range permissionsToCreate {
 //		//existingPermission, err := client.Permission.Query().Where(permission.NameEQ(p.Name)).Where(permission.HasAccountWith(account.IDEQ(account.ID))).Only(ctx)
 //		existingPermission, err := client.Permission.Query().
@@ -199,28 +201,82 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	rolesToCreate := []string{"super_admin", "platform_admin", "tenant_admin"}
 
 	for _, roleName := range rolesToCreate {
-		_, err := client.Role.Query().Only(ctx)
+		//_, err := client.Role.Query().Where(role.NameEQ(roleName)).Where(role.HasTenantWith(tenant.NameEQ(managementTenant.Name))).Only(ctx)
+		r, err := client.Role.Query().Where(role.NameEQ(roleName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return fmt.Errorf("query role %s failed: %w", roleName, err)
 		}
 		if ent.IsNotFound(err) {
-			_, err := client.Role.Create().SetName(roleName).Save(ctx)
+			r, err = client.Role.Create().SetName(roleName).Save(ctx)
 			if err != nil {
 				return fmt.Errorf("create role %s failed: %w", roleName, err)
 			}
-			log.Printf("Created role: %s for platform: %s", roleName, platformName)
+			_, err = systemAccount.Update().AddRoles(r).Save(ctx)
+			if err != nil {
+				return fmt.Errorf("关联 system 账户和 role %s 角色失败: %w", err)
+			}
+			log.Printf("Created role: %s (ID: %v)", r.Name, r.ID)
 		} else {
-			log.Printf("Role: %s already exists for platform: %s", roleName, platformName)
+			log.Printf("Role: %s (ID: %v) already exists.", r.Name, r.ID)
 		}
 	}
 
-	// 5. 创建超级管理员用户
-	superAdminUsername := "SuperAdmin"
-	superAdminUser, err := client.User.Query().
-		Where(user.UsernameEQ(superAdminUsername)).
-		Where(user.HasAccountWith(account.IDEQ(systemAccount.ID))). // 关联到 system account
-		Only(ctx)
+	// 5. 创建超级管理员策略
+	superAdminRole, err := client.Role.Query().Where(role.NameEQ("super_admin")).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("query super admin role failed: %w", err)
+	}
 
+	superAdminPolicy, err := client.AccessPolicy.Query().Where(accesspolicy.NameEQ("super_admin_policy")).Only(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return fmt.Errorf("query super admin policy failed: %w", err)
+	}
+
+	if ent.IsNotFound(err) {
+		statements := []schema.PolicyStatement{
+			{
+				Effect:    "Allow",
+				Actions:   []string{"*"}, // 超级管理员拥有所有操作权限
+				Resources: []string{"*"}, // 超级管理员拥有所有资源权限
+			},
+		}
+
+		superAdminPolicy, err = client.AccessPolicy.Create().
+			SetName("super_admin_policy").
+			SetStatements(statements).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("创建 super admin policy 失败: %w", err)
+		}
+		log.Printf("Created super admin policy: %s (ID: %v)", superAdminPolicy.Name, superAdminPolicy.ID)
+	} else {
+		log.Printf("super admin policy: %s (ID: %v) already exists.", superAdminPolicy.Name, superAdminPolicy.ID)
+	}
+
+	// 检查策略是否已经关联到角色
+	exists, err := client.Role.Query().
+		Where(role.IDEQ(superAdminRole.ID)).
+		Where(role.HasAccessPoliciesWith(accesspolicy.IDEQ(superAdminPolicy.ID))).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("checking role policy existence: %w", err)
+	}
+
+	if !exists {
+		_, err = superAdminRole.Update().AddAccessPolicies(superAdminPolicy).Save(ctx)
+		if err != nil {
+			return fmt.Errorf("关联 super_admin 角色和 super_admin 策略失败: %w", err)
+		}
+		log.Printf("关联 super_admin 角色和 super_admin 策略")
+	} else {
+		log.Printf("super_admin 角色和 super_admin 策略已经关联")
+	}
+
+	// 6. 创建超级管理员用户并关联到账户
+	superAdminUsername := "SuperAdmin"
+	//superAdminUser, err := client.User.Query().Where(user.UsernameEQ(superAdminUsername)).Where(user.HasAccountWith(account.IDEQ(systemAccount.ID))).Only(ctx)
+	//if err != nil && !ent.IsNotFound(err) {
+	_, err = client.User.Query().Where(user.UsernameEQ(superAdminUsername)).Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return fmt.Errorf("query super admin user failed: %w", err)
 	}
@@ -237,7 +293,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 			return fmt.Errorf("hash password failed: %w", err)
 		}
 
-		superAdminUser, err = client.User.Create().
+		_, err = client.User.Create().
 			SetUsername(superAdminUsername).
 			SetPassword(string(hashedPassword)).
 			SetEmail("superadmin@example.com").
@@ -253,27 +309,5 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 		log.Printf("Initial Super Admin user already exists for platform: %s", platformName)
 	}
 
-	// 5. 将超级管理员用户关联到 super_admin 角色
-	superAdminRole, err := client.Role.Query().Where(role.NameEQ("super_admin")).Only(ctx)
-	if err != nil {
-		return fmt.Errorf("query super admin role failed: %w", err)
-	}
-	// 检查是否已关联
-	exists, err := client.User.Query().
-		Where(user.IDEQ(superAdminUser.ID)).
-		Where(user.HasRolesWith(role.IDEQ(superAdminRole.ID))).
-		Exist(ctx)
-	if err != nil {
-		return fmt.Errorf("checking user role existence: %w", err)
-	}
-	if !exists { // 如果未关联，则关联
-		_, err = superAdminUser.Update().AddRoles(superAdminRole).Save(ctx)
-		if err != nil {
-			return fmt.Errorf("关联超级管理员角色失败: %w", err)
-		}
-		log.Printf("Super admin user associated to super_admin role")
-	} else {
-		log.Printf("Super admin user already associated to super_admin role")
-	}
 	return nil
 }

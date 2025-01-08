@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
 )
@@ -71,31 +72,9 @@ func (apc *AccessPolicyCreate) SetNillableDescription(s *string) *AccessPolicyCr
 	return apc
 }
 
-// SetEffect sets the "effect" field.
-func (apc *AccessPolicyCreate) SetEffect(a accesspolicy.Effect) *AccessPolicyCreate {
-	apc.mutation.SetEffect(a)
-	return apc
-}
-
-// SetNillableEffect sets the "effect" field if the given value is not nil.
-func (apc *AccessPolicyCreate) SetNillableEffect(a *accesspolicy.Effect) *AccessPolicyCreate {
-	if a != nil {
-		apc.SetEffect(*a)
-	}
-	return apc
-}
-
 // SetStatements sets the "statements" field.
-func (apc *AccessPolicyCreate) SetStatements(ss schema.PolicyStatement) *AccessPolicyCreate {
+func (apc *AccessPolicyCreate) SetStatements(ss []schema.PolicyStatement) *AccessPolicyCreate {
 	apc.mutation.SetStatements(ss)
-	return apc
-}
-
-// SetNillableStatements sets the "statements" field if the given value is not nil.
-func (apc *AccessPolicyCreate) SetNillableStatements(ss *schema.PolicyStatement) *AccessPolicyCreate {
-	if ss != nil {
-		apc.SetStatements(*ss)
-	}
 	return apc
 }
 
@@ -125,6 +104,25 @@ func (apc *AccessPolicyCreate) SetNillableID(u *uuid.UUID) *AccessPolicyCreate {
 		apc.SetID(*u)
 	}
 	return apc
+}
+
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (apc *AccessPolicyCreate) SetAccountID(id uuid.UUID) *AccessPolicyCreate {
+	apc.mutation.SetAccountID(id)
+	return apc
+}
+
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (apc *AccessPolicyCreate) SetNillableAccountID(id *uuid.UUID) *AccessPolicyCreate {
+	if id != nil {
+		apc = apc.SetAccountID(*id)
+	}
+	return apc
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (apc *AccessPolicyCreate) SetAccount(a *Account) *AccessPolicyCreate {
+	return apc.SetAccountID(a.ID)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -185,10 +183,6 @@ func (apc *AccessPolicyCreate) defaults() {
 		v := accesspolicy.DefaultUpdatedAt()
 		apc.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := apc.mutation.Effect(); !ok {
-		v := accesspolicy.DefaultEffect
-		apc.mutation.SetEffect(v)
-	}
 	if _, ok := apc.mutation.Statements(); !ok {
 		v := accesspolicy.DefaultStatements
 		apc.mutation.SetStatements(v)
@@ -217,14 +211,6 @@ func (apc *AccessPolicyCreate) check() error {
 	if v, ok := apc.mutation.Name(); ok {
 		if err := accesspolicy.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.name": %w`, err)}
-		}
-	}
-	if _, ok := apc.mutation.Effect(); !ok {
-		return &ValidationError{Name: "effect", err: errors.New(`ent: missing required field "AccessPolicy.effect"`)}
-	}
-	if v, ok := apc.mutation.Effect(); ok {
-		if err := accesspolicy.EffectValidator(v); err != nil {
-			return &ValidationError{Name: "effect", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.effect": %w`, err)}
 		}
 	}
 	if _, ok := apc.mutation.Statements(); !ok {
@@ -284,10 +270,6 @@ func (apc *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec
 		_spec.SetField(accesspolicy.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := apc.mutation.Effect(); ok {
-		_spec.SetField(accesspolicy.FieldEffect, field.TypeEnum, value)
-		_node.Effect = value
-	}
 	if value, ok := apc.mutation.Statements(); ok {
 		_spec.SetField(accesspolicy.FieldStatements, field.TypeJSON, value)
 		_node.Statements = value
@@ -295,6 +277,23 @@ func (apc *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec
 	if value, ok := apc.mutation.Immutable(); ok {
 		_spec.SetField(accesspolicy.FieldImmutable, field.TypeBool, value)
 		_node.Immutable = value
+	}
+	if nodes := apc.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   accesspolicy.AccountTable,
+			Columns: []string{accesspolicy.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.account_access_policies = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := apc.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

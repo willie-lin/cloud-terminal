@@ -237,6 +237,15 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error updating last login time: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
+		// 查询账户信息，通过边查询获取用户关联的账户
+		sa, err := us.QueryAccount().Only(ctx)
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Account not found"})
+		} else if err != nil {
+			log.Printf("Error finding Account: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
+		}
+		fmt.Println(sa.ID)
 
 		// 查询租户信息，通过边查询获取用户关联的租户
 		tenant, err := us.QueryAccount().QueryTenant().Only(ctx)
@@ -250,7 +259,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 获取用户的第一个角色ID
 		//role, err := us.QueryRoles().First(context.Background())
-		r, err := us.QueryRoles().Only(ctx)
+		r, err := us.QueryAccount().QueryRoles().Only(ctx)
 		//role, err := us.QueryRoles().All(ctx)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)

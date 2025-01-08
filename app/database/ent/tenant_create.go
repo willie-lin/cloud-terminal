@@ -111,19 +111,23 @@ func (tc *TenantCreate) SetPlatform(p *Platform) *TenantCreate {
 	return tc.SetPlatformID(p.ID)
 }
 
-// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
-func (tc *TenantCreate) AddAccountIDs(ids ...uuid.UUID) *TenantCreate {
-	tc.mutation.AddAccountIDs(ids...)
+// SetAccountsID sets the "accounts" edge to the Account entity by ID.
+func (tc *TenantCreate) SetAccountsID(id uuid.UUID) *TenantCreate {
+	tc.mutation.SetAccountsID(id)
 	return tc
 }
 
-// AddAccounts adds the "accounts" edges to the Account entity.
-func (tc *TenantCreate) AddAccounts(a ...*Account) *TenantCreate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableAccountsID sets the "accounts" edge to the Account entity by ID if the given value is not nil.
+func (tc *TenantCreate) SetNillableAccountsID(id *uuid.UUID) *TenantCreate {
+	if id != nil {
+		tc = tc.SetAccountsID(*id)
 	}
-	return tc.AddAccountIDs(ids...)
+	return tc
+}
+
+// SetAccounts sets the "accounts" edge to the Account entity.
+func (tc *TenantCreate) SetAccounts(a *Account) *TenantCreate {
+	return tc.SetAccountsID(a.ID)
 }
 
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
@@ -295,7 +299,7 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 	}
 	if nodes := tc.mutation.AccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   tenant.AccountsTable,
 			Columns: []string{tenant.AccountsColumn},

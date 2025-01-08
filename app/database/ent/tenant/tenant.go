@@ -172,17 +172,10 @@ func ByPlatformField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByAccountsCount orders the results by accounts count.
-func ByAccountsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByAccountsField orders the results by accounts field.
+func ByAccountsField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAccountsStep(), opts...)
-	}
-}
-
-// ByAccounts orders the results by accounts terms.
-func ByAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -210,7 +203,7 @@ func newAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccountsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AccountsTable, AccountsColumn),
+		sqlgraph.Edge(sqlgraph.O2O, false, AccountsTable, AccountsColumn),
 	)
 }
 func newAuditLogsStep() *sqlgraph.Step {

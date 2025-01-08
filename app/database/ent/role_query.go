@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
@@ -21,14 +23,16 @@ import (
 // RoleQuery is the builder for querying Role entities.
 type RoleQuery struct {
 	config
-	ctx            *QueryContext
-	order          []role.OrderOption
-	inters         []Interceptor
-	predicates     []predicate.Role
-	withUsers      *UserQuery
-	withParentRole *RoleQuery
-	withChildRoles *RoleQuery
-	withFKs        bool
+	ctx                *QueryContext
+	order              []role.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.Role
+	withAccount        *AccountQuery
+	withUsers          *UserQuery
+	withAccessPolicies *AccessPolicyQuery
+	withParentRole     *RoleQuery
+	withChildRoles     *RoleQuery
+	withFKs            bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -65,6 +69,28 @@ func (rq *RoleQuery) Order(o ...role.OrderOption) *RoleQuery {
 	return rq
 }
 
+// QueryAccount chains the current query on the "account" edge.
+func (rq *RoleQuery) QueryAccount() *AccountQuery {
+	query := (&AccountClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, selector),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountTable, role.AccountColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryUsers chains the current query on the "users" edge.
 func (rq *RoleQuery) QueryUsers() *UserQuery {
 	query := (&UserClient{config: rq.config}).Query()
@@ -80,6 +106,28 @@ func (rq *RoleQuery) QueryUsers() *UserQuery {
 			sqlgraph.From(role.Table, role.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, role.UsersTable, role.UsersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAccessPolicies chains the current query on the "access_policies" edge.
+func (rq *RoleQuery) QueryAccessPolicies() *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, selector),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, role.AccessPoliciesTable, role.AccessPoliciesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -318,18 +366,31 @@ func (rq *RoleQuery) Clone() *RoleQuery {
 		return nil
 	}
 	return &RoleQuery{
-		config:         rq.config,
-		ctx:            rq.ctx.Clone(),
-		order:          append([]role.OrderOption{}, rq.order...),
-		inters:         append([]Interceptor{}, rq.inters...),
-		predicates:     append([]predicate.Role{}, rq.predicates...),
-		withUsers:      rq.withUsers.Clone(),
-		withParentRole: rq.withParentRole.Clone(),
-		withChildRoles: rq.withChildRoles.Clone(),
+		config:             rq.config,
+		ctx:                rq.ctx.Clone(),
+		order:              append([]role.OrderOption{}, rq.order...),
+		inters:             append([]Interceptor{}, rq.inters...),
+		predicates:         append([]predicate.Role{}, rq.predicates...),
+		withAccount:        rq.withAccount.Clone(),
+		withUsers:          rq.withUsers.Clone(),
+		withAccessPolicies: rq.withAccessPolicies.Clone(),
+		withParentRole:     rq.withParentRole.Clone(),
+		withChildRoles:     rq.withChildRoles.Clone(),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
 	}
+}
+
+// WithAccount tells the query-builder to eager-load the nodes that are connected to
+// the "account" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RoleQuery) WithAccount(opts ...func(*AccountQuery)) *RoleQuery {
+	query := (&AccountClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withAccount = query
+	return rq
 }
 
 // WithUsers tells the query-builder to eager-load the nodes that are connected to
@@ -340,6 +401,17 @@ func (rq *RoleQuery) WithUsers(opts ...func(*UserQuery)) *RoleQuery {
 		opt(query)
 	}
 	rq.withUsers = query
+	return rq
+}
+
+// WithAccessPolicies tells the query-builder to eager-load the nodes that are connected to
+// the "access_policies" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RoleQuery) WithAccessPolicies(opts ...func(*AccessPolicyQuery)) *RoleQuery {
+	query := (&AccessPolicyClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withAccessPolicies = query
 	return rq
 }
 
@@ -444,12 +516,17 @@ func (rq *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 		nodes       = []*Role{}
 		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [5]bool{
+			rq.withAccount != nil,
 			rq.withUsers != nil,
+			rq.withAccessPolicies != nil,
 			rq.withParentRole != nil,
 			rq.withChildRoles != nil,
 		}
 	)
+	if rq.withAccount != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, role.ForeignKeys...)
 	}
@@ -471,10 +548,23 @@ func (rq *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := rq.withAccount; query != nil {
+		if err := rq.loadAccount(ctx, query, nodes, nil,
+			func(n *Role, e *Account) { n.Edges.Account = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := rq.withUsers; query != nil {
 		if err := rq.loadUsers(ctx, query, nodes,
 			func(n *Role) { n.Edges.Users = []*User{} },
 			func(n *Role, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withAccessPolicies; query != nil {
+		if err := rq.loadAccessPolicies(ctx, query, nodes,
+			func(n *Role) { n.Edges.AccessPolicies = []*AccessPolicy{} },
+			func(n *Role, e *AccessPolicy) { n.Edges.AccessPolicies = append(n.Edges.AccessPolicies, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -495,6 +585,38 @@ func (rq *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 	return nodes, nil
 }
 
+func (rq *RoleQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*Role, init func(*Role), assign func(*Role, *Account)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Role)
+	for i := range nodes {
+		if nodes[i].account_roles == nil {
+			continue
+		}
+		fk := *nodes[i].account_roles
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(account.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "account_roles" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (rq *RoleQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*Role, init func(*Role), assign func(*Role, *User)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[uuid.UUID]*Role)
@@ -521,6 +643,37 @@ func (rq *RoleQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*R
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "role_users" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (rq *RoleQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicyQuery, nodes []*Role, init func(*Role), assign func(*Role, *AccessPolicy)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Role)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.AccessPolicy(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(role.AccessPoliciesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.role_access_policies
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "role_access_policies" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "role_access_policies" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

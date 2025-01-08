@@ -13,27 +13,42 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "effect", Type: field.TypeEnum, Enums: []string{"allow", "deny"}, Default: "allow"},
 		{Name: "statements", Type: field.TypeJSON},
 		{Name: "immutable", Type: field.TypeBool, Default: false},
+		{Name: "account_access_policies", Type: field.TypeUUID, Nullable: true},
+		{Name: "role_access_policies", Type: field.TypeUUID, Nullable: true},
 	}
 	// AccessPoliciesTable holds the schema information for the "access_policies" table.
 	AccessPoliciesTable = &schema.Table{
 		Name:       "access_policies",
 		Columns:    AccessPoliciesColumns,
 		PrimaryKey: []*schema.Column{AccessPoliciesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "access_policies_accounts_access_policies",
+				Columns:    []*schema.Column{AccessPoliciesColumns[7]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "access_policies_roles_access_policies",
+				Columns:    []*schema.Column{AccessPoliciesColumns[8]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// AccountsColumns holds the columns for the "accounts" table.
 	AccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "suspended", "deleted"}, Default: "active"},
-		{Name: "tenant_accounts", Type: field.TypeUUID},
+		{Name: "tenant_accounts", Type: field.TypeUUID, Unique: true},
 	}
 	// AccountsTable holds the schema information for the "accounts" table.
 	AccountsTable = &schema.Table{
@@ -95,7 +110,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeString},
-		{Name: "arn", Type: field.TypeString, Unique: true},
+		{Name: "rrn", Type: field.TypeString, Unique: true},
 		{Name: "properties", Type: field.TypeJSON, Nullable: true},
 		{Name: "tags", Type: field.TypeJSON, Nullable: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
@@ -118,11 +133,12 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "is_disabled", Type: field.TypeBool, Default: false},
 		{Name: "is_default", Type: field.TypeBool, Default: false},
 		{Name: "access_policy_roles", Type: field.TypeUUID, Nullable: true},
+		{Name: "account_roles", Type: field.TypeUUID, Nullable: true},
 		{Name: "user_roles", Type: field.TypeUUID, Nullable: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
@@ -138,8 +154,14 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "roles_users_roles",
+				Symbol:     "roles_accounts_roles",
 				Columns:    []*schema.Column{RolesColumns[8]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "roles_users_roles",
+				Columns:    []*schema.Column{RolesColumns[9]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -383,9 +405,12 @@ var (
 )
 
 func init() {
+	AccessPoliciesTable.ForeignKeys[0].RefTable = AccountsTable
+	AccessPoliciesTable.ForeignKeys[1].RefTable = RolesTable
 	AccountsTable.ForeignKeys[0].RefTable = TenantsTable
 	RolesTable.ForeignKeys[0].RefTable = AccessPoliciesTable
-	RolesTable.ForeignKeys[1].RefTable = UsersTable
+	RolesTable.ForeignKeys[1].RefTable = AccountsTable
+	RolesTable.ForeignKeys[2].RefTable = UsersTable
 	TenantsTable.ForeignKeys[0].RefTable = PlatformsTable
 	UsersTable.ForeignKeys[0].RefTable = AccountsTable
 	UsersTable.ForeignKeys[1].RefTable = RolesTable

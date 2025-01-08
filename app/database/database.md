@@ -8,13 +8,9 @@ Tenant   1---N Account
 Account  1---N User
 Account  1---N Role
 Account  1---N Resource
-Account  1---N Permission  (账户级别的通用权限)
 Account  1---N AccessPolicy
-User     1---N AccessPolicy
-Role     N---N Permission (通过中间表 role_permissions)
+User     N---1 Account  (用户属于一个账户)
 Role     N---N AccessPolicy (通过中间表 role_access_policies)
-AccessPolicy N---N Permission
-AccessPolicy N---N Resource
 User     1---N AuditLog
 ```
 

@@ -10,9 +10,11 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
@@ -71,31 +73,15 @@ func (apu *AccessPolicyUpdate) ClearDescription() *AccessPolicyUpdate {
 	return apu
 }
 
-// SetEffect sets the "effect" field.
-func (apu *AccessPolicyUpdate) SetEffect(a accesspolicy.Effect) *AccessPolicyUpdate {
-	apu.mutation.SetEffect(a)
-	return apu
-}
-
-// SetNillableEffect sets the "effect" field if the given value is not nil.
-func (apu *AccessPolicyUpdate) SetNillableEffect(a *accesspolicy.Effect) *AccessPolicyUpdate {
-	if a != nil {
-		apu.SetEffect(*a)
-	}
-	return apu
-}
-
 // SetStatements sets the "statements" field.
-func (apu *AccessPolicyUpdate) SetStatements(ss schema.PolicyStatement) *AccessPolicyUpdate {
+func (apu *AccessPolicyUpdate) SetStatements(ss []schema.PolicyStatement) *AccessPolicyUpdate {
 	apu.mutation.SetStatements(ss)
 	return apu
 }
 
-// SetNillableStatements sets the "statements" field if the given value is not nil.
-func (apu *AccessPolicyUpdate) SetNillableStatements(ss *schema.PolicyStatement) *AccessPolicyUpdate {
-	if ss != nil {
-		apu.SetStatements(*ss)
-	}
+// AppendStatements appends ss to the "statements" field.
+func (apu *AccessPolicyUpdate) AppendStatements(ss []schema.PolicyStatement) *AccessPolicyUpdate {
+	apu.mutation.AppendStatements(ss)
 	return apu
 }
 
@@ -111,6 +97,25 @@ func (apu *AccessPolicyUpdate) SetNillableImmutable(b *bool) *AccessPolicyUpdate
 		apu.SetImmutable(*b)
 	}
 	return apu
+}
+
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (apu *AccessPolicyUpdate) SetAccountID(id uuid.UUID) *AccessPolicyUpdate {
+	apu.mutation.SetAccountID(id)
+	return apu
+}
+
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (apu *AccessPolicyUpdate) SetNillableAccountID(id *uuid.UUID) *AccessPolicyUpdate {
+	if id != nil {
+		apu = apu.SetAccountID(*id)
+	}
+	return apu
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (apu *AccessPolicyUpdate) SetAccount(a *Account) *AccessPolicyUpdate {
+	return apu.SetAccountID(a.ID)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -131,6 +136,12 @@ func (apu *AccessPolicyUpdate) AddRoles(r ...*Role) *AccessPolicyUpdate {
 // Mutation returns the AccessPolicyMutation object of the builder.
 func (apu *AccessPolicyUpdate) Mutation() *AccessPolicyMutation {
 	return apu.mutation
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (apu *AccessPolicyUpdate) ClearAccount() *AccessPolicyUpdate {
+	apu.mutation.ClearAccount()
+	return apu
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -197,11 +208,6 @@ func (apu *AccessPolicyUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.name": %w`, err)}
 		}
 	}
-	if v, ok := apu.mutation.Effect(); ok {
-		if err := accesspolicy.EffectValidator(v); err != nil {
-			return &ValidationError{Name: "effect", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.effect": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -229,14 +235,45 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if apu.mutation.DescriptionCleared() {
 		_spec.ClearField(accesspolicy.FieldDescription, field.TypeString)
 	}
-	if value, ok := apu.mutation.Effect(); ok {
-		_spec.SetField(accesspolicy.FieldEffect, field.TypeEnum, value)
-	}
 	if value, ok := apu.mutation.Statements(); ok {
 		_spec.SetField(accesspolicy.FieldStatements, field.TypeJSON, value)
 	}
+	if value, ok := apu.mutation.AppendedStatements(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, accesspolicy.FieldStatements, value)
+		})
+	}
 	if value, ok := apu.mutation.Immutable(); ok {
 		_spec.SetField(accesspolicy.FieldImmutable, field.TypeBool, value)
+	}
+	if apu.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   accesspolicy.AccountTable,
+			Columns: []string{accesspolicy.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := apu.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   accesspolicy.AccountTable,
+			Columns: []string{accesspolicy.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if apu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -343,31 +380,15 @@ func (apuo *AccessPolicyUpdateOne) ClearDescription() *AccessPolicyUpdateOne {
 	return apuo
 }
 
-// SetEffect sets the "effect" field.
-func (apuo *AccessPolicyUpdateOne) SetEffect(a accesspolicy.Effect) *AccessPolicyUpdateOne {
-	apuo.mutation.SetEffect(a)
-	return apuo
-}
-
-// SetNillableEffect sets the "effect" field if the given value is not nil.
-func (apuo *AccessPolicyUpdateOne) SetNillableEffect(a *accesspolicy.Effect) *AccessPolicyUpdateOne {
-	if a != nil {
-		apuo.SetEffect(*a)
-	}
-	return apuo
-}
-
 // SetStatements sets the "statements" field.
-func (apuo *AccessPolicyUpdateOne) SetStatements(ss schema.PolicyStatement) *AccessPolicyUpdateOne {
+func (apuo *AccessPolicyUpdateOne) SetStatements(ss []schema.PolicyStatement) *AccessPolicyUpdateOne {
 	apuo.mutation.SetStatements(ss)
 	return apuo
 }
 
-// SetNillableStatements sets the "statements" field if the given value is not nil.
-func (apuo *AccessPolicyUpdateOne) SetNillableStatements(ss *schema.PolicyStatement) *AccessPolicyUpdateOne {
-	if ss != nil {
-		apuo.SetStatements(*ss)
-	}
+// AppendStatements appends ss to the "statements" field.
+func (apuo *AccessPolicyUpdateOne) AppendStatements(ss []schema.PolicyStatement) *AccessPolicyUpdateOne {
+	apuo.mutation.AppendStatements(ss)
 	return apuo
 }
 
@@ -383,6 +404,25 @@ func (apuo *AccessPolicyUpdateOne) SetNillableImmutable(b *bool) *AccessPolicyUp
 		apuo.SetImmutable(*b)
 	}
 	return apuo
+}
+
+// SetAccountID sets the "account" edge to the Account entity by ID.
+func (apuo *AccessPolicyUpdateOne) SetAccountID(id uuid.UUID) *AccessPolicyUpdateOne {
+	apuo.mutation.SetAccountID(id)
+	return apuo
+}
+
+// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
+func (apuo *AccessPolicyUpdateOne) SetNillableAccountID(id *uuid.UUID) *AccessPolicyUpdateOne {
+	if id != nil {
+		apuo = apuo.SetAccountID(*id)
+	}
+	return apuo
+}
+
+// SetAccount sets the "account" edge to the Account entity.
+func (apuo *AccessPolicyUpdateOne) SetAccount(a *Account) *AccessPolicyUpdateOne {
+	return apuo.SetAccountID(a.ID)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -403,6 +443,12 @@ func (apuo *AccessPolicyUpdateOne) AddRoles(r ...*Role) *AccessPolicyUpdateOne {
 // Mutation returns the AccessPolicyMutation object of the builder.
 func (apuo *AccessPolicyUpdateOne) Mutation() *AccessPolicyMutation {
 	return apuo.mutation
+}
+
+// ClearAccount clears the "account" edge to the Account entity.
+func (apuo *AccessPolicyUpdateOne) ClearAccount() *AccessPolicyUpdateOne {
+	apuo.mutation.ClearAccount()
+	return apuo
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -482,11 +528,6 @@ func (apuo *AccessPolicyUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.name": %w`, err)}
 		}
 	}
-	if v, ok := apuo.mutation.Effect(); ok {
-		if err := accesspolicy.EffectValidator(v); err != nil {
-			return &ValidationError{Name: "effect", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.effect": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -531,14 +572,45 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 	if apuo.mutation.DescriptionCleared() {
 		_spec.ClearField(accesspolicy.FieldDescription, field.TypeString)
 	}
-	if value, ok := apuo.mutation.Effect(); ok {
-		_spec.SetField(accesspolicy.FieldEffect, field.TypeEnum, value)
-	}
 	if value, ok := apuo.mutation.Statements(); ok {
 		_spec.SetField(accesspolicy.FieldStatements, field.TypeJSON, value)
 	}
+	if value, ok := apuo.mutation.AppendedStatements(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, accesspolicy.FieldStatements, value)
+		})
+	}
 	if value, ok := apuo.mutation.Immutable(); ok {
 		_spec.SetField(accesspolicy.FieldImmutable, field.TypeBool, value)
+	}
+	if apuo.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   accesspolicy.AccountTable,
+			Columns: []string{accesspolicy.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := apuo.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   accesspolicy.AccountTable,
+			Columns: []string{accesspolicy.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if apuo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{

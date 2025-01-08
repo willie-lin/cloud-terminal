@@ -3,7 +3,6 @@
 package accesspolicy
 
 import (
-	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -25,16 +24,23 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldEffect holds the string denoting the effect field in the database.
-	FieldEffect = "effect"
 	// FieldStatements holds the string denoting the statements field in the database.
 	FieldStatements = "statements"
 	// FieldImmutable holds the string denoting the immutable field in the database.
 	FieldImmutable = "immutable"
+	// EdgeAccount holds the string denoting the account edge name in mutations.
+	EdgeAccount = "account"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
 	EdgeRoles = "roles"
 	// Table holds the table name of the accesspolicy in the database.
 	Table = "access_policies"
+	// AccountTable is the table that holds the account relation/edge.
+	AccountTable = "access_policies"
+	// AccountInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountInverseTable = "accounts"
+	// AccountColumn is the table column denoting the account relation/edge.
+	AccountColumn = "account_access_policies"
 	// RolesTable is the table that holds the roles relation/edge.
 	RolesTable = "roles"
 	// RolesInverseTable is the table name for the Role entity.
@@ -51,15 +57,26 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldName,
 	FieldDescription,
-	FieldEffect,
 	FieldStatements,
 	FieldImmutable,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "access_policies"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"account_access_policies",
+	"role_access_policies",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -76,38 +93,12 @@ var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// DefaultStatements holds the default value on creation for the "statements" field.
-	DefaultStatements schema.PolicyStatement
+	DefaultStatements []schema.PolicyStatement
 	// DefaultImmutable holds the default value on creation for the "immutable" field.
 	DefaultImmutable bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
-
-// Effect defines the type for the "effect" enum field.
-type Effect string
-
-// EffectAllow is the default value of the Effect enum.
-const DefaultEffect = EffectAllow
-
-// Effect values.
-const (
-	EffectAllow Effect = "allow"
-	EffectDeny  Effect = "deny"
-)
-
-func (e Effect) String() string {
-	return string(e)
-}
-
-// EffectValidator is a validator for the "effect" field enum values. It is called by the builders before save.
-func EffectValidator(e Effect) error {
-	switch e {
-	case EffectAllow, EffectDeny:
-		return nil
-	default:
-		return fmt.Errorf("accesspolicy: invalid enum value for effect field: %q", e)
-	}
-}
 
 // OrderOption defines the ordering options for the AccessPolicy queries.
 type OrderOption func(*sql.Selector)
@@ -137,14 +128,16 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByEffect orders the results by the effect field.
-func ByEffect(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEffect, opts...).ToFunc()
-}
-
 // ByImmutable orders the results by the immutable field.
 func ByImmutable(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImmutable, opts...).ToFunc()
+}
+
+// ByAccountField orders the results by account field.
+func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), sql.OrderByField(field, opts...))
+	}
 }
 
 // ByRolesCount orders the results by roles count.
@@ -159,6 +152,13 @@ func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newAccountStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccountInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+	)
 }
 func newRolesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

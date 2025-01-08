@@ -29,17 +29,19 @@ type PolicyStatement struct {
 func (AccessPolicy) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
-		field.String("name").Unique().NotEmpty(),
+		field.String("name").NotEmpty(),
 		field.String("description").Optional(),
-		field.Enum("effect").Values("allow", "deny").Default("allow"),          // 策略效果
-		field.JSON("statements", PolicyStatement{}).Default(PolicyStatement{}), // 使用 JSON 存储策略语句
-		field.Bool("immutable").Default(false),                                 // 添加 immutable 字段，默认为 false
+		//field.Enum("effect").Values("allow", "deny").Default("allow"),          // 策略效果
+		field.JSON("statements", []PolicyStatement{}).Default([]PolicyStatement{}), // 使用 JSON 存储策略语句
+		field.Bool("immutable").Default(false),                                     // 添加 immutable 字段，默认为 false
 	}
 }
 
 // Edges of the AccessPolicy.
 func (AccessPolicy) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.From("account", Account.Type).Ref("access_policies").Unique(),
+		//edge.From("user", User.Type).Ref("access_policies"),
 		edge.To("roles", Role.Type),
 	}
 }

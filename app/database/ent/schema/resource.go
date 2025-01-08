@@ -25,7 +25,7 @@ func (Resource) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique().NotEmpty(),                      // 资源的名称，例如"Database1"
 		field.String("type").NotEmpty(),                               // 资源类型，例如"Database", "File", "IP"
-		field.String("arn").Unique().NotEmpty(),                       // 资源的 ARN
+		field.String("rrn").Unique().NotEmpty(),                       // 资源的 ARN
 		field.JSON("properties", map[string]interface{}{}).Optional(), // 存储资源的其他属性
 		field.JSON("tags", map[string]string{}).Optional(),            // 资源的标签
 		field.String("description").Optional(),                        // 资源的描述
