@@ -335,13 +335,13 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(r.Description)
 
 		// 生成包含租户信息的accessToken
-		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, us.Email, us.Username, r.Name)
+		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, sa.ID, us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 		// 生成包含租户信息的RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, us.Email, us.Username, r.Name)
+		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, sa.ID, us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})
@@ -403,6 +403,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 				"user": map[string]interface{}{
 					"id":            us.ID,
 					"tenantId":      tenant.ID,
+					"accountId":     sa.ID,
 					"email":         us.Email,
 					"username":      us.Username,
 					"roleName":      r.Name,

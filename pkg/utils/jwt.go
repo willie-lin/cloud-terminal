@@ -12,11 +12,12 @@ import (
 
 // JwtCustomClaims 在全局范围内定义你的jwtCustomClaims类型
 type JwtCustomClaims struct {
-	UserID   uuid.UUID `json:"user_id"`
-	Email    string    `json:"email"`
-	Username string    `json:"username"`
-	TenantID uuid.UUID `json:"tenant_id"`
-	RoleName string    `json:"role_name"` // 存储单个角色的名称
+	UserID    uuid.UUID `json:"user_id"`
+	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	TenantID  uuid.UUID `json:"tenant_id"`
+	RoleName  string    `json:"role_name"` // 存储单个角色的名称
+	AccountID uuid.UUID `json:"account_id"`
 	//RoleID   uuid.UUID `json:"role_id"`
 
 	jwt.RegisteredClaims
@@ -41,13 +42,14 @@ func init() {
 }
 
 // CreateAccessToken 创建JWT访问令牌
-func CreateAccessToken(userID, tenantID uuid.UUID, email, username, roleName string) (string, error) {
+func CreateAccessToken(userID, tenantID, accountID uuid.UUID, email, username, roleName string) (string, error) {
 	claims := &JwtCustomClaims{
-		UserID:   userID,
-		Email:    email,
-		Username: username,
-		TenantID: tenantID,
-		RoleName: roleName,
+		UserID:    userID,
+		Email:     email,
+		Username:  username,
+		TenantID:  tenantID,
+		RoleName:  roleName,
+		AccountID: accountID,
 		//RoleID:   roleID,
 
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -70,13 +72,14 @@ func ValidAccessTokenConfig() echojwt.Config {
 }
 
 // CreateRefreshToken 创建刷新令牌
-func CreateRefreshToken(userID, tenantID uuid.UUID, email, username, roleName string) (string, error) {
+func CreateRefreshToken(userID, tenantID, accountID uuid.UUID, email, username, roleName string) (string, error) {
 	claims := &JwtCustomClaims{
-		UserID:   userID,
-		Email:    email,
-		Username: username,
-		TenantID: tenantID,
-		RoleName: roleName,
+		UserID:    userID,
+		Email:     email,
+		Username:  username,
+		TenantID:  tenantID,
+		RoleName:  roleName,
+		AccountID: accountID,
 		//RoleID:   roleID,
 
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -127,7 +130,7 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(*JwtCustomClaims); ok {
 					// 使用刷新令牌的声明生成新的访问令牌
-					newAccessToken, err := CreateAccessToken(claims.UserID, claims.TenantID, claims.Email, claims.Username, claims.RoleName)
+					newAccessToken, err := CreateAccessToken(claims.UserID, claims.TenantID, claims.AccountID, claims.Email, claims.Username, claims.RoleName)
 					if err != nil {
 						return err
 					}
@@ -157,49 +160,3 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 		return next(c)
 	}
 }
-
-//func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
-//	return func(c echo.Context) error {
-//		if c.Request().Method != http.MethodOptions {
-//			token := c.Get(middleware.DefaultCSRFConfig.ContextKey)
-//			if token == nil {
-//				var err error
-//				token, err = GenerateRandomKey(32)
-//				if err != nil {
-//					return echo.NewHTTPError(http.StatusInternalServerError, "生成 CSRF 令牌失败")
-//				}
-//			}
-//			fmt.Println("6666666666666666666666")
-//			csrfToken := token.(string)
-//			fmt.Println("Generated CSRF Token:", csrfToken) // 调试输出
-//			cookie := &http.Cookie{
-//				Name:   "_csrf",
-//				Value:  csrfToken,
-//				Path:   "/",
-//				Domain: c.Request().Host,
-//				//Domain: "localhost",
-//				//Secure:   c.IsTLS(),
-//				Secure:   true,
-//				HttpOnly: true, // 确保 HttpOnly 设置为 false 以允许前端访问
-//				//SameSite: http.SameSiteLaxMode,
-//				SameSite: http.SameSiteNoneMode,
-//				MaxAge:   3600,
-//			}
-//
-//			c.SetCookie(cookie)
-//			c.Response().Header().Set("X-CSRF-Token", csrfToken)
-//			fmt.Printf("CSRF 令牌: %s\n", csrfToken)
-//
-//			// 打印所有响应头
-//			for name, values := range c.Response().Header() {
-//				for _, value := range values {
-//					fmt.Printf("%s: %s\n", name, value)
-//				}
-//			}
-//		}
-//		fmt.Println("777777777777777")
-//
-//		return next(c)
-//	}
-//}
-//
