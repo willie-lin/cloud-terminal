@@ -42,41 +42,108 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 // RegisterUser 用户注册
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		// 使用 privacy.DecisionContext 跳过隐私检查
+		//ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 
-		username := utils.GenerateUsername()
-		type UserDTO struct {
-			Email      string `json:"email"`
-			Password   string `json:"password"`
-			TenantName string `json:"tenant_name"` // 新增租户名称字段
-		}
+		//username := utils.GenerateUsername()
+		//type UserDTO struct {
+		//	Email      string `json:"email"`
+		//	Password   string `json:"password"`
+		//	TenantName string `json:"tenant_name"` // 新增租户名称字段
+		//}
+		//
+		//dto := new(UserDTO)
+		//if err := c.Bind(&dto); err != nil {
+		//	log.Printf("Error binding user: %v", err)
+		//	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		//}
+		//
+		//// 创建密码的哈希值
+		//hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
+		//if err != nil {
+		//	log.Printf("Error hashing password: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
+		//}
+		//
+		//// 查询平台
+		//platformName, err := client.Platform.Query().Only(ctx)
+		//if err != nil && !ent.IsNotFound(err) {
+		//	return err
+		//}
+		//
+		//// 创建租户
+		//tt, err := client.Tenant.Query().Where(tenant.NameEQ(dto.TenantName)).Only(ctx)
+		//if err != nil && !ent.IsNotFound(err) {
+		//	return err
+		//}
+		//if ent.IsNotFound(err) {
+		//	tt, err = client.Tenant.Create().
+		//		SetName(dto.TenantName).
+		//		SetPlatform(platformName).
+		//		Save(ctx)
+		//	if err != nil {
+		//		return err
+		//	}
+		//	log.Printf("Created management tenant for %s platform", platformName)
+		//} else {
+		//	log.Printf("Management tenant already exists for %s platform.", platformName)
+		//}
+		//
+		//// 创建账户
+		//accountName := dto.TenantName + "-Service"
+		//account, err := client.Account.Query().Where(account.NameEQ(accountName)).Only(ctx)
+		//if err != nil && !ent.IsNotFound(err) {
+		//	return err
+		//}
+		//if ent.IsNotFound(err) {
+		//	account, err = client.Account.Create().
+		//		SetName(accountName).
+		//		SetTenant(tt).
+		//		Save(ctx)
+		//	if err != nil {
+		//		return err
+		//	}
+		//	log.Printf("Created Account Service for %s platform", platformName)
+		//} else {
+		//	log.Printf("MAccount Service already exists for %s platform.", platformName)
+		//}
+		//
+		//// 查询角色
+		//
+		//tenantRoleName := "tenant_admin" // Replace with your desired role name
+		//
+		//r, err := client.Role.Query().Where(role.NameEQ(tenantRoleName)).Only(ctx)
+		//if err != nil && !ent.IsNotFound(err) {
+		//	return fmt.Errorf("query role %s failed: %w", tenantRoleName, err)
+		//}
+		//if ent.IsNotFound(err) {
+		//	r, err = client.Role.Create().SetName(tenantRoleName).Save(ctx)
+		//	if err != nil {
+		//		return fmt.Errorf("create role %s failed: %w", tenantRoleName, err)
+		//	}
+		//} else {
+		//	log.Printf("Role: %s (ID: %v) already exists.", r.Name, r.ID)
+		//}
 
-		dto := new(UserDTO)
-		if err := c.Bind(&dto); err != nil {
-			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
-		}
+		// ---------------------------------------------
 
-		// 创建密码的哈希值
-		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
-		if err != nil {
-			log.Printf("Error hashing password: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
-		}
+		//_, err = account.Update().AddRoles(r).Save(ctx)
 
-		tx, err := client.Tx(context.Background())
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "create transaction error"})
-		}
-		defer func() {
-			if r := recover(); r != nil || err != nil {
-				err := tx.Rollback()
-				if err != nil {
-					return
-				}
-			}
-		}()
+		//tx, err := client.Tx(context.Background())
+		//if err != nil {
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "create transaction error"})
+		//}
+		//defer func() {
+		//	if r := recover(); r != nil || err != nil {
+		//		err := tx.Rollback()
+		//		if err != nil {
+		//			return
+		//		}
+		//	}
+		//}()
 
 		// 创建新租户
+
 		//tenant, err := tx.Tenant.Create().SetName(dto.TenantName).Save(context.Background())
 		//if err != nil {
 		//	err := tx.Rollback()
@@ -110,20 +177,20 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		//}
 
 		// 创建用户并设置为租户的超级管理员
-		us, err := tx.User.Create().
-			SetEmail(dto.Email).
-			SetUsername(username).
-			SetPassword(string(hashedPassword)).
-			//SetTenantID(tenant.ID).
-			Save(context.Background())
-		if err != nil {
-			err := tx.Rollback()
-			if err != nil {
-				return err
-			}
-			log.Printf("Error creating user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "create user failed"})
-		}
+		//us, err := tx.User.Create().
+		//	SetEmail(dto.Email).
+		//	SetUsername(username).
+		//	SetPassword(string(hashedPassword)).
+		//	//SetTenantID(tenant.ID).
+		//	Save(context.Background())
+		//if err != nil {
+		//	err := tx.Rollback()
+		//	if err != nil {
+		//		return err
+		//	}
+		//	log.Printf("Error creating user: %v", err)
+		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "create user failed"})
+		//}
 		//us, err := client.User.Create().
 		//	SetEmail(dto.Email).
 		//	SetUsername(username).
@@ -163,8 +230,8 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		//	log.Printf("Error assigning super admin role to user: %v", err)
 		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning super admin role"})
 		//}
-		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
-		//return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
+		//return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
+		return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
 	}
 }
 

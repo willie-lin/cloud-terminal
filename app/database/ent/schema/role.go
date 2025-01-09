@@ -24,7 +24,7 @@ func (Role) Mixin() []ent.Mixin {
 func (Role) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
-		field.String("name").NotEmpty(),
+		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
 		field.Bool("is_disabled").Default(false), // 标记角色是否被禁用
 		field.Bool("is_default").Default(false),
