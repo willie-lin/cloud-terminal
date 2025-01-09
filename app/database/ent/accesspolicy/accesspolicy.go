@@ -35,12 +35,12 @@ const (
 	// Table holds the table name of the accesspolicy in the database.
 	Table = "access_policies"
 	// AccountTable is the table that holds the account relation/edge.
-	AccountTable = "access_policies"
+	AccountTable = "accounts"
 	// AccountInverseTable is the table name for the Account entity.
 	// It exists in this package in order to avoid circular dependency with the "account" package.
 	AccountInverseTable = "accounts"
 	// AccountColumn is the table column denoting the account relation/edge.
-	AccountColumn = "account_access_policies"
+	AccountColumn = "access_policy_account"
 	// RolesTable is the table that holds the roles relation/edge.
 	RolesTable = "roles"
 	// RolesInverseTable is the table name for the Role entity.
@@ -133,10 +133,17 @@ func ByImmutable(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImmutable, opts...).ToFunc()
 }
 
-// ByAccountField orders the results by account field.
-func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByAccountCount orders the results by account count.
+func ByAccountCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newAccountStep(), opts...)
+	}
+}
+
+// ByAccount orders the results by account terms.
+func ByAccount(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -157,7 +164,7 @@ func newAccountStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccountInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+		sqlgraph.Edge(sqlgraph.O2M, false, AccountTable, AccountColumn),
 	)
 }
 func newRolesStep() *sqlgraph.Step {

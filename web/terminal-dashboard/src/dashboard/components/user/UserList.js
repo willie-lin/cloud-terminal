@@ -24,7 +24,7 @@ function UserList() {
 
     const { currentUser } = useContext(AuthContext);
     // 判断当前用户是否具有删除权限
-    const canDelete = currentUser?.roleName === 'admin' || currentUser?.roleName === 'super_admin'
+    const canDelete = currentUser?.isTenantAdmin  || currentUser?.roleName === 'super_admin'
 
     const { isDarkMode } = useTheme();
 
@@ -46,7 +46,7 @@ function UserList() {
     const [search, setSearch] = useState('');
     const [sortField, setSortField] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
-    const headers = ['ID', 'NICKNAME', 'USERNAME', 'EMAIL', 'PHONE', 'BIO', '2FA','STATUS', 'ONLINE', 'CREATED', 'UPDATED', 'LAST MODIFIED', 'EDIT USER', ''];
+    const headers = ['ID', 'NICKNAME', 'USERNAME', 'EMAIL', 'PHONE', 'BIO', '2FA','STATUS', 'ONLINE', 'CREATED', 'UPDATED', 'LAST MODIFIED', 'EDIT USER', 'DELETE USER'];
 
     const handleSort = (field) => {
         if (sortField === field) {

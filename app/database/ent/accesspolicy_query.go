@@ -79,7 +79,7 @@ func (apq *AccessPolicyQuery) QueryAccount() *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, accesspolicy.AccountTable, accesspolicy.AccountColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, accesspolicy.AccountTable, accesspolicy.AccountColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(apq.driver.Dialect(), step)
 		return fromU, nil
@@ -415,9 +415,6 @@ func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 			apq.withRoles != nil,
 		}
 	)
-	if apq.withAccount != nil {
-		withFKs = true
-	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, accesspolicy.ForeignKeys...)
 	}
@@ -440,8 +437,9 @@ func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		return nodes, nil
 	}
 	if query := apq.withAccount; query != nil {
-		if err := apq.loadAccount(ctx, query, nodes, nil,
-			func(n *AccessPolicy, e *Account) { n.Edges.Account = e }); err != nil {
+		if err := apq.loadAccount(ctx, query, nodes,
+			func(n *AccessPolicy) { n.Edges.Account = []*Account{} },
+			func(n *AccessPolicy, e *Account) { n.Edges.Account = append(n.Edges.Account, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -456,34 +454,33 @@ func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 }
 
 func (apq *AccessPolicyQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Account)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*AccessPolicy)
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*AccessPolicy)
 	for i := range nodes {
-		if nodes[i].account_access_policies == nil {
-			continue
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
 		}
-		fk := *nodes[i].account_access_policies
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(account.IDIn(ids...))
+	query.withFKs = true
+	query.Where(predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(accesspolicy.AccountColumn), fks...))
+	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		fk := n.access_policy_account
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "access_policy_account" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "account_access_policies" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "access_policy_account" returned %v for node %v`, *fk, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
+		assign(node, n)
 	}
 	return nil
 }

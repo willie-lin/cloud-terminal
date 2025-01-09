@@ -9,7 +9,8 @@ function RenderRole({ role, isLast }) {
 
     const { currentUser } = useContext(AuthContext);
     // 判断当前用户是否具有删除权限
-    const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
+    // const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
+    const canDelete = currentUser?.isTenantAdmin  || currentUser?.roleName === 'super_admin'
 
     const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
 

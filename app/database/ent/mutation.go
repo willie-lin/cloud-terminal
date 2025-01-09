@@ -57,7 +57,8 @@ type AccessPolicyMutation struct {
 	appendstatements []schema.PolicyStatement
 	immutable        *bool
 	clearedFields    map[string]struct{}
-	account          *uuid.UUID
+	account          map[uuid.UUID]struct{}
+	removedaccount   map[uuid.UUID]struct{}
 	clearedaccount   bool
 	roles            map[uuid.UUID]struct{}
 	removedroles     map[uuid.UUID]struct{}
@@ -415,9 +416,14 @@ func (m *AccessPolicyMutation) ResetImmutable() {
 	m.immutable = nil
 }
 
-// SetAccountID sets the "account" edge to the Account entity by id.
-func (m *AccessPolicyMutation) SetAccountID(id uuid.UUID) {
-	m.account = &id
+// AddAccountIDs adds the "account" edge to the Account entity by ids.
+func (m *AccessPolicyMutation) AddAccountIDs(ids ...uuid.UUID) {
+	if m.account == nil {
+		m.account = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.account[ids[i]] = struct{}{}
+	}
 }
 
 // ClearAccount clears the "account" edge to the Account entity.
@@ -430,20 +436,29 @@ func (m *AccessPolicyMutation) AccountCleared() bool {
 	return m.clearedaccount
 }
 
-// AccountID returns the "account" edge ID in the mutation.
-func (m *AccessPolicyMutation) AccountID() (id uuid.UUID, exists bool) {
-	if m.account != nil {
-		return *m.account, true
+// RemoveAccountIDs removes the "account" edge to the Account entity by IDs.
+func (m *AccessPolicyMutation) RemoveAccountIDs(ids ...uuid.UUID) {
+	if m.removedaccount == nil {
+		m.removedaccount = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.account, ids[i])
+		m.removedaccount[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAccount returns the removed IDs of the "account" edge to the Account entity.
+func (m *AccessPolicyMutation) RemovedAccountIDs() (ids []uuid.UUID) {
+	for id := range m.removedaccount {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // AccountIDs returns the "account" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// AccountID instead. It exists only for internal usage by the builders.
 func (m *AccessPolicyMutation) AccountIDs() (ids []uuid.UUID) {
-	if id := m.account; id != nil {
-		ids = append(ids, *id)
+	for id := range m.account {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -452,6 +467,7 @@ func (m *AccessPolicyMutation) AccountIDs() (ids []uuid.UUID) {
 func (m *AccessPolicyMutation) ResetAccount() {
 	m.account = nil
 	m.clearedaccount = false
+	m.removedaccount = nil
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by ids.
@@ -750,9 +766,11 @@ func (m *AccessPolicyMutation) AddedEdges() []string {
 func (m *AccessPolicyMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case accesspolicy.EdgeAccount:
-		if id := m.account; id != nil {
-			return []ent.Value{*id}
+		ids := make([]ent.Value, 0, len(m.account))
+		for id := range m.account {
+			ids = append(ids, id)
 		}
+		return ids
 	case accesspolicy.EdgeRoles:
 		ids := make([]ent.Value, 0, len(m.roles))
 		for id := range m.roles {
@@ -766,6 +784,9 @@ func (m *AccessPolicyMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccessPolicyMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
+	if m.removedaccount != nil {
+		edges = append(edges, accesspolicy.EdgeAccount)
+	}
 	if m.removedroles != nil {
 		edges = append(edges, accesspolicy.EdgeRoles)
 	}
@@ -776,6 +797,12 @@ func (m *AccessPolicyMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *AccessPolicyMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case accesspolicy.EdgeAccount:
+		ids := make([]ent.Value, 0, len(m.removedaccount))
+		for id := range m.removedaccount {
+			ids = append(ids, id)
+		}
+		return ids
 	case accesspolicy.EdgeRoles:
 		ids := make([]ent.Value, 0, len(m.removedroles))
 		for id := range m.removedroles {
@@ -814,9 +841,6 @@ func (m *AccessPolicyMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *AccessPolicyMutation) ClearEdge(name string) error {
 	switch name {
-	case accesspolicy.EdgeAccount:
-		m.ClearAccount()
-		return nil
 	}
 	return fmt.Errorf("unknown AccessPolicy unique edge %s", name)
 }

@@ -380,7 +380,7 @@ func (c *AccessPolicyClient) QueryAccount(ap *AccessPolicy) *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, accesspolicy.AccountTable, accesspolicy.AccountColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, accesspolicy.AccountTable, accesspolicy.AccountColumn),
 		)
 		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
 		return fromV, nil

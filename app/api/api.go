@@ -9,10 +9,16 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -43,195 +49,183 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 使用 privacy.DecisionContext 跳过隐私检查
-		//ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
+		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 
-		//username := utils.GenerateUsername()
-		//type UserDTO struct {
-		//	Email      string `json:"email"`
-		//	Password   string `json:"password"`
-		//	TenantName string `json:"tenant_name"` // 新增租户名称字段
-		//}
-		//
-		//dto := new(UserDTO)
-		//if err := c.Bind(&dto); err != nil {
-		//	log.Printf("Error binding user: %v", err)
-		//	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
-		//}
-		//
-		//// 创建密码的哈希值
-		//hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
-		//if err != nil {
-		//	log.Printf("Error hashing password: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
-		//}
-		//
-		//// 查询平台
-		//platformName, err := client.Platform.Query().Only(ctx)
-		//if err != nil && !ent.IsNotFound(err) {
-		//	return err
-		//}
-		//
-		//// 创建租户
-		//tt, err := client.Tenant.Query().Where(tenant.NameEQ(dto.TenantName)).Only(ctx)
-		//if err != nil && !ent.IsNotFound(err) {
-		//	return err
-		//}
-		//if ent.IsNotFound(err) {
-		//	tt, err = client.Tenant.Create().
-		//		SetName(dto.TenantName).
-		//		SetPlatform(platformName).
-		//		Save(ctx)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	log.Printf("Created management tenant for %s platform", platformName)
-		//} else {
-		//	log.Printf("Management tenant already exists for %s platform.", platformName)
-		//}
-		//
-		//// 创建账户
-		//accountName := dto.TenantName + "-Service"
-		//account, err := client.Account.Query().Where(account.NameEQ(accountName)).Only(ctx)
-		//if err != nil && !ent.IsNotFound(err) {
-		//	return err
-		//}
-		//if ent.IsNotFound(err) {
-		//	account, err = client.Account.Create().
-		//		SetName(accountName).
-		//		SetTenant(tt).
-		//		Save(ctx)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	log.Printf("Created Account Service for %s platform", platformName)
-		//} else {
-		//	log.Printf("MAccount Service already exists for %s platform.", platformName)
-		//}
-		//
-		//// 查询角色
-		//
-		//tenantRoleName := "tenant_admin" // Replace with your desired role name
-		//
-		//r, err := client.Role.Query().Where(role.NameEQ(tenantRoleName)).Only(ctx)
-		//if err != nil && !ent.IsNotFound(err) {
-		//	return fmt.Errorf("query role %s failed: %w", tenantRoleName, err)
-		//}
-		//if ent.IsNotFound(err) {
-		//	r, err = client.Role.Create().SetName(tenantRoleName).Save(ctx)
-		//	if err != nil {
-		//		return fmt.Errorf("create role %s failed: %w", tenantRoleName, err)
-		//	}
-		//} else {
-		//	log.Printf("Role: %s (ID: %v) already exists.", r.Name, r.ID)
-		//}
+		username := utils.GenerateUsername()
+		type UserDTO struct {
+			Email      string `json:"email"`
+			Password   string `json:"password"`
+			TenantName string `json:"tenant_name"` // 新增租户名称字段
+		}
 
-		// ---------------------------------------------
+		dto := new(UserDTO)
+		if err := c.Bind(&dto); err != nil {
+			log.Printf("Error binding user: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
 
-		//_, err = account.Update().AddRoles(r).Save(ctx)
+		// 创建密码的哈希值
+		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
+		if err != nil {
+			log.Printf("Error hashing password: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
+		}
 
-		//tx, err := client.Tx(context.Background())
-		//if err != nil {
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "create transaction error"})
-		//}
-		//defer func() {
-		//	if r := recover(); r != nil || err != nil {
-		//		err := tx.Rollback()
-		//		if err != nil {
-		//			return
-		//		}
-		//	}
-		//}()
+		// 查询平台
+		platformName, err := client.Platform.Query().Only(ctx)
+		if err != nil && !ent.IsNotFound(err) {
+			return err
+		}
 
-		// 创建新租户
+		// 创建租户
+		tenantName := dto.TenantName + "Tenant"
+		tt, err := client.Tenant.Query().Where(tenant.NameEQ(tenantName)).Only(ctx)
+		if err != nil && !ent.IsNotFound(err) {
+			return err
+		}
+		if ent.IsNotFound(err) {
+			tt, err = client.Tenant.Create().
+				SetName(tenantName).
+				SetPlatform(platformName).
+				Save(ctx)
+			if err != nil {
+				return err
+			}
+			log.Printf("Created management tenant for %s platform", platformName)
+		} else {
+			log.Printf("Management tenant already exists for %s platform.", platformName)
+		}
 
-		//tenant, err := tx.Tenant.Create().SetName(dto.TenantName).Save(context.Background())
-		//if err != nil {
-		//	err := tx.Rollback()
-		//	if err != nil {
-		//		return err
-		//	}
-		//	log.Printf("Error creating tenant: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating tenant in database"})
-		//}
+		// 查询角色
+		tenantRoleName := tenantName + "Admin" // Replace with your desired role name
 
-		// 获取所有默认角色
-		//defaultRoles, err := tx.Role.Query().All(context.Background())
-		//defaultRoles, err := tx.Role.Query().Where(role.IsDefaultEQ(true)).All(context.Background())
-		//if err != nil {
-		//	err := tx.Rollback()
-		//	if err != nil {
-		//		return err
-		//	}
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error getting default roles"})
-		//}
-		// 通过事务关联租户和角色 (关键修改在这里)
-		//for _, r := range defaultRoles {
-		//	err = tx.Tenant.UpdateOne(tenant).Exec(context.Background()) // 直接在事务中使用 AddRoles
-		//	if err != nil {
-		//		err := tx.Rollback()
-		//		if err != nil {
-		//			return err
-		//		}
-		//		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning role to tenant"})
-		//	}
-		//}
+		r, err := client.Role.Query().Where(role.NameEQ(tenantRoleName)).Only(ctx)
+		if err != nil && !ent.IsNotFound(err) {
+			return fmt.Errorf("query role %s failed: %w", tenantRoleName, err)
+		}
+		if ent.IsNotFound(err) {
+			r, err = client.Role.Create().SetName(tenantRoleName).Save(ctx)
+			if err != nil {
+				return fmt.Errorf("create role %s failed: %w", tenantRoleName, err)
+			}
+		} else {
+			log.Printf("Role: %s (ID: %v) already exists.", r.Name, r.ID)
+		}
 
-		// 创建用户并设置为租户的超级管理员
-		//us, err := tx.User.Create().
-		//	SetEmail(dto.Email).
-		//	SetUsername(username).
-		//	SetPassword(string(hashedPassword)).
-		//	//SetTenantID(tenant.ID).
-		//	Save(context.Background())
-		//if err != nil {
-		//	err := tx.Rollback()
-		//	if err != nil {
-		//		return err
-		//	}
-		//	log.Printf("Error creating user: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "create user failed"})
-		//}
-		//us, err := client.User.Create().
-		//	SetEmail(dto.Email).
-		//	SetUsername(username).
-		//	SetPassword(string(hashedPassword)).
-		//	SetTenantID(tenant.ID).
-		//	Save(context.Background())
-		//if err != nil {
-		//	log.Printf("Error creating user: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
-		//}
-		//检查管理员角色是否存在，如果不存在则创建
-		//adminRole, err := client.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
+		// 5. 创建租户管理员策略
+		tenantRole, err := client.Role.Query().Where(role.NameEQ(tenantRoleName)).Only(ctx)
+		if err != nil {
+			return fmt.Errorf("query tenant admin role failed: %w", err)
+		}
 
-		//adminRole, err := tx.Role.Query().Where(role.NameEQ("Admin")).Only(context.Background())
-		//
-		//if ent.IsNotFound(err) {
-		//	err := tx.Rollback()
-		//	if err != nil {
-		//		return err
-		//	}
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "admin role is not found"})
-		//}
-		//if err = tx.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
-		//	err := tx.Rollback()
-		//	if err != nil {
-		//		return err
-		//	}
-		//	log.Printf("Error assigning super admin role to user: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "add role to user failed"})
-		//}
-		//
-		//if err := tx.Commit(); err != nil {
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "commit transaction error"})
-		//}
+		tenantPolicyName := "tenant_admin_policy"
+		tenantPolicy, err := client.AccessPolicy.Query().Where(accesspolicy.NameEQ(tenantPolicyName)).Only(ctx)
+		if err != nil && !ent.IsNotFound(err) {
+			return fmt.Errorf("query tenant admin policy failed: %w", err)
+		}
 
-		//if err = client.User.UpdateOne(us).AddRoles(adminRole).Exec(context.Background()); err != nil {
-		//	log.Printf("Error assigning super admin role to user: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error assigning super admin role"})
-		//}
-		//return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
-		return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
+		if ent.IsNotFound(err) {
+			statements := []schema.PolicyStatement{
+				{
+					Effect: "Allow",
+					Actions: []string{
+						// ActionTenantCreate Tenant Actions
+						// ActionUserCreate User Actions
+						utils.ActionUserCreate,
+						utils.ActionUserRead,
+						utils.ActionUserUpdate,
+						utils.ActionUserDelete,
+
+						// ActionRoleCreate ActionUserCreate User Actions
+						utils.ActionRoleCreate,
+						utils.ActionRoleRead,
+						utils.ActionRoleUpdate,
+						utils.ActionRoleDelete,
+
+						// ActionProjectCreate Project Actions
+						utils.ActionProjectCreate,
+						utils.ActionProjectRead,
+						utils.ActionProjectUpdate,
+						utils.ActionProjectDelete,
+
+						// ActionAuditLogRead Audit Log Actions
+						utils.ActionAuditLogRead,
+						utils.ActionAuditLogExport,
+					}, // 超级管理员拥有所有操作权限
+					Resources: []string{
+						utils.ResourceUserAll, // 匹配所有租户和账户的用户
+						utils.ResourceAccountAll,
+						utils.ResourceRoleAll,
+						utils.ResourcePolicyAll,
+						utils.ResourceProjectAll,
+						utils.ResourceAuditLogAll,
+					}, // 超级管理员拥有所有资源权限
+				},
+			}
+
+			tenantPolicy, err = client.AccessPolicy.Create().
+				SetName(tenantPolicyName).
+				SetStatements(statements).
+				Save(ctx)
+			if err != nil {
+				return fmt.Errorf("创建 tenant admin policy 失败: %w", err)
+			}
+			log.Printf("Created tenant admin policy: %s (ID: %v)", tenantPolicy.Name, tenantPolicy.ID)
+		} else if err == nil {
+			log.Printf("tenant admin policy: %s (ID: %v) already exists.", tenantPolicy.Name, tenantPolicy.ID)
+		} else {
+			return fmt.Errorf("unexpected error when querying tenant admin policy: %w", err)
+		}
+
+		// 检查策略是否已经关联到角色
+		exists, err := client.Role.Query().
+			Where(role.IDEQ(tenantRole.ID)).
+			Where(role.HasAccessPoliciesWith(accesspolicy.IDEQ(tenantPolicy.ID))).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("checking role policy existence: %w", err)
+		}
+
+		if !exists {
+			_, err = tenantRole.Update().AddAccessPolicies(tenantPolicy).Save(ctx)
+			if err != nil {
+				return fmt.Errorf("关联 tenant_admin 角色和 tenant_admin 策略失败: %w", err)
+			}
+			log.Printf("关联 tenant_admin 角色和 tenant_admin 策略")
+		} else {
+			log.Printf("tenant_admin 角色和 tenant_admin 策略已经关联")
+		}
+
+		// 创建账户
+		accountName := dto.TenantName + "Account"
+		account, err := client.Account.Query().Where(account.NameEQ(accountName)).Only(ctx)
+		if err != nil && !ent.IsNotFound(err) {
+			return err
+		}
+		if ent.IsNotFound(err) {
+			account, err = client.Account.Create().
+				SetName(accountName).
+				SetTenant(tt).
+				AddRoles(tenantRole).
+				Save(ctx)
+			if err != nil {
+				return err
+			}
+			log.Printf("Created Account Service for %s platform", platformName)
+		} else {
+			log.Printf("MAccount Service already exists for %s platform.", platformName)
+		}
+
+		// 6. 创建租户管理员用户并关联到账户
+		us, err := client.User.Create().
+			SetUsername(username).
+			SetEmail(dto.Email).
+			SetPassword(string(hashedPassword)).
+			SetAccount(account).
+			SetRole(tenantRole).
+			Save(ctx)
+		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
+		//return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
 	}
 }
 
@@ -332,6 +326,10 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})
 		}
+
+		// 关键部分：判断是否为租户管理员
+		isTenantAdmin := strings.Contains(r.Name, "TenantAdmin") // 或更精确的匹配逻辑
+
 		fmt.Println(r.ID)
 		fmt.Println(r.Name)
 		fmt.Println(r.Description)
@@ -403,11 +401,12 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 				"accessToken":  accessToken,
 				"refreshToken": refreshToken,
 				"user": map[string]interface{}{
-					"id":       us.ID,
-					"tenantId": tenant.ID,
-					"email":    us.Email,
-					"username": us.Username,
-					"roleName": r.Name,
+					"id":            us.ID,
+					"tenantId":      tenant.ID,
+					"email":         us.Email,
+					"username":      us.Username,
+					"roleName":      r.Name,
+					"isTenantAdmin": isTenantAdmin, // 添加 isTenantAdmin 字段
 				},
 			})
 	}

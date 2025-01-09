@@ -9,7 +9,8 @@ import {AuthContext} from "../../../App";
 function RenderUser({ user, isLast, isDarkMode }) {
     const { currentUser } = useContext(AuthContext);
     // 判断当前用户是否具有删除权限
-    const canDelete = currentUser?.roleName === 'admin' || currentUser?.roleName === 'super_admin'
+    // const canDelete = currentUser?.roleName === 'admin' || currentUser?.roleName === 'super_admin'
+    const canDelete = currentUser?.isTenantAdmin  || currentUser?.roleName === 'super_admin'
 
 
     // const classes = isLast ? "p-2" : "p-2 border-b border-blue-gray-50";

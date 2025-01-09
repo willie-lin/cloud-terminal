@@ -40,7 +40,8 @@ func (AccessPolicy) Fields() []ent.Field {
 // Edges of the AccessPolicy.
 func (AccessPolicy) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).Ref("access_policies").Unique(),
+		//edge.From("account", Account.Type).Ref("access_policies").Unique(),
+		edge.To("account", Account.Type),
 		//edge.From("user", User.Type).Ref("access_policies"),
 		edge.To("roles", Role.Type),
 	}

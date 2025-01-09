@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/schema"
 )
 
@@ -44,7 +43,7 @@ type AccessPolicy struct {
 // AccessPolicyEdges holds the relations/edges for other nodes in the graph.
 type AccessPolicyEdges struct {
 	// Account holds the value of the account edge.
-	Account *Account `json:"account,omitempty"`
+	Account []*Account `json:"account,omitempty"`
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -53,12 +52,10 @@ type AccessPolicyEdges struct {
 }
 
 // AccountOrErr returns the Account value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e AccessPolicyEdges) AccountOrErr() (*Account, error) {
-	if e.Account != nil {
+// was not loaded in eager-loading.
+func (e AccessPolicyEdges) AccountOrErr() ([]*Account, error) {
+	if e.loadedTypes[0] {
 		return e.Account, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: account.Label}
 	}
 	return nil, &NotLoadedError{edge: "account"}
 }

@@ -48,6 +48,7 @@ var (
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "suspended", "deleted"}, Default: "active"},
+		{Name: "access_policy_account", Type: field.TypeUUID, Nullable: true},
 		{Name: "tenant_accounts", Type: field.TypeUUID, Unique: true},
 	}
 	// AccountsTable holds the schema information for the "accounts" table.
@@ -57,8 +58,14 @@ var (
 		PrimaryKey: []*schema.Column{AccountsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "accounts_tenants_accounts",
+				Symbol:     "accounts_access_policies_account",
 				Columns:    []*schema.Column{AccountsColumns[6]},
+				RefColumns: []*schema.Column{AccessPoliciesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "accounts_tenants_accounts",
+				Columns:    []*schema.Column{AccountsColumns[7]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -400,7 +407,8 @@ var (
 func init() {
 	AccessPoliciesTable.ForeignKeys[0].RefTable = AccountsTable
 	AccessPoliciesTable.ForeignKeys[1].RefTable = RolesTable
-	AccountsTable.ForeignKeys[0].RefTable = TenantsTable
+	AccountsTable.ForeignKeys[0].RefTable = AccessPoliciesTable
+	AccountsTable.ForeignKeys[1].RefTable = TenantsTable
 	RolesTable.ForeignKeys[0].RefTable = AccessPoliciesTable
 	RolesTable.ForeignKeys[1].RefTable = AccountsTable
 	TenantsTable.ForeignKeys[0].RefTable = PlatformsTable

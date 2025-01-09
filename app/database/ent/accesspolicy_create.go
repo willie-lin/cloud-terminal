@@ -106,23 +106,19 @@ func (apc *AccessPolicyCreate) SetNillableID(u *uuid.UUID) *AccessPolicyCreate {
 	return apc
 }
 
-// SetAccountID sets the "account" edge to the Account entity by ID.
-func (apc *AccessPolicyCreate) SetAccountID(id uuid.UUID) *AccessPolicyCreate {
-	apc.mutation.SetAccountID(id)
+// AddAccountIDs adds the "account" edge to the Account entity by IDs.
+func (apc *AccessPolicyCreate) AddAccountIDs(ids ...uuid.UUID) *AccessPolicyCreate {
+	apc.mutation.AddAccountIDs(ids...)
 	return apc
 }
 
-// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
-func (apc *AccessPolicyCreate) SetNillableAccountID(id *uuid.UUID) *AccessPolicyCreate {
-	if id != nil {
-		apc = apc.SetAccountID(*id)
+// AddAccount adds the "account" edges to the Account entity.
+func (apc *AccessPolicyCreate) AddAccount(a ...*Account) *AccessPolicyCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return apc
-}
-
-// SetAccount sets the "account" edge to the Account entity.
-func (apc *AccessPolicyCreate) SetAccount(a *Account) *AccessPolicyCreate {
-	return apc.SetAccountID(a.ID)
+	return apc.AddAccountIDs(ids...)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -280,8 +276,8 @@ func (apc *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec
 	}
 	if nodes := apc.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
 			Table:   accesspolicy.AccountTable,
 			Columns: []string{accesspolicy.AccountColumn},
 			Bidi:    false,
@@ -292,7 +288,6 @@ func (apc *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.account_access_policies = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := apc.mutation.RolesIDs(); len(nodes) > 0 {

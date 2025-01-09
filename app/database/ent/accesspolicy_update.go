@@ -99,23 +99,19 @@ func (apu *AccessPolicyUpdate) SetNillableImmutable(b *bool) *AccessPolicyUpdate
 	return apu
 }
 
-// SetAccountID sets the "account" edge to the Account entity by ID.
-func (apu *AccessPolicyUpdate) SetAccountID(id uuid.UUID) *AccessPolicyUpdate {
-	apu.mutation.SetAccountID(id)
+// AddAccountIDs adds the "account" edge to the Account entity by IDs.
+func (apu *AccessPolicyUpdate) AddAccountIDs(ids ...uuid.UUID) *AccessPolicyUpdate {
+	apu.mutation.AddAccountIDs(ids...)
 	return apu
 }
 
-// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
-func (apu *AccessPolicyUpdate) SetNillableAccountID(id *uuid.UUID) *AccessPolicyUpdate {
-	if id != nil {
-		apu = apu.SetAccountID(*id)
+// AddAccount adds the "account" edges to the Account entity.
+func (apu *AccessPolicyUpdate) AddAccount(a ...*Account) *AccessPolicyUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return apu
-}
-
-// SetAccount sets the "account" edge to the Account entity.
-func (apu *AccessPolicyUpdate) SetAccount(a *Account) *AccessPolicyUpdate {
-	return apu.SetAccountID(a.ID)
+	return apu.AddAccountIDs(ids...)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -138,10 +134,25 @@ func (apu *AccessPolicyUpdate) Mutation() *AccessPolicyMutation {
 	return apu.mutation
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
+// ClearAccount clears all "account" edges to the Account entity.
 func (apu *AccessPolicyUpdate) ClearAccount() *AccessPolicyUpdate {
 	apu.mutation.ClearAccount()
 	return apu
+}
+
+// RemoveAccountIDs removes the "account" edge to Account entities by IDs.
+func (apu *AccessPolicyUpdate) RemoveAccountIDs(ids ...uuid.UUID) *AccessPolicyUpdate {
+	apu.mutation.RemoveAccountIDs(ids...)
+	return apu
+}
+
+// RemoveAccount removes "account" edges to Account entities.
+func (apu *AccessPolicyUpdate) RemoveAccount(a ...*Account) *AccessPolicyUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return apu.RemoveAccountIDs(ids...)
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -248,8 +259,8 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if apu.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
 			Table:   accesspolicy.AccountTable,
 			Columns: []string{accesspolicy.AccountColumn},
 			Bidi:    false,
@@ -259,10 +270,26 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
+	if nodes := apu.mutation.RemovedAccountIDs(); len(nodes) > 0 && !apu.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspolicy.AccountTable,
+			Columns: []string{accesspolicy.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
 	if nodes := apu.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
 			Table:   accesspolicy.AccountTable,
 			Columns: []string{accesspolicy.AccountColumn},
 			Bidi:    false,
@@ -406,23 +433,19 @@ func (apuo *AccessPolicyUpdateOne) SetNillableImmutable(b *bool) *AccessPolicyUp
 	return apuo
 }
 
-// SetAccountID sets the "account" edge to the Account entity by ID.
-func (apuo *AccessPolicyUpdateOne) SetAccountID(id uuid.UUID) *AccessPolicyUpdateOne {
-	apuo.mutation.SetAccountID(id)
+// AddAccountIDs adds the "account" edge to the Account entity by IDs.
+func (apuo *AccessPolicyUpdateOne) AddAccountIDs(ids ...uuid.UUID) *AccessPolicyUpdateOne {
+	apuo.mutation.AddAccountIDs(ids...)
 	return apuo
 }
 
-// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
-func (apuo *AccessPolicyUpdateOne) SetNillableAccountID(id *uuid.UUID) *AccessPolicyUpdateOne {
-	if id != nil {
-		apuo = apuo.SetAccountID(*id)
+// AddAccount adds the "account" edges to the Account entity.
+func (apuo *AccessPolicyUpdateOne) AddAccount(a ...*Account) *AccessPolicyUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return apuo
-}
-
-// SetAccount sets the "account" edge to the Account entity.
-func (apuo *AccessPolicyUpdateOne) SetAccount(a *Account) *AccessPolicyUpdateOne {
-	return apuo.SetAccountID(a.ID)
+	return apuo.AddAccountIDs(ids...)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -445,10 +468,25 @@ func (apuo *AccessPolicyUpdateOne) Mutation() *AccessPolicyMutation {
 	return apuo.mutation
 }
 
-// ClearAccount clears the "account" edge to the Account entity.
+// ClearAccount clears all "account" edges to the Account entity.
 func (apuo *AccessPolicyUpdateOne) ClearAccount() *AccessPolicyUpdateOne {
 	apuo.mutation.ClearAccount()
 	return apuo
+}
+
+// RemoveAccountIDs removes the "account" edge to Account entities by IDs.
+func (apuo *AccessPolicyUpdateOne) RemoveAccountIDs(ids ...uuid.UUID) *AccessPolicyUpdateOne {
+	apuo.mutation.RemoveAccountIDs(ids...)
+	return apuo
+}
+
+// RemoveAccount removes "account" edges to Account entities.
+func (apuo *AccessPolicyUpdateOne) RemoveAccount(a ...*Account) *AccessPolicyUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return apuo.RemoveAccountIDs(ids...)
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -585,8 +623,8 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 	}
 	if apuo.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
 			Table:   accesspolicy.AccountTable,
 			Columns: []string{accesspolicy.AccountColumn},
 			Bidi:    false,
@@ -596,10 +634,26 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
+	if nodes := apuo.mutation.RemovedAccountIDs(); len(nodes) > 0 && !apuo.mutation.AccountCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   accesspolicy.AccountTable,
+			Columns: []string{accesspolicy.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
 	if nodes := apuo.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
 			Table:   accesspolicy.AccountTable,
 			Columns: []string{accesspolicy.AccountColumn},
 			Bidi:    false,
