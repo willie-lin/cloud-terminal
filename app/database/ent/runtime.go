@@ -331,6 +331,10 @@ func init() {
 	userDescLastLoginTime := userFields[15].Descriptor()
 	// user.DefaultLastLoginTime holds the default value on creation for the last_login_time field.
 	user.DefaultLastLoginTime = userDescLastLoginTime.Default.(func() time.Time)
+	// userDescIsDefault is the schema descriptor for is_default field.
+	userDescIsDefault := userFields[17].Descriptor()
+	// user.DefaultIsDefault holds the default value on creation for the is_default field.
+	user.DefaultIsDefault = userDescIsDefault.Default.(bool)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userFields[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.

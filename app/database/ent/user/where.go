@@ -141,6 +141,11 @@ func LastLoginTime(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldLastLoginTime, v))
 }
 
+// IsDefault applies equality check predicate on the "is_default" field. It's identical to IsDefaultEQ.
+func IsDefault(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsDefault, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -969,6 +974,16 @@ func SocialLoginsIsNil() predicate.User {
 // SocialLoginsNotNil applies the NotNil predicate on the "social_logins" field.
 func SocialLoginsNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldSocialLogins))
+}
+
+// IsDefaultEQ applies the EQ predicate on the "is_default" field.
+func IsDefaultEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsDefault, v))
+}
+
+// IsDefaultNEQ applies the NEQ predicate on the "is_default" field.
+func IsDefaultNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldIsDefault, v))
 }
 
 // HasAccount applies the HasEdge predicate on the "account" edge.

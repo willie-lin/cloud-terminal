@@ -104,7 +104,10 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			return fmt.Errorf("query role %s failed: %w", tenantRoleName, err)
 		}
 		if ent.IsNotFound(err) {
-			r, err = client.Role.Create().SetName(tenantRoleName).Save(ctx)
+			r, err = client.Role.Create().
+				SetName(tenantRoleName).
+				SetIsDefault(true).
+				Save(ctx)
 			if err != nil {
 				return fmt.Errorf("create role %s failed: %w", tenantRoleName, err)
 			}
@@ -118,7 +121,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			return fmt.Errorf("query tenant admin role failed: %w", err)
 		}
 
-		tenantPolicyName := "tenant_admin_policy"
+		tenantPolicyName := tenantRoleName + "_policy"
 		tenantPolicy, err := client.AccessPolicy.Query().Where(accesspolicy.NameEQ(tenantPolicyName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return fmt.Errorf("query tenant admin policy failed: %w", err)
@@ -221,6 +224,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			SetUsername(username).
 			SetEmail(dto.Email).
 			SetPassword(string(hashedPassword)).
+			SetIsDefault(true).
 			SetAccount(account).
 			SetRole(tenantRole).
 			Save(ctx)

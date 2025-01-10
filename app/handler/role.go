@@ -113,7 +113,7 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only super admins and tenant admins can create roles"})
 		}
 
-		var roles []RoleDTO
+		var roles []*RoleDTO
 		if err := c.Bind(&roles); err != nil {
 			log.Printf("Error binding role: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
@@ -132,8 +132,10 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create role"})
 			}
 			createdRoles = append(createdRoles, r)
-			return c.JSON(http.StatusCreated, r)
+			//return c.JSON(http.StatusCreated, r)
 		}
+		// 返回创建的所有角色
+		//return c.JSON(http.StatusCreated, createdRoles)
 		return c.JSON(http.StatusCreated, map[string]string{"message": "Roles created successfully"})
 	}
 }
@@ -152,12 +154,12 @@ func IsDefaultRole(roleName string) bool {
 func DeleteRoleByName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		// 从请求上下文中获取租户ID
-		v := viewer.FromContext(c.Request().Context())
-		if v == nil || v.RoleName != "admin" {
-			log.Printf("No viewer found in context or not authorized")
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-		}
+		//// 从请求上下文中获取租户ID
+		//v := viewer.FromContext(c.Request().Context())
+		//if v == nil || v.RoleName != "admin" {
+		//	log.Printf("No viewer found in context or not authorized")
+		//	return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		//}
 		type RoleDTO struct {
 			Name string `json:"name"`
 		}

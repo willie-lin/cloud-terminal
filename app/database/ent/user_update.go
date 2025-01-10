@@ -303,6 +303,20 @@ func (uu *UserUpdate) ClearSocialLogins() *UserUpdate {
 	return uu
 }
 
+// SetIsDefault sets the "is_default" field.
+func (uu *UserUpdate) SetIsDefault(b bool) *UserUpdate {
+	uu.mutation.SetIsDefault(b)
+	return uu
+}
+
+// SetNillableIsDefault sets the "is_default" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableIsDefault(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetIsDefault(*b)
+	}
+	return uu
+}
+
 // SetAccountID sets the "account" edge to the Account entity by ID.
 func (uu *UserUpdate) SetAccountID(id uuid.UUID) *UserUpdate {
 	uu.mutation.SetAccountID(id)
@@ -541,6 +555,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.SocialLoginsCleared() {
 		_spec.ClearField(user.FieldSocialLogins, field.TypeJSON)
+	}
+	if value, ok := uu.mutation.IsDefault(); ok {
+		_spec.SetField(user.FieldIsDefault, field.TypeBool, value)
 	}
 	if uu.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -936,6 +953,20 @@ func (uuo *UserUpdateOne) ClearSocialLogins() *UserUpdateOne {
 	return uuo
 }
 
+// SetIsDefault sets the "is_default" field.
+func (uuo *UserUpdateOne) SetIsDefault(b bool) *UserUpdateOne {
+	uuo.mutation.SetIsDefault(b)
+	return uuo
+}
+
+// SetNillableIsDefault sets the "is_default" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableIsDefault(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetIsDefault(*b)
+	}
+	return uuo
+}
+
 // SetAccountID sets the "account" edge to the Account entity by ID.
 func (uuo *UserUpdateOne) SetAccountID(id uuid.UUID) *UserUpdateOne {
 	uuo.mutation.SetAccountID(id)
@@ -1204,6 +1235,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if uuo.mutation.SocialLoginsCleared() {
 		_spec.ClearField(user.FieldSocialLogins, field.TypeJSON)
+	}
+	if value, ok := uuo.mutation.IsDefault(); ok {
+		_spec.SetField(user.FieldIsDefault, field.TypeBool, value)
 	}
 	if uuo.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{

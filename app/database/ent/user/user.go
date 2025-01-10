@@ -51,6 +51,8 @@ const (
 	FieldLastLoginTime = "last_login_time"
 	// FieldSocialLogins holds the string denoting the social_logins field in the database.
 	FieldSocialLogins = "social_logins"
+	// FieldIsDefault holds the string denoting the is_default field in the database.
+	FieldIsDefault = "is_default"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
 	// EdgeRole holds the string denoting the role edge name in mutations.
@@ -101,6 +103,7 @@ var Columns = []string{
 	FieldLockoutTime,
 	FieldLastLoginTime,
 	FieldSocialLogins,
+	FieldIsDefault,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
@@ -162,6 +165,8 @@ var (
 	DefaultLoginAttempts int
 	// DefaultLastLoginTime holds the default value on creation for the "last_login_time" field.
 	DefaultLastLoginTime func() time.Time
+	// DefaultIsDefault holds the default value on creation for the "is_default" field.
+	DefaultIsDefault bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -257,6 +262,11 @@ func ByLockoutTime(opts ...sql.OrderTermOption) OrderOption {
 // ByLastLoginTime orders the results by the last_login_time field.
 func ByLastLoginTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastLoginTime, opts...).ToFunc()
+}
+
+// ByIsDefault orders the results by the is_default field.
+func ByIsDefault(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsDefault, opts...).ToFunc()
 }
 
 // ByAccountField orders the results by account field.

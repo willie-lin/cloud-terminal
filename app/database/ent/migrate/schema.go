@@ -226,6 +226,7 @@ var (
 		{Name: "lockout_time", Type: field.TypeTime, Nullable: true},
 		{Name: "last_login_time", Type: field.TypeTime},
 		{Name: "social_logins", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_default", Type: field.TypeBool, Default: false},
 		{Name: "account_users", Type: field.TypeUUID},
 		{Name: "role_users", Type: field.TypeUUID, Nullable: true},
 	}
@@ -237,13 +238,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_accounts_users",
-				Columns:    []*schema.Column{UsersColumns[19]},
+				Columns:    []*schema.Column{UsersColumns[20]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "users_roles_users",
-				Columns:    []*schema.Column{UsersColumns[20]},
+				Columns:    []*schema.Column{UsersColumns[21]},
 				RefColumns: []*schema.Column{RolesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

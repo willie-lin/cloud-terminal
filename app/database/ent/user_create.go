@@ -244,6 +244,20 @@ func (uc *UserCreate) SetSocialLogins(m map[string]string) *UserCreate {
 	return uc
 }
 
+// SetIsDefault sets the "is_default" field.
+func (uc *UserCreate) SetIsDefault(b bool) *UserCreate {
+	uc.mutation.SetIsDefault(b)
+	return uc
+}
+
+// SetNillableIsDefault sets the "is_default" field if the given value is not nil.
+func (uc *UserCreate) SetNillableIsDefault(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetIsDefault(*b)
+	}
+	return uc
+}
+
 // SetID sets the "id" field.
 func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 	uc.mutation.SetID(u)
@@ -374,6 +388,10 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultLastLoginTime()
 		uc.mutation.SetLastLoginTime(v)
 	}
+	if _, ok := uc.mutation.IsDefault(); !ok {
+		v := user.DefaultIsDefault
+		uc.mutation.SetIsDefault(v)
+	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
 		uc.mutation.SetID(v)
@@ -439,6 +457,9 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.LastLoginTime(); !ok {
 		return &ValidationError{Name: "last_login_time", err: errors.New(`ent: missing required field "User.last_login_time"`)}
+	}
+	if _, ok := uc.mutation.IsDefault(); !ok {
+		return &ValidationError{Name: "is_default", err: errors.New(`ent: missing required field "User.is_default"`)}
 	}
 	if len(uc.mutation.AccountIDs()) == 0 {
 		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "User.account"`)}
@@ -549,6 +570,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.SocialLogins(); ok {
 		_spec.SetField(user.FieldSocialLogins, field.TypeJSON, value)
 		_node.SocialLogins = value
+	}
+	if value, ok := uc.mutation.IsDefault(); ok {
+		_spec.SetField(user.FieldIsDefault, field.TypeBool, value)
+		_node.IsDefault = value
 	}
 	if nodes := uc.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

@@ -4,6 +4,7 @@ import {addUser, checkEmail, getAllRoles} from "../../../api/api";
 import CryptoJS from "crypto-js";
 import {useNavigate} from "react-router-dom";
 import {useFetchRoles} from "../role/RoleHook";
+import {EnvelopeIcon, LockClosedIcon} from "@heroicons/react/24/solid";
 
 function AddUserForm({ onAddUser, onClose }) {
     const [addUserError, setAddUserError] = useState('');
@@ -22,6 +23,7 @@ function AddUserForm({ onAddUser, onClose }) {
         setEmail(email);
         try {
             const exists = await checkEmail(email);
+            // setEmailError(exists ? '' : 'Email not registered');
             setEmailError(exists ? 'Email already registered' : '');
         } catch (error) {
             console.error(error);
@@ -82,14 +84,13 @@ function AddUserForm({ onAddUser, onClose }) {
                             <Input
                                 variant="outlined"
                                 label="Email"
+                                size="lg"
                                 type="email"
                                 color="lightBlue"
-                                size="regular"
                                 outline={true}
+                                icon={<EnvelopeIcon className="h-5 w-5" />}
                                 value={email}
-                                name="email"  // 添加name属性
-                                onChange={handleEmailChange}
-                                className="mb-4  w-full" // 添加边距
+                                onChange={ handleEmailChange }
                                 error={!!emailError}
                             />
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
@@ -103,9 +104,7 @@ function AddUserForm({ onAddUser, onClose }) {
                                 size="regular"
                                 outline={true}
                                 value={password}
-                                name="password"  // 添加name属性
-                                // onChange={handleChange}
-                                className="mb-4" // 添加边距
+                                icon={<LockClosedIcon className="h-5 w-5" />}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                             {addUserError && (

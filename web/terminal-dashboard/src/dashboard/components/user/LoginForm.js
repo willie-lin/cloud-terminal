@@ -93,15 +93,14 @@ function LoginForm({ onLogin }) {
                         <Input
                             variant="outlined"
                             label="Email"
+                            size="lg"
                             type="email"
                             color="lightBlue"
-                            size="regular"
                             outline={true}
-                            // placeholder="email"
-                            value={email}
-                            onChange={handleEmailChange}
-                            error={!!emailError}
                             icon={<EnvelopeIcon className="h-5 w-5" />}
+                            value={email}
+                            onChange={ handleEmailChange }
+                            error={!!emailError}
                         />
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                             Password

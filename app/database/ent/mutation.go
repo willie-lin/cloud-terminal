@@ -6807,6 +6807,7 @@ type UserMutation struct {
 	lockout_time          *time.Time
 	last_login_time       *time.Time
 	social_logins         *map[string]string
+	is_default            *bool
 	clearedFields         map[string]struct{}
 	account               *uuid.UUID
 	clearedaccount        bool
@@ -7683,6 +7684,42 @@ func (m *UserMutation) ResetSocialLogins() {
 	delete(m.clearedFields, user.FieldSocialLogins)
 }
 
+// SetIsDefault sets the "is_default" field.
+func (m *UserMutation) SetIsDefault(b bool) {
+	m.is_default = &b
+}
+
+// IsDefault returns the value of the "is_default" field in the mutation.
+func (m *UserMutation) IsDefault() (r bool, exists bool) {
+	v := m.is_default
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDefault returns the old "is_default" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldIsDefault(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDefault is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDefault requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDefault: %w", err)
+	}
+	return oldValue.IsDefault, nil
+}
+
+// ResetIsDefault resets all changes to the "is_default" field.
+func (m *UserMutation) ResetIsDefault() {
+	m.is_default = nil
+}
+
 // SetAccountID sets the "account" edge to the Account entity by id.
 func (m *UserMutation) SetAccountID(id uuid.UUID) {
 	m.account = &id
@@ -7849,7 +7886,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 18)
+	fields := make([]string, 0, 19)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -7904,6 +7941,9 @@ func (m *UserMutation) Fields() []string {
 	if m.social_logins != nil {
 		fields = append(fields, user.FieldSocialLogins)
 	}
+	if m.is_default != nil {
+		fields = append(fields, user.FieldIsDefault)
+	}
 	return fields
 }
 
@@ -7948,6 +7988,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.LastLoginTime()
 	case user.FieldSocialLogins:
 		return m.SocialLogins()
+	case user.FieldIsDefault:
+		return m.IsDefault()
 	}
 	return nil, false
 }
@@ -7993,6 +8035,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldLastLoginTime(ctx)
 	case user.FieldSocialLogins:
 		return m.OldSocialLogins(ctx)
+	case user.FieldIsDefault:
+		return m.OldIsDefault(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -8127,6 +8171,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSocialLogins(v)
+		return nil
+	case user.FieldIsDefault:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDefault(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -8290,6 +8341,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldSocialLogins:
 		m.ResetSocialLogins()
+		return nil
+	case user.FieldIsDefault:
+		m.ResetIsDefault()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

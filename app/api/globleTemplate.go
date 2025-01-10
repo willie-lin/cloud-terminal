@@ -392,6 +392,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 			SetPassword(string(hashedPassword)).
 			SetEmail("superadmin@example.com").
 			SetPhoneNumber("19288888888").
+			SetIsDefault(true).
 			SetAccount(sa).
 			SetRole(superAdminRole).
 			Save(ctx)

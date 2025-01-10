@@ -94,13 +94,13 @@ func Confirm2FA(client *ent.Client) echo.HandlerFunc {
 
 func Check2FA(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 
 		dto := new(FaDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 		// 从数据库中获取用户
 		ua, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(ctx)
 		if err != nil {

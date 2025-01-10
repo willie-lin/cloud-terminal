@@ -2,6 +2,7 @@ import {Button, Card, CardBody, IconButton, Input, Tooltip, Typography} from "@m
 import React, {useState} from "react";
 import {TrashIcon} from "@heroicons/react/16/solid";
 import {addRole, checkEmail, checkRoleName} from "../../../api/api";
+import {useNavigate} from "react-router-dom";
 
 
 function AddRole({ onAddrole, onClose }) {
@@ -9,6 +10,8 @@ function AddRole({ onAddrole, onClose }) {
     const [nameError, setNameError] = useState('');
 
     const [roles, setRoles] = useState([{ name: '', description: '' }]);
+
+    const navigate = useNavigate();
 
     const handleRoleChange = async (index, field, value) => {
         const newRoles = [...roles];
@@ -48,6 +51,7 @@ function AddRole({ onAddrole, onClose }) {
         try {
             await addRole(roles)
             onAddrole(roles);
+            navigate("/")
         } catch (error) {
             console.log(error)
         }

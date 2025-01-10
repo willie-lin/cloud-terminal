@@ -42,6 +42,7 @@ func (User) Fields() []ent.Field {
 		field.Time("lockout_time").Optional(),  // 账户锁定时间
 		field.Time("last_login_time").Default(time.Now),
 		field.JSON("social_logins", map[string]string{}).Optional(), // 社交登录信息
+		field.Bool("is_default").Default(false),
 	}
 }
 
