@@ -144,20 +144,8 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 {/*</td>*/}
                 <td className={classes}>
                     <div className="w-max">
-                        <Chip variant="ghost" size="sm" value={
-                            (() => {
-                            switch (user.status) {
-                                case 'active':
-                                    return '启用';
-                                case 'inactive':
-                                    return '禁用';
-                                case 'blocked':
-                                    return '已阻止';
-                                default:
-                                    return '未知状态'; // 处理未知状态的情况
-                            }
-                        })()}
-                              color={user.status ? "green" : "blue-gray"}
+                        <Chip variant="ghost" size="sm" value={user.online ? "启用" : "禁用"}
+                              color={user.online ? "green" : "blue-gray"}
                         />
                     </div>
                 </td>
