@@ -319,6 +319,10 @@ func init() {
 	userDescOnline := userFields[11].Descriptor()
 	// user.DefaultOnline holds the default value on creation for the online field.
 	user.DefaultOnline = userDescOnline.Default.(bool)
+	// userDescStatus is the schema descriptor for status field.
+	userDescStatus := userFields[12].Descriptor()
+	// user.DefaultStatus holds the default value on creation for the status field.
+	user.DefaultStatus = userDescStatus.Default.(bool)
 	// userDescLoginAttempts is the schema descriptor for login_attempts field.
 	userDescLoginAttempts := userFields[13].Descriptor()
 	// user.DefaultLoginAttempts holds the default value on creation for the login_attempts field.

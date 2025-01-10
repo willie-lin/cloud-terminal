@@ -223,15 +223,15 @@ func (uu *UserUpdate) SetNillableOnline(b *bool) *UserUpdate {
 }
 
 // SetStatus sets the "status" field.
-func (uu *UserUpdate) SetStatus(u user.Status) *UserUpdate {
-	uu.mutation.SetStatus(u)
+func (uu *UserUpdate) SetStatus(b bool) *UserUpdate {
+	uu.mutation.SetStatus(b)
 	return uu
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableStatus(u *user.Status) *UserUpdate {
-	if u != nil {
-		uu.SetStatus(*u)
+func (uu *UserUpdate) SetNillableStatus(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetStatus(*b)
 	}
 	return uu
 }
@@ -317,6 +317,14 @@ func (uu *UserUpdate) SetAccount(a *Account) *UserUpdate {
 // SetRoleID sets the "role" edge to the Role entity by ID.
 func (uu *UserUpdate) SetRoleID(id uuid.UUID) *UserUpdate {
 	uu.mutation.SetRoleID(id)
+	return uu
+}
+
+// SetNillableRoleID sets the "role" edge to the Role entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableRoleID(id *uuid.UUID) *UserUpdate {
+	if id != nil {
+		uu = uu.SetRoleID(*id)
+	}
 	return uu
 }
 
@@ -441,16 +449,8 @@ func (uu *UserUpdate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if v, ok := uu.mutation.Status(); ok {
-		if err := user.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
-		}
-	}
 	if uu.mutation.AccountCleared() && len(uu.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "User.account"`)
-	}
-	if uu.mutation.RoleCleared() && len(uu.mutation.RoleIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "User.role"`)
 	}
 	return nil
 }
@@ -519,7 +519,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.SetField(user.FieldOnline, field.TypeBool, value)
 	}
 	if value, ok := uu.mutation.Status(); ok {
-		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(user.FieldStatus, field.TypeBool, value)
 	}
 	if value, ok := uu.mutation.LoginAttempts(); ok {
 		_spec.SetField(user.FieldLoginAttempts, field.TypeInt, value)
@@ -574,7 +574,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if uu.mutation.RoleCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.RoleTable,
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
@@ -587,7 +587,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := uu.mutation.RoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.RoleTable,
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
@@ -856,15 +856,15 @@ func (uuo *UserUpdateOne) SetNillableOnline(b *bool) *UserUpdateOne {
 }
 
 // SetStatus sets the "status" field.
-func (uuo *UserUpdateOne) SetStatus(u user.Status) *UserUpdateOne {
-	uuo.mutation.SetStatus(u)
+func (uuo *UserUpdateOne) SetStatus(b bool) *UserUpdateOne {
+	uuo.mutation.SetStatus(b)
 	return uuo
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableStatus(u *user.Status) *UserUpdateOne {
-	if u != nil {
-		uuo.SetStatus(*u)
+func (uuo *UserUpdateOne) SetNillableStatus(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetStatus(*b)
 	}
 	return uuo
 }
@@ -950,6 +950,14 @@ func (uuo *UserUpdateOne) SetAccount(a *Account) *UserUpdateOne {
 // SetRoleID sets the "role" edge to the Role entity by ID.
 func (uuo *UserUpdateOne) SetRoleID(id uuid.UUID) *UserUpdateOne {
 	uuo.mutation.SetRoleID(id)
+	return uuo
+}
+
+// SetNillableRoleID sets the "role" edge to the Role entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableRoleID(id *uuid.UUID) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetRoleID(*id)
+	}
 	return uuo
 }
 
@@ -1087,16 +1095,8 @@ func (uuo *UserUpdateOne) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if v, ok := uuo.mutation.Status(); ok {
-		if err := user.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
-		}
-	}
 	if uuo.mutation.AccountCleared() && len(uuo.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "User.account"`)
-	}
-	if uuo.mutation.RoleCleared() && len(uuo.mutation.RoleIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "User.role"`)
 	}
 	return nil
 }
@@ -1182,7 +1182,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		_spec.SetField(user.FieldOnline, field.TypeBool, value)
 	}
 	if value, ok := uuo.mutation.Status(); ok {
-		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(user.FieldStatus, field.TypeBool, value)
 	}
 	if value, ok := uuo.mutation.LoginAttempts(); ok {
 		_spec.SetField(user.FieldLoginAttempts, field.TypeInt, value)
@@ -1237,7 +1237,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if uuo.mutation.RoleCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.RoleTable,
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
@@ -1250,7 +1250,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if nodes := uuo.mutation.RoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.RoleTable,
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,

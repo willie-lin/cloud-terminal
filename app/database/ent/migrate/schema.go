@@ -221,13 +221,13 @@ var (
 		{Name: "phone_number_verified", Type: field.TypeBool, Default: false},
 		{Name: "totp_secret", Type: field.TypeString, Nullable: true},
 		{Name: "online", Type: field.TypeBool, Default: true},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive", "blocked"}, Default: "active"},
+		{Name: "status", Type: field.TypeBool, Default: true},
 		{Name: "login_attempts", Type: field.TypeInt, Default: 0},
 		{Name: "lockout_time", Type: field.TypeTime, Nullable: true},
 		{Name: "last_login_time", Type: field.TypeTime},
 		{Name: "social_logins", Type: field.TypeJSON, Nullable: true},
 		{Name: "account_users", Type: field.TypeUUID},
-		{Name: "user_role", Type: field.TypeUUID},
+		{Name: "role_users", Type: field.TypeUUID, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -242,10 +242,10 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "users_roles_role",
+				Symbol:     "users_roles_users",
 				Columns:    []*schema.Column{UsersColumns[20]},
 				RefColumns: []*schema.Column{RolesColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{

@@ -3,7 +3,6 @@
 package user
 
 import (
-	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -73,7 +72,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RoleInverseTable = "roles"
 	// RoleColumn is the table column denoting the role relation/edge.
-	RoleColumn = "user_role"
+	RoleColumn = "role_users"
 	// AuditLogsTable is the table that holds the audit_logs relation/edge. The primary key declared below.
 	AuditLogsTable = "user_audit_logs"
 	// AuditLogsInverseTable is the table name for the AuditLog entity.
@@ -108,7 +107,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"account_users",
-	"user_role",
+	"role_users",
 }
 
 var (
@@ -157,6 +156,8 @@ var (
 	DefaultPhoneNumberVerified bool
 	// DefaultOnline holds the default value on creation for the "online" field.
 	DefaultOnline bool
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus bool
 	// DefaultLoginAttempts holds the default value on creation for the "login_attempts" field.
 	DefaultLoginAttempts int
 	// DefaultLastLoginTime holds the default value on creation for the "last_login_time" field.
@@ -164,33 +165,6 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
-
-// Status defines the type for the "status" enum field.
-type Status string
-
-// StatusActive is the default value of the Status enum.
-const DefaultStatus = StatusActive
-
-// Status values.
-const (
-	StatusActive   Status = "active"
-	StatusInactive Status = "inactive"
-	StatusBlocked  Status = "blocked"
-)
-
-func (s Status) String() string {
-	return string(s)
-}
-
-// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
-func StatusValidator(s Status) error {
-	switch s {
-	case StatusActive, StatusInactive, StatusBlocked:
-		return nil
-	default:
-		return fmt.Errorf("user: invalid enum value for status field: %q", s)
-	}
-}
 
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
@@ -323,7 +297,7 @@ func newRoleStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoleInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, RoleTable, RoleColumn),
+		sqlgraph.Edge(sqlgraph.M2O, true, RoleTable, RoleColumn),
 	)
 }
 func newAuditLogsStep() *sqlgraph.Step {

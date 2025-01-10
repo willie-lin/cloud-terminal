@@ -6801,7 +6801,7 @@ type UserMutation struct {
 	phone_number_verified *bool
 	totp_secret           *string
 	online                *bool
-	status                *user.Status
+	status                *bool
 	login_attempts        *int
 	addlogin_attempts     *int
 	lockout_time          *time.Time
@@ -7458,12 +7458,12 @@ func (m *UserMutation) ResetOnline() {
 }
 
 // SetStatus sets the "status" field.
-func (m *UserMutation) SetStatus(u user.Status) {
-	m.status = &u
+func (m *UserMutation) SetStatus(b bool) {
+	m.status = &b
 }
 
 // Status returns the value of the "status" field in the mutation.
-func (m *UserMutation) Status() (r user.Status, exists bool) {
+func (m *UserMutation) Status() (r bool, exists bool) {
 	v := m.status
 	if v == nil {
 		return
@@ -7474,7 +7474,7 @@ func (m *UserMutation) Status() (r user.Status, exists bool) {
 // OldStatus returns the old "status" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldStatus(ctx context.Context) (v user.Status, err error) {
+func (m *UserMutation) OldStatus(ctx context.Context) (v bool, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
 	}
@@ -8094,7 +8094,7 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		m.SetOnline(v)
 		return nil
 	case user.FieldStatus:
-		v, ok := value.(user.Status)
+		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

@@ -35,8 +35,7 @@ func (Role) Fields() []ent.Field {
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("account", Account.Type).Ref("roles").Unique(),
-		edge.From("users", User.Type).Ref("role"),
-		//edge.To("users", User.Type),
+		edge.To("users", User.Type),
 		edge.To("access_policies", AccessPolicy.Type),
 		edge.To("child_roles", Role.Type).From("parent_role"), // 自引用：一个 Role 可以有多个子 Role
 	}

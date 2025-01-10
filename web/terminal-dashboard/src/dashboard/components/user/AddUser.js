@@ -10,8 +10,8 @@ function AddUserForm({ onAddUser, onClose }) {
     const [password, setPassword] = useState('');
     const [emailError, setEmailError] = useState('');
     const [email, setEmail] = useState('');
-    const [enableType, setEnableType] = useState('');
-    const [onlineStatus, setOnlineStatus] = useState('');
+    const [status, setStatus] = useState('');
+    const [online, setOnline] = useState('');
     const [selectedRole, setSelectedRole] = useState(''); // State for selected role
 
     const roles = useFetchRoles(); // 使用自定义的 hook 获取角色列表
@@ -45,8 +45,8 @@ function AddUserForm({ onAddUser, onClose }) {
                 email: email,  // 使用传递过来的email
                 password: hashedPassword,
                 roleID: selectedRole, // 添加角色到提交数据
-                online: onlineStatus,
-                enableType: enableType
+                online: online,
+                status: status
             }
             await addUser(data); // 使用 register 函数
             // console.log(datas);
@@ -126,18 +126,18 @@ function AddUserForm({ onAddUser, onClose }) {
                                     ( <Option key={role.id} value={role.id}>{role.name}</Option> ))}
                             </Select>
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                                Online Status
+                                Online
                             </Typography>
                             <Select size="md"
-                                    label="OnlineStatus"
-                                    onChange={value => setOnlineStatus(value)}>
+                                    label="Online"
+                                    onChange={value => setOnline(value)}>
                                 <Option value={true}>True</Option>
                                 <Option value={false}>False</Option>
                             </Select>
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                                Enable Type
+                                Status
                             </Typography>
-                            <Select size="lg" label="EnableType" onChange={value => setEnableType(value)}>
+                            <Select size="lg" label="Status" onChange={value => setStatus(value)}>
                                 <Option value={true}>True</Option>
                                 <Option value={false}>False</Option>
                             </Select>

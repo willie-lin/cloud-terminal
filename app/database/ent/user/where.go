@@ -121,6 +121,11 @@ func Online(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldOnline, v))
 }
 
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldStatus, v))
+}
+
 // LoginAttempts applies equality check predicate on the "login_attempts" field. It's identical to LoginAttemptsEQ.
 func LoginAttempts(v int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldLoginAttempts, v))
@@ -817,23 +822,13 @@ func OnlineNEQ(v bool) predicate.User {
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v Status) predicate.User {
+func StatusEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldStatus, v))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v Status) predicate.User {
+func StatusNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldStatus, v))
-}
-
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...Status) predicate.User {
-	return predicate.User(sql.FieldIn(FieldStatus, vs...))
-}
-
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...Status) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldStatus, vs...))
 }
 
 // LoginAttemptsEQ applies the EQ predicate on the "login_attempts" field.
@@ -1004,7 +999,7 @@ func HasRole() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, RoleTable, RoleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, RoleTable, RoleColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

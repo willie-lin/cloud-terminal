@@ -37,7 +37,7 @@ func (User) Fields() []ent.Field {
 		field.Bool("phone_number_verified").Default(false), // 邮箱是否已验证
 		field.String("totp_secret").Optional(),
 		field.Bool("online").Default(true),
-		field.Enum("status").Values("active", "inactive", "blocked").Default("active"),
+		field.Bool("status").Default(true),
 		field.Int("login_attempts").Default(0), // 登录尝试次数
 		field.Time("lockout_time").Optional(),  // 账户锁定时间
 		field.Time("last_login_time").Default(time.Now),
@@ -49,7 +49,8 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("account", Account.Type).Ref("users").Unique().Required(), // 多对一关系：一个 User 属于一个 Account
-		edge.To("role", Role.Type).Unique().Required(),                      // 用户关联一个角色
+		//edge.To("role", Role.Type).Unique(),                                 // 定义唯一边
+		edge.From("role", Role.Type).Ref("users").Unique(), // 定义唯一角色边
 		edge.To("audit_logs", AuditLog.Type),
 	}
 }

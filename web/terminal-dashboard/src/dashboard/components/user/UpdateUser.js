@@ -17,8 +17,8 @@ function UpdateUser({ user, onUpdateUser, onClose }) {
     const [nickname, setNickname] = useState(user ? user.nickname : '');
     const [phone, setPhone] = useState(user ? user.phone : '');
     const [bio, setBio] = useState(user ? user.bio : '');
-    const [onlineStatus, setOnlineStatus] = useState(user ? user.online : '');
-    const [enableType, setEnableType] =  useState(user ? user.enable_type : '');
+    const [online, setOnline] = useState(user ? user.online : '');
+    const [status, setStatus] =  useState(user ? user.status : '');
     const [inputError, setInputError] = useState(false);
     const MAX_LENGTH = 180; // 设置最大长度为200
 
@@ -31,8 +31,8 @@ function UpdateUser({ user, onUpdateUser, onClose }) {
                 nickname: nickname,
                 phone: phone,
                 bio: bio,
-                online: onlineStatus,
-                enable_type: enableType,
+                online: online,
+                status: status,
             };
             await updateUser(data);
             onUpdateUser()
@@ -130,24 +130,28 @@ function UpdateUser({ user, onUpdateUser, onClose }) {
                             }
                         />
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                            Online Status
+                            Online
                         </Typography>
                         <Select size="md"
-                                label="OnlineStatus"
-                                value={onlineStatus ? 'true' : 'false'}
-                                onChange={value => setOnlineStatus(value === 'true')}>
-                            <Option value='true'>True</Option>
-                            <Option value='false'>False</Option>
+                                label="Online"
+                                onChange={value => setOnline(value)}>
+                            <Option value={true}>True</Option>
+                            <Option value={false}>False</Option>
                         </Select>
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                            Enable Type
+                            Status
                         </Typography>
-                        <Select size="md"
-                                label="EnableType"
-                                value={enableType ? 'true' : 'false'}
-                                onChange={value => setEnableType(value === 'true')}>
-                            <Option value='true'>True</Option>
-                            <Option value='false'>False</Option>
+                        {/*<Select size="md"*/}
+                        {/*        label="Status"*/}
+                        {/*        value={status ? 'true' : 'false'}*/}
+                        {/*        onChange={value => setStatus(value === 'true')}>*/}
+                        {/*    <Option value='true'>True</Option>*/}
+                        {/*    <Option value='false'>False</Option>*/}
+                        {/*</Select>*/}
+
+                        <Select size="lg" label="Status" onChange={value => setStatus(value)}>
+                            <Option value={true}>True</Option>
+                            <Option value={false}>False</Option>
                         </Select>
                     </div>
                     <Button fullWidth

@@ -48,7 +48,7 @@ type User struct {
 	// Online holds the value of the "online" field.
 	Online bool `json:"online,omitempty"`
 	// Status holds the value of the "status" field.
-	Status user.Status `json:"status,omitempty"`
+	Status bool `json:"status,omitempty"`
 	// LoginAttempts holds the value of the "login_attempts" field.
 	LoginAttempts int `json:"login_attempts,omitempty"`
 	// LockoutTime holds the value of the "lockout_time" field.
@@ -61,7 +61,7 @@ type User struct {
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges         UserEdges `json:"edges"`
 	account_users *uuid.UUID
-	user_role     *uuid.UUID
+	role_users    *uuid.UUID
 	selectValues  sql.SelectValues
 }
 
@@ -116,11 +116,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldSocialLogins:
 			values[i] = new([]byte)
-		case user.FieldEmailVerified, user.FieldPhoneNumberVerified, user.FieldOnline:
+		case user.FieldEmailVerified, user.FieldPhoneNumberVerified, user.FieldOnline, user.FieldStatus:
 			values[i] = new(sql.NullBool)
 		case user.FieldLoginAttempts:
 			values[i] = new(sql.NullInt64)
-		case user.FieldAvatar, user.FieldNickname, user.FieldBio, user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldPhoneNumber, user.FieldTotpSecret, user.FieldStatus:
+		case user.FieldAvatar, user.FieldNickname, user.FieldBio, user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldPhoneNumber, user.FieldTotpSecret:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLockoutTime, user.FieldLastLoginTime:
 			values[i] = new(sql.NullTime)
@@ -128,7 +128,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(uuid.UUID)
 		case user.ForeignKeys[0]: // account_users
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case user.ForeignKeys[1]: // user_role
+		case user.ForeignKeys[1]: // role_users
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -230,10 +230,10 @@ func (u *User) assignValues(columns []string, values []any) error {
 				u.Online = value.Bool
 			}
 		case user.FieldStatus:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				u.Status = user.Status(value.String)
+				u.Status = value.Bool
 			}
 		case user.FieldLoginAttempts:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -270,10 +270,10 @@ func (u *User) assignValues(columns []string, values []any) error {
 			}
 		case user.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field user_role", values[i])
+				return fmt.Errorf("unexpected type %T for field role_users", values[i])
 			} else if value.Valid {
-				u.user_role = new(uuid.UUID)
-				*u.user_role = *value.S.(*uuid.UUID)
+				u.role_users = new(uuid.UUID)
+				*u.role_users = *value.S.(*uuid.UUID)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])

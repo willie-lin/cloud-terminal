@@ -183,15 +183,15 @@ func (uc *UserCreate) SetNillableOnline(b *bool) *UserCreate {
 }
 
 // SetStatus sets the "status" field.
-func (uc *UserCreate) SetStatus(u user.Status) *UserCreate {
-	uc.mutation.SetStatus(u)
+func (uc *UserCreate) SetStatus(b bool) *UserCreate {
+	uc.mutation.SetStatus(b)
 	return uc
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (uc *UserCreate) SetNillableStatus(u *user.Status) *UserCreate {
-	if u != nil {
-		uc.SetStatus(*u)
+func (uc *UserCreate) SetNillableStatus(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetStatus(*b)
 	}
 	return uc
 }
@@ -272,6 +272,14 @@ func (uc *UserCreate) SetAccount(a *Account) *UserCreate {
 // SetRoleID sets the "role" edge to the Role entity by ID.
 func (uc *UserCreate) SetRoleID(id uuid.UUID) *UserCreate {
 	uc.mutation.SetRoleID(id)
+	return uc
+}
+
+// SetNillableRoleID sets the "role" edge to the Role entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableRoleID(id *uuid.UUID) *UserCreate {
+	if id != nil {
+		uc = uc.SetRoleID(*id)
+	}
 	return uc
 }
 
@@ -426,11 +434,6 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
 	}
-	if v, ok := uc.mutation.Status(); ok {
-		if err := user.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
-		}
-	}
 	if _, ok := uc.mutation.LoginAttempts(); !ok {
 		return &ValidationError{Name: "login_attempts", err: errors.New(`ent: missing required field "User.login_attempts"`)}
 	}
@@ -439,9 +442,6 @@ func (uc *UserCreate) check() error {
 	}
 	if len(uc.mutation.AccountIDs()) == 0 {
 		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "User.account"`)}
-	}
-	if len(uc.mutation.RoleIDs()) == 0 {
-		return &ValidationError{Name: "role", err: errors.New(`ent: missing required edge "User.role"`)}
 	}
 	return nil
 }
@@ -531,7 +531,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.Online = value
 	}
 	if value, ok := uc.mutation.Status(); ok {
-		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(user.FieldStatus, field.TypeBool, value)
 		_node.Status = value
 	}
 	if value, ok := uc.mutation.LoginAttempts(); ok {
@@ -570,7 +570,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if nodes := uc.mutation.RoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.RoleTable,
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
@@ -581,7 +581,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_role = &nodes[0]
+		_node.role_users = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.AuditLogsIDs(); len(nodes) > 0 {

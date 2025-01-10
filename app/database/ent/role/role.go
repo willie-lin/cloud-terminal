@@ -52,7 +52,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UsersInverseTable = "users"
 	// UsersColumn is the table column denoting the users relation/edge.
-	UsersColumn = "user_role"
+	UsersColumn = "role_users"
 	// AccessPoliciesTable is the table that holds the access_policies relation/edge.
 	AccessPoliciesTable = "access_policies"
 	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
@@ -236,7 +236,7 @@ func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, true, UsersTable, UsersColumn),
+		sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
 	)
 }
 func newAccessPoliciesStep() *sqlgraph.Step {

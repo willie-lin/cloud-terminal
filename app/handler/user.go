@@ -8,6 +8,8 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -17,6 +19,15 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+)
+
+// Define the Status enum
+type Status int
+
+const (
+	Active Status = iota
+	Inactive
+	Blocked
 )
 
 // CreateUser 创建一个新用户
@@ -29,12 +40,14 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
+		accountID := v.AccountID
+
 		type UserDTO struct {
-			Email      string    `json:"email"`
-			Password   string    `json:"password"`
-			RoleID     uuid.UUID `json:"roleID"`
-			Online     bool      `json:"online"`
-			EnableType bool      `json:"enable_type"`
+			Email    string    `json:"email"`
+			Password string    `json:"password"`
+			RoleID   uuid.UUID `json:"roleID"`
+			Online   bool      `json:"online"`
+			Status   bool      `json:"status"`
 		}
 
 		dto := new(UserDTO)
@@ -50,29 +63,15 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		//// 查询指定租户下的角色是否存在
-		//r, err := client.Role.Query().
-		//	Where(role.IDEQ(dto.RoleID)).
-		//	//Where(role.HasTenantWith(tenant.IDEQ(v.TenantID))).
-		//	Only(c.Request().Context())
-		//if ent.IsNotFound(err) {
-		//	log.Printf("Role not found in tenant: %v", err)
-		//	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Specified role does not exist in the tenant"})
-		//} else if err != nil {
-		//	log.Printf("Error querying role: %v", err)
-		//	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role"})
-		//}
-
 		// 创建用户并分配默认角色
 		us, err := client.User.Create().
 			SetEmail(dto.Email).
 			SetUsername(utils.GenerateUsername()).
 			SetPassword(string(hashedPassword)).
+			SetRoleID(dto.RoleID).
+			SetAccountID(accountID).
 			SetOnline(dto.Online).
-			//SetEnableType(dto.EnableType).
-			//SetTenantID(v.TenantID). // 关联到租户
-			//AddRoles(r).
-			//SetRolesID(dto.RoleID).
+			SetStatus(dto.Status).
 			Save(c.Request().Context())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
@@ -102,26 +101,46 @@ func GetAllUsersByTenant(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
 		tenantID := v.TenantID
+		accountID := v.AccountID
+		userID := v.UserID
 		roleName := v.RoleName
+		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
 
-		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, tenantID, roleName)
+		// 关键部分：判断是否为租户管理员
+		isTenantAdmin := strings.Contains(roleName, "TenantAdmin") // 或更精确的匹配逻辑
 
 		var users []*ent.User
 		var err error
-		if roleName == "admin" || roleName == "superadmin" {
-			//users, err = client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(c.Request().Context())
-			users, err = client.User.Query().Where().All(c.Request().Context())
-			if err != nil {
-				log.Printf("Error querying users for tenant %s: %v", tenantID, err)
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
-			}
-		} else {
-			users, err = client.User.Query().Where(user.IDEQ(v.UserID)).All(c.Request().Context())
-			if err != nil {
-				log.Printf("Error querying user %s: %v", v.UserID, err)
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
-			}
+
+		// 获取用户
+		query := client.User.Query()
+		if isTenantAdmin || roleName == "super_admin" {
+
+			query = query.Where(user.HasAccountWith(account.And(account.IDEQ(accountID), account.HasTenantWith(tenant.IDEQ(tenantID)))))
 		}
+		users, err = query.All(c.Request().Context())
+		if err != nil {
+			log.Printf("Error querying users for tenant %s: %v", tenantID, err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
+		}
+
+		//var users []*ent.User
+		//var err error
+		//if isTenantAdmin == true || roleName == "super_admin" {
+		//	//users, err = client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(c.Request().Context())
+		//	//users, err = client.User.Query().Where(user.HasAccount(account.IDEQ(accountID))).All(c.Request().Context())
+		//	users, err := client.Account.Query().Where(account.IDEQ(accountID)).QueryUsers().All(c.Request().Context())
+		//	if err != nil {
+		//		log.Printf("Error querying users for tenant %s: %v", tenantID, err)
+		//		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
+		//	}
+		//} else {
+		//	users, err := client.Account.Query().Where(account.IDEQ(accountID)).QueryUsers().All(c.Request().Context())
+		//	if err != nil {
+		//		log.Printf("Error querying user %s: %v", v.UserID, err)
+		//		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
+		//	}
+		//}
 
 		log.Printf("Users for tenant %s: %v", tenantID, users)
 		return c.JSON(http.StatusOK, users)
@@ -204,12 +223,12 @@ func GetUserByEmail(client *ent.Client) echo.HandlerFunc {
 func UpdateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		type UpdateUserDTO struct {
-			Username   string `json:"username"`
-			Nickname   string `json:"nickname"`
-			Phone      string `json:"phone"`
-			Bio        string `json:"bio"`
-			Online     bool   `json:"online"`
-			EnableType bool   `json:"enable_type"`
+			Username string `json:"username"`
+			Nickname string `json:"nickname"`
+			Phone    string `json:"phone"`
+			Bio      string `json:"bio"`
+			Online   bool   `json:"online"`
+			Status   bool   `json:"status"`
 		}
 
 		dto := new(UpdateUserDTO)
@@ -235,7 +254,7 @@ func UpdateUser(client *ent.Client) echo.HandlerFunc {
 			SetPhoneNumber(dto.Phone).
 			SetBio(dto.Bio).
 			SetOnline(dto.Online).
-			//SetEnableType(dto.EnableType).
+			SetStatus(dto.Status).
 			SetLastLoginTime(time.Now()).
 			Save(c.Request().Context())
 		if err != nil {

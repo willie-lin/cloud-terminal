@@ -105,7 +105,7 @@ func (rq *RoleQuery) QueryUsers() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, role.UsersTable, role.UsersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, role.UsersTable, role.UsersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -636,13 +636,13 @@ func (rq *RoleQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*R
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.user_role
+		fk := n.role_users
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_role" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "role_users" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_role" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "role_users" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
