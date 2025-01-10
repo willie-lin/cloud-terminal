@@ -13,8 +13,8 @@ function RoleList() {
     // 判断当前用户是否具有删除权限
     // const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
     const canDelete = currentUser?.isTenantAdmin  || currentUser?.roleName === 'super_admin'
-    
-    const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "CREATED", "LASTMODIFIED", ""];
+
+    const TABLE_HEAD = ["ID", "NAME", "DESCRIPTION", "DISABLE", "DEFAULT", "CREATED", "LASTMODIFIED", ""];
 
     const roles = useFetchRoles() || [];
 

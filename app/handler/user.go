@@ -106,43 +106,36 @@ func GetAllUsersByTenant(client *ent.Client) echo.HandlerFunc {
 		roleName := v.RoleName
 		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
 
-		// 关键部分：判断是否为租户管理员
-		isTenantAdmin := strings.Contains(roleName, "TenantAdmin") // 或更精确的匹配逻辑
-
+		ctx := c.Request().Context()
 		var users []*ent.User
 		var err error
 
-		// 获取用户
-		query := client.User.Query()
-		if isTenantAdmin || roleName == "super_admin" {
+		isSuperAdmin := roleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin") // Or use a more precise matching logic
 
-			query = query.Where(user.HasAccountWith(account.And(account.IDEQ(accountID), account.HasTenantWith(tenant.IDEQ(tenantID)))))
+		if isSuperAdmin || isTenantAdmin {
+			// Super admin and tenant admin can view all users in the tenant
+			users, err = client.User.Query().
+				Where(user.HasAccountWith(
+					account.And(
+						account.ID(accountID),
+						account.HasTenantWith(tenant.IDEQ(tenantID)),
+					),
+				)).
+				All(ctx)
+		} else {
+			// Regular users can only view their own information
+			users, err = client.User.Query().
+				Where(user.IDEQ(userID)).
+				All(ctx)
 		}
-		users, err = query.All(c.Request().Context())
+
 		if err != nil {
-			log.Printf("Error querying users for tenant %s: %v", tenantID, err)
+			log.Printf("Error querying users: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
 		}
 
-		//var users []*ent.User
-		//var err error
-		//if isTenantAdmin == true || roleName == "super_admin" {
-		//	//users, err = client.User.Query().Where(user.HasTenantWith(tenant.IDEQ(tenantID))).All(c.Request().Context())
-		//	//users, err = client.User.Query().Where(user.HasAccount(account.IDEQ(accountID))).All(c.Request().Context())
-		//	users, err := client.Account.Query().Where(account.IDEQ(accountID)).QueryUsers().All(c.Request().Context())
-		//	if err != nil {
-		//		log.Printf("Error querying users for tenant %s: %v", tenantID, err)
-		//		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
-		//	}
-		//} else {
-		//	users, err := client.Account.Query().Where(account.IDEQ(accountID)).QueryUsers().All(c.Request().Context())
-		//	if err != nil {
-		//		log.Printf("Error querying user %s: %v", v.UserID, err)
-		//		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
-		//	}
-		//}
-
-		log.Printf("Users for tenant %s: %v", tenantID, users)
+		log.Printf("Users queried: %v", users)
 		return c.JSON(http.StatusOK, users)
 	}
 }

@@ -262,7 +262,10 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 			return fmt.Errorf("query role %s failed: %w", roleName, err)
 		}
 		if ent.IsNotFound(err) {
-			r, err = client.Role.Create().SetName(roleName).Save(ctx)
+			r, err = client.Role.Create().
+				SetName(roleName).
+				SetIsDefault(true).
+				Save(ctx)
 			if err != nil {
 				return fmt.Errorf("create role %s failed: %w", roleName, err)
 			}

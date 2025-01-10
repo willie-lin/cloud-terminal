@@ -1,20 +1,20 @@
 package handler
 
 import (
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/account"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/role"
-	"github.com/willie-lin/cloud-terminal/app/database/ent/user"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/app/viewer"
 	"net/http"
+	"strings"
 )
 
 type RoleDTO struct {
-	Name          string      `json:"name"`
-	Description   string      `json:"description"`
-	PermissionIDs []uuid.UUID `json:"permission_ids"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func CheckRoleName(client *ent.Client) echo.HandlerFunc {
@@ -54,8 +54,8 @@ func GetAllRoles(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// GetAllRolesByAccountTenant  查询当前租户下的用户，管理员登陆时查询所有
-func GetAllRolesByAccountTenant(client *ent.Client) echo.HandlerFunc {
+// GetAllRolesByAccountByTenant  查询当前租户下的用户，管理员登陆时查询所有
+func GetAllRolesByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		v := viewer.FromContext(c.Request().Context())
 		if v == nil {
@@ -63,26 +63,26 @@ func GetAllRolesByAccountTenant(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
 		tenantID := v.TenantID
+		accountID := v.AccountID
+		userID := v.UserID
 		roleName := v.RoleName
+		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
 
-		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", v.UserID, tenantID, roleName)
+		isSuperAdmin := roleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin") // Or use a more precise matching logic
 
 		var roles []*ent.Role
 		var err error
-		if roleName == "admin" || roleName == "superadmin" {
-			roles, err = client.Role.Query().
-				//Where(role.HasTenantWith(tenant.IDEQ(tenantID))).
-				All(c.Request().Context())
-			if err != nil {
-				log.Printf("Error querying roles for tenant %s: %v", tenantID, err)
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
-			}
+
+		if isSuperAdmin || isTenantAdmin {
+			roles, err = client.Role.Query().Where(role.HasAccountWith(account.And(account.ID(accountID), account.HasTenantWith(tenant.IDEQ(tenantID))))).All(c.Request().Context())
 		} else {
-			roles, err = client.Role.Query().Where(role.HasUsersWith(user.IDEQ(v.UserID))).All(c.Request().Context())
-			if err != nil {
-				log.Printf("Error querying roles for user %s: %v", v.UserID, err)
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
-			}
+			roles, err = client.Role.Query().Where(role.NameEQ(roleName)).All(c.Request().Context())
+		}
+
+		if err != nil {
+			log.Printf("Error querying roles: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles from database"})
 		}
 
 		log.Printf("Roles for tenant %s: %v", tenantID, roles)
@@ -95,12 +95,25 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// 从请求上下文中获取租户ID
 		v := viewer.FromContext(c.Request().Context())
-		if v == nil || v.RoleName != "admin" {
+		if v == nil {
 			log.Printf("No viewer found in context or not authorized")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
+		tenantID := v.TenantID
+		accountID := v.AccountID
+		userID := v.UserID
+		roleName := v.RoleName
+		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
 
-		var roles []*RoleDTO
+		isSuperAdmin := roleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin") // Or use a more precise matching logic
+
+		//if isSuperAdmin || isTenantAdmin {
+		if !isSuperAdmin && !isTenantAdmin {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only super admins and tenant admins can create roles"})
+		}
+
+		var roles []RoleDTO
 		if err := c.Bind(&roles); err != nil {
 			log.Printf("Error binding role: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
@@ -109,12 +122,10 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 		createdRoles := make([]*ent.Role, 0, len(roles))
 
 		for _, dto := range roles {
-
 			r, err := client.Role.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
-				//AddTenantIDs(v.TenantID). // 关联到租户
-				//AddPermissionIDs(dto.PermissionIDs...).
+				SetAccountID(accountID).
 				Save(c.Request().Context())
 			if err != nil {
 				log.Printf("Error creating role: %v", err)

@@ -78,7 +78,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 创建租户
-		tenantName := dto.TenantName + "Tenant"
+		tenantName := dto.TenantName + "_tenant"
 		tt, err := client.Tenant.Query().Where(tenant.NameEQ(tenantName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return err
@@ -97,7 +97,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 查询角色
-		tenantRoleName := tenantName + "Admin" // Replace with your desired role name
+		tenantRoleName := tenantName + "_admin" // Replace with your desired role name
 
 		r, err := client.Role.Query().Where(role.NameEQ(tenantRoleName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
@@ -328,7 +328,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 关键部分：判断是否为租户管理员
-		isTenantAdmin := strings.Contains(r.Name, "TenantAdmin") // 或更精确的匹配逻辑
+		isTenantAdmin := strings.Contains(strings.ToLower(r.Name), "tenant_admin") // 或更精确的匹配逻辑
 
 		fmt.Println(r.ID)
 		fmt.Println(r.Name)

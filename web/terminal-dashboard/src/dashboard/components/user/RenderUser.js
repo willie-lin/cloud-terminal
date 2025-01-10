@@ -144,23 +144,25 @@ function RenderUser({ user, isLast, isDarkMode }) {
                 {/*</td>*/}
                 <td className={classes}>
                     <div className="w-max">
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                         <Chip variant="ghost" size="sm" value={user.online ? "启用" : "禁用"}
-                              color={user.online ? "green" : "blue-gray"}
-                        />
+                              color={user.online ? "green" : "blue-gray"}/>
+                        </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="w-max">
-                        <Chip variant="ghost" size="sm" value={user.online ? "在线" : "离线"}
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                            <Chip variant="ghost" size="sm" value={user.online ? "在线" : "离线"}
                               color={user.online ? "green" : "blue-gray"}
                         />
+                        </Typography>
                     </div>
                 </td>
                 <td className={classes}>
                     <div className="flex flex-col">
                         {/*<Typography variant="small" color="blue-gray" className="font-normal">*/}
-                        <Typography variant="small"
-                                    className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
+                        <Typography variant="small" className={`font-normal ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-600'}`}>
                             {user.created_at}
                         </Typography>
                     </div>
