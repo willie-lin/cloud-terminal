@@ -28,7 +28,6 @@ type AccessPolicyQuery struct {
 	predicates  []predicate.AccessPolicy
 	withAccount *AccountQuery
 	withRoles   *RoleQuery
-	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -79,7 +78,7 @@ func (apq *AccessPolicyQuery) QueryAccount() *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, accesspolicy.AccountTable, accesspolicy.AccountColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.AccountTable, accesspolicy.AccountPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(apq.driver.Dialect(), step)
 		return fromU, nil
@@ -101,7 +100,7 @@ func (apq *AccessPolicyQuery) QueryRoles() *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, accesspolicy.RolesTable, accesspolicy.RolesColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.RolesTable, accesspolicy.RolesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(apq.driver.Dialect(), step)
 		return fromU, nil
@@ -408,16 +407,12 @@ func (apq *AccessPolicyQuery) prepareQuery(ctx context.Context) error {
 func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*AccessPolicy, error) {
 	var (
 		nodes       = []*AccessPolicy{}
-		withFKs     = apq.withFKs
 		_spec       = apq.querySpec()
 		loadedTypes = [2]bool{
 			apq.withAccount != nil,
 			apq.withRoles != nil,
 		}
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, accesspolicy.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*AccessPolicy).scanValues(nil, columns)
 	}
@@ -454,64 +449,124 @@ func (apq *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 }
 
 func (apq *AccessPolicyQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Account)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*AccessPolicy)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*AccessPolicy)
+	nids := make(map[uuid.UUID]map[*AccessPolicy]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
 		if init != nil {
-			init(nodes[i])
+			init(node)
 		}
 	}
-	query.withFKs = true
-	query.Where(predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(accesspolicy.AccountColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(accesspolicy.AccountTable)
+		s.Join(joinT).On(s.C(account.FieldID), joinT.C(accesspolicy.AccountPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(accesspolicy.AccountPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(accesspolicy.AccountPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*AccessPolicy]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Account](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.access_policy_account
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "access_policy_account" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "access_policy_account" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected "account" node returned %v`, n.ID)
 		}
-		assign(node, n)
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }
 func (apq *AccessPolicyQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Role)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*AccessPolicy)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*AccessPolicy)
+	nids := make(map[uuid.UUID]map[*AccessPolicy]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
 		if init != nil {
-			init(nodes[i])
+			init(node)
 		}
 	}
-	query.withFKs = true
-	query.Where(predicate.Role(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(accesspolicy.RolesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(accesspolicy.RolesTable)
+		s.Join(joinT).On(s.C(role.FieldID), joinT.C(accesspolicy.RolesPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(accesspolicy.RolesPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(accesspolicy.RolesPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*AccessPolicy]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Role](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.access_policy_roles
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "access_policy_roles" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "access_policy_roles" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected "roles" node returned %v`, n.ID)
 		}
-		assign(node, n)
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

@@ -380,7 +380,7 @@ func (c *AccessPolicyClient) QueryAccount(ap *AccessPolicy) *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, accesspolicy.AccountTable, accesspolicy.AccountColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.AccountTable, accesspolicy.AccountPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
 		return fromV, nil
@@ -396,7 +396,7 @@ func (c *AccessPolicyClient) QueryRoles(ap *AccessPolicy) *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, id),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, accesspolicy.RolesTable, accesspolicy.RolesColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.RolesTable, accesspolicy.RolesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(ap.driver.Dialect(), step)
 		return fromV, nil
@@ -609,7 +609,7 @@ func (c *AccountClient) QueryAccessPolicies(a *Account) *AccessPolicyQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(account.Table, account.FieldID, id),
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, account.AccessPoliciesTable, account.AccessPoliciesColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, account.AccessPoliciesTable, account.AccessPoliciesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -1269,7 +1269,7 @@ func (c *RoleClient) QueryUsers(r *Role) *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, role.UsersTable, role.UsersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, role.UsersTable, role.UsersColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -1285,7 +1285,7 @@ func (c *RoleClient) QueryAccessPolicies(r *Role) *AccessPolicyQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, id),
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, role.AccessPoliciesTable, role.AccessPoliciesColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, role.AccessPoliciesTable, role.AccessPoliciesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -1663,7 +1663,7 @@ func (c *UserClient) QueryRole(u *User) *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, user.RoleTable, user.RoleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, user.RoleTable, user.RoleColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

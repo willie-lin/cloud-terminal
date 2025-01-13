@@ -322,4 +322,14 @@ export const checkPermissionName = async (data) => {
     }
 };
 
+// AccessPolicies
+export const getAllAccessPolicies = async () => {
+    try {
+        const response = await api.get('/admin/access-policies',);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
 

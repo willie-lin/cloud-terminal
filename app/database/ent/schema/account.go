@@ -30,9 +30,9 @@ func (Account) Fields() []ent.Field {
 func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("tenant", Tenant.Type).Ref("accounts").Unique().Required(), // 多对一关系：一个 Account 属于一个 Tenant
-		edge.To("users", User.Type), // 一对多关系：一个 Account 可以有多个 User
+		edge.To("users", User.Type).Comment("账户下的所有用户"),                      // 一对多关系：一个 Account 可以有多个 User
 		edge.To("roles", Role.Type),
 		edge.To("resources", Resource.Type),
-		edge.To("access_policies", AccessPolicy.Type),
+		edge.To("access_policies", AccessPolicy.Type).Comment("直接关联到账户的策略"), // 账户与策略的多对多关系
 	}
 }

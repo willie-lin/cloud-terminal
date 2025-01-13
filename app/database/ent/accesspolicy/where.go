@@ -316,7 +316,7 @@ func HasAccount() predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, AccountTable, AccountColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, AccountTable, AccountPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -339,7 +339,7 @@ func HasRoles() predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, RolesTable, RolesPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

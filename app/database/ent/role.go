@@ -33,19 +33,18 @@ type Role struct {
 	IsDefault bool `json:"is_default,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoleQuery when eager-loading is set.
-	Edges               RoleEdges `json:"edges"`
-	access_policy_roles *uuid.UUID
-	account_roles       *uuid.UUID
-	selectValues        sql.SelectValues
+	Edges         RoleEdges `json:"edges"`
+	account_roles *uuid.UUID
+	selectValues  sql.SelectValues
 }
 
 // RoleEdges holds the relations/edges for other nodes in the graph.
 type RoleEdges struct {
 	// Account holds the value of the account edge.
 	Account *Account `json:"account,omitempty"`
-	// Users holds the value of the users edge.
+	// 拥有该角色的用户
 	Users []*User `json:"users,omitempty"`
-	// AccessPolicies holds the value of the access_policies edge.
+	// 分配给角色的策略
 	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// ParentRole holds the value of the parent_role edge.
 	ParentRole []*Role `json:"parent_role,omitempty"`
@@ -116,9 +115,7 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case role.FieldID:
 			values[i] = new(uuid.UUID)
-		case role.ForeignKeys[0]: // access_policy_roles
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case role.ForeignKeys[1]: // account_roles
+		case role.ForeignKeys[0]: // account_roles
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -178,13 +175,6 @@ func (r *Role) assignValues(columns []string, values []any) error {
 				r.IsDefault = value.Bool
 			}
 		case role.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field access_policy_roles", values[i])
-			} else if value.Valid {
-				r.access_policy_roles = new(uuid.UUID)
-				*r.access_policy_roles = *value.S.(*uuid.UUID)
-			}
-		case role.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field account_roles", values[i])
 			} else if value.Valid {

@@ -35,8 +35,9 @@ func (Role) Fields() []ent.Field {
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("account", Account.Type).Ref("roles").Unique(),
-		edge.To("users", User.Type),
-		edge.To("access_policies", AccessPolicy.Type),
+		//edge.To("users", User.Type),
+		edge.From("users", User.Type).Ref("role").Comment("拥有该角色的用户"), // 正确：edge.From，并使用 Ref("role")
+		edge.To("access_policies", AccessPolicy.Type).Comment("分配给角色的策略"),
 		edge.To("child_roles", Role.Type).From("parent_role"), // 自引用：一个 Role 可以有多个子 Role
 	}
 }

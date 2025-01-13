@@ -31,23 +31,22 @@ type Account struct {
 	Status account.Status `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccountQuery when eager-loading is set.
-	Edges                 AccountEdges `json:"edges"`
-	access_policy_account *uuid.UUID
-	tenant_accounts       *uuid.UUID
-	selectValues          sql.SelectValues
+	Edges           AccountEdges `json:"edges"`
+	tenant_accounts *uuid.UUID
+	selectValues    sql.SelectValues
 }
 
 // AccountEdges holds the relations/edges for other nodes in the graph.
 type AccountEdges struct {
 	// Tenant holds the value of the tenant edge.
 	Tenant *Tenant `json:"tenant,omitempty"`
-	// Users holds the value of the users edge.
+	// 账户下的所有用户
 	Users []*User `json:"users,omitempty"`
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
 	// Resources holds the value of the resources edge.
 	Resources []*Resource `json:"resources,omitempty"`
-	// AccessPolicies holds the value of the access_policies edge.
+	// 直接关联到账户的策略
 	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
@@ -112,9 +111,7 @@ func (*Account) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case account.FieldID:
 			values[i] = new(uuid.UUID)
-		case account.ForeignKeys[0]: // access_policy_account
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case account.ForeignKeys[1]: // tenant_accounts
+		case account.ForeignKeys[0]: // tenant_accounts
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -168,13 +165,6 @@ func (a *Account) assignValues(columns []string, values []any) error {
 				a.Status = account.Status(value.String)
 			}
 		case account.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field access_policy_account", values[i])
-			} else if value.Valid {
-				a.access_policy_account = new(uuid.UUID)
-				*a.access_policy_account = *value.S.(*uuid.UUID)
-			}
-		case account.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_accounts", values[i])
 			} else if value.Valid {

@@ -259,10 +259,10 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if apu.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.AccountTable,
-			Columns: []string{accesspolicy.AccountColumn},
+			Columns: accesspolicy.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -272,10 +272,10 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := apu.mutation.RemovedAccountIDs(); len(nodes) > 0 && !apu.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.AccountTable,
-			Columns: []string{accesspolicy.AccountColumn},
+			Columns: accesspolicy.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -288,10 +288,10 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := apu.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.AccountTable,
-			Columns: []string{accesspolicy.AccountColumn},
+			Columns: accesspolicy.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -304,10 +304,10 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if apu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.RolesTable,
-			Columns: []string{accesspolicy.RolesColumn},
+			Columns: accesspolicy.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -317,10 +317,10 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := apu.mutation.RemovedRolesIDs(); len(nodes) > 0 && !apu.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.RolesTable,
-			Columns: []string{accesspolicy.RolesColumn},
+			Columns: accesspolicy.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -333,10 +333,10 @@ func (apu *AccessPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := apu.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.RolesTable,
-			Columns: []string{accesspolicy.RolesColumn},
+			Columns: accesspolicy.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -623,10 +623,10 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 	}
 	if apuo.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.AccountTable,
-			Columns: []string{accesspolicy.AccountColumn},
+			Columns: accesspolicy.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -636,10 +636,10 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 	}
 	if nodes := apuo.mutation.RemovedAccountIDs(); len(nodes) > 0 && !apuo.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.AccountTable,
-			Columns: []string{accesspolicy.AccountColumn},
+			Columns: accesspolicy.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -652,10 +652,10 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 	}
 	if nodes := apuo.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.AccountTable,
-			Columns: []string{accesspolicy.AccountColumn},
+			Columns: accesspolicy.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -668,10 +668,10 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 	}
 	if apuo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.RolesTable,
-			Columns: []string{accesspolicy.RolesColumn},
+			Columns: accesspolicy.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -681,10 +681,10 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 	}
 	if nodes := apuo.mutation.RemovedRolesIDs(); len(nodes) > 0 && !apuo.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.RolesTable,
-			Columns: []string{accesspolicy.RolesColumn},
+			Columns: accesspolicy.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
@@ -697,10 +697,10 @@ func (apuo *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPo
 	}
 	if nodes := apuo.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.RolesTable,
-			Columns: []string{accesspolicy.RolesColumn},
+			Columns: accesspolicy.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),

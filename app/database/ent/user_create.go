@@ -289,14 +289,6 @@ func (uc *UserCreate) SetRoleID(id uuid.UUID) *UserCreate {
 	return uc
 }
 
-// SetNillableRoleID sets the "role" edge to the Role entity by ID if the given value is not nil.
-func (uc *UserCreate) SetNillableRoleID(id *uuid.UUID) *UserCreate {
-	if id != nil {
-		uc = uc.SetRoleID(*id)
-	}
-	return uc
-}
-
 // SetRole sets the "role" edge to the Role entity.
 func (uc *UserCreate) SetRole(r *Role) *UserCreate {
 	return uc.SetRoleID(r.ID)
@@ -464,6 +456,9 @@ func (uc *UserCreate) check() error {
 	if len(uc.mutation.AccountIDs()) == 0 {
 		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "User.account"`)}
 	}
+	if len(uc.mutation.RoleIDs()) == 0 {
+		return &ValidationError{Name: "role", err: errors.New(`ent: missing required edge "User.role"`)}
+	}
 	return nil
 }
 
@@ -595,7 +590,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if nodes := uc.mutation.RoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   user.RoleTable,
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
@@ -606,7 +601,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.role_users = &nodes[0]
+		_node.user_role = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.AuditLogsIDs(); len(nodes) > 0 {

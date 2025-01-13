@@ -63,7 +63,7 @@ type User struct {
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges         UserEdges `json:"edges"`
 	account_users *uuid.UUID
-	role_users    *uuid.UUID
+	user_role     *uuid.UUID
 	selectValues  sql.SelectValues
 }
 
@@ -71,7 +71,7 @@ type User struct {
 type UserEdges struct {
 	// Account holds the value of the account edge.
 	Account *Account `json:"account,omitempty"`
-	// Role holds the value of the role edge.
+	// 用户拥有的角色
 	Role *Role `json:"role,omitempty"`
 	// AuditLogs holds the value of the audit_logs edge.
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
@@ -130,7 +130,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(uuid.UUID)
 		case user.ForeignKeys[0]: // account_users
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case user.ForeignKeys[1]: // role_users
+		case user.ForeignKeys[1]: // user_role
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -278,10 +278,10 @@ func (u *User) assignValues(columns []string, values []any) error {
 			}
 		case user.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field role_users", values[i])
+				return fmt.Errorf("unexpected type %T for field user_role", values[i])
 			} else if value.Valid {
-				u.role_users = new(uuid.UUID)
-				*u.role_users = *value.S.(*uuid.UUID)
+				u.user_role = new(uuid.UUID)
+				*u.user_role = *value.S.(*uuid.UUID)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])

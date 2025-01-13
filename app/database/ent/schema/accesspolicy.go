@@ -40,9 +40,9 @@ func (AccessPolicy) Fields() []ent.Field {
 // Edges of the AccessPolicy.
 func (AccessPolicy) Edges() []ent.Edge {
 	return []ent.Edge{
-		//edge.From("account", Account.Type).Ref("access_policies").Unique(),
-		edge.To("account", Account.Type),
+		edge.From("account", Account.Type).Ref("access_policies"),
+		//edge.To("account", Account.Type),
 		//edge.From("user", User.Type).Ref("access_policies"),
-		edge.To("roles", Role.Type),
+		edge.From("roles", Role.Type).Ref("access_policies").Comment("分配此策略的角色"), // 反向关系
 	}
 }

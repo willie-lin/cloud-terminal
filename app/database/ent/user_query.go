@@ -103,7 +103,7 @@ func (uq *UserQuery) QueryRole() *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, user.RoleTable, user.RoleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, user.RoleTable, user.RoleColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -534,10 +534,10 @@ func (uq *UserQuery) loadRole(ctx context.Context, query *RoleQuery, nodes []*Us
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*User)
 	for i := range nodes {
-		if nodes[i].role_users == nil {
+		if nodes[i].user_role == nil {
 			continue
 		}
-		fk := *nodes[i].role_users
+		fk := *nodes[i].user_role
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -554,7 +554,7 @@ func (uq *UserQuery) loadRole(ctx context.Context, query *RoleQuery, nodes []*Us
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "role_users" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_role" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

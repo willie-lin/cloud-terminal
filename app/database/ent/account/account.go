@@ -64,13 +64,11 @@ const (
 	// ResourcesInverseTable is the table name for the Resource entity.
 	// It exists in this package in order to avoid circular dependency with the "resource" package.
 	ResourcesInverseTable = "resources"
-	// AccessPoliciesTable is the table that holds the access_policies relation/edge.
-	AccessPoliciesTable = "access_policies"
+	// AccessPoliciesTable is the table that holds the access_policies relation/edge. The primary key declared below.
+	AccessPoliciesTable = "account_access_policies"
 	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
 	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
 	AccessPoliciesInverseTable = "access_policies"
-	// AccessPoliciesColumn is the table column denoting the access_policies relation/edge.
-	AccessPoliciesColumn = "account_access_policies"
 )
 
 // Columns holds all SQL columns for account fields.
@@ -86,7 +84,6 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "accounts"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"access_policy_account",
 	"tenant_accounts",
 }
 
@@ -94,6 +91,9 @@ var (
 	// ResourcesPrimaryKey and ResourcesColumn2 are the table columns denoting the
 	// primary key for the resources relation (M2M).
 	ResourcesPrimaryKey = []string{"account_id", "resource_id"}
+	// AccessPoliciesPrimaryKey and AccessPoliciesColumn2 are the table columns denoting the
+	// primary key for the access_policies relation (M2M).
+	AccessPoliciesPrimaryKey = []string{"account_id", "access_policy_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -278,6 +278,6 @@ func newAccessPoliciesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AccessPoliciesTable, AccessPoliciesColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
 	)
 }

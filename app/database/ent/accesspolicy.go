@@ -34,17 +34,15 @@ type AccessPolicy struct {
 	Immutable bool `json:"immutable,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccessPolicyQuery when eager-loading is set.
-	Edges                   AccessPolicyEdges `json:"edges"`
-	account_access_policies *uuid.UUID
-	role_access_policies    *uuid.UUID
-	selectValues            sql.SelectValues
+	Edges        AccessPolicyEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // AccessPolicyEdges holds the relations/edges for other nodes in the graph.
 type AccessPolicyEdges struct {
 	// Account holds the value of the account edge.
 	Account []*Account `json:"account,omitempty"`
-	// Roles holds the value of the roles edge.
+	// 分配此策略的角色
 	Roles []*Role `json:"roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
@@ -84,10 +82,6 @@ func (*AccessPolicy) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case accesspolicy.FieldID:
 			values[i] = new(uuid.UUID)
-		case accesspolicy.ForeignKeys[0]: // account_access_policies
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case accesspolicy.ForeignKeys[1]: // role_access_policies
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -146,20 +140,6 @@ func (ap *AccessPolicy) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field immutable", values[i])
 			} else if value.Valid {
 				ap.Immutable = value.Bool
-			}
-		case accesspolicy.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field account_access_policies", values[i])
-			} else if value.Valid {
-				ap.account_access_policies = new(uuid.UUID)
-				*ap.account_access_policies = *value.S.(*uuid.UUID)
-			}
-		case accesspolicy.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field role_access_policies", values[i])
-			} else if value.Valid {
-				ap.role_access_policies = new(uuid.UUID)
-				*ap.role_access_policies = *value.S.(*uuid.UUID)
 			}
 		default:
 			ap.selectValues.Set(columns[i], values[i])

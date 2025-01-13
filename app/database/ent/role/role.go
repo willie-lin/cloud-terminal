@@ -52,14 +52,12 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UsersInverseTable = "users"
 	// UsersColumn is the table column denoting the users relation/edge.
-	UsersColumn = "role_users"
-	// AccessPoliciesTable is the table that holds the access_policies relation/edge.
-	AccessPoliciesTable = "access_policies"
+	UsersColumn = "user_role"
+	// AccessPoliciesTable is the table that holds the access_policies relation/edge. The primary key declared below.
+	AccessPoliciesTable = "role_access_policies"
 	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
 	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
 	AccessPoliciesInverseTable = "access_policies"
-	// AccessPoliciesColumn is the table column denoting the access_policies relation/edge.
-	AccessPoliciesColumn = "role_access_policies"
 	// ParentRoleTable is the table that holds the parent_role relation/edge. The primary key declared below.
 	ParentRoleTable = "role_child_roles"
 	// ChildRolesTable is the table that holds the child_roles relation/edge. The primary key declared below.
@@ -80,11 +78,13 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "roles"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"access_policy_roles",
 	"account_roles",
 }
 
 var (
+	// AccessPoliciesPrimaryKey and AccessPoliciesColumn2 are the table columns denoting the
+	// primary key for the access_policies relation (M2M).
+	AccessPoliciesPrimaryKey = []string{"role_id", "access_policy_id"}
 	// ParentRolePrimaryKey and ParentRoleColumn2 are the table columns denoting the
 	// primary key for the parent_role relation (M2M).
 	ParentRolePrimaryKey = []string{"role_id", "parent_role_id"}
@@ -236,14 +236,14 @@ func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, UsersTable, UsersColumn),
 	)
 }
 func newAccessPoliciesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AccessPoliciesTable, AccessPoliciesColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
 	)
 }
 func newParentRoleStep() *sqlgraph.Step {

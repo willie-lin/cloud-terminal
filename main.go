@@ -277,8 +277,8 @@ func main() {
 	r.POST("/delete-role", handler.DeleteRoleByName(client))
 	r.POST("/check-role-name", handler.CheckRoleName(client))
 
-	//// permission
-	////r.GET("/permissions", handler.GetAllPermissions(client))
+	// AccessPolicy
+	r.GET("/access-policies", handler.GetAllAccessPolicyByAccountByTenant(client))
 	//r.GET("/permissions", handler.GetAllPermissionsByTenant(client))
 	////r.POST("/add-permission", handler.CreatePermission(client), middlewarers.Authorize(enforcer))
 	//r.POST("/add-permission", handler.CreatePermission(client))

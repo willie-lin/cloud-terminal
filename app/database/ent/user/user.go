@@ -74,7 +74,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RoleInverseTable = "roles"
 	// RoleColumn is the table column denoting the role relation/edge.
-	RoleColumn = "role_users"
+	RoleColumn = "user_role"
 	// AuditLogsTable is the table that holds the audit_logs relation/edge. The primary key declared below.
 	AuditLogsTable = "user_audit_logs"
 	// AuditLogsInverseTable is the table name for the AuditLog entity.
@@ -110,7 +110,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"account_users",
-	"role_users",
+	"user_role",
 }
 
 var (
@@ -307,7 +307,7 @@ func newRoleStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoleInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, RoleTable, RoleColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, RoleTable, RoleColumn),
 	)
 }
 func newAuditLogsStep() *sqlgraph.Step {

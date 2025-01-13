@@ -200,7 +200,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 创建账户
-		accountName := dto.TenantName + "Account"
+		accountName := strings.ToLower(dto.TenantName) + "Account"
 		account, err := client.Account.Query().Where(account.NameEQ(accountName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return err
@@ -210,6 +210,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 				SetName(accountName).
 				SetTenant(tt).
 				AddRoles(tenantRole).
+				AddAccessPolicies(tenantPolicy).
 				Save(ctx)
 			if err != nil {
 				return err

@@ -276,10 +276,10 @@ func (apc *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec
 	}
 	if nodes := apc.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.AccountTable,
-			Columns: []string{accesspolicy.AccountColumn},
+			Columns: accesspolicy.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -292,10 +292,10 @@ func (apc *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec
 	}
 	if nodes := apc.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   accesspolicy.RolesTable,
-			Columns: []string{accesspolicy.RolesColumn},
+			Columns: accesspolicy.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
