@@ -7,7 +7,7 @@ import {
     CardHeader,
     Typography
 } from "@material-tailwind/react";
-import {useCurrentTime, useFetchUserInfo} from "./UserHook";
+import {useCurrentDateTime, useCurrentTime, useFetchUserInfo} from "./UserHook";
 import {
     MdEmail,
     MdOutlineAccessTimeFilled, MdOutlinePhoneIphone
@@ -18,6 +18,7 @@ import EditUserInfo from "./EditUserInfo";
 function UserInfo({ user }) {
 
     const currentTime = useCurrentTime();
+    const currentDateTime = useCurrentDateTime();
 
     // 在 UserInfo 组件中
     const userInfo = useFetchUserInfo(user.email);
@@ -41,7 +42,10 @@ function UserInfo({ user }) {
             <Card className="w-full shadow-lg rounded-lg">
             {/*<Card className="w-full max-w-lg p-6 mx-auto mt-12 bg-white shadow-lg rounded-lg relative">*/}
                 <div className="flex justify-center mb-6">
-                    {userInfo && <Avatar src={userInfo.avatar} alt="avatar" variant="rounded" size="xxl"/>}
+                    {userInfo && <Avatar src={userInfo.avatar} alt="avatar" withBorder={true} color={"blue"}
+                                         className="p-0.5"
+                                         // className="border border-green-500 shadow-xl shadow-green-900/20 ring-4 ring-green-500/30"
+                                         variant="rounded" size="xxl"/>}
                 </div>
                 <CardBody className="text-left">
                     <Typography variant="h4" color="blue-gray" className="mb-4 text-center">
@@ -82,7 +86,9 @@ function UserInfo({ user }) {
                     <div className="flex items-center mb-4">
                         <MdOutlineAccessTimeFilled className="mr-2 text-lg"/>
                         <Typography color="blue-gray" className="font-medium" textGradient>
-                            {currentTime.toLocaleTimeString()}
+                            {/*{currentTime.toLocaleTimeString()}*/}
+                            { currentDateTime.toLocaleUpperCase()}
+
                         </Typography>
                     </div>
                 </CardBody>

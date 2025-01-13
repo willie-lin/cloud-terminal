@@ -78,7 +78,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 创建租户
-		tenantName := dto.TenantName + "_tenant"
+		tenantName := strings.ToLower(dto.TenantName) + "_tenant"
 		tt, err := client.Tenant.Query().Where(tenant.NameEQ(tenantName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return err

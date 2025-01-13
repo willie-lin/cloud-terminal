@@ -147,6 +147,16 @@ function Sidebar({ email, onLogout }) {
                             <ListItem
                                 // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
                                 className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
+                                <Link to="/policies" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
+                                    <ListItemPrefix>
+                                        <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
+                                    </ListItemPrefix>
+                                    Access Policy
+                                </Link>
+                            </ListItem>
+                            <ListItem
+                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
+                                className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <Link to="/permissions" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                                     <ListItemPrefix>
                                         <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>

@@ -121,7 +121,9 @@ function AddUserForm({ onAddUser, onClose }) {
                                 Role
                             </Typography>
                             <Select size="lg" label="Role" onChange={value => setSelectedRole(value)}>
-                                {roles && roles.map((role) =>
+                                {roles && roles
+                                    // .filter(role => !role.is_default) // 过滤掉 is_default 为 true 的角色
+                                    .map((role) =>
                                     ( <Option key={role.id} value={role.id}>{role.name}</Option> ))}
                             </Select>
                             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">

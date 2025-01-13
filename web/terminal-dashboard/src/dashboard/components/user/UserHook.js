@@ -44,6 +44,31 @@ export const useCurrentTime = () => {
     }, []);
 
     return currentTime;
+}
+
+
+// 自定义钩子函数，用于获取当前地区的格式化年月日和时间
+export const useCurrentDateTime = () => {
+    const [currentDateTime, setCurrentDateTime] = useState('');
+
+    useEffect(() => {
+        const updateDateTime = () => {
+            const now = new Date();
+            const formattedDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            setCurrentDateTime(formattedDateTime);
+        };
+
+        updateDateTime(); // 初始化调用一次
+
+        const timer = setInterval(updateDateTime, 1000); // 每秒更新一次
+
+        return () => {
+            clearInterval(timer);
+        };
+    }, []);
+
+    return currentDateTime;
 };
+
 
 

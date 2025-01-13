@@ -340,6 +340,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 		superAdminPolicy, err = client.AccessPolicy.Create().
 			SetName("super_admin_policy").
 			SetStatements(statements).
+			AddAccount(sa).
 			Save(ctx)
 		if err != nil {
 			return fmt.Errorf("创建 super admin policy 失败: %w", err)

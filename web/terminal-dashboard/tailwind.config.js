@@ -53,6 +53,10 @@ module.exports = withMT({
       serif: ["Roboto Slab", "serif"],
       body: ["Roboto", "sans-serif"],
     },
+    screens: {
+      sm: "640px",
+      // rest of the breakpoints
+    },
   },
   plugins: [],
 });

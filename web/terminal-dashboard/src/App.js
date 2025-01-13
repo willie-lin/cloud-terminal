@@ -15,6 +15,7 @@ import PermissionList from "./dashboard/components/permission/PermissionList";
 import UserList from "./dashboard/components/user/UserList";
 import { ThemeProvider } from './layout/ThemeContext';
 import {logout} from "./api/api";
+import PolicyList from "./dashboard/components/accesspolicy/PolicyList";
 
 
 export const AuthContext = React.createContext(null)
@@ -75,6 +76,7 @@ const App = () => {
                             <Route path="dashboard" element={<HomePage user={user}/>}/>
                             <Route path="users" element={<UserList user={user}/>}/>
                             <Route path="roles" element={<RoleList user={user}/>}/>
+                            <Route path="policies" element={<PolicyList user={user}/>}/>
                             <Route path="permissions" element={<PermissionList user={user}/>}/>
                             <Route path="userinfo" element={<UserInfo user={user}/>}/>
                             <Route path="open-user-2fa" element={<TwoFactorAuthPage user={user}/>}/>
