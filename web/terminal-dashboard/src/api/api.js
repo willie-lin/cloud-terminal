@@ -114,9 +114,9 @@ export const checkEmail = async (email) => {
     }
 };
 
-export const checkOrganizationName = async (organization) => {
+export const checkOrganizationName = async (name) => {
     try {
-        const response = await api.post('/api/check-tenant-name', {organization});
+        const response = await api.post('/api/check-tenant-name', {name});
         return response.data.exists;
     } catch (error) {
         console.error(error);

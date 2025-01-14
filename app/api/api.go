@@ -25,6 +25,7 @@ import (
 // CheckEmail 检查邮箱是否已经存在
 func CheckEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 		type UserDTO struct {
 			Email string `json:"email"`
 		}
@@ -34,9 +35,9 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
-		exists, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Exist(ctx)
+		fmt.Println(dto.Email)
 
+		exists, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Exist(ctx)
 		if err != nil {
 			log.Printf("Error checking email: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error checking email from database"})

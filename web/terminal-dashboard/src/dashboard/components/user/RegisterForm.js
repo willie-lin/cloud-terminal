@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import {checkEmail, checkOrganizationName, register} from "../../../api/api";
 import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {EnvelopeIcon, LockClosedIcon} from "@heroicons/react/24/solid";
 import {BuildingOfficeIcon, HomeIcon} from "@heroicons/react/16/solid";
 
@@ -15,6 +15,13 @@ function RegisterForm({ onRegister }) {
     const [emailError, setEmailError] = useState('');// 添加一个新的状态来保存邮箱错误信息
     const [passwordError, setPasswordError] = useState(''); // 添加一个新的状态来保存密码错误信息
     const [registerError, setRegisterError] = useState(''); // 添加一个新的状态来保存密码错误信息
+    const [registerSuccess, setRegisterSuccess] = useState(''); // 添加一个新的状态来保存注册成功信息
+    const [isSubmitting, setIsSubmitting] = useState(false); // 添加一个新的状态来防止重复提交
+
+    const organizationNameRegex = /^[a-zA-Z]+([a-zA-Z-_]*[a-zA-Z]+)?$/;
+
+
+    const navigate = useNavigate();
 
     const handleEmailChange = async (e) => {
         const email = e.target.value;
@@ -26,33 +33,50 @@ function RegisterForm({ onRegister }) {
             console.error(error);
         }
     };
-    
+
     const handleOrganizationNameChange = async (e) => {
         const organization = e.target.value;
-        setOrganization(organization)
+        if (!organizationNameRegex.test(organization)) {
+            setOrganizationError('组织名称只能包含英文、拼音或缩写，且必须连贯（如 Skystar, sky-star, sky_star）');
+        } else {
+            setOrganizationError('');
+        }
+        setOrganization(organization);
+
         try {
-            const exists = await checkOrganizationName(organization);
-            setOrganizationError(exists ? 'Organization already registered' : '');
+            const exists = await checkOrganizationName(organization+"_tenant");
+            if (exists) {
+                setOrganizationError('Organization already registered');
+            }
         } catch (error) {
-            console.error(error)
+            console.error(error);
         }
     };
+
 
     const CryptoJS = require("crypto-js");
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return; // 防止重复提交
+
+        // 设置提交状态
+        setIsSubmitting(true);
+
         // 验证组织,电子邮件,密码和是否已填写
         if (!email || !password || !organization) {
             setRegisterError('请填写所有必填字段');
             setTimeout(() => setRegisterError(''), 3000); // 3秒后清除错误信息
+            setIsSubmitting(false); // 恢复提交状态
             return;
         }
         // 验证密码和确认密码是否匹配
         if (password !== confirmPassword) {
             setPasswordError("Passwords don't match"); // 设置密码错误信息
             setTimeout(() => setPasswordError(''), 3000); // 3秒后清除错误信息
+            setIsSubmitting(false); // 恢复提交状态
             return;
         }
+
         try {
             // 对密码进行哈希处理
             const hashedPassword = CryptoJS.SHA256(password).toString();
@@ -62,10 +86,15 @@ function RegisterForm({ onRegister }) {
                 tenant_name: organization, // 将租户名称包含在请求数据中
             };
             await register(data); // 使用 register 函数
+            setRegisterSuccess("Registration successful! Please log in."); // 设置注册成功信息
+            setTimeout(() => setRegisterSuccess(''), 3000); // 3秒后清除成功信息
             onRegister(email);
+            navigate("/")
         } catch (error) {
             setRegisterError("Registration failed");
             setTimeout(() => setRegisterError(''), 3000);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -83,6 +112,9 @@ function RegisterForm({ onRegister }) {
                     <div className="mb-1 flex flex-col gap-6">
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                             Your Organization
+                        </Typography>
+                        <Typography variant="small" color="gray" className="-mb-3 font-medium">
+                            组织名称只能包含英文、拼音或缩写，且必须连贯（如 Skystar, sky-star, sky_star）
                         </Typography>
                         <Input
                             variant="outlined"
@@ -193,13 +225,23 @@ function RegisterForm({ onRegister }) {
                             </div>
                         </Alert>
                     )}
+                    {registerSuccess && (
+                        <Alert color="green" className="mb-4" open={!!registerSuccess}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <i className="fas fa-check-circle mr-2"></i>
+                                    <span className="text-sm">{registerSuccess}</span>
+                                </div>
+                            </div>
+                        </Alert>
+                    )}
 
-                    {/*{passwordError && (*/}
-                    {/*    <Alert color="red" className="mb-4" open={true}>*/}
+                    {/*{registerSuccess && (*/}
+                    {/*    <Alert color="green" className="mb-4" open={!!registerSuccess}>*/}
                     {/*        <div className="flex items-center justify-between">*/}
                     {/*            <div className="flex items-center">*/}
-                    {/*                <i className="fas fa-info-circle mr-2"></i>*/}
-                    {/*                <span className="text-sm">{passwordError}</span>*/}
+                    {/*                <i className="fas fa-check-circle mr-2"></i>*/}
+                    {/*                <span className="text-sm">{registerSuccess}</span>*/}
                     {/*            </div>*/}
                     {/*        </div>*/}
                     {/*    </Alert>*/}

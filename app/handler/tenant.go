@@ -2,9 +2,11 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/uber/jaeger-client-go/crossdock/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
+	"github.com/willie-lin/cloud-terminal/app/database/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/app/database/ent/tenant"
 	"net/http"
 )
@@ -92,20 +94,23 @@ func DeleteTenantName(client *ent.Client) echo.HandlerFunc {
 
 func CheckTenantName(client *ent.Client) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		type TenantDTO struct {
-			Name string `json:"name"`
-		}
+		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
+
 		dto := new(TenantDTO)
 		if err := c.Bind(&dto); err != nil {
 			log.Printf("Error binding tenant: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
+
+		fmt.Println(dto.Name)
 		// 检查tenant是否已经存在
-		exists, err := client.Tenant.Query().Where(tenant.NameEQ(dto.Name)).Exist(context.Background())
+		exists, err := client.Tenant.Query().Where(tenant.NameEQ(dto.Name)).Exist(ctx)
 		if err != nil {
 			log.Printf("Error checking tenant: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error checking tenant from database"})
 		}
+
+		fmt.Println(exists)
 		return c.JSON(http.StatusOK, map[string]bool{"exists": exists})
 	}
 }
