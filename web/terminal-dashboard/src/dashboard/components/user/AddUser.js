@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import {Alert, Button, Card, CardBody, CardHeader, Input, Select, Typography, Option} from "@material-tailwind/react";
-import {addUser, checkEmail, getAllRoles} from "../../../api/api";
+import React, { useState} from 'react';
+import {Alert, Button, Card, CardBody, Input, Select, Typography, Option} from "@material-tailwind/react";
+import {addUser, checkEmail} from "../../../api/api";
 import CryptoJS from "crypto-js";
 import {useNavigate} from "react-router-dom";
 import {useFetchRoles} from "../role/RoleHook";

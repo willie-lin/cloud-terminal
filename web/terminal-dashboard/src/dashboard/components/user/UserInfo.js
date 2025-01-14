@@ -4,7 +4,6 @@ import {
     Avatar, Button,
     Card,
     CardBody, CardFooter,
-    CardHeader,
     Typography
 } from "@material-tailwind/react";
 import {useCurrentDateTime, useCurrentTime, useFetchUserInfo} from "./UserHook";
@@ -17,7 +16,6 @@ import EditUserInfo from "./EditUserInfo";
 
 function UserInfo({ user }) {
 
-    const currentTime = useCurrentTime();
     const currentDateTime = useCurrentDateTime();
 
     // 在 UserInfo 组件中

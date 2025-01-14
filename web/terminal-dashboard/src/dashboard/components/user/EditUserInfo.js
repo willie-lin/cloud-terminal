@@ -2,13 +2,12 @@ import React, {useRef, useState} from "react";
 import {Button, Card, CardBody, Input, Textarea, Typography} from "@material-tailwind/react";
 import {editUserInfo, uploadFile} from "../../../api/api";
 import {useNavigate} from "react-router-dom";
-import {useFetchUserInfo} from "./UserHook";
 
 function EditUserInfo({ user, onEditUser,  onUserChange, onClose }) {
 
     // 使用user的值来初始化你的状态
     const [email, setEmail] = useState(user ? user.email : '');
-    const [avatar, setAvatar] = useState(user ? user.avatar : '');
+    // const [avatar, setAvatar] = useState(user ? user.avatar : '');
 
     const [nickname, setNickname] = useState(user ? user.nickname : '');
     const [phone, setPhone] = useState(user ? user.phone_number : '');

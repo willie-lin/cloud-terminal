@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {check2FA, confirm2FA, enable2FA, getUserByEmail} from "../../../api/api";
-import {Alert, Button, Card, CardBody, CardFooter, CardHeader, Input, Typography} from "@material-tailwind/react";
+import {Alert, Button, Card, CardFooter, Input, Typography} from "@material-tailwind/react";
 import {AuthContext} from "../../../App";
 import {LockOpenIcon, QrCodeIcon, ShieldCheckIcon} from "@heroicons/react/16/solid";
 

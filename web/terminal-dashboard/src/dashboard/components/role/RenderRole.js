@@ -1,7 +1,6 @@
 import {Chip, IconButton, Tooltip, Typography} from "@material-tailwind/react";
-import {PencilIcon, TrashIcon} from "@heroicons/react/16/solid";
+import {TrashIcon} from "@heroicons/react/16/solid";
 import React, {useContext, useState} from "react";
-import DeleteUserForm from "../user/DeleteUserForm";
 import DeleteRole from "./DeleteRole";
 import {AuthContext} from "../../../App";
 
@@ -9,7 +8,6 @@ function RenderRole({ role, isLast }) {
 
     const { currentUser } = useContext(AuthContext);
     // 判断当前用户是否具有删除权限
-    // const canDelete = currentUser?.roleName === 'Admin' || currentUser?.roleName === 'SuperAdmin'
     const canDelete = (currentUser?.isTenantAdmin  || currentUser?.roleName === 'super_admin') && !role.is_default
 
     const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";

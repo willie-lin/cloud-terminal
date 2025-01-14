@@ -122,7 +122,7 @@ function RoleList() {
                                  }
                              }}
                         >
-                            <AddRole onAddrole={handleAddRole} onClose={closeAddRole}/>
+                            <AddRole onAddRole={handleAddRole} onClose={closeAddRole}/>
                         </div>
                     )}
                 </div>

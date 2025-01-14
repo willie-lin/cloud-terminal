@@ -4,7 +4,7 @@ import {checkEmail, checkOrganizationName, register} from "../../../api/api";
 import {Alert, Button, Checkbox, Input, Typography} from "@material-tailwind/react";
 import {Link, useNavigate} from "react-router-dom";
 import {EnvelopeIcon, LockClosedIcon} from "@heroicons/react/24/solid";
-import {BuildingOfficeIcon, HomeIcon} from "@heroicons/react/16/solid";
+import { HomeIcon} from "@heroicons/react/16/solid";
 
 function RegisterForm({ onRegister }) {
     const [email, setEmail] = useState('');

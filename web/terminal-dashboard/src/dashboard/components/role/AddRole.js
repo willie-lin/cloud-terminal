@@ -1,11 +1,11 @@
 import {Button, Card, CardBody, IconButton, Input, Tooltip, Typography} from "@material-tailwind/react";
 import React, {useState} from "react";
 import {TrashIcon} from "@heroicons/react/16/solid";
-import {addRole, checkEmail, checkRoleName} from "../../../api/api";
+import {addRole, checkRoleName} from "../../../api/api";
 import {useNavigate} from "react-router-dom";
 
 
-function AddRole({ onAddrole, onClose }) {
+function AddRole({ onAddRole, onClose }) {
 
     const [nameError, setNameError] = useState('');
 
@@ -50,7 +50,7 @@ function AddRole({ onAddrole, onClose }) {
         }
         try {
             await addRole(roles)
-            onAddrole(roles);
+            onAddRole(roles);
             navigate("/")
         } catch (error) {
             console.log(error)
