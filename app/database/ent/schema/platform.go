@@ -34,6 +34,6 @@ func (Platform) Fields() []ent.Field {
 // Edges of the Platform.
 func (Platform) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("tenants", Tenant.Type), // 一对多关系：一个 Platform 可以有多个 Tenant
+		edge.To("tenants", Tenant.Type).Comment("平台下的所有租户"), // 一对多关系：一个 Platform 可以有多个 Tenant
 	}
 }

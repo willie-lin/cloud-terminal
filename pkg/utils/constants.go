@@ -3,7 +3,9 @@ package utils
 const (
 	PlatformName     = "CloudSecPlatform"
 	ManagementTenant = "systemTenant"
+	DefaultTenant    = "defaultTenant"
 	Account          = "systemAccount"
+	UserName         = "SuperAdmin"
 )
 
 const (

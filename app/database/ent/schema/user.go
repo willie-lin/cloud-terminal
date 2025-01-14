@@ -49,11 +49,9 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).Ref("users").Unique().Required(), // 多对一关系：一个 User 属于一个 Account
-		//edge.To("role", Role.Type).Unique(),                                 // 定义唯一边
-		//edge.From("role", Role.Type).Ref("users").Unique(), // 定义唯一角色边
-		edge.To("role", Role.Type).Unique().Required().Comment("用户拥有的角色"), // 正确：edge.To
-		edge.To("audit_logs", AuditLog.Type),
+		edge.From("account", Account.Type).Ref("users").Unique().Required().Comment("用户所属的账户"), // 多对一关系：一个 User 属于一个 Account
+		edge.To("role", Role.Type).Unique().Required().Comment("用户拥有的角色"),                      // 正确：edge.To
+		edge.To("audit_logs", AuditLog.Type).Comment("用户的审计日志"),
 	}
 }
 

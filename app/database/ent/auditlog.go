@@ -49,9 +49,9 @@ type AuditLog struct {
 
 // AuditLogEdges holds the relations/edges for other nodes in the graph.
 type AuditLogEdges struct {
-	// User holds the value of the user edge.
+	// 执行操作的用户
 	User []*User `json:"user,omitempty"`
-	// Tenant holds the value of the tenant edge.
+	// 操作所属的租户
 	Tenant []*Tenant `json:"tenant,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.

@@ -40,7 +40,7 @@ type Role struct {
 
 // RoleEdges holds the relations/edges for other nodes in the graph.
 type RoleEdges struct {
-	// Account holds the value of the account edge.
+	// 角色所属的账户
 	Account *Account `json:"account,omitempty"`
 	// 拥有该角色的用户
 	Users []*User `json:"users,omitempty"`

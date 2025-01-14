@@ -43,9 +43,9 @@ type Resource struct {
 
 // ResourceEdges holds the relations/edges for other nodes in the graph.
 type ResourceEdges struct {
-	// Account holds the value of the account edge.
+	// 资源所属的账户
 	Account []*Account `json:"account,omitempty"`
-	// Children holds the value of the children edge.
+	// 父资源
 	Children []*Resource `json:"children,omitempty"`
 	// Parent holds the value of the parent edge.
 	Parent []*Resource `json:"parent,omitempty"`

@@ -40,7 +40,7 @@ type AccessPolicy struct {
 
 // AccessPolicyEdges holds the relations/edges for other nodes in the graph.
 type AccessPolicyEdges struct {
-	// Account holds the value of the account edge.
+	// 应用此策略的账户
 	Account []*Account `json:"account,omitempty"`
 	// 分配此策略的角色
 	Roles []*Role `json:"roles,omitempty"`

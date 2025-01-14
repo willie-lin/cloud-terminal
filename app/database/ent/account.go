@@ -38,13 +38,13 @@ type Account struct {
 
 // AccountEdges holds the relations/edges for other nodes in the graph.
 type AccountEdges struct {
-	// Tenant holds the value of the tenant edge.
+	// 账户所属的租户
 	Tenant *Tenant `json:"tenant,omitempty"`
 	// 账户下的所有用户
 	Users []*User `json:"users,omitempty"`
-	// Roles holds the value of the roles edge.
+	// 账户下的所有角色
 	Roles []*Role `json:"roles,omitempty"`
-	// Resources holds the value of the resources edge.
+	// 账户下的所有资源
 	Resources []*Resource `json:"resources,omitempty"`
 	// 直接关联到账户的策略
 	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`

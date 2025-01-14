@@ -35,8 +35,8 @@ func (Resource) Fields() []ent.Field {
 // Edges of the Resource.
 func (Resource) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).Ref("resources").Required(), // 资源属于哪个 Account
-		edge.To("parent", Resource.Type).From("children"),              //资源层级结构
+		edge.From("account", Account.Type).Ref("resources").Required().Comment("资源所属的账户"), // 资源属于哪个 Account
+		edge.To("parent", Resource.Type).From("children").Comment("父资源"),                  //资源层级结构
 	}
 }
 

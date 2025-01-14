@@ -32,9 +32,9 @@ func (Tenant) Fields() []ent.Field {
 // Edges of the Tenant.
 func (Tenant) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("platform", Platform.Type).Ref("tenants").Unique().Required(), // 多对一关系：一个 Tenant 属于一个 Platform
-		edge.To("accounts", Account.Type).Unique(),                              // 一对多关系：一个 Tenant 可以有多个 Account
-		edge.To("audit_logs", AuditLog.Type),                                    // optional
+		edge.From("platform", Platform.Type).Ref("tenants").Unique().Required().Comment("租户所属的平台"), // 多对一关系：一个 Tenant 属于一个 Platform
+		edge.To("accounts", Account.Type).Unique().Comment("租户的账户"),                                // 一对多关系：一个 Tenant 可以有多个 Account
+		edge.To("audit_logs", AuditLog.Type).Comment("租户的审计日志"),                                    // optional
 	}
 }
 

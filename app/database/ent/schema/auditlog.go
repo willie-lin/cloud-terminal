@@ -38,7 +38,7 @@ func (AuditLog) Fields() []ent.Field {
 // Edges of the AuditLog.
 func (AuditLog) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).Ref("audit_logs"),
-		edge.From("tenant", Tenant.Type).Ref("audit_logs"), // 添加与 Tenant 的关联
+		edge.From("user", User.Type).Ref("audit_logs").Comment("执行操作的用户"),
+		edge.From("tenant", Tenant.Type).Ref("audit_logs").Comment("操作所属的租户"), // 添加与 Tenant 的关联
 	}
 }

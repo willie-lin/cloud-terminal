@@ -39,11 +39,11 @@ type Tenant struct {
 
 // TenantEdges holds the relations/edges for other nodes in the graph.
 type TenantEdges struct {
-	// Platform holds the value of the platform edge.
+	// 租户所属的平台
 	Platform *Platform `json:"platform,omitempty"`
-	// Accounts holds the value of the accounts edge.
+	// 租户的账户
 	Accounts *Account `json:"accounts,omitempty"`
-	// AuditLogs holds the value of the audit_logs edge.
+	// 租户的审计日志
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.

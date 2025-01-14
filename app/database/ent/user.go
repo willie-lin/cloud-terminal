@@ -69,11 +69,11 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Account holds the value of the account edge.
+	// 用户所属的账户
 	Account *Account `json:"account,omitempty"`
 	// 用户拥有的角色
 	Role *Role `json:"role,omitempty"`
-	// AuditLogs holds the value of the audit_logs edge.
+	// 用户的审计日志
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.

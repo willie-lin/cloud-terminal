@@ -201,12 +201,12 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 
 		// 创建账户
 		accountName := strings.ToLower(dto.TenantName) + "Account"
-		account, err := client.Account.Query().Where(account.NameEQ(accountName)).Only(ctx)
+		act, err := client.Account.Query().Where(account.NameEQ(accountName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return err
 		}
 		if ent.IsNotFound(err) {
-			account, err = client.Account.Create().
+			act, err = client.Account.Create().
 				SetName(accountName).
 				SetTenant(tt).
 				AddRoles(tenantRole).
@@ -226,7 +226,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			SetEmail(dto.Email).
 			SetPassword(string(hashedPassword)).
 			SetIsDefault(true).
-			SetAccount(account).
+			SetAccount(act).
 			SetRole(tenantRole).
 			Save(ctx)
 		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
