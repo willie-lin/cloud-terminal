@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/uber/jaeger-client-go/crossdock/log"
 	"github.com/willie-lin/cloud-terminal/app/database/ent"
@@ -102,7 +101,7 @@ func CheckTenantName(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		fmt.Println(dto.Name)
+		//fmt.Println(dto.Name)
 		// 检查tenant是否已经存在
 		exists, err := client.Tenant.Query().Where(tenant.NameEQ(dto.Name)).Exist(ctx)
 		if err != nil {
@@ -110,7 +109,7 @@ func CheckTenantName(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error checking tenant from database"})
 		}
 
-		fmt.Println(exists)
+		//fmt.Println(exists)
 		return c.JSON(http.StatusOK, map[string]bool{"exists": exists})
 	}
 }

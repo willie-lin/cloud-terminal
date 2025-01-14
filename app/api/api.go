@@ -35,7 +35,6 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		fmt.Println(dto.Email)
 
 		exists, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Exist(ctx)
 		if err != nil {
