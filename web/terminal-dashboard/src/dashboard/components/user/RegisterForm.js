@@ -26,9 +26,7 @@ function RegisterForm({ onRegister }) {
             console.error(error);
         }
     };
-
-
-
+    
     const handleOrganizationNameChange = async (e) => {
         const organization = e.target.value;
         setOrganization(organization)
@@ -46,13 +44,13 @@ function RegisterForm({ onRegister }) {
         // 验证组织,电子邮件,密码和是否已填写
         if (!email || !password || !organization) {
             setRegisterError('请填写所有必填字段');
-            setTimeout(() => setRegisterError(''), 1000); // 1秒后清除错误信息
+            setTimeout(() => setRegisterError(''), 3000); // 3秒后清除错误信息
             return;
         }
         // 验证密码和确认密码是否匹配
         if (password !== confirmPassword) {
             setPasswordError("Passwords don't match"); // 设置密码错误信息
-            setTimeout(() => setPasswordError(''), 1000); // 1秒后清除错误信息
+            setTimeout(() => setPasswordError(''), 3000); // 3秒后清除错误信息
             return;
         }
         try {
@@ -62,15 +60,12 @@ function RegisterForm({ onRegister }) {
                 email: email,
                 password: hashedPassword,
                 tenant_name: organization, // 将租户名称包含在请求数据中
-
-            }
-           await register(data); // 使用 register 函数
-            // console.log(data);
+            };
+            await register(data); // 使用 register 函数
             onRegister(email);
         } catch (error) {
-            // console.error(error);
             setRegisterError("Registration failed");
-            setTimeout(() => setRegisterError(''), 1000);
+            setTimeout(() => setRegisterError(''), 3000);
         }
     };
 
@@ -167,8 +162,29 @@ function RegisterForm({ onRegister }) {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
                     </div>
+
+                    {organizationError && (
+                        <Alert color="red" className="mb-4" open={!!organizationError}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <i className="fas fa-info-circle mr-2"></i>
+                                    <span className="text-sm">{organizationError}</span>
+                                </div>
+                            </div>
+                        </Alert>
+                    )}
+                    {emailError && (
+                        <Alert color="red" className="mb-4" open={!!emailError}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <i className="fas fa-info-circle mr-2"></i>
+                                    <span className="text-sm">{emailError}</span>
+                                </div>
+                            </div>
+                        </Alert>
+                    )}
                     {passwordError && (
-                        <Alert color="red" className="mb-4" open={true}>
+                        <Alert color="red" className="mb-4" open={!!passwordError}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
                                     <i className="fas fa-info-circle mr-2"></i>
@@ -177,6 +193,27 @@ function RegisterForm({ onRegister }) {
                             </div>
                         </Alert>
                     )}
+                    {registerError && (
+                        <Alert color="red" className="mb-4" open={!!registerError}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <i className="fas fa-info-circle mr-2"></i>
+                                    <span className="text-sm">{registerError}</span>
+                                </div>
+                            </div>
+                        </Alert>
+                    )}
+
+                    {/*{passwordError && (*/}
+                    {/*    <Alert color="red" className="mb-4" open={true}>*/}
+                    {/*        <div className="flex items-center justify-between">*/}
+                    {/*            <div className="flex items-center">*/}
+                    {/*                <i className="fas fa-info-circle mr-2"></i>*/}
+                    {/*                <span className="text-sm">{passwordError}</span>*/}
+                    {/*            </div>*/}
+                    {/*        </div>*/}
+                    {/*    </Alert>*/}
+                    {/*)}*/}
                     <Checkbox
                         label={
                             <Typography
