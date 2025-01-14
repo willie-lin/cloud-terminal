@@ -112,16 +112,6 @@ function RegisterForm({ onRegister }) {
                             onChange={ handleEmailChange }
                             error={!!emailError}
                         />
-                        {/*{organizationError && (*/}
-                        {/*    <Alert color="red" className="mb-4">*/}
-                        {/*        <div className="flex items-center justify-between">*/}
-                        {/*            <div className="flex items-center">*/}
-                        {/*                <i className="fas fa-info-circle mr-2"></i>*/}
-                        {/*                <span className="text-sm">{organizationError}</span>*/}
-                        {/*            </div>*/}
-                        {/*        </div>*/}
-                        {/*    </Alert>*/}
-                        {/*)}*/}
                         <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
                             Password
                         </Typography>
