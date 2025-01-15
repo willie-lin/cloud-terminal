@@ -1,43 +1,61 @@
-FROM golang:1.22 as build
+#FROM scratch
+#
+## 设置维护者信息
+#MAINTAINER Linjiezui "JieZui.Lin@gmail.com"
+#
+## 复制时区信息
+#COPY /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#
+## 复制已编译的二进制文件到根目录
+#COPY dist/cloud-terminal_linux_amd64_v1/cloud-terminal /
+#
+## 复制配置文件到 /config 目录
+#COPY app/config/config.json /app/config/
+#
+## 复制证书文件到 /cert 目录
+#COPY cert/cert.pem /cert/cert.pem
+#COPY cert/key.pem /cert/key.pem
+#
+## 设置环境变量（可选）
+#ENV HOST=0.0.0.0
+#
+## 公开端口
+#EXPOSE 80 443 3306
+#
+## 启动服务
+#CMD ["./cloud-terminal"]
+#
 
-MAINTAINER Linjiezui "JieZui.Lin@gmail.com"
+FROM golang:1.23-alpine AS builder
 
-# 容器环境变量添加，会覆盖默认的变量值
-ENV GO111MODULE=on
+# 设置工作目录
+WORKDIR /app
 
-ENV GOPROXY=https://goproxy.io,direct
-#ENV GOPROXY=https://goproxy.cn,direct
+# 复制所有文件到工作目录
+COPY . .
 
-# 设置工作区
-WORKDIR /go/release
+# 编译 Go 程序
+RUN go build -o cloud-terminal ./cmd/cloud-terminal
 
+# 使用 Caddy 作为反向代理服务器
+FROM caddy:2
 
-# 把全部文件添加到/go/release目录
-ADD . .
+# 设置工作目录
+WORKDIR /app
 
-# 编译：把cmd/main.go编译成可执行的二进制文件，命名为app
-#RUN GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -w" -installsuffix cgo -o cloud-terminal main.go
-RUN GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build  -o cloud-terminal main.go
-#RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-linkmode external -extldflags "-static"' -o cloud-terminal main.go
-#RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-linkmode external -extldflags "-static"' -o cloud-terminal main.go
-# 运行：使用scratch作为基础镜像
-FROM scratch as prod
+# 复制后端编译的二进制文件到工作目录
+COPY --from=builder /app/cloud-terminal /app/cloud-terminal
 
-# 在build阶段复制时区到
-COPY --from=build /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-# 在build阶段复制可执行的go二进制文件app
-COPY --from=build /go/release/cloud-terminal /
+# 复制 Caddyfile 到 Caddy 配置目录
+COPY Caddyfile /etc/caddy/Caddyfile
 
-#COPY --from=build /go/release/terminal /
-# 在build阶段复制配置文件
-#COPY --from=build /go/release/config ./config
+# 复制配置文件到 /app/config 目录
+COPY app/config/config.json /app/config/config.json
 
-# Set environment variables
-#ENV PORT=2021
-ENV HOST=0.0.0.0
+# 暴露端口
+EXPOSE 80
+EXPOSE 443
 
-# Expose default port
-EXPOSE 80 443 3306
-# 启动服务
-CMD ["./cloud-terminal"]
-#ENTRYPOINT ["./app"]
+# 启动后端应用程序和 Caddy
+CMD ["sh", "-c", "./cloud-terminal & caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
+

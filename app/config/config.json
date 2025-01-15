@@ -1,0 +1,8 @@
+{
+  "user": "root",
+  "password": "root1234",
+  "db_name": "terminal",
+  "host": "127.0.0.1",
+  "port": 3306,
+  "type": "mysql"
+}

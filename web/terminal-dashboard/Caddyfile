@@ -1,0 +1,14 @@
+cloudsec.sbs {
+    root * /usr/share/caddy
+    file_server
+    encode gzip
+
+    # 代理 API 请求到后端
+    reverse_proxy /api/* localhost:8080
+
+    # 自动管理 HTTPS 证书
+    tls {
+        # 如果需要 DNS 验证，可以使用以下配置（可选）
+        # dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+}

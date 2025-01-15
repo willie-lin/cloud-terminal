@@ -74,7 +74,7 @@ func main() {
 
 	// CORS middleware
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"https://localhost:3000"},
+		AllowOrigins:     []string{"https://localhost:3000", "https://cloudsec.sbs"},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, "X-CSRF-Token"},
 		AllowCredentials: true,
 		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
@@ -82,7 +82,7 @@ func main() {
 	}))
 
 	// 设置CSP头
-	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{ContentSecurityPolicy: "default-src 'self'; script-src 'self' https://trusted-scripts.com; object-src 'none'; frame-ancestors 'none';"}))
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{ContentSecurityPolicy: "default-src 'self'; script-src 'self' https://cloudsec.sbs https://trusted-scripts.com; object-src 'none'; frame-ancestors 'none';"}))
 	// 设置 Static 中间件
 	e.Static("/picture", "picture")
 
@@ -298,10 +298,14 @@ func main() {
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	go func() {
-		e.Logger.Fatal(e.Start(":80"))
-	}()
+	// 测试使用本地的证书
+	//go func() {
+	//	e.Logger.Fatal(e.Start(":80"))
+	//}()
+	//
+	//e.Logger.Fatal(e.StartTLS(":443", "./cert/cert.pem", "./cert/key.pem"))
 
-	e.Logger.Fatal(e.StartTLS(":443", "./cert/cert.pem", "./cert/key.pem"))
+	// 生产编译 docker image
+	e.Logger.Fatal(e.Start(":8080"))
 
 }

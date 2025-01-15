@@ -1,32 +1,33 @@
 # 使用官方的 Node 镜像作为基础镜像
-FROM node:14 as build
+FROM node:23-alpine
 
 # 设置工作目录
 WORKDIR /app
 
-# 复制 package.json 和 package-lock.json
-COPY package*.json ./
+# 复制 package.json 和 yarn.lock 文件到工作目录
+COPY package.json yarn.lock ./
 
 # 安装项目依赖
-RUN npm install
+RUN yarn install
 
-# 复制项目文件
+# 复制所有文件到工作目录
 COPY . .
 
-# 编译项目
-RUN npm run build
+# 构建项目
+RUN NODE_OPTIONS="--max_old_space_size=4096" yarn build
 
-# 使用 Nginx 作为生产环境的服务器
-FROM nginx:alpine
+# 使用 Caddy 作为静态文件服务器
+FROM caddy:2
 
-# 复制编译后的文件到 Nginx 目录
-COPY --from=build /app/build /usr/share/nginx/html
+# 复制构建结果到 Caddy 服务器目录
+COPY --from=0 /app/build /usr/share/caddy
 
-# 复制自定义 Nginx 配置文件（可选）
-COPY nginx.conf /etc/nginx/nginx.conf
+# 复制 Caddyfile 到 Caddy 配置目录
+COPY Caddyfile /etc/caddy/Caddyfile
 
 # 暴露端口
 EXPOSE 80
+EXPOSE 443
 
-# 启动 Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# 启动 Caddy
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
