@@ -51,7 +51,7 @@ func main() {
 	defer c.Close()
 
 	// 使用重定向中间件将http连接重定向到https
-	e.Pre(middleware.HTTPSRedirect())
+	//e.Pre(middleware.HTTPSRedirect())
 
 	// 设置主机策略
 	// e.AutoTLSManager.HostPolicy = autocert.HostWhitelist("<DOMAIN>")
@@ -74,7 +74,7 @@ func main() {
 
 	// CORS middleware
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"https://localhost:3000", "https://cloudsec.sbs"},
+		AllowOrigins:     []string{"https://localhost:3000", "https://app.cloudsec.sbs"},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, "X-CSRF-Token"},
 		AllowCredentials: true,
 		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
@@ -298,14 +298,14 @@ func main() {
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	// 测试使用本地的证书
+	////测试使用本地的证书
 	//go func() {
 	//	e.Logger.Fatal(e.Start(":80"))
 	//}()
 	//
 	//e.Logger.Fatal(e.StartTLS(":443", "./cert/cert.pem", "./cert/key.pem"))
 
-	// 生产编译 docker image
+	//生产编译 docker image
 	e.Logger.Fatal(e.Start(":8080"))
 
 }

@@ -1,13 +1,3 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
-
 version: 1
 
 before:
@@ -26,15 +16,19 @@ builds:
       - "-X main.version={{.Version}}"
       - "-X main.commit={{.Commit}}"
       - "-X main.date={{.Date}}"
-
-  # 移除大部分 ignore 规则，以构建更多平台
-
-
-  # 移除大部分 ignore 规则，以构建更多平台
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+      - arm
     ignore:
       - goos: darwin
-        goarch: i386 # 缩进一致
-
+        goarch: i386
 archives:
   - format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"

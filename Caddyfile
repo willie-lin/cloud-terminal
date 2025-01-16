@@ -4,7 +4,6 @@ cloudsec.sbs {
 
     # 自动管理 HTTPS 证书
     tls {
-        # 如果需要 DNS 验证，可以使用以下配置（可选）
-        # dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+        on_demand
     }
 }
