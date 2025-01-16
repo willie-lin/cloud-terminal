@@ -65,7 +65,8 @@ services:
       DB_PASSWORD: root1234
       DB_NAME: terminal
       DB_TYPE: mysql
-
+    volumes:
+      - ./picture:/app/picture
   frontend:
     image: 0809/terminal-dashboard:latest
     ports:
