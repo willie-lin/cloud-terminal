@@ -13,28 +13,32 @@ import {
     InboxIcon,
     PowerIcon,} from "@heroicons/react/24/solid";
 import {Link} from "react-router-dom";
-import React from "react";
+import React, {useState} from "react";
 import {
     ChevronDownIcon,
-    ChevronRightIcon,
+    ChevronRightIcon, CogIcon,
     CubeTransparentIcon,
     UserIcon,
 } from "@heroicons/react/16/solid";
 import { useTheme } from './ThemeContext';
+import CollapseButton from "./CollapseButton";
 
 function Sidebar({ email, onLogout }) {
-    const [open, setOpen] = React.useState(0);
-    const [openAlert, setOpenAlert] = React.useState(true);
-    const { isDarkMode } = useTheme();
 
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [open, setOpen] = useState(0);
+    const [openAlert, setOpenAlert] = useState(true);
+    const { isDarkMode } = useTheme();
 
     const handleOpen = (value) => {
         setOpen(open === value ? 0 : value);
     };
 
-
     return (
-        <div className={`h-full w-full max-w-[20rem] p-4 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
+        // <div className={`h-full w-full max-w-[20rem] p-4 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
+            <div className={`h-full w-full max-w-[20rem] p-4 ${isDarkMode ? 'bg-gray-900 text-gray-300' : 'bg-white text-gray-800'}`}>
+
+
             <div className="mb-2 flex items-center gap-4 p-4">
                 {/*<Link to="/" className="-m-1.5 p-1.5">*/}
                 <Link to="/">
@@ -65,10 +69,13 @@ function Sidebar({ email, onLogout }) {
                         selected={open === 1}>
                         <AccordionHeader onClick={() => handleOpen(1)} className="border-b-0 p-3">
                             <ListItemPrefix>
-                                <PresentationChartBarIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
+                                {/*<PresentationChartBarIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>*/}
+                                <PresentationChartBarIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-blue-gray-500'}`}/>
+
                             </ListItemPrefix>
-                            <Typography
-                                className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
+                            {/*<Typography className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>*/}
+                                <Typography className={`${isDarkMode ? 'text-gray-300 mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
+
                                 Dashboard
                             </Typography>
                         </AccordionHeader>
@@ -84,7 +91,6 @@ function Sidebar({ email, onLogout }) {
                                 Analytics
                             </ListItem>
                             <ListItem
-                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
                                 className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
@@ -92,7 +98,6 @@ function Sidebar({ email, onLogout }) {
                                 Reporting
                             </ListItem>
                             <ListItem
-                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
                                 className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <ListItemPrefix>
                                     <ChevronRightIcon strokeWidth={3} className="h-3 w-5"/>
@@ -111,11 +116,10 @@ function Sidebar({ email, onLogout }) {
                         />
                     }
                 >
-                    {/*{user.role === 'Super Admin' && (*/}
                     <ListItem className="p-0" selected={open === 2}>
                         <AccordionHeader onClick={() => handleOpen(2)} className="border-b-0 p-3">
                             <ListItemPrefix>
-                                <UserIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
+                                <UserIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-blue-gray-500'}`}/>
                             </ListItemPrefix>
                             <Typography
                                 className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
@@ -145,7 +149,6 @@ function Sidebar({ email, onLogout }) {
                                 </Link>
                             </ListItem>
                             <ListItem
-                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
                                 className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <Link to="/policies" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                                     <ListItemPrefix>
@@ -155,7 +158,6 @@ function Sidebar({ email, onLogout }) {
                                 </Link>
                             </ListItem>
                             <ListItem
-                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
                                 className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <Link to="/permissions" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                                     <ListItemPrefix>
@@ -165,7 +167,6 @@ function Sidebar({ email, onLogout }) {
                                 </Link>
                             </ListItem>
                             <ListItem
-                                // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}>
                                 className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                                 <Link to="/authorization"
                                       style={{display: 'flex', alignItems: 'center', width: '100%'}}>
@@ -181,20 +182,18 @@ function Sidebar({ email, onLogout }) {
 
                 <hr className={`my-2 ${isDarkMode ? 'border-gray-600' : 'border-blue-gray-50'}`}/>
                 <ListItem
-                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
                     className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}>
                     <ListItemPrefix>
-                        <CommandLineIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
+                        <CommandLineIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-blue-gray-500'}`}/>
                     </ListItemPrefix>
                     Cloud Terminal
                 </ListItem>
 
                 <ListItem
-                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
                     className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}
                 >
                     <ListItemPrefix>
-                        <InboxIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
+                        <InboxIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-blue-gray-500'}`}/>
                     </ListItemPrefix>
                     Inbox
                     <ListItemSuffix>
@@ -203,36 +202,35 @@ function Sidebar({ email, onLogout }) {
                 </ListItem>
 
                 <ListItem
-                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
                     className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}
                 >
                     <Link to="/userinfo" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                         <ListItemPrefix>
-                            <UserCircleIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
+                            <UserCircleIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-blue-gray-500'}`}/>
                         </ListItemPrefix>
                         Profile</Link>
                 </ListItem>
 
                 <ListItem
-                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
                     className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}
                 >
                     <Link to="/open-user-2fa" style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                         <ListItemPrefix>
-                            <Cog6ToothIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
+                            {/*<Cog6ToothIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>*/}
+                            <Cog6ToothIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-blue-gray-500'}`}/>
+
+
                         </ListItemPrefix>
                         Settings
                     </Link>
                 </ListItem>
 
                 <ListItem
-                    // className="hover:bg-blue-gray-100 transition-colors duration-200"
-                    // className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-gray-50'} transition-colors duration-200`}
                     className={`${isDarkMode ? 'text-white mr-auto font-normal' : 'text-blue-gray-900 mr-auto font-normal'}`}
                 >
                     <Link to="/login" style={{display: 'flex', alignItems: 'center', width: '100%'}} onClick={onLogout}>
                         <ListItemPrefix>
-                            <PowerIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-blue-gray-500'}`}/>
+                            <PowerIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-blue-gray-500'}`}/>
                         </ListItemPrefix>
                         Logout
                     </Link>
@@ -259,7 +257,6 @@ function Sidebar({ email, onLogout }) {
                         Dismiss
                     </Typography>
                     <Typography as="a" href="#" variant="small"
-                                // className="font-medium"
                                 className={`${isDarkMode ? 'text-white mr-auto font-medium opacity-80' : 'text-blue-gray-900 mr-auto font-medium opacity-80'}`}
                     >
                         Upgrade Now
@@ -267,7 +264,6 @@ function Sidebar({ email, onLogout }) {
                 </div>
             </Alert>
         </div>
-
 
     );
 }

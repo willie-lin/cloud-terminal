@@ -24,6 +24,7 @@
     "file-saver": "^2.0.5",
     "javascript-obfuscator": "^4.1.1",
     "js-cookie": "^3.0.5",
+    "lucide-react": "^0.473.0",
     "nanoid": "^5.0.9",
     "nth-check": "^2.1.1",
     "postcss": "8.4.31",
