@@ -142,7 +142,7 @@ func FieldNotIn[T any](name string, vs ...T) func(*Selector) {
 	}
 }
 
-// FieldEqualFold returns a raw predicate to check if the field has the given prefix with case-folding.
+// FieldEqualFold returns a raw predicate to check if the field is equal to the given string under case-folding.
 func FieldEqualFold(name string, substr string) func(*Selector) {
 	return func(s *Selector) {
 		s.Where(EqualFold(s.C(name), substr))
@@ -156,10 +156,24 @@ func FieldHasPrefix(name string, prefix string) func(*Selector) {
 	}
 }
 
+// FieldHasPrefixFold returns a raw predicate to check if the field has the given prefix with case-folding
+func FieldHasPrefixFold(name string, prefix string) func(*Selector) {
+	return func(s *Selector) {
+		s.Where(HasPrefixFold(s.C(name), prefix))
+	}
+}
+
 // FieldHasSuffix returns a raw predicate to check if the field has the given suffix.
 func FieldHasSuffix(name string, suffix string) func(*Selector) {
 	return func(s *Selector) {
 		s.Where(HasSuffix(s.C(name), suffix))
+	}
+}
+
+// FieldHasSuffixFold returns a raw predicate to check if the field has the given suffix with case-folding
+func FieldHasSuffixFold(name string, suffix string) func(*Selector) {
+	return func(s *Selector) {
+		s.Where(HasSuffixFold(s.C(name), suffix))
 	}
 }
 

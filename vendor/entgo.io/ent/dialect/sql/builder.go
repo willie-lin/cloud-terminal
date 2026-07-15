@@ -38,12 +38,8 @@ type querierErr interface {
 // ColumnBuilder is a builder for column definition in table creation.
 type ColumnBuilder struct {
 	Builder
-	typ    string             // column type.
-	name   string             // column name.
-	attr   string             // extra attributes.
-	modify bool               // modify existing.
-	fk     *ForeignKeyBuilder // foreign-key constraint.
-	check  func(*Builder)     // column checks.
+	typ  string // column type.
+	name string // column name.
 }
 
 // Column returns a new ColumnBuilder with the given name.
@@ -57,598 +53,87 @@ func (c *ColumnBuilder) Type(t string) *ColumnBuilder {
 	return c
 }
 
-// Attr sets an extra attribute for the column, like UNIQUE or AUTO_INCREMENT.
-func (c *ColumnBuilder) Attr(attr string) *ColumnBuilder {
-	if c.attr != "" && attr != "" {
-		c.attr += " "
-	}
-	c.attr += attr
-	return c
-}
-
-// Constraint adds the CONSTRAINT clause to the ADD COLUMN statement in SQLite.
-func (c *ColumnBuilder) Constraint(fk *ForeignKeyBuilder) *ColumnBuilder {
-	c.fk = fk
-	return c
-}
-
-// Check adds a CHECK clause to the ADD COLUMN statement.
-func (c *ColumnBuilder) Check(check func(*Builder)) *ColumnBuilder {
-	c.check = check
-	return c
-}
-
 // Query returns query representation of a Column.
 func (c *ColumnBuilder) Query() (string, []any) {
 	c.Ident(c.name)
 	if c.typ != "" {
-		if c.postgres() && c.modify {
-			c.WriteString(" TYPE")
-		}
 		c.Pad().WriteString(c.typ)
-	}
-	if c.attr != "" {
-		c.Pad().WriteString(c.attr)
-	}
-	if c.fk != nil {
-		c.WriteString(" CONSTRAINT " + c.fk.symbol)
-		c.Pad().Join(c.fk.ref)
-		for _, action := range c.fk.actions {
-			c.Pad().WriteString(action)
-		}
-	}
-	if c.check != nil {
-		c.WriteString(" CHECK ")
-		c.Wrap(c.check)
 	}
 	return c.String(), c.args
 }
 
-// TableBuilder is a query builder for `CREATE TABLE` statement.
-type TableBuilder struct {
+// ViewBuilder is a query builder for `CREATE VIEW` statement.
+type ViewBuilder struct {
 	Builder
-	name        string           // table name.
-	exists      bool             // check existence.
-	charset     string           // table charset.
-	collation   string           // table collation.
-	options     string           // table options.
-	columns     []Querier        // table columns.
-	primary     []string         // primary key.
-	constraints []Querier        // foreign keys and indices.
-	checks      []func(*Builder) // check constraints.
+	schema  string    // view schema.
+	name    string    // view name.
+	exists  bool      // check existence.
+	columns []Querier // table columns.
+	as      Querier   // view query.
 }
 
-// CreateTable returns a query builder for the `CREATE TABLE` statement.
+// CreateView returns a query builder for the `CREATE VIEW` statement.
 //
-//	CreateTable("users").
+//	t := Table("users")
+//	CreateView("clean_users").
 //		Columns(
 //			Column("id").Type("int").Attr("auto_increment"),
 //			Column("name").Type("varchar(255)"),
 //		).
-//		PrimaryKey("id")
-func CreateTable(name string) *TableBuilder { return &TableBuilder{name: name} }
+//		As(Select(t.C("id"), t.C("name")).From(t))
+func CreateView(name string) *ViewBuilder { return &ViewBuilder{name: name} }
 
-// IfNotExists appends the `IF NOT EXISTS` clause to the `CREATE TABLE` statement.
-func (t *TableBuilder) IfNotExists() *TableBuilder {
-	t.exists = true
-	return t
+// Schema sets the database name for the view.
+func (v *ViewBuilder) Schema(name string) *ViewBuilder {
+	v.schema = name
+	return v
 }
 
-// Column appends the given column to the `CREATE TABLE` statement.
-func (t *TableBuilder) Column(c *ColumnBuilder) *TableBuilder {
-	t.columns = append(t.columns, c)
-	return t
+// IfNotExists appends the `IF NOT EXISTS` clause to the `CREATE VIEW` statement.
+func (v *ViewBuilder) IfNotExists() *ViewBuilder {
+	v.exists = true
+	return v
+}
+
+// Column appends the given column to the `CREATE VIEW` statement.
+func (v *ViewBuilder) Column(c *ColumnBuilder) *ViewBuilder {
+	v.columns = append(v.columns, c)
+	return v
 }
 
 // Columns appends a list of columns to the builder.
-func (t *TableBuilder) Columns(columns ...*ColumnBuilder) *TableBuilder {
-	t.columns = make([]Querier, 0, len(columns))
+func (v *ViewBuilder) Columns(columns ...*ColumnBuilder) *ViewBuilder {
+	v.columns = make([]Querier, 0, len(columns))
 	for i := range columns {
-		t.columns = append(t.columns, columns[i])
+		v.columns = append(v.columns, columns[i])
 	}
-	return t
+	return v
 }
 
-// PrimaryKey adds a column to the primary-key constraint in the statement.
-func (t *TableBuilder) PrimaryKey(column ...string) *TableBuilder {
-	t.primary = append(t.primary, column...)
-	return t
+// As sets the view definition to the builder.
+func (v *ViewBuilder) As(as Querier) *ViewBuilder {
+	v.as = as
+	return v
 }
 
-// ForeignKeys adds a list of foreign-keys to the statement (without constraints).
-func (t *TableBuilder) ForeignKeys(fks ...*ForeignKeyBuilder) *TableBuilder {
-	queries := make([]Querier, len(fks))
-	for i := range fks {
-		// Erase the constraint symbol/name.
-		fks[i].symbol = ""
-		queries[i] = fks[i]
+// Query returns query representation of a `CREATE VIEW` statement.
+//
+// CREATE VIEW [IF NOT EXISTS] name AS
+//
+//	(view definition)
+func (v *ViewBuilder) Query() (string, []any) {
+	v.WriteString("CREATE VIEW ")
+	if v.exists {
+		v.WriteString("IF NOT EXISTS ")
 	}
-	t.constraints = append(t.constraints, queries...)
-	return t
-}
-
-// Constraints adds a list of foreign-key constraints to the statement.
-func (t *TableBuilder) Constraints(fks ...*ForeignKeyBuilder) *TableBuilder {
-	queries := make([]Querier, len(fks))
-	for i := range fks {
-		queries[i] = &Wrapper{"CONSTRAINT %s", fks[i]}
+	v.writeSchema(v.schema)
+	v.Ident(v.name)
+	if len(v.columns) > 0 {
+		v.Pad().Wrap(func(b *Builder) { b.JoinComma(v.columns...) })
 	}
-	t.constraints = append(t.constraints, queries...)
-	return t
-}
-
-// Checks adds CHECK clauses to the CREATE TABLE statement.
-func (t *TableBuilder) Checks(checks ...func(*Builder)) *TableBuilder {
-	t.checks = append(t.checks, checks...)
-	return t
-}
-
-// Charset appends the `CHARACTER SET` clause to the statement. MySQL only.
-func (t *TableBuilder) Charset(s string) *TableBuilder {
-	t.charset = s
-	return t
-}
-
-// Collate appends the `COLLATE` clause to the statement. MySQL only.
-func (t *TableBuilder) Collate(s string) *TableBuilder {
-	t.collation = s
-	return t
-}
-
-// Options appends additional options to the statement (MySQL only).
-func (t *TableBuilder) Options(s string) *TableBuilder {
-	t.options = s
-	return t
-}
-
-// Query returns query representation of a `CREATE TABLE` statement.
-//
-// CREATE TABLE [IF NOT EXISTS] name
-//
-//	(table definition)
-//	[charset and collation]
-func (t *TableBuilder) Query() (string, []any) {
-	t.WriteString("CREATE TABLE ")
-	if t.exists {
-		t.WriteString("IF NOT EXISTS ")
-	}
-	t.Ident(t.name)
-	t.Wrap(func(b *Builder) {
-		b.JoinComma(t.columns...)
-		if len(t.primary) > 0 {
-			b.Comma().WriteString("PRIMARY KEY")
-			b.Wrap(func(b *Builder) {
-				b.IdentComma(t.primary...)
-			})
-		}
-		if len(t.constraints) > 0 {
-			b.Comma().JoinComma(t.constraints...)
-		}
-		for _, check := range t.checks {
-			check(b.Comma())
-		}
-	})
-	if t.charset != "" {
-		t.WriteString(" CHARACTER SET " + t.charset)
-	}
-	if t.collation != "" {
-		t.WriteString(" COLLATE " + t.collation)
-	}
-	if t.options != "" {
-		t.WriteString(" " + t.options)
-	}
-	return t.String(), t.args
-}
-
-// DescribeBuilder is a query builder for `DESCRIBE` statement.
-type DescribeBuilder struct {
-	Builder
-	name string // table name.
-}
-
-// Describe returns a query builder for the `DESCRIBE` statement.
-//
-//	Describe("users")
-func Describe(name string) *DescribeBuilder { return &DescribeBuilder{name: name} }
-
-// Query returns query representation of a `DESCRIBE` statement.
-func (t *DescribeBuilder) Query() (string, []any) {
-	t.WriteString("DESCRIBE ")
-	t.Ident(t.name)
-	return t.String(), nil
-}
-
-// TableAlter is a query builder for `ALTER TABLE` statement.
-type TableAlter struct {
-	Builder
-	name    string    // table to alter.
-	Queries []Querier // columns and foreign-keys to add.
-}
-
-// AlterTable returns a query builder for the `ALTER TABLE` statement.
-//
-//	AlterTable("users").
-//		AddColumn(Column("group_id").Type("int").Attr("UNIQUE")).
-//		AddForeignKey(ForeignKey().Columns("group_id").
-//			Reference(Reference().Table("groups").Columns("id")).OnDelete("CASCADE")),
-//		)
-func AlterTable(name string) *TableAlter { return &TableAlter{name: name} }
-
-// AddColumn appends the `ADD COLUMN` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) AddColumn(c *ColumnBuilder) *TableAlter {
-	t.Queries = append(t.Queries, &Wrapper{"ADD COLUMN %s", c})
-	return t
-}
-
-// ModifyColumn appends the `MODIFY/ALTER COLUMN` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) ModifyColumn(c *ColumnBuilder) *TableAlter {
-	switch {
-	case t.postgres():
-		c.modify = true
-		t.Queries = append(t.Queries, &Wrapper{"ALTER COLUMN %s", c})
-	default:
-		t.Queries = append(t.Queries, &Wrapper{"MODIFY COLUMN %s", c})
-	}
-	return t
-}
-
-// RenameColumn appends the `RENAME COLUMN` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) RenameColumn(old, new string) *TableAlter {
-	t.Queries = append(t.Queries, Raw(fmt.Sprintf("RENAME COLUMN %s TO %s", t.Quote(old), t.Quote(new))))
-	return t
-}
-
-// ModifyColumns calls ModifyColumn with each of the given builders.
-func (t *TableAlter) ModifyColumns(cs ...*ColumnBuilder) *TableAlter {
-	for _, c := range cs {
-		t.ModifyColumn(c)
-	}
-	return t
-}
-
-// DropColumn appends the `DROP COLUMN` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) DropColumn(c *ColumnBuilder) *TableAlter {
-	t.Queries = append(t.Queries, &Wrapper{"DROP COLUMN %s", c})
-	return t
-}
-
-// ChangeColumn appends the `CHANGE COLUMN` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) ChangeColumn(name string, c *ColumnBuilder) *TableAlter {
-	prefix := fmt.Sprintf("CHANGE COLUMN %s", t.Quote(name))
-	t.Queries = append(t.Queries, &Wrapper{prefix + " %s", c})
-	return t
-}
-
-// RenameIndex appends the `RENAME INDEX` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) RenameIndex(curr, new string) *TableAlter {
-	t.Queries = append(t.Queries, Raw(fmt.Sprintf("RENAME INDEX %s TO %s", t.Quote(curr), t.Quote(new))))
-	return t
-}
-
-// DropIndex appends the `DROP INDEX` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) DropIndex(name string) *TableAlter {
-	t.Queries = append(t.Queries, Raw(fmt.Sprintf("DROP INDEX %s", t.Quote(name))))
-	return t
-}
-
-// AddIndex appends the `ADD INDEX` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) AddIndex(idx *IndexBuilder) *TableAlter {
-	b := &Builder{dialect: t.dialect}
-	b.WriteString("ADD ")
-	if idx.unique {
-		b.WriteString("UNIQUE ")
-	}
-	b.WriteString("INDEX ")
-	b.Ident(idx.name)
-	b.Wrap(func(b *Builder) {
-		b.IdentComma(idx.columns...)
-	})
-	t.Queries = append(t.Queries, b)
-	return t
-}
-
-// AddForeignKey adds a foreign key constraint to the `ALTER TABLE` statement.
-func (t *TableAlter) AddForeignKey(fk *ForeignKeyBuilder) *TableAlter {
-	t.Queries = append(t.Queries, &Wrapper{"ADD CONSTRAINT %s", fk})
-	return t
-}
-
-// DropConstraint appends the `DROP CONSTRAINT` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) DropConstraint(ident string) *TableAlter {
-	t.Queries = append(t.Queries, Raw(fmt.Sprintf("DROP CONSTRAINT %s", t.Quote(ident))))
-	return t
-}
-
-// DropForeignKey appends the `DROP FOREIGN KEY` clause to the given `ALTER TABLE` statement.
-func (t *TableAlter) DropForeignKey(ident string) *TableAlter {
-	t.Queries = append(t.Queries, Raw(fmt.Sprintf("DROP FOREIGN KEY %s", t.Quote(ident))))
-	return t
-}
-
-// Query returns query representation of the `ALTER TABLE` statement.
-//
-//	ALTER TABLE name
-//		[alter_specification]
-func (t *TableAlter) Query() (string, []any) {
-	t.WriteString("ALTER TABLE ")
-	t.Ident(t.name)
-	t.Pad()
-	t.JoinComma(t.Queries...)
-	return t.String(), t.args
-}
-
-// IndexAlter is a query builder for `ALTER INDEX` statement.
-type IndexAlter struct {
-	Builder
-	name    string    // index to alter.
-	Queries []Querier // alter options.
-}
-
-// AlterIndex returns a query builder for the `ALTER INDEX` statement.
-//
-//	AlterIndex("old_key").
-//		Rename("new_key")
-func AlterIndex(name string) *IndexAlter { return &IndexAlter{name: name} }
-
-// Rename appends the `RENAME TO` clause to the `ALTER INDEX` statement.
-func (i *IndexAlter) Rename(name string) *IndexAlter {
-	i.Queries = append(i.Queries, Raw(fmt.Sprintf("RENAME TO %s", i.Quote(name))))
-	return i
-}
-
-// Query returns query representation of the `ALTER INDEX` statement.
-//
-//	ALTER INDEX name
-//		[alter_specification]
-func (i *IndexAlter) Query() (string, []any) {
-	i.WriteString("ALTER INDEX ")
-	i.Ident(i.name)
-	i.Pad()
-	i.JoinComma(i.Queries...)
-	return i.String(), i.args
-}
-
-// ForeignKeyBuilder is the builder for the foreign-key constraint clause.
-type ForeignKeyBuilder struct {
-	Builder
-	symbol  string
-	columns []string
-	actions []string
-	ref     *ReferenceBuilder
-}
-
-// ForeignKey returns a builder for the foreign-key constraint clause in create/alter table statements.
-//
-//	ForeignKey().
-//		Columns("group_id").
-//		Reference(Reference().Table("groups").Columns("id")).
-//		OnDelete("CASCADE")
-func ForeignKey(symbol ...string) *ForeignKeyBuilder {
-	fk := &ForeignKeyBuilder{}
-	if len(symbol) != 0 {
-		fk.symbol = symbol[0]
-	}
-	return fk
-}
-
-// Symbol sets the symbol of the foreign key.
-func (fk *ForeignKeyBuilder) Symbol(s string) *ForeignKeyBuilder {
-	fk.symbol = s
-	return fk
-}
-
-// Columns sets the columns of the foreign key in the source table.
-func (fk *ForeignKeyBuilder) Columns(s ...string) *ForeignKeyBuilder {
-	fk.columns = append(fk.columns, s...)
-	return fk
-}
-
-// Reference sets the reference clause.
-func (fk *ForeignKeyBuilder) Reference(r *ReferenceBuilder) *ForeignKeyBuilder {
-	fk.ref = r
-	return fk
-}
-
-// OnDelete sets the on delete action for this constraint.
-func (fk *ForeignKeyBuilder) OnDelete(action string) *ForeignKeyBuilder {
-	fk.actions = append(fk.actions, "ON DELETE "+action)
-	return fk
-}
-
-// OnUpdate sets the on delete action for this constraint.
-func (fk *ForeignKeyBuilder) OnUpdate(action string) *ForeignKeyBuilder {
-	fk.actions = append(fk.actions, "ON UPDATE "+action)
-	return fk
-}
-
-// Query returns query representation of a foreign key constraint.
-func (fk *ForeignKeyBuilder) Query() (string, []any) {
-	if fk.symbol != "" {
-		fk.Ident(fk.symbol).Pad()
-	}
-	fk.WriteString("FOREIGN KEY")
-	fk.Wrap(func(b *Builder) {
-		b.IdentComma(fk.columns...)
-	})
-	fk.Pad().Join(fk.ref)
-	for _, action := range fk.actions {
-		fk.Pad().WriteString(action)
-	}
-	return fk.String(), fk.args
-}
-
-// ReferenceBuilder is a builder for the reference clause in constraints. For example, in foreign key creation.
-type ReferenceBuilder struct {
-	Builder
-	table   string   // referenced table.
-	columns []string // referenced columns.
-}
-
-// Reference creates a reference builder for the reference_option clause.
-//
-//	Reference().Table("groups").Columns("id")
-func Reference() *ReferenceBuilder { return &ReferenceBuilder{} }
-
-// Table sets the referenced table.
-func (r *ReferenceBuilder) Table(s string) *ReferenceBuilder {
-	r.table = s
-	return r
-}
-
-// Columns sets the columns of the referenced table.
-func (r *ReferenceBuilder) Columns(s ...string) *ReferenceBuilder {
-	r.columns = append(r.columns, s...)
-	return r
-}
-
-// Query returns query representation of a reference clause.
-func (r *ReferenceBuilder) Query() (string, []any) {
-	r.WriteString("REFERENCES ")
-	r.Ident(r.table)
-	r.Wrap(func(b *Builder) {
-		b.IdentComma(r.columns...)
-	})
-	return r.String(), r.args
-}
-
-// IndexBuilder is a builder for `CREATE INDEX` statement.
-type IndexBuilder struct {
-	Builder
-	name    string
-	unique  bool
-	exists  bool
-	table   string
-	method  string
-	columns []string
-}
-
-// CreateIndex creates a builder for the `CREATE INDEX` statement.
-//
-//	CreateIndex("index_name").
-//		Unique().
-//		Table("users").
-//		Column("name")
-//
-// Or:
-//
-//	CreateIndex("index_name").
-//		Unique().
-//		Table("users").
-//		Columns("name", "age")
-func CreateIndex(name string) *IndexBuilder {
-	return &IndexBuilder{name: name}
-}
-
-// IfNotExists appends the `IF NOT EXISTS` clause to the `CREATE INDEX` statement.
-func (i *IndexBuilder) IfNotExists() *IndexBuilder {
-	i.exists = true
-	return i
-}
-
-// Unique sets the index to be a unique index.
-func (i *IndexBuilder) Unique() *IndexBuilder {
-	i.unique = true
-	return i
-}
-
-// Table defines the table for the index.
-func (i *IndexBuilder) Table(table string) *IndexBuilder {
-	i.table = table
-	return i
-}
-
-// Using sets the method to create the index with.
-func (i *IndexBuilder) Using(method string) *IndexBuilder {
-	i.method = method
-	return i
-}
-
-// Column appends a column to the column list for the index.
-func (i *IndexBuilder) Column(column string) *IndexBuilder {
-	i.columns = append(i.columns, column)
-	return i
-}
-
-// Columns appends the given columns to the column list for the index.
-func (i *IndexBuilder) Columns(columns ...string) *IndexBuilder {
-	i.columns = append(i.columns, columns...)
-	return i
-}
-
-// Query returns query representation of a reference clause.
-func (i *IndexBuilder) Query() (string, []any) {
-	i.WriteString("CREATE ")
-	if i.unique {
-		i.WriteString("UNIQUE ")
-	}
-	i.WriteString("INDEX ")
-	if i.exists {
-		i.WriteString("IF NOT EXISTS ")
-	}
-	i.Ident(i.name)
-	i.WriteString(" ON ")
-	i.Ident(i.table)
-	switch i.dialect {
-	case dialect.Postgres:
-		if i.method != "" {
-			i.WriteString(" USING ").Ident(i.method)
-		}
-		i.Wrap(func(b *Builder) {
-			b.IdentComma(i.columns...)
-		})
-	case dialect.MySQL:
-		i.Wrap(func(b *Builder) {
-			b.IdentComma(i.columns...)
-		})
-		if i.method != "" {
-			i.WriteString(" USING " + i.method)
-		}
-	default:
-		i.Wrap(func(b *Builder) {
-			b.IdentComma(i.columns...)
-		})
-	}
-	return i.String(), nil
-}
-
-// DropIndexBuilder is a builder for `DROP INDEX` statement.
-type DropIndexBuilder struct {
-	Builder
-	name  string
-	table string
-}
-
-// DropIndex creates a builder for the `DROP INDEX` statement.
-//
-//	MySQL:
-//
-//		DropIndex("index_name").
-//			Table("users").
-//
-//	SQLite/PostgreSQL:
-//
-//		DropIndex("index_name")
-func DropIndex(name string) *DropIndexBuilder {
-	return &DropIndexBuilder{name: name}
-}
-
-// Table defines the table for the index.
-func (d *DropIndexBuilder) Table(table string) *DropIndexBuilder {
-	d.table = table
-	return d
-}
-
-// Query returns query representation of a reference clause.
-//
-//	DROP INDEX index_name [ON table_name]
-func (d *DropIndexBuilder) Query() (string, []any) {
-	d.WriteString("DROP INDEX ")
-	d.Ident(d.name)
-	if d.table != "" {
-		d.WriteString(" ON ")
-		d.Ident(d.table)
-	}
-	return d.String(), nil
+	v.WriteString(" AS ")
+	v.Join(v.as)
+	return v.String(), v.args
 }
 
 // InsertBuilder is a builder for `INSERT INTO` statement.
@@ -1716,6 +1201,32 @@ func (p *Predicate) escapedLike(col, left, right, word string) *Predicate {
 	})
 }
 
+// ContainsFold is a helper predicate that applies the LIKE predicate with case-folding.
+func (p *Predicate) escapedLikeFold(col, left, substr, right string) *Predicate {
+	return p.Append(func(b *Builder) {
+		w, escaped := escape(substr)
+		switch b.dialect {
+		case dialect.MySQL:
+			// We assume the CHARACTER SET is configured to utf8mb4,
+			// because this how it is defined in dialect/sql/schema.
+			b.Ident(col).WriteString(" COLLATE utf8mb4_general_ci LIKE ")
+			b.Arg(left + strings.ToLower(w) + right)
+		case dialect.Postgres:
+			b.Ident(col).WriteString(" ILIKE ")
+			b.Arg(left + strings.ToLower(w) + right)
+		default: // SQLite.
+			var f Func
+			f.SetDialect(b.dialect)
+			f.Lower(col)
+			b.WriteString(f.String()).WriteString(" LIKE ")
+			b.Arg(left + strings.ToLower(w) + right)
+			if escaped {
+				p.WriteString(" ESCAPE ").Arg("\\")
+			}
+		}
+	})
+}
+
 // HasPrefix is a helper predicate that checks prefix using the LIKE predicate.
 func HasPrefix(col, prefix string) *Predicate {
 	return P().HasPrefix(col, prefix)
@@ -1724,6 +1235,16 @@ func HasPrefix(col, prefix string) *Predicate {
 // HasPrefix is a helper predicate that checks prefix using the LIKE predicate.
 func (p *Predicate) HasPrefix(col, prefix string) *Predicate {
 	return p.escapedLike(col, "", "%", prefix)
+}
+
+// HasPrefixFold is a helper predicate that checks prefix using the ILIKE predicate.
+func HasPrefixFold(col, prefix string) *Predicate {
+	return P().HasPrefixFold(col, prefix)
+}
+
+// HasPrefixFold is a helper predicate that checks prefix using the ILIKE predicate.
+func (p *Predicate) HasPrefixFold(col, prefix string) *Predicate {
+	return p.escapedLikeFold(col, "", prefix, "%")
 }
 
 // ColumnsHasPrefix appends a new predicate that checks if the given column begins with the other column (prefix).
@@ -1758,6 +1279,14 @@ func HasSuffix(col, suffix string) *Predicate { return P().HasSuffix(col, suffix
 // HasSuffix is a helper predicate that checks suffix using the LIKE predicate.
 func (p *Predicate) HasSuffix(col, suffix string) *Predicate {
 	return p.escapedLike(col, "%", "", suffix)
+}
+
+// HasSuffixFold is a helper predicate that checks suffix using the ILIKE predicate.
+func HasSuffixFold(col, suffix string) *Predicate { return P().HasSuffixFold(col, suffix) }
+
+// HasSuffixFold is a helper predicate that checks suffix using the ILIKE predicate.
+func (p *Predicate) HasSuffixFold(col, suffix string) *Predicate {
+	return p.escapedLikeFold(col, "%", suffix, "")
 }
 
 // EqualFold is a helper predicate that applies the "=" predicate with case-folding.
@@ -1800,28 +1329,7 @@ func ContainsFold(col, sub string) *Predicate { return P().ContainsFold(col, sub
 
 // ContainsFold is a helper predicate that applies the LIKE predicate with case-folding.
 func (p *Predicate) ContainsFold(col, substr string) *Predicate {
-	return p.Append(func(b *Builder) {
-		w, escaped := escape(substr)
-		switch b.dialect {
-		case dialect.MySQL:
-			// We assume the CHARACTER SET is configured to utf8mb4,
-			// because this how it is defined in dialect/sql/schema.
-			b.Ident(col).WriteString(" COLLATE utf8mb4_general_ci LIKE ")
-			b.Arg("%" + strings.ToLower(w) + "%")
-		case dialect.Postgres:
-			b.Ident(col).WriteString(" ILIKE ")
-			b.Arg("%" + strings.ToLower(w) + "%")
-		default: // SQLite.
-			var f Func
-			f.SetDialect(b.dialect)
-			f.Lower(col)
-			b.WriteString(f.String()).WriteString(" LIKE ")
-			b.Arg("%" + strings.ToLower(w) + "%")
-			if escaped {
-				p.WriteString(" ESCAPE ").Arg("\\")
-			}
-		}
-	})
+	return p.escapedLikeFold(col, "%", substr, "%")
 }
 
 // CompositeGT returns a composite ">" predicate
@@ -3861,7 +3369,7 @@ func (b *Builder) isQualified(s string) bool {
 		ident && !pg && strings.Contains(s, "`.`") // `qualifier`.`column`
 }
 
-// state wraps the all methods for setting and getting
+// state wraps all methods for setting and getting
 // update state between all queries in the query tree.
 type state interface {
 	Dialect() string
@@ -3893,53 +3401,18 @@ func (d *DialectBuilder) Expr(f func(*Builder)) Querier {
 	return Expr(d.String(f))
 }
 
-// Describe creates a DescribeBuilder for the configured dialect.
+// CreateView creates a ViewBuilder for the configured dialect.
 //
+//	t := Table("users")
 //	Dialect(dialect.Postgres).
-//		Describe("users")
-func (d *DialectBuilder) Describe(name string) *DescribeBuilder {
-	b := Describe(name)
-	b.SetDialect(d.dialect)
-	return b
-}
-
-// CreateTable creates a TableBuilder for the configured dialect.
-//
-//	Dialect(dialect.Postgres).
-//		CreateTable("users").
-//			Columns(
-//				Column("id").Type("int").Attr("auto_increment"),
-//				Column("name").Type("varchar(255)"),
-//			).
-//			PrimaryKey("id")
-func (d *DialectBuilder) CreateTable(name string) *TableBuilder {
-	b := CreateTable(name)
-	b.SetDialect(d.dialect)
-	return b
-}
-
-// AlterTable creates a TableAlter for the configured dialect.
-//
-//	Dialect(dialect.Postgres).
-//		AlterTable("users").
-//		AddColumn(Column("group_id").Type("int").Attr("UNIQUE")).
-//		AddForeignKey(ForeignKey().Columns("group_id").
-//			Reference(Reference().Table("groups").Columns("id")).
-//			OnDelete("CASCADE"),
-//		)
-func (d *DialectBuilder) AlterTable(name string) *TableAlter {
-	b := AlterTable(name)
-	b.SetDialect(d.dialect)
-	return b
-}
-
-// AlterIndex creates an IndexAlter for the configured dialect.
-//
-//	Dialect(dialect.Postgres).
-//		AlterIndex("old").
-//		Rename("new")
-func (d *DialectBuilder) AlterIndex(name string) *IndexAlter {
-	b := AlterIndex(name)
+//		CreateView("users").
+//		Columns(
+//			Column("id").Type("int"),
+//			Column("name").Type("varchar(255)"),
+//		).
+//		As(Select(t.C("id"), t.C("name")).From(t))
+func (d *DialectBuilder) CreateView(name string) *ViewBuilder {
+	b := CreateView(name)
 	b.SetDialect(d.dialect)
 	return b
 }
@@ -4023,29 +3496,6 @@ func (d *DialectBuilder) Table(name string) *SelectTable {
 //		As(Select().From(Table("users")))
 func (d *DialectBuilder) With(name string) *WithBuilder {
 	b := With(name)
-	b.SetDialect(d.dialect)
-	return b
-}
-
-// CreateIndex creates a IndexBuilder for the configured dialect.
-//
-//	Dialect(dialect.Postgres).
-//		CreateIndex("unique_name").
-//		Unique().
-//		Table("users").
-//		Columns("first", "last")
-func (d *DialectBuilder) CreateIndex(name string) *IndexBuilder {
-	b := CreateIndex(name)
-	b.SetDialect(d.dialect)
-	return b
-}
-
-// DropIndex creates a DropIndexBuilder for the configured dialect.
-//
-//	Dialect(dialect.Postgres).
-//		DropIndex("name")
-func (d *DialectBuilder) DropIndex(name string) *DropIndexBuilder {
-	b := DropIndex(name)
 	b.SetDialect(d.dialect)
 	return b
 }

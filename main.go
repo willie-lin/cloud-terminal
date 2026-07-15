@@ -4,25 +4,18 @@ import (
 	"context"
 	"fmt"
 	"github.com/bykof/gostradamus"
-	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/jaegertracing"
-	"github.com/labstack/echo-contrib/session"
-	echojwt "github.com/labstack/echo-jwt/v4"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/swaggo/echo-swagger"
-	"github.com/willie-lin/cloud-terminal/app/api"
-	"github.com/willie-lin/cloud-terminal/app/config"
-	"github.com/willie-lin/cloud-terminal/app/database/ent"
-	_ "github.com/willie-lin/cloud-terminal/app/database/ent/runtime"
-	"github.com/willie-lin/cloud-terminal/app/handler"
-	"github.com/willie-lin/cloud-terminal/app/logger"
-	"github.com/willie-lin/cloud-terminal/app/middlewarers"
+	"github.com/willie-lin/cloud-terminal/api"
+	"github.com/willie-lin/cloud-terminal/config"
+	"github.com/willie-lin/cloud-terminal/ent"
+	_ "github.com/willie-lin/cloud-terminal/ent/runtime"
+	"github.com/willie-lin/cloud-terminal/handler"
+	"github.com/willie-lin/cloud-terminal/logger"
+	"github.com/willie-lin/cloud-terminal/middlewarers"
 	_ "github.com/willie-lin/cloud-terminal/docs"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
-	"go.elastic.co/apm/module/apmechov4"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -48,8 +41,6 @@ func main() {
 	e := echo.New()
 
 	// Enable tracing middleware
-	c := jaegertracing.New(e, nil)
-	defer c.Close()
 
 	// 使用重定向中间件将http连接重定向到https
 	e.Pre(middleware.HTTPSRedirect())
@@ -67,8 +58,7 @@ func main() {
 	e.IPExtractor = echo.ExtractIPDirect()
 	e.IPExtractor = echo.ExtractIPFromXFFHeader()
 
-	e.Use(apmechov4.Middleware())
-	e.Use(middleware.Logger())
+	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Gzip())
@@ -85,7 +75,7 @@ func main() {
 		AllowOrigins:     allowedOrigins,
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, "X-CSRF-Token"},
 		AllowCredentials: true,
-		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE, http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+		AllowMethods:     []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 		//MaxAge:           300,
 	}))
 
@@ -95,14 +85,14 @@ func main() {
 	e.Static("/picture", "picture")
 
 	// 设置session中间件
-	e.Use(session.Middleware(sessions.NewCookieStore(securecookie.GenerateRandomKey(64))))
+	handler.InitSessionStore()
 
 	// 设置 CSRF 令牌
 	e.Use(utils.SetCSRFToken)
 	//fmt.Println("4444444444444444444444")
 	//
 	//e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-	//	return func(c echo.Context) error {
+	//	return func(c *echo.Context) error {
 	//		fmt.Printf("请求方法: %s, 路径: %s\n", c.Request().Method, c.Request().URL.Path)
 	//		fmt.Printf("所有请求头: %+v\n", c.Request().Header)
 	//		fmt.Printf("所有cookie: %+v\n", c.Request().Cookies())
@@ -137,14 +127,14 @@ func main() {
 		Store: middleware.NewRateLimiterMemoryStoreWithConfig(
 			middleware.RateLimiterMemoryStoreConfig{Rate: 10, Burst: 30, ExpiresIn: 3 * time.Minute},
 		),
-		IdentifierExtractor: func(ctx echo.Context) (string, error) {
+		IdentifierExtractor: func(ctx *echo.Context) (string, error) {
 			id := ctx.RealIP()
 			return id, nil
 		},
-		ErrorHandler: func(context echo.Context, err error) error {
+		ErrorHandler: func(context *echo.Context, err error) error {
 			return context.JSON(http.StatusForbidden, nil)
 		},
-		DenyHandler: func(context echo.Context, identifier string, err error) error {
+		DenyHandler: func(context *echo.Context, identifier string, err error) error {
 			return context.JSON(http.StatusTooManyRequests, nil)
 		},
 	}))
@@ -157,15 +147,6 @@ func main() {
 		HSTSMaxAge:            3600,
 		ContentSecurityPolicy: "default-src 'self'",
 		//Secure: "max-age=31536000; includeSubDomains",
-	}))
-
-	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
-		Skipper:      middleware.DefaultSkipper,
-		ErrorMessage: "custom timeout error message returns to client",
-		OnTimeoutRouteErrorHandler: func(err error, c echo.Context) {
-			log.Print(c.Path())
-		},
-		Timeout: 30 * time.Second,
 	}))
 
 	e.Pre(middleware.MethodOverrideWithConfig(middleware.MethodOverrideConfig{
@@ -232,7 +213,7 @@ func main() {
 	// Viewer 中间件应在所有请求处理之前应用
 
 	// 在所有路由之前应用中间件
-	e.GET("/api/csrf-token", func(c echo.Context) error {
+	e.GET("/api/csrf-token", func(c *echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	})
 
@@ -257,7 +238,7 @@ func main() {
 	//r.Use(utils.CheckAccessToken)
 
 	//e.Use(utils.WithViewer)
-	r.Use(echojwt.WithConfig(utils.ValidAccessTokenConfig()))
+	r.Use(utils.CheckAccessToken)
 
 	// 定义会话检查端点
 	//e.GET("/api/check-session", handler.CheckSession)
@@ -304,14 +285,14 @@ func main() {
 	//e.DELETE("/policies", handler.RemovePolicy(enforcer), middlewarers.Authorize(enforcer))
 	//e.GET("/policies", handler.GetAllPolicies(enforcer), middlewarers.Authorize(enforcer))
 
-	e.GET("/swagger/*", echoSwagger.WrapHandler)
+	// e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	//测试使用本地的证书
 	go func() {
-		e.Logger.Fatal(e.Start(":80"))
+		log.Fatal(e.Start(":80"))
 	}()
 
-	e.Logger.Fatal(e.StartTLS(":443", "./cert/cert.pem", "./cert/key.pem"))
+	log.Fatal(e.Start(":443"))
 
 	//生产编译 docker image
 	//e.Logger.Fatal(e.Start(":8080"))

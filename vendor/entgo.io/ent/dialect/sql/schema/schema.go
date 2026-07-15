@@ -6,11 +6,19 @@
 package schema
 
 import (
+	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 
+	"ariga.io/atlas/sql/migrate"
+	"ariga.io/atlas/sql/mysql"
+	"ariga.io/atlas/sql/postgres"
+	"ariga.io/atlas/sql/schema"
+	"ariga.io/atlas/sql/sqlite"
+	entdialect "entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/schema/field"
@@ -29,6 +37,7 @@ const (
 
 // Table schema definition for SQL dialects.
 type Table struct {
+	mu          sync.Mutex
 	Name        string
 	Schema      string
 	Columns     []*Column
@@ -38,7 +47,8 @@ type Table struct {
 	ForeignKeys []*ForeignKey
 	Annotation  *entsql.Annotation
 	Comment     string
-	View        bool // Indicate the table is a view.
+	View        bool   // Indicate the table is a view.
+	Pos         string // filename:line of the ent schema definition.
 }
 
 // NewTable returns a new table with the given name.
@@ -65,6 +75,12 @@ func (t *Table) SetComment(c string) *Table {
 // SetSchema sets the table schema.
 func (t *Table) SetSchema(s string) *Table {
 	t.Schema = s
+	return t
+}
+
+// SetPos sets the table position.
+func (t *Table) SetPos(p string) *Table {
+	t.Pos = p
 	return t
 }
 
@@ -182,30 +198,6 @@ func (t *Table) index(name string) (*Index, bool) {
 	}
 	if ok && c.Unique {
 		return &Index{Name: name, Unique: c.Unique, Columns: []*Column{c}, columns: []string{c.Name}}, true
-	}
-	return nil, false
-}
-
-// hasIndex reports if the table has at least one index that matches the given names.
-func (t *Table) hasIndex(names ...string) bool {
-	for i := range names {
-		if names[i] == "" {
-			continue
-		}
-		if _, ok := t.index(names[i]); ok {
-			return true
-		}
-	}
-	return false
-}
-
-// fk returns a table foreign-key by its symbol.
-// faster than map lookup for most cases.
-func (t *Table) fk(symbol string) (*ForeignKey, bool) {
-	for _, fk := range t.ForeignKeys {
-		if fk.Symbol == symbol {
-			return fk, true
-		}
 	}
 	return nil, false
 }
@@ -417,27 +409,6 @@ func (c *Column) ScanDefault(value string) error {
 	return nil
 }
 
-// defaultValue adds the `DEFAULT` attribute to the column.
-// Note that, in SQLite if a NOT NULL constraint is specified,
-// then the column must have a default value which not NULL.
-func (c *Column) defaultValue(b *sql.ColumnBuilder) {
-	if c.Default == nil || !c.supportDefault() {
-		return
-	}
-	// Has default and the database supports adding this default.
-	attr := fmt.Sprint(c.Default)
-	switch v := c.Default.(type) {
-	case bool:
-		attr = strconv.FormatBool(v)
-	case string:
-		if t := c.Type; t != field.TypeUUID && t != field.TypeTime {
-			// Escape single quote by replacing each with 2.
-			attr = fmt.Sprintf("'%s'", strings.ReplaceAll(v, "'", "''"))
-		}
-	}
-	b.Attr("DEFAULT " + attr)
-}
-
 // supportDefault reports if the column type supports default value.
 func (c Column) supportDefault() bool {
 	switch t := c.Type; t {
@@ -448,25 +419,6 @@ func (c Column) supportDefault() bool {
 	default:
 		return t.Numeric()
 	}
-}
-
-// unique adds the `UNIQUE` attribute if the column is a unique type.
-// it is exist in a different function to share the common declaration
-// between the two dialects.
-func (c *Column) unique(b *sql.ColumnBuilder) {
-	if c.Unique {
-		b.Attr("UNIQUE")
-	}
-}
-
-// nullable adds the `NULL`/`NOT NULL` attribute to the column if it exists in
-// a different function to share the common declaration between the two dialects.
-func (c *Column) nullable(b *sql.ColumnBuilder) {
-	attr := Null
-	if !c.Nullable {
-		attr = "NOT " + attr
-	}
-	b.Attr(attr)
 }
 
 // scanTypeOr returns the scanning type or the given value.
@@ -485,46 +437,6 @@ type ForeignKey struct {
 	RefColumns []*Column       // referenced columns.
 	OnUpdate   ReferenceOption // action on update.
 	OnDelete   ReferenceOption // action on delete.
-}
-
-func (fk ForeignKey) column(name string) (*Column, bool) {
-	for _, c := range fk.Columns {
-		if c.Name == name {
-			return c, true
-		}
-	}
-	return nil, false
-}
-
-func (fk ForeignKey) refColumn(name string) (*Column, bool) {
-	for _, c := range fk.RefColumns {
-		if c.Name == name {
-			return c, true
-		}
-	}
-	return nil, false
-}
-
-// DSL returns a default DSL query for a foreign-key.
-func (fk ForeignKey) DSL() *sql.ForeignKeyBuilder {
-	cols := make([]string, len(fk.Columns))
-	refs := make([]string, len(fk.RefColumns))
-	for i, c := range fk.Columns {
-		cols[i] = c.Name
-	}
-	for i, c := range fk.RefColumns {
-		refs[i] = c.Name
-	}
-	dsl := sql.ForeignKey().Symbol(fk.Symbol).
-		Columns(cols...).
-		Reference(sql.Reference().Table(fk.RefTable.Name).Columns(refs...))
-	if action := string(fk.OnDelete); action != "" {
-		dsl.OnDelete(action)
-	}
-	if action := string(fk.OnUpdate); action != "" {
-		dsl.OnUpdate(action)
-	}
-	return dsl
 }
 
 // ReferenceOption for constraint actions.
@@ -551,52 +463,7 @@ type Index struct {
 	Columns    []*Column               // actual table columns.
 	Annotation *entsql.IndexAnnotation // index annotation.
 	columns    []string                // columns loaded from query scan.
-	primary    bool                    // primary key index.
 	realname   string                  // real name in the database (Postgres only).
-}
-
-// Builder returns the query builder for index creation. The DSL is identical in all dialects.
-func (i *Index) Builder(table string) *sql.IndexBuilder {
-	idx := sql.CreateIndex(i.Name).Table(table)
-	if i.Unique {
-		idx.Unique()
-	}
-	for _, c := range i.Columns {
-		idx.Column(c.Name)
-	}
-	return idx
-}
-
-// DropBuilder returns the query builder for the drop index.
-func (i *Index) DropBuilder(table string) *sql.DropIndexBuilder {
-	idx := sql.DropIndex(i.Name).Table(table)
-	return idx
-}
-
-// sameAs reports if the index has the same properties
-// as the given index (except the name).
-func (i *Index) sameAs(idx *Index) bool {
-	if i.Unique != idx.Unique || len(i.Columns) != len(idx.Columns) {
-		return false
-	}
-	for j, c := range i.Columns {
-		if c.Name != idx.Columns[j].Name {
-			return false
-		}
-	}
-	return true
-}
-
-// columnNames returns the names of the columns of the index.
-func (i *Index) columnNames() []string {
-	if len(i.columns) > 0 {
-		return i.columns
-	}
-	columns := make([]string, 0, len(i.Columns))
-	for _, c := range i.Columns {
-		columns = append(columns, c.Name)
-	}
-	return columns
 }
 
 // Indexes used for scanning all sql.Rows into a list of indexes, because
@@ -673,33 +540,156 @@ func compare(v1, v2 int) int {
 	return 1
 }
 
-// addChecks appends the CHECK clauses from the entsql.Annotation.
-func addChecks(t *sql.TableBuilder, ant *entsql.Annotation) {
-	if check := ant.Check; check != "" {
-		t.Checks(func(b *sql.Builder) {
-			b.WriteString("CHECK " + checkExpr(check))
-		})
+func indexType(idx *Index, d string) (string, bool) {
+	ant := idx.Annotation
+	if ant == nil {
+		return "", false
 	}
-	if checks := ant.Checks; len(ant.Checks) > 0 {
-		names := make([]string, 0, len(checks))
-		for name := range checks {
-			names = append(names, name)
-		}
-		sort.Strings(names)
-		for _, name := range names {
-			name := name
-			t.Checks(func(b *sql.Builder) {
-				b.WriteString("CONSTRAINT ").Ident(name).WriteString(" CHECK " + checkExpr(checks[name]))
-			})
-		}
+	if ant.Types != nil && ant.Types[d] != "" {
+		return ant.Types[d], true
+	}
+	if ant.Type != "" {
+		return ant.Type, true
+	}
+	return "", false
+}
+
+type driver struct {
+	sqlDialect
+	schema.Differ
+	migrate.PlanApplier
+}
+
+var drivers = func(v string) map[string]driver {
+	return map[string]driver{
+		entdialect.SQLite: {
+			&SQLite{
+				WithForeignKeys: true,
+				Driver:          nopDriver{dialect: entdialect.SQLite},
+			},
+			sqlite.DefaultDiff,
+			sqlite.DefaultPlan,
+		},
+		entdialect.MySQL: {
+			&MySQL{
+				version: v,
+				Driver:  nopDriver{dialect: entdialect.MySQL},
+			},
+			mysql.DefaultDiff,
+			mysql.DefaultPlan,
+		},
+		entdialect.Postgres: {
+			&Postgres{
+				version: v,
+				Driver:  nopDriver{dialect: entdialect.Postgres},
+			},
+			postgres.DefaultDiff,
+			postgres.DefaultPlan,
+		},
 	}
 }
 
-// checkExpr formats the CHECK expression.
-func checkExpr(expr string) string {
-	expr = strings.TrimSpace(expr)
-	if !strings.HasPrefix(expr, "(") && !strings.HasSuffix(expr, ")") {
-		expr = "(" + expr + ")"
+type DDLArgs struct {
+	// Dialect and Version of the target database.
+	Dialect, Version string
+	// HashSymbols indicates whether to hash long symbols in the DDL.
+	HashSymbols bool
+	// Tables to dump.
+	Tables []*Table
+	// Options to pass to the migration plan engine.
+	Options []migrate.PlanOption
+}
+
+// Dump the schema DDL for the given tables.
+//
+// Deprecated: use DDL instead.
+func Dump(ctx context.Context, dialect, version string, tables []*Table, opts ...migrate.PlanOption) (string, error) {
+	return DDL(ctx, DDLArgs{
+		Dialect: dialect,
+		Version: version,
+		Tables:  tables,
+		Options: opts,
+	})
+}
+
+// DDL the schema DDL for the given tables.
+func DDL(ctx context.Context, args DDLArgs) (string, error) {
+	args.Options = append([]migrate.PlanOption{func(o *migrate.PlanOptions) {
+		o.Mode = migrate.PlanModeDump
+		o.Indent = "  "
+	}}, args.Options...)
+	d, ok := drivers(args.Version)[args.Dialect]
+	if !ok {
+		return "", fmt.Errorf("unsupported dialect %q", args.Dialect)
 	}
-	return expr
+	a := &Atlas{
+		sqlDialect:  d,
+		dialect:     args.Dialect,
+		hashSymbols: args.HashSymbols,
+	}
+	r, err := a.StateReader(args.Tables...).ReadState(ctx)
+	if err != nil {
+		return "", err
+	}
+	// Since the Atlas version bundled with Ent does not support view management,
+	// simply spit out the definition instead of letting Atlas plan them.
+	var vs []*schema.View
+	for _, s := range r.Schemas {
+		vs = append(vs, s.Views...)
+		s.Views = nil
+	}
+	var c schema.Changes
+	if slices.ContainsFunc(args.Tables, func(t *Table) bool { return t.Schema != "" }) {
+		c, err = d.RealmDiff(&schema.Realm{}, r)
+	} else {
+		c, err = d.SchemaDiff(&schema.Schema{}, r.Schemas[0])
+	}
+	if err != nil {
+		return "", err
+	}
+	p, err := d.PlanChanges(ctx, "dump", c, args.Options...)
+	if err != nil {
+		return "", err
+	}
+	for _, v := range vs {
+		q, _ := sql.Dialect(args.Dialect).
+			CreateView(v.Name).
+			Schema(v.Schema.Name).
+			Columns(func(cols []*schema.Column) (bs []*sql.ColumnBuilder) {
+				for _, c := range cols {
+					bs = append(bs, sql.Dialect(args.Dialect).Column(c.Name).Type(c.Type.Raw))
+				}
+				return
+			}(v.Columns)...).
+			As(sql.Raw(v.Def)).
+			Query()
+		p.Changes = append(p.Changes, &migrate.Change{
+			Cmd:     q,
+			Comment: fmt.Sprintf("Add %q view", v.Name),
+		})
+	}
+	for _, t := range args.Tables {
+		p.Directives = append(p.Directives, fmt.Sprintf(
+			"-- atlas:pos %s%s[type=%s] %s",
+			func() string {
+				if t.Schema != "" {
+					return t.Schema + "[type=schema]."
+				}
+				return ""
+			}(),
+			t.Name,
+			func() string {
+				if t.View {
+					return "view"
+				}
+				return "table"
+			}(),
+			t.Pos,
+		))
+	}
+	f, err := migrate.DefaultFormatter.FormatFile(p)
+	if err != nil {
+		return "", err
+	}
+	return string(f.Bytes()), nil
 }

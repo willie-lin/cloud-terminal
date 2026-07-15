@@ -30,6 +30,8 @@ type (
 	ConvertIndexFunc       func(*sqlspec.Index, *schema.Table) (*schema.Index, error)
 	ConvertViewIndexFunc   func(*sqlspec.Index, *schema.View) (*schema.Index, error)
 	ConvertCheckFunc       func(*sqlspec.Check) (*schema.Check, error)
+	ConvertFuncFunc        func(*sqlspec.Func, *schema.Schema) (*schema.Func, error)
+	ConvertProcFunc        func(*sqlspec.Func, *schema.Schema) (*schema.Proc, error)
 	ColumnTypeSpecFunc     func(schema.Type) (*sqlspec.Column, error)
 	TableSpecFunc          func(*schema.Table) (*sqlspec.Table, error)
 	TableColumnSpecFunc    func(*schema.Column, *schema.Table) (*sqlspec.Column, error)
@@ -58,8 +60,8 @@ type (
 	ScanFuncs struct {
 		Table ConvertTableFunc
 		View  ConvertViewFunc
-		Func  func(*sqlspec.Func) (*schema.Func, error)
-		Proc  func(*sqlspec.Func) (*schema.Proc, error)
+		Func  ConvertFuncFunc
+		Proc  ConvertProcFunc
 		// Triggers add themselves to the relevant tables/views.
 		Triggers func(*schema.Realm, []*sqlspec.Trigger) error
 		// Objects add themselves to the realm.
@@ -85,10 +87,15 @@ type (
 	// SpecTypeNamer is an interface for objects that can
 	// return their spec type and name.
 	SpecTypeNamer interface {
-		// SpecType returns the spec type of the object.
-		SpecType() string
+		SpecTyper
 		// SpecName returns the spec name of the object.
 		SpecName() string
+	}
+	// SpecTyper wraps the SpecType method. It allows objects
+	// to describe what their spec type is.
+	SpecTyper interface {
+		// SpecType returns the spec type of the object.
+		SpecType() string
 	}
 )
 
@@ -96,6 +103,7 @@ const (
 	typeView         = "view"
 	typeTable        = "table"
 	typeColumn       = "column"
+	typeIndex        = "index"
 	typeSchema       = "schema"
 	typeMaterialized = "materialized"
 	typeFunction     = "function"
@@ -105,18 +113,44 @@ const (
 
 // typeName returns the type name of the given object.
 func typeName(o schema.Object) string {
-	switch o := o.(type) {
-	case *schema.Table:
-		return typeTable
-	case *schema.View:
-		if o.Materialized() {
-			return typeMaterialized
+	attrOr := func(n string, attrs []schema.Attr) string {
+		for _, a := range attrs {
+			if t, ok := a.(SpecTyper); ok && t.SpecType() != "" {
+				n = t.SpecType()
+			}
 		}
-		return typeView
+		return n
+	}
+	switch o := o.(type) {
+	case nil:
+	case *schema.Table:
+		if o == nil {
+			return typeTable
+		}
+		return attrOr(typeTable, o.Attrs)
+	case *schema.View:
+		switch {
+		case o == nil:
+			return typeView
+		case o.Materialized():
+			return attrOr(typeMaterialized, o.Attrs)
+		default:
+			return attrOr(typeView, o.Attrs)
+		}
 	case *schema.Func:
-		return typeFunction
+		if o == nil {
+			return typeFunction
+		}
+		return attrOr(typeFunction, o.Attrs)
 	case *schema.Proc:
-		return typeProcedure
+		if o == nil {
+			return typeProcedure
+		}
+		return attrOr(typeProcedure, o.Attrs)
+	default:
+		if ts, ok := o.(SpecTyper); ok && ts != nil && ts.SpecType() != "" {
+			return ts.SpecType()
+		}
 	}
 	return "object"
 }
@@ -134,8 +168,9 @@ func Scan(r *schema.Realm, doc *ScanDoc, funcs *ScanFuncs) error {
 		byName[s.Name] = s1
 	}
 	var (
-		fks  = make(map[*schema.Table][]*sqlspec.ForeignKey)
-		deps = make(map[schema.Object][]*schemahcl.Ref, len(doc.Views))
+		fks     = make(map[*schema.Table][]*sqlspec.ForeignKey)
+		deps    = make(map[schema.Object][]*schemahcl.Ref, len(doc.Views))
+		aliases = make(map[string]string)
 	)
 	for _, st := range doc.Tables {
 		name, err := SchemaName(st.Schema)
@@ -149,6 +184,9 @@ func Scan(r *schema.Realm, doc *ScanDoc, funcs *ScanFuncs) error {
 		t, err := funcs.Table(st, s)
 		if err != nil {
 			return fmt.Errorf("cannot convert table %q: %w", st.Name, err)
+		}
+		if tn := typeName(t); tn != typeTable {
+			aliases[tn] = typeTable
 		}
 		fks[t] = st.ForeignKeys
 		s.AddTables(t)
@@ -179,6 +217,9 @@ func Scan(r *schema.Realm, doc *ScanDoc, funcs *ScanFuncs) error {
 		if err != nil {
 			return fmt.Errorf("cannot convert view %q: %w", sv.Name, err)
 		}
+		if tn := typeName(v); tn != typeView {
+			aliases[tn] = typeView
+		}
 		s.AddViews(v)
 		if d, ok := sv.Attr("depends_on"); ok {
 			refs, err := d.Refs()
@@ -201,6 +242,9 @@ func Scan(r *schema.Realm, doc *ScanDoc, funcs *ScanFuncs) error {
 		if err != nil {
 			return fmt.Errorf("cannot convert materialized %q: %w", m.Name, err)
 		}
+		if tn := typeName(v); tn != typeMaterialized {
+			aliases[tn] = typeMaterialized
+		}
 		s.AddViews(v.SetMaterialized(true))
 		if d, ok := m.Attr("depends_on"); ok {
 			refs, err := d.Refs()
@@ -220,9 +264,12 @@ func Scan(r *schema.Realm, doc *ScanDoc, funcs *ScanFuncs) error {
 			if !ok {
 				return fmt.Errorf("schema %q not found for function %q", name, sf.Name)
 			}
-			f, err := funcs.Func(sf)
+			f, err := funcs.Func(sf, s)
 			if err != nil {
 				return fmt.Errorf("cannot convert function %q: %w", sf.Name, err)
+			}
+			if tn := typeName(f); tn != typeFunction {
+				aliases[tn] = typeFunction
 			}
 			s.AddFuncs(f)
 			if d, ok := sf.Attr("depends_on"); ok {
@@ -244,9 +291,12 @@ func Scan(r *schema.Realm, doc *ScanDoc, funcs *ScanFuncs) error {
 			if !ok {
 				return fmt.Errorf("schema %q not found for procedure %q", name, sf.Name)
 			}
-			f, err := funcs.Proc(sf)
+			f, err := funcs.Proc(sf, s)
 			if err != nil {
 				return fmt.Errorf("cannot convert procedure %q: %w", sf.Name, err)
+			}
+			if tn := typeName(f); tn != typeProcedure {
+				aliases[tn] = typeProcedure
 			}
 			s.AddProcs(f)
 			if d, ok := sf.Attr("depends_on"); ok {
@@ -272,17 +322,13 @@ func Scan(r *schema.Realm, doc *ScanDoc, funcs *ScanFuncs) error {
 		var err error
 		switch o := o.(type) {
 		case *schema.Table:
-			err = fromDependsOn(fmt.Sprintf("table.%s", o.Name), o, o.Schema, refs)
+			err = fromDependsOn(fmt.Sprintf("%s.%s", typeName(o), o.Name), o, o.Schema, refs, aliases)
 		case *schema.View:
-			t := "view"
-			if o.Materialized() {
-				t = "materialized"
-			}
-			err = fromDependsOn(fmt.Sprintf("%s.%s", t, o.Name), o, o.Schema, refs)
+			err = fromDependsOn(fmt.Sprintf("%s.%s", typeName(o), o.Name), o, o.Schema, refs, aliases)
 		case *schema.Func:
-			err = fromDependsOn(fmt.Sprintf("function.%s", o.Name), o, o.Schema, refs)
+			err = fromDependsOn(fmt.Sprintf("%s.%s", typeName(o), o.Name), o, o.Schema, refs, aliases)
 		case *schema.Proc:
-			err = fromDependsOn(fmt.Sprintf("procedure.%s", o.Name), o, o.Schema, refs)
+			err = fromDependsOn(fmt.Sprintf("%s.%s", typeName(o), o.Name), o, o.Schema, refs, aliases)
 		}
 		if err != nil {
 			return err
@@ -388,7 +434,7 @@ func Column(spec *sqlspec.Column, conv ConvertTypeFunc) (*schema.Column, error) 
 			Null: spec.Null,
 		},
 	}
-	d, err := Default(spec.Default)
+	d, err := columnDefault(spec.Remain())
 	if err != nil {
 		return nil, err
 	}
@@ -402,6 +448,36 @@ func Column(spec *sqlspec.Column, conv ConvertTypeFunc) (*schema.Column, error) 
 		return nil, err
 	}
 	return out, err
+}
+
+func columnDefault(r *schemahcl.Resource) (schema.Expr, error) {
+	defaultA, okA := r.Attr("default")
+	defaultR, okR := r.Resource("default")
+	switch {
+	case okA && okR:
+		return nil, errors.New("both default and default resource are set")
+	case okA:
+		v, err := Default(defaultA.V)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	case okR:
+		var spec struct {
+			Name string    `spec:",name"`
+			As   cty.Value `spec:"as"`
+		}
+		if err := defaultR.As(&spec); err != nil {
+			return nil, err
+		}
+		v, err := Default(spec.As)
+		if err != nil {
+			return nil, err
+		}
+		return &schema.NamedDefault{Name: spec.Name, Expr: v}, nil
+	default:
+		return nil, nil
+	}
 }
 
 // Default converts a cty.Value (as defined in the spec) into a schema.Expr.
@@ -519,6 +595,7 @@ func PrimaryKey(spec *sqlspec.PrimaryKey, parent *schema.Table) (*schema.Index, 
 		})
 	}
 	pk := &schema.Index{
+		Name:  spec.Name,
 		Table: parent,
 		Parts: parts,
 	}
@@ -803,7 +880,7 @@ func dependsOn(realm *schema.Realm, objects []schema.Object) (*schemahcl.Attr, b
 	return nil, false
 }
 
-func fromDependsOn[T interface{ AddDeps(...schema.Object) T }](loc string, t T, ns *schema.Schema, refs []*schemahcl.Ref) error {
+func fromDependsOn[T interface{ AddDeps(...schema.Object) T }](loc string, t T, ns *schema.Schema, refs []*schemahcl.Ref, aliases map[string]string) error {
 	for i, r := range refs {
 		p, err := r.Path()
 		if err != nil {
@@ -817,39 +894,56 @@ func fromDependsOn[T interface{ AddDeps(...schema.Object) T }](loc string, t T, 
 			return fmt.Errorf("extract %s name from %s.depends_on[%d]: %w", p[0].T, loc, i, err)
 		}
 		var o schema.Object
-		switch p[0].T {
-		case typeTable:
+		switch tn := p[0].T; {
+		case tn == typeTable, aliases[tn] == typeTable:
 			o, err = findT(ns, q, n, func(s *schema.Schema, name string) (*schema.Table, bool) {
-				return s.Table(name)
+				if v, ok := s.Table(name); ok && typeName(v) == tn {
+					return v, true
+				}
+				return nil, false
 			})
-		case typeView:
+		case tn == typeView, aliases[tn] == typeView:
 			o, err = findT(ns, q, n, func(s *schema.Schema, name string) (*schema.View, bool) {
-				return s.View(name)
+				if v, ok := s.View(name); ok && typeName(v) == tn {
+					return v, true
+				}
+				return nil, false
 			})
-		case typeMaterialized:
+		case tn == typeMaterialized, aliases[tn] == typeMaterialized:
 			o, err = findT(ns, q, n, func(s *schema.Schema, name string) (*schema.View, bool) {
-				return s.Materialized(name)
+				if v, ok := s.Materialized(name); ok && typeName(v) == tn {
+					return v, true
+				}
+				return nil, false
 			})
-		case typeFunction:
+		case tn == typeFunction, aliases[tn] == typeFunction:
 			o, err = findT(ns, q, n, func(s *schema.Schema, name string) (*schema.Func, bool) {
-				return s.Func(name)
+				if f, ok := s.Func(name); ok && typeName(f) == tn {
+					return f, true
+				}
+				return nil, false
 			})
-		case typeProcedure:
+		case tn == typeProcedure, aliases[tn] == typeProcedure:
 			o, err = findT(ns, q, n, func(s *schema.Schema, name string) (*schema.Proc, bool) {
-				return s.Proc(name)
+				if f, ok := s.Proc(name); ok && typeName(f) == tn {
+					return f, true
+				}
+				return nil, false
 			})
 		default:
-			o, err = findT(ns, q, n, func(s *schema.Schema, name string) (schema.Object, bool) {
+			if o, err = findT(ns, q, n, func(s *schema.Schema, name string) (schema.Object, bool) {
 				return s.Object(func(o schema.Object) bool {
 					if o, ok := o.(SpecTypeNamer); ok {
 						return p[0].T == o.SpecType() && name == o.SpecName()
 					}
 					return false
 				})
-			})
+			}); err != nil {
+				continue // Custom objects might be loaded in a different pass.
+			}
 		}
 		if err != nil {
-			return fmt.Errorf("find %s refrence for %s.depends_on[%d]: %w", loc, p[0].T, i, err)
+			return fmt.Errorf("find %s reference for %s.depends_on[%d]: %w", p[0].T, loc, i, err)
 		}
 		t.AddDeps(o)
 	}
@@ -881,12 +975,24 @@ func FromColumn(c *schema.Column, columnTypeSpec ColumnTypeSpecFunc) (*sqlspec.C
 			Extra: schemahcl.Resource{Attrs: ct.DefaultExtension.Extra.Attrs},
 		},
 	}
-	if c.Default != nil {
+	switch v := c.Default.(type) {
+	case nil:
+	case *schema.NamedDefault:
 		lv, err := ColumnDefault(c)
 		if err != nil {
 			return nil, err
 		}
-		spec.Default = lv
+		spec.Extra.Children = append(spec.Extra.Children, &schemahcl.Resource{
+			Type:  "default",
+			Name:  v.Name,
+			Attrs: []*schemahcl.Attr{{K: "as", V: lv}},
+		})
+	default:
+		lv, err := ColumnDefault(c)
+		if err != nil {
+			return nil, err
+		}
+		spec.Extra.Attrs = slices.Insert(spec.Extra.Attrs, 0, &schemahcl.Attr{K: "default", V: lv})
 	}
 	convertCommentFromSchema(c.Attrs, &spec.Extra.Attrs)
 	return spec, nil
@@ -1087,7 +1193,9 @@ func SchemaName(ref *schemahcl.Ref) (string, error) {
 }
 
 // ColumnByRef returns a column from the table by its reference.
-func ColumnByRef[T *schema.View | *schema.Table](tv T, ref *schemahcl.Ref) (*schema.Column, error) {
+func ColumnByRef(tv interface {
+	Column(string) (*schema.Column, bool)
+}, ref *schemahcl.Ref) (*schema.Column, error) {
 	vs, err := ref.ByType(typeColumn)
 	if err != nil {
 		return nil, err
@@ -1095,21 +1203,40 @@ func ColumnByRef[T *schema.View | *schema.Table](tv T, ref *schemahcl.Ref) (*sch
 	if len(vs) != 1 {
 		return nil, fmt.Errorf("expected 1 column ref, got %d", len(vs))
 	}
-	switch tv := any(tv).(type) {
+	if c, ok := tv.Column(vs[0]); ok {
+		return c, nil
+	}
+	switch tv := tv.(type) {
 	case *schema.Table:
-		c, ok := tv.Column(vs[0])
-		if !ok {
-			return nil, fmt.Errorf("column %q was not found in table %s", vs[0], tv.Name)
-		}
-		return c, nil
+		return nil, fmt.Errorf("column %q was not found in table %s", vs[0], tv.Name)
 	case *schema.View:
-		c, ok := tv.Column(vs[0])
-		if !ok {
-			return nil, fmt.Errorf("column %q was not found in view %s", vs[0], tv.Name)
-		}
-		return c, nil
+		return nil, fmt.Errorf("column %q was not found in view %s", vs[0], tv.Name)
 	default:
-		return nil, fmt.Errorf("unreachable %T", tv)
+		return nil, fmt.Errorf("column %q was not found in %T", vs[0], tv)
+	}
+}
+
+// IndexByRef returns a index from the table/view by its reference.
+func IndexByRef(tv interface {
+	Index(string) (*schema.Index, bool)
+}, ref *schemahcl.Ref) (*schema.Index, error) {
+	vs, err := ref.ByType(typeIndex)
+	if err != nil {
+		return nil, err
+	}
+	if len(vs) != 1 {
+		return nil, fmt.Errorf("expected 1 index ref, got %d", len(vs))
+	}
+	if c, ok := tv.Index(vs[0]); ok {
+		return c, nil
+	}
+	switch tv := tv.(type) {
+	case *schema.Table:
+		return nil, fmt.Errorf("index %q was not found in table %s", vs[0], tv.Name)
+	case *schema.View:
+		return nil, fmt.Errorf("index %q was not found in view %s", vs[0], tv.Name)
+	default:
+		return nil, fmt.Errorf("index %q was not found in %T", vs[0], tv)
 	}
 }
 
@@ -1200,8 +1327,15 @@ func ColumnRef(cName string) *schemahcl.Ref {
 	})
 }
 
+// IndexRef returns the reference of a index by its name.
+func IndexRef(name string) *schemahcl.Ref {
+	return schemahcl.BuildRef([]schemahcl.PathIndex{
+		{T: typeIndex, V: []string{name}},
+	})
+}
+
 // ExternalColumnRef returns the reference of a column by its name and table name.
-func ExternalColumnRef(cName string, tName string) *schemahcl.Ref {
+func ExternalColumnRef(cName, tName string) *schemahcl.Ref {
 	return schemahcl.BuildRef([]schemahcl.PathIndex{
 		{T: typeTable, V: []string{tName}},
 		{T: typeColumn, V: []string{cName}},

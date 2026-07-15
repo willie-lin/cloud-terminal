@@ -1,15 +1,15 @@
 package utils
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"net/http"
 )
 
 // SetCSRFToken
 
 func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		if c.Request().Method != http.MethodOptions {
 			token := c.Get(middleware.DefaultCSRFConfig.ContextKey)
 			if token == nil {
@@ -51,7 +51,7 @@ func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 //func SetCSRFToken(next echo.HandlerFunc) echo.HandlerFunc {
-//	return func(c echo.Context) error {
+//	return func(c *echo.Context) error {
 //		if c.Request().Method != http.MethodOptions {
 //			csrfToken := ""
 //

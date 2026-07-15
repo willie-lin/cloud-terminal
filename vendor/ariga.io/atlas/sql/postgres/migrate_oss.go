@@ -93,46 +93,14 @@ func (s *state) plan(changes []schema.Change) error {
 			err = s.modifyTable(c)
 		case *schema.RenameTable:
 			s.renameTable(c)
-		case *schema.AddFunc:
-			err = s.addFunc(c)
-		case *schema.AddProc:
-			err = s.addProc(c)
-		case *schema.ModifyFunc:
-			err = s.modifyFunc(c)
-		case *schema.ModifyProc:
-			err = s.modifyProc(c)
-		case *schema.RenameFunc:
-			err = s.renameFunc(c)
-		case *schema.RenameProc:
-			err = s.renameProc(c)
-		case *schema.AddView:
-			err = s.addView(c)
-		case *schema.DropView:
-			err = s.dropView(c)
-		case *schema.ModifyView:
-			err = s.modifyView(c)
-		case *schema.RenameView:
-			s.renameView(c)
 		case *schema.DropTable:
 			err = s.dropTable(c)
-		case *schema.DropFunc:
-			err = s.dropFunc(c)
-		case *schema.DropProc:
-			err = s.dropProc(c)
 		case *schema.AddObject:
 			err = s.addObject(c)
 		case *schema.ModifyObject:
 			err = s.modifyObject(c)
 		case *schema.DropObject:
 			err = s.dropObject(c)
-		case *schema.AddTrigger:
-			err = s.addTrigger(c)
-		case *schema.DropTrigger:
-			err = s.dropTrigger(c)
-		case *schema.RenameTrigger:
-			err = s.renameTrigger(c)
-		case *schema.ModifyTrigger:
-			err = s.modifyTrigger(c)
 		default:
 			err = fmt.Errorf("unsupported change %T", c)
 		}
@@ -1147,7 +1115,7 @@ func (s *state) index(b *sqlx.Builder, idx *schema.Index) error {
 			if p.AutoSummarize {
 				parts = append(parts, "autosummarize = true")
 			}
-			if p.PagesPerRange != 0 && p.PagesPerRange != defaultPagePerRange {
+			if p.PagesPerRange != 0 && p.PagesPerRange != defaultPagesPerRange {
 				parts = append(parts, fmt.Sprintf("pages_per_range = %d", p.PagesPerRange))
 			}
 			b.WriteString(strings.Join(parts, ", "))
