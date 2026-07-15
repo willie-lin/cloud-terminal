@@ -9,14 +9,11 @@ import (
 	"math"
 
 	"entgo.io/ent"
-	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
@@ -25,17 +22,13 @@ import (
 // TenantQuery is the builder for querying Tenant entities.
 type TenantQuery struct {
 	config
-	ctx                     *QueryContext
-	order                   []tenant.OrderOption
-	inters                  []Interceptor
-	predicates              []predicate.Tenant
-	withEnvironments        *EnvironmentQuery
-	withResources           *ResourceQuery
-	withAccessPolicies      *AccessPolicyQuery
-	modifiers               []func(*sql.Selector)
-	withNamedEnvironments   map[string]*EnvironmentQuery
-	withNamedResources      map[string]*ResourceQuery
-	withNamedAccessPolicies map[string]*AccessPolicyQuery
+	ctx                *QueryContext
+	order              []tenant.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.Tenant
+	withEnvironments   *EnvironmentQuery
+	withResources      *ResourceQuery
+	withAccessPolicies *AccessPolicyQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -88,9 +81,6 @@ func (_q *TenantQuery) QueryEnvironments() *EnvironmentQuery {
 			sqlgraph.To(environment.Table, environment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.EnvironmentsTable, tenant.EnvironmentsColumn),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Environment
-		step.Edge.Schema = schemaConfig.Environment
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -113,9 +103,6 @@ func (_q *TenantQuery) QueryResources() *ResourceQuery {
 			sqlgraph.To(resource.Table, resource.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ResourcesTable, tenant.ResourcesColumn),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Resource
-		step.Edge.Schema = schemaConfig.Resource
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -138,9 +125,6 @@ func (_q *TenantQuery) QueryAccessPolicies() *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.AccessPoliciesTable, tenant.AccessPoliciesColumn),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.AccessPolicy
-		step.Edge.Schema = schemaConfig.AccessPolicy
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -171,8 +155,8 @@ func (_q *TenantQuery) FirstX(ctx context.Context) *Tenant {
 
 // FirstID returns the first Tenant ID from the query.
 // Returns a *NotFoundError when no Tenant ID was found.
-func (_q *TenantQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *TenantQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -184,7 +168,7 @@ func (_q *TenantQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *TenantQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *TenantQuery) FirstIDX(ctx context.Context) string {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -222,8 +206,8 @@ func (_q *TenantQuery) OnlyX(ctx context.Context) *Tenant {
 // OnlyID is like Only, but returns the only Tenant ID in the query.
 // Returns a *NotSingularError when more than one Tenant ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *TenantQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *TenantQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -239,7 +223,7 @@ func (_q *TenantQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *TenantQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *TenantQuery) OnlyIDX(ctx context.Context) string {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -267,7 +251,7 @@ func (_q *TenantQuery) AllX(ctx context.Context) []*Tenant {
 }
 
 // IDs executes the query and returns a list of Tenant IDs.
-func (_q *TenantQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (_q *TenantQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -279,7 +263,7 @@ func (_q *TenantQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *TenantQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *TenantQuery) IDsX(ctx context.Context) []string {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -343,9 +327,8 @@ func (_q *TenantQuery) Clone() *TenantQuery {
 		withResources:      _q.withResources.Clone(),
 		withAccessPolicies: _q.withAccessPolicies.Clone(),
 		// clone intermediate query.
-		sql:       _q.sql.Clone(),
-		path:      _q.path,
-		modifiers: append([]func(*sql.Selector){}, _q.modifiers...),
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
@@ -475,11 +458,6 @@ func (_q *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
-	_spec.Node.Schema = _q.schemaConfig.Tenant
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -492,72 +470,21 @@ func (_q *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 	if query := _q.withEnvironments; query != nil {
 		if err := _q.loadEnvironments(ctx, query, nodes,
 			func(n *Tenant) { n.Edges.Environments = []*Environment{} },
-			func(n *Tenant, e *Environment) {
-				n.Edges.Environments = append(n.Edges.Environments, e)
-				if !e.Edges.loadedTypes[0] {
-					e.Edges.Tenant = n
-				}
-			}); err != nil {
+			func(n *Tenant, e *Environment) { n.Edges.Environments = append(n.Edges.Environments, e) }); err != nil {
 			return nil, err
 		}
 	}
 	if query := _q.withResources; query != nil {
 		if err := _q.loadResources(ctx, query, nodes,
 			func(n *Tenant) { n.Edges.Resources = []*Resource{} },
-			func(n *Tenant, e *Resource) {
-				n.Edges.Resources = append(n.Edges.Resources, e)
-				if !e.Edges.loadedTypes[0] {
-					e.Edges.Tenant = n
-				}
-			}); err != nil {
+			func(n *Tenant, e *Resource) { n.Edges.Resources = append(n.Edges.Resources, e) }); err != nil {
 			return nil, err
 		}
 	}
 	if query := _q.withAccessPolicies; query != nil {
 		if err := _q.loadAccessPolicies(ctx, query, nodes,
 			func(n *Tenant) { n.Edges.AccessPolicies = []*AccessPolicy{} },
-			func(n *Tenant, e *AccessPolicy) {
-				n.Edges.AccessPolicies = append(n.Edges.AccessPolicies, e)
-				if !e.Edges.loadedTypes[2] {
-					e.Edges.Tenant = n
-				}
-			}); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range _q.withNamedEnvironments {
-		if err := _q.loadEnvironments(ctx, query, nodes,
-			func(n *Tenant) { n.appendNamedEnvironments(name) },
-			func(n *Tenant, e *Environment) {
-				n.appendNamedEnvironments(name, e)
-				if !e.Edges.loadedTypes[0] {
-					e.Edges.Tenant = n
-				}
-			}); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range _q.withNamedResources {
-		if err := _q.loadResources(ctx, query, nodes,
-			func(n *Tenant) { n.appendNamedResources(name) },
-			func(n *Tenant, e *Resource) {
-				n.appendNamedResources(name, e)
-				if !e.Edges.loadedTypes[0] {
-					e.Edges.Tenant = n
-				}
-			}); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range _q.withNamedAccessPolicies {
-		if err := _q.loadAccessPolicies(ctx, query, nodes,
-			func(n *Tenant) { n.appendNamedAccessPolicies(name) },
-			func(n *Tenant, e *AccessPolicy) {
-				n.appendNamedAccessPolicies(name, e)
-				if !e.Edges.loadedTypes[2] {
-					e.Edges.Tenant = n
-				}
-			}); err != nil {
+			func(n *Tenant, e *AccessPolicy) { n.Edges.AccessPolicies = append(n.Edges.AccessPolicies, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -566,7 +493,7 @@ func (_q *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 
 func (_q *TenantQuery) loadEnvironments(ctx context.Context, query *EnvironmentQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *Environment)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Tenant)
+	nodeids := make(map[string]*Tenant)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -597,7 +524,7 @@ func (_q *TenantQuery) loadEnvironments(ctx context.Context, query *EnvironmentQ
 }
 func (_q *TenantQuery) loadResources(ctx context.Context, query *ResourceQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *Resource)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Tenant)
+	nodeids := make(map[string]*Tenant)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -628,7 +555,7 @@ func (_q *TenantQuery) loadResources(ctx context.Context, query *ResourceQuery, 
 }
 func (_q *TenantQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicyQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *AccessPolicy)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Tenant)
+	nodeids := make(map[string]*Tenant)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -660,11 +587,6 @@ func (_q *TenantQuery) loadAccessPolicies(ctx context.Context, query *AccessPoli
 
 func (_q *TenantQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
-	_spec.Node.Schema = _q.schemaConfig.Tenant
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
 		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
@@ -673,7 +595,7 @@ func (_q *TenantQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *TenantQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -727,12 +649,6 @@ func (_q *TenantQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	t1.Schema(_q.schemaConfig.Tenant)
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	selector.WithContext(ctx)
-	for _, m := range _q.modifiers {
-		m(selector)
-	}
 	for _, p := range _q.predicates {
 		p(selector)
 	}
@@ -748,80 +664,6 @@ func (_q *TenantQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
-// updated, deleted or "selected ... for update" by other sessions, until the transaction is
-// either committed or rolled-back.
-func (_q *TenantQuery) ForUpdate(opts ...sql.LockOption) *TenantQuery {
-	if _q.driver.Dialect() == dialect.Postgres {
-		_q.Unique(false)
-	}
-	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
-		s.ForUpdate(opts...)
-	})
-	return _q
-}
-
-// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
-// on any rows that are read. Other sessions can read the rows, but cannot modify them
-// until your transaction commits.
-func (_q *TenantQuery) ForShare(opts ...sql.LockOption) *TenantQuery {
-	if _q.driver.Dialect() == dialect.Postgres {
-		_q.Unique(false)
-	}
-	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
-		s.ForShare(opts...)
-	})
-	return _q
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (_q *TenantQuery) Modify(modifiers ...func(s *sql.Selector)) *TenantSelect {
-	_q.modifiers = append(_q.modifiers, modifiers...)
-	return _q.Select()
-}
-
-// WithNamedEnvironments tells the query-builder to eager-load the nodes that are connected to the "environments"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (_q *TenantQuery) WithNamedEnvironments(name string, opts ...func(*EnvironmentQuery)) *TenantQuery {
-	query := (&EnvironmentClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if _q.withNamedEnvironments == nil {
-		_q.withNamedEnvironments = make(map[string]*EnvironmentQuery)
-	}
-	_q.withNamedEnvironments[name] = query
-	return _q
-}
-
-// WithNamedResources tells the query-builder to eager-load the nodes that are connected to the "resources"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (_q *TenantQuery) WithNamedResources(name string, opts ...func(*ResourceQuery)) *TenantQuery {
-	query := (&ResourceClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if _q.withNamedResources == nil {
-		_q.withNamedResources = make(map[string]*ResourceQuery)
-	}
-	_q.withNamedResources[name] = query
-	return _q
-}
-
-// WithNamedAccessPolicies tells the query-builder to eager-load the nodes that are connected to the "access_policies"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (_q *TenantQuery) WithNamedAccessPolicies(name string, opts ...func(*AccessPolicyQuery)) *TenantQuery {
-	query := (&AccessPolicyClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if _q.withNamedAccessPolicies == nil {
-		_q.withNamedAccessPolicies = make(map[string]*AccessPolicyQuery)
-	}
-	_q.withNamedAccessPolicies[name] = query
-	return _q
 }
 
 // TenantGroupBy is the group-by builder for Tenant entities.
@@ -912,10 +754,4 @@ func (_s *TenantSelect) sqlScan(ctx context.Context, root *TenantQuery, v any) e
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (_s *TenantSelect) Modify(modifiers ...func(s *sql.Selector)) *TenantSelect {
-	_s.modifiers = append(_s.modifiers, modifiers...)
-	return _s
 }

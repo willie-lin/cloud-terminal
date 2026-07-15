@@ -9,7 +9,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/session"
 )
 
@@ -17,7 +16,8 @@ import (
 type Session struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	// UUID primary key
+	ID string `json:"id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -50,12 +50,10 @@ func (*Session) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case session.FieldSessionID, session.FieldPrincipalUrn, session.FieldResourceUrn, session.FieldEnvironmentUrn, session.FieldAccountUrn, session.FieldMode, session.FieldStatus, session.FieldRemoteAddress:
+		case session.FieldID, session.FieldSessionID, session.FieldPrincipalUrn, session.FieldResourceUrn, session.FieldEnvironmentUrn, session.FieldAccountUrn, session.FieldMode, session.FieldStatus, session.FieldRemoteAddress:
 			values[i] = new(sql.NullString)
 		case session.FieldCreatedAt, session.FieldUpdatedAt, session.FieldStartedAt, session.FieldEndedAt:
 			values[i] = new(sql.NullTime)
-		case session.FieldID:
-			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -72,10 +70,10 @@ func (_m *Session) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case session.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			} else if value.Valid {
+				_m.ID = value.String
 			}
 		case session.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {

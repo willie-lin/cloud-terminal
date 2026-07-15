@@ -5,7 +5,6 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/google/uuid"
 	"regexp"
 	"time"
 )
@@ -18,6 +17,7 @@ type User struct {
 // Mixin MiXin Mixin User
 func (User) Mixin() []ent.Mixin {
 	return []ent.Mixin{
+		IDMixin{},
 		TimeMixin{},
 	}
 }
@@ -25,7 +25,6 @@ func (User) Mixin() []ent.Mixin {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("avatar").Optional(),
 		field.String("nickname").MinLen(2).MaxLen(30).Unique().Optional(),
 		field.String("bio").MaxLen(200).Optional(),

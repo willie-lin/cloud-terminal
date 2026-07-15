@@ -11,9 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
@@ -21,9 +19,8 @@ import (
 // AuditLogUpdate is the builder for updating AuditLog entities.
 type AuditLogUpdate struct {
 	config
-	hooks     []Hook
-	mutation  *AuditLogMutation
-	modifiers []func(*sql.UpdateBuilder)
+	hooks    []Hook
+	mutation *AuditLogMutation
 }
 
 // Where appends a list predicates to the AuditLogUpdate builder.
@@ -161,13 +158,13 @@ func (_u *AuditLogUpdate) ClearS3Path() *AuditLogUpdate {
 }
 
 // SetUserID sets the "user" edge to the User entity by ID.
-func (_u *AuditLogUpdate) SetUserID(id uuid.UUID) *AuditLogUpdate {
+func (_u *AuditLogUpdate) SetUserID(id string) *AuditLogUpdate {
 	_u.mutation.SetUserID(id)
 	return _u
 }
 
 // SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (_u *AuditLogUpdate) SetNillableUserID(id *uuid.UUID) *AuditLogUpdate {
+func (_u *AuditLogUpdate) SetNillableUserID(id *string) *AuditLogUpdate {
 	if id != nil {
 		_u = _u.SetUserID(*id)
 	}
@@ -226,14 +223,8 @@ func (_u *AuditLogUpdate) defaults() {
 	}
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *AuditLogUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *AuditLogUpdate {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -285,10 +276,9 @@ func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{auditlog.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
@@ -299,18 +289,14 @@ func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{auditlog.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.AuditLog
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{auditlog.Label}
@@ -326,10 +312,9 @@ func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // AuditLogUpdateOne is the builder for updating a single AuditLog entity.
 type AuditLogUpdateOne struct {
 	config
-	fields    []string
-	hooks     []Hook
-	mutation  *AuditLogMutation
-	modifiers []func(*sql.UpdateBuilder)
+	fields   []string
+	hooks    []Hook
+	mutation *AuditLogMutation
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -461,13 +446,13 @@ func (_u *AuditLogUpdateOne) ClearS3Path() *AuditLogUpdateOne {
 }
 
 // SetUserID sets the "user" edge to the User entity by ID.
-func (_u *AuditLogUpdateOne) SetUserID(id uuid.UUID) *AuditLogUpdateOne {
+func (_u *AuditLogUpdateOne) SetUserID(id string) *AuditLogUpdateOne {
 	_u.mutation.SetUserID(id)
 	return _u
 }
 
 // SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (_u *AuditLogUpdateOne) SetNillableUserID(id *uuid.UUID) *AuditLogUpdateOne {
+func (_u *AuditLogUpdateOne) SetNillableUserID(id *string) *AuditLogUpdateOne {
 	if id != nil {
 		_u = _u.SetUserID(*id)
 	}
@@ -539,14 +524,8 @@ func (_u *AuditLogUpdateOne) defaults() {
 	}
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *AuditLogUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *AuditLogUpdateOne {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err error) {
-	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "AuditLog.id" for update`)}
@@ -615,10 +594,9 @@ func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err 
 			Columns: []string{auditlog.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
@@ -629,18 +607,14 @@ func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err 
 			Columns: []string{auditlog.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.AuditLog
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	_node = &AuditLog{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

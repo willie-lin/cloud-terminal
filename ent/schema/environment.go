@@ -4,7 +4,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // Environment holds the schema definition for the Environment entity.
@@ -14,13 +13,13 @@ type Environment struct {
 
 func (Environment) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		BaseMixin{},
+		IDMixin{},
+		TimeMixin{},
 	}
 }
 
 func (Environment) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique().NotEmpty().Comment("环境名称"),
 		field.String("description").Optional(),
 		field.String("image").NotEmpty().Comment("容器镜像"),

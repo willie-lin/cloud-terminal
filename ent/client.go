@@ -9,7 +9,6 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/migrate"
 
 	"entgo.io/ent"
@@ -26,10 +25,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/session"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/ent/user"
-
-	stdsql "database/sql"
-
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 )
 
 // Client is the client that holds all ent builders.
@@ -93,8 +88,6 @@ type (
 		hooks *hooks
 		// interceptors to execute on queries.
 		inters *inters
-		// schemaConfig contains alternative names for all tables.
-		schemaConfig SchemaConfig
 	}
 	// Option function to configure the client.
 	Option func(*config)
@@ -347,7 +340,7 @@ func (c *AccessPolicyClient) UpdateOne(_m *AccessPolicy) *AccessPolicyUpdateOne 
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *AccessPolicyClient) UpdateOneID(id uuid.UUID) *AccessPolicyUpdateOne {
+func (c *AccessPolicyClient) UpdateOneID(id string) *AccessPolicyUpdateOne {
 	mutation := newAccessPolicyMutation(c.config, OpUpdateOne, withAccessPolicyID(id))
 	return &AccessPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -364,7 +357,7 @@ func (c *AccessPolicyClient) DeleteOne(_m *AccessPolicy) *AccessPolicyDeleteOne 
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *AccessPolicyClient) DeleteOneID(id uuid.UUID) *AccessPolicyDeleteOne {
+func (c *AccessPolicyClient) DeleteOneID(id string) *AccessPolicyDeleteOne {
 	builder := c.Delete().Where(accesspolicy.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -381,12 +374,12 @@ func (c *AccessPolicyClient) Query() *AccessPolicyQuery {
 }
 
 // Get returns a AccessPolicy entity by its id.
-func (c *AccessPolicyClient) Get(ctx context.Context, id uuid.UUID) (*AccessPolicy, error) {
+func (c *AccessPolicyClient) Get(ctx context.Context, id string) (*AccessPolicy, error) {
 	return c.Query().Where(accesspolicy.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *AccessPolicyClient) GetX(ctx context.Context, id uuid.UUID) *AccessPolicy {
+func (c *AccessPolicyClient) GetX(ctx context.Context, id string) *AccessPolicy {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -404,9 +397,6 @@ func (c *AccessPolicyClient) QueryAccount(_m *AccessPolicy) *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.AccountTable, accesspolicy.AccountPrimaryKey...),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.AccountAccessPolicies
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -423,9 +413,6 @@ func (c *AccessPolicyClient) QueryRoles(_m *AccessPolicy) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.RolesTable, accesspolicy.RolesPrimaryKey...),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -442,9 +429,6 @@ func (c *AccessPolicyClient) QueryTenant(_m *AccessPolicy) *TenantQuery {
 			sqlgraph.To(tenant.Table, tenant.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, accesspolicy.TenantTable, accesspolicy.TenantColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.AccessPolicy
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -461,9 +445,6 @@ func (c *AccessPolicyClient) QueryEnvironment(_m *AccessPolicy) *EnvironmentQuer
 			sqlgraph.To(environment.Table, environment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, accesspolicy.EnvironmentTable, accesspolicy.EnvironmentColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Environment
-		step.Edge.Schema = schemaConfig.Environment
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -556,7 +537,7 @@ func (c *AccountClient) UpdateOne(_m *Account) *AccountUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *AccountClient) UpdateOneID(id uuid.UUID) *AccountUpdateOne {
+func (c *AccountClient) UpdateOneID(id string) *AccountUpdateOne {
 	mutation := newAccountMutation(c.config, OpUpdateOne, withAccountID(id))
 	return &AccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -573,7 +554,7 @@ func (c *AccountClient) DeleteOne(_m *Account) *AccountDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *AccountClient) DeleteOneID(id uuid.UUID) *AccountDeleteOne {
+func (c *AccountClient) DeleteOneID(id string) *AccountDeleteOne {
 	builder := c.Delete().Where(account.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -590,12 +571,12 @@ func (c *AccountClient) Query() *AccountQuery {
 }
 
 // Get returns a Account entity by its id.
-func (c *AccountClient) Get(ctx context.Context, id uuid.UUID) (*Account, error) {
+func (c *AccountClient) Get(ctx context.Context, id string) (*Account, error) {
 	return c.Query().Where(account.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *AccountClient) GetX(ctx context.Context, id uuid.UUID) *Account {
+func (c *AccountClient) GetX(ctx context.Context, id string) *Account {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -613,9 +594,6 @@ func (c *AccountClient) QueryUsers(_m *Account) *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, account.UsersTable, account.UsersColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.User
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -632,9 +610,6 @@ func (c *AccountClient) QueryRoles(_m *Account) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, account.RolesTable, account.RolesColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.Role
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -651,9 +626,6 @@ func (c *AccountClient) QueryAccessPolicies(_m *Account) *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, account.AccessPoliciesTable, account.AccessPoliciesPrimaryKey...),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.AccessPolicy
-		step.Edge.Schema = schemaConfig.AccountAccessPolicies
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -670,9 +642,6 @@ func (c *AccountClient) QueryResource(_m *Account) *ResourceQuery {
 			sqlgraph.To(resource.Table, resource.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, account.ResourceTable, account.ResourceColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Resource
-		step.Edge.Schema = schemaConfig.Resource
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -765,7 +734,7 @@ func (c *AuditLogClient) UpdateOne(_m *AuditLog) *AuditLogUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *AuditLogClient) UpdateOneID(id uuid.UUID) *AuditLogUpdateOne {
+func (c *AuditLogClient) UpdateOneID(id string) *AuditLogUpdateOne {
 	mutation := newAuditLogMutation(c.config, OpUpdateOne, withAuditLogID(id))
 	return &AuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -782,7 +751,7 @@ func (c *AuditLogClient) DeleteOne(_m *AuditLog) *AuditLogDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *AuditLogClient) DeleteOneID(id uuid.UUID) *AuditLogDeleteOne {
+func (c *AuditLogClient) DeleteOneID(id string) *AuditLogDeleteOne {
 	builder := c.Delete().Where(auditlog.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -799,12 +768,12 @@ func (c *AuditLogClient) Query() *AuditLogQuery {
 }
 
 // Get returns a AuditLog entity by its id.
-func (c *AuditLogClient) Get(ctx context.Context, id uuid.UUID) (*AuditLog, error) {
+func (c *AuditLogClient) Get(ctx context.Context, id string) (*AuditLog, error) {
 	return c.Query().Where(auditlog.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *AuditLogClient) GetX(ctx context.Context, id uuid.UUID) *AuditLog {
+func (c *AuditLogClient) GetX(ctx context.Context, id string) *AuditLog {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -822,9 +791,6 @@ func (c *AuditLogClient) QueryUser(_m *AuditLog) *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, auditlog.UserTable, auditlog.UserColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.AuditLog
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -917,7 +883,7 @@ func (c *EnvironmentClient) UpdateOne(_m *Environment) *EnvironmentUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *EnvironmentClient) UpdateOneID(id uuid.UUID) *EnvironmentUpdateOne {
+func (c *EnvironmentClient) UpdateOneID(id string) *EnvironmentUpdateOne {
 	mutation := newEnvironmentMutation(c.config, OpUpdateOne, withEnvironmentID(id))
 	return &EnvironmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -934,7 +900,7 @@ func (c *EnvironmentClient) DeleteOne(_m *Environment) *EnvironmentDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *EnvironmentClient) DeleteOneID(id uuid.UUID) *EnvironmentDeleteOne {
+func (c *EnvironmentClient) DeleteOneID(id string) *EnvironmentDeleteOne {
 	builder := c.Delete().Where(environment.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -951,12 +917,12 @@ func (c *EnvironmentClient) Query() *EnvironmentQuery {
 }
 
 // Get returns a Environment entity by its id.
-func (c *EnvironmentClient) Get(ctx context.Context, id uuid.UUID) (*Environment, error) {
+func (c *EnvironmentClient) Get(ctx context.Context, id string) (*Environment, error) {
 	return c.Query().Where(environment.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *EnvironmentClient) GetX(ctx context.Context, id uuid.UUID) *Environment {
+func (c *EnvironmentClient) GetX(ctx context.Context, id string) *Environment {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -974,9 +940,6 @@ func (c *EnvironmentClient) QueryTenant(_m *Environment) *TenantQuery {
 			sqlgraph.To(tenant.Table, tenant.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, environment.TenantTable, environment.TenantColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.Environment
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -993,9 +956,6 @@ func (c *EnvironmentClient) QueryAccessPolicies(_m *Environment) *AccessPolicyQu
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, environment.AccessPoliciesTable, environment.AccessPoliciesColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.AccessPolicy
-		step.Edge.Schema = schemaConfig.Environment
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1088,7 +1048,7 @@ func (c *PlatformClient) UpdateOne(_m *Platform) *PlatformUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *PlatformClient) UpdateOneID(id uuid.UUID) *PlatformUpdateOne {
+func (c *PlatformClient) UpdateOneID(id string) *PlatformUpdateOne {
 	mutation := newPlatformMutation(c.config, OpUpdateOne, withPlatformID(id))
 	return &PlatformUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1105,7 +1065,7 @@ func (c *PlatformClient) DeleteOne(_m *Platform) *PlatformDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PlatformClient) DeleteOneID(id uuid.UUID) *PlatformDeleteOne {
+func (c *PlatformClient) DeleteOneID(id string) *PlatformDeleteOne {
 	builder := c.Delete().Where(platform.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1122,12 +1082,12 @@ func (c *PlatformClient) Query() *PlatformQuery {
 }
 
 // Get returns a Platform entity by its id.
-func (c *PlatformClient) Get(ctx context.Context, id uuid.UUID) (*Platform, error) {
+func (c *PlatformClient) Get(ctx context.Context, id string) (*Platform, error) {
 	return c.Query().Where(platform.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *PlatformClient) GetX(ctx context.Context, id uuid.UUID) *Platform {
+func (c *PlatformClient) GetX(ctx context.Context, id string) *Platform {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1221,7 +1181,7 @@ func (c *ResourceClient) UpdateOne(_m *Resource) *ResourceUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ResourceClient) UpdateOneID(id uuid.UUID) *ResourceUpdateOne {
+func (c *ResourceClient) UpdateOneID(id string) *ResourceUpdateOne {
 	mutation := newResourceMutation(c.config, OpUpdateOne, withResourceID(id))
 	return &ResourceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1238,7 +1198,7 @@ func (c *ResourceClient) DeleteOne(_m *Resource) *ResourceDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ResourceClient) DeleteOneID(id uuid.UUID) *ResourceDeleteOne {
+func (c *ResourceClient) DeleteOneID(id string) *ResourceDeleteOne {
 	builder := c.Delete().Where(resource.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1255,12 +1215,12 @@ func (c *ResourceClient) Query() *ResourceQuery {
 }
 
 // Get returns a Resource entity by its id.
-func (c *ResourceClient) Get(ctx context.Context, id uuid.UUID) (*Resource, error) {
+func (c *ResourceClient) Get(ctx context.Context, id string) (*Resource, error) {
 	return c.Query().Where(resource.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ResourceClient) GetX(ctx context.Context, id uuid.UUID) *Resource {
+func (c *ResourceClient) GetX(ctx context.Context, id string) *Resource {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1278,9 +1238,6 @@ func (c *ResourceClient) QueryTenant(_m *Resource) *TenantQuery {
 			sqlgraph.To(tenant.Table, tenant.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, resource.TenantTable, resource.TenantColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.Resource
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1297,9 +1254,6 @@ func (c *ResourceClient) QueryAccounts(_m *Resource) *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, resource.AccountsTable, resource.AccountsColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.Resource
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1392,7 +1346,7 @@ func (c *RoleClient) UpdateOne(_m *Role) *RoleUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *RoleClient) UpdateOneID(id uuid.UUID) *RoleUpdateOne {
+func (c *RoleClient) UpdateOneID(id string) *RoleUpdateOne {
 	mutation := newRoleMutation(c.config, OpUpdateOne, withRoleID(id))
 	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1409,7 +1363,7 @@ func (c *RoleClient) DeleteOne(_m *Role) *RoleDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *RoleClient) DeleteOneID(id uuid.UUID) *RoleDeleteOne {
+func (c *RoleClient) DeleteOneID(id string) *RoleDeleteOne {
 	builder := c.Delete().Where(role.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1426,12 +1380,12 @@ func (c *RoleClient) Query() *RoleQuery {
 }
 
 // Get returns a Role entity by its id.
-func (c *RoleClient) Get(ctx context.Context, id uuid.UUID) (*Role, error) {
+func (c *RoleClient) Get(ctx context.Context, id string) (*Role, error) {
 	return c.Query().Where(role.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *RoleClient) GetX(ctx context.Context, id uuid.UUID) *Role {
+func (c *RoleClient) GetX(ctx context.Context, id string) *Role {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1449,9 +1403,6 @@ func (c *RoleClient) QueryAccount(_m *Role) *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountTable, role.AccountColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.Role
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1468,9 +1419,6 @@ func (c *RoleClient) QueryUsers(_m *Role) *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, role.UsersTable, role.UsersColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.User
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1487,9 +1435,6 @@ func (c *RoleClient) QueryAccessPolicies(_m *Role) *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.AccessPoliciesTable, role.AccessPoliciesPrimaryKey...),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.AccessPolicy
-		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1506,9 +1451,6 @@ func (c *RoleClient) QueryParentRole(_m *Role) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, role.ParentRoleTable, role.ParentRolePrimaryKey...),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.RoleChildRoles
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1525,9 +1467,6 @@ func (c *RoleClient) QueryChildRoles(_m *Role) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.ChildRolesTable, role.ChildRolesPrimaryKey...),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.RoleChildRoles
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1620,7 +1559,7 @@ func (c *SessionClient) UpdateOne(_m *Session) *SessionUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *SessionClient) UpdateOneID(id uuid.UUID) *SessionUpdateOne {
+func (c *SessionClient) UpdateOneID(id string) *SessionUpdateOne {
 	mutation := newSessionMutation(c.config, OpUpdateOne, withSessionID(id))
 	return &SessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1637,7 +1576,7 @@ func (c *SessionClient) DeleteOne(_m *Session) *SessionDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SessionClient) DeleteOneID(id uuid.UUID) *SessionDeleteOne {
+func (c *SessionClient) DeleteOneID(id string) *SessionDeleteOne {
 	builder := c.Delete().Where(session.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1654,12 +1593,12 @@ func (c *SessionClient) Query() *SessionQuery {
 }
 
 // Get returns a Session entity by its id.
-func (c *SessionClient) Get(ctx context.Context, id uuid.UUID) (*Session, error) {
+func (c *SessionClient) Get(ctx context.Context, id string) (*Session, error) {
 	return c.Query().Where(session.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *SessionClient) GetX(ctx context.Context, id uuid.UUID) *Session {
+func (c *SessionClient) GetX(ctx context.Context, id string) *Session {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1753,7 +1692,7 @@ func (c *TenantClient) UpdateOne(_m *Tenant) *TenantUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *TenantClient) UpdateOneID(id uuid.UUID) *TenantUpdateOne {
+func (c *TenantClient) UpdateOneID(id string) *TenantUpdateOne {
 	mutation := newTenantMutation(c.config, OpUpdateOne, withTenantID(id))
 	return &TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1770,7 +1709,7 @@ func (c *TenantClient) DeleteOne(_m *Tenant) *TenantDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *TenantClient) DeleteOneID(id uuid.UUID) *TenantDeleteOne {
+func (c *TenantClient) DeleteOneID(id string) *TenantDeleteOne {
 	builder := c.Delete().Where(tenant.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1787,12 +1726,12 @@ func (c *TenantClient) Query() *TenantQuery {
 }
 
 // Get returns a Tenant entity by its id.
-func (c *TenantClient) Get(ctx context.Context, id uuid.UUID) (*Tenant, error) {
+func (c *TenantClient) Get(ctx context.Context, id string) (*Tenant, error) {
 	return c.Query().Where(tenant.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *TenantClient) GetX(ctx context.Context, id uuid.UUID) *Tenant {
+func (c *TenantClient) GetX(ctx context.Context, id string) *Tenant {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1810,9 +1749,6 @@ func (c *TenantClient) QueryEnvironments(_m *Tenant) *EnvironmentQuery {
 			sqlgraph.To(environment.Table, environment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.EnvironmentsTable, tenant.EnvironmentsColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Environment
-		step.Edge.Schema = schemaConfig.Environment
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1829,9 +1765,6 @@ func (c *TenantClient) QueryResources(_m *Tenant) *ResourceQuery {
 			sqlgraph.To(resource.Table, resource.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ResourcesTable, tenant.ResourcesColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Resource
-		step.Edge.Schema = schemaConfig.Resource
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1848,9 +1781,6 @@ func (c *TenantClient) QueryAccessPolicies(_m *Tenant) *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.AccessPoliciesTable, tenant.AccessPoliciesColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.AccessPolicy
-		step.Edge.Schema = schemaConfig.AccessPolicy
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1943,7 +1873,7 @@ func (c *UserClient) UpdateOne(_m *User) *UserUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *UserClient) UpdateOneID(id uuid.UUID) *UserUpdateOne {
+func (c *UserClient) UpdateOneID(id string) *UserUpdateOne {
 	mutation := newUserMutation(c.config, OpUpdateOne, withUserID(id))
 	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1960,7 +1890,7 @@ func (c *UserClient) DeleteOne(_m *User) *UserDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UserClient) DeleteOneID(id uuid.UUID) *UserDeleteOne {
+func (c *UserClient) DeleteOneID(id string) *UserDeleteOne {
 	builder := c.Delete().Where(user.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1977,12 +1907,12 @@ func (c *UserClient) Query() *UserQuery {
 }
 
 // Get returns a User entity by its id.
-func (c *UserClient) Get(ctx context.Context, id uuid.UUID) (*User, error) {
+func (c *UserClient) Get(ctx context.Context, id string) (*User, error) {
 	return c.Query().Where(user.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *UserClient) GetX(ctx context.Context, id uuid.UUID) *User {
+func (c *UserClient) GetX(ctx context.Context, id string) *User {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -2000,9 +1930,6 @@ func (c *UserClient) QueryAccount(_m *User) *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.AccountTable, user.AccountColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.User
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -2019,9 +1946,6 @@ func (c *UserClient) QueryRole(_m *User) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, user.RoleTable, user.RoleColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.User
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -2038,9 +1962,6 @@ func (c *UserClient) QueryAuditLogs(_m *User) *AuditLogQuery {
 			sqlgraph.To(auditlog.Table, auditlog.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AuditLogsTable, user.AuditLogsColumn),
 		)
-		schemaConfig := _m.schemaConfig
-		step.To.Schema = schemaConfig.AuditLog
-		step.Edge.Schema = schemaConfig.AuditLog
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -2083,39 +2004,3 @@ type (
 		Tenant, User []ent.Interceptor
 	}
 )
-
-// SchemaConfig represents alternative schema names for all tables
-// that can be passed at runtime.
-type SchemaConfig = internal.SchemaConfig
-
-// AlternateSchemas allows alternate schema names to be
-// passed into ent operations.
-func AlternateSchema(schemaConfig SchemaConfig) Option {
-	return func(c *config) {
-		c.schemaConfig = schemaConfig
-	}
-}
-
-// ExecContext allows calling the underlying ExecContext method of the driver if it is supported by it.
-// See, database/sql#DB.ExecContext for more information.
-func (c *config) ExecContext(ctx context.Context, query string, args ...any) (stdsql.Result, error) {
-	ex, ok := c.driver.(interface {
-		ExecContext(context.Context, string, ...any) (stdsql.Result, error)
-	})
-	if !ok {
-		return nil, fmt.Errorf("Driver.ExecContext is not supported")
-	}
-	return ex.ExecContext(ctx, query, args...)
-}
-
-// QueryContext allows calling the underlying QueryContext method of the driver if it is supported by it.
-// See, database/sql#DB.QueryContext for more information.
-func (c *config) QueryContext(ctx context.Context, query string, args ...any) (*stdsql.Rows, error) {
-	q, ok := c.driver.(interface {
-		QueryContext(context.Context, string, ...any) (*stdsql.Rows, error)
-	})
-	if !ok {
-		return nil, fmt.Errorf("Driver.QueryContext is not supported")
-	}
-	return q.QueryContext(ctx, query, args...)
-}

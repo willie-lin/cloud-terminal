@@ -4,7 +4,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // Tenant holds the schema definition for the Tenant entity.
@@ -14,6 +13,7 @@ type Tenant struct {
 
 func (Tenant) Mixin() []ent.Mixin {
 	return []ent.Mixin{
+		IDMixin{},
 		TimeMixin{},
 	}
 }
@@ -21,7 +21,6 @@ func (Tenant) Mixin() []ent.Mixin {
 // Fields of the Tenant.
 func (Tenant) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
 		field.Enum("status").Values("active", "inactive", "suspended").Default("active"),

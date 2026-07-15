@@ -3,7 +3,6 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // Session holds the schema definition for the Session entity.
@@ -13,13 +12,13 @@ type Session struct {
 
 func (Session) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		BaseMixin{},
+		IDMixin{},
+		TimeMixin{},
 	}
 }
 
 func (Session) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("session_id").Unique().Immutable().Comment("会话ID"),
 		field.String("principal_urn").Comment("主体URN"),
 		field.String("resource_urn").Optional().Comment("资源URN"),

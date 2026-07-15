@@ -11,7 +11,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
@@ -52,7 +51,7 @@ type AccessPolicyMutation struct {
 	config
 	op                 Op
 	typ                string
-	id                 *uuid.UUID
+	id                 *string
 	created_at         *time.Time
 	updated_at         *time.Time
 	name               *string
@@ -63,15 +62,15 @@ type AccessPolicyMutation struct {
 	priority           *int
 	addpriority        *int
 	clearedFields      map[string]struct{}
-	account            map[uuid.UUID]struct{}
-	removedaccount     map[uuid.UUID]struct{}
+	account            map[string]struct{}
+	removedaccount     map[string]struct{}
 	clearedaccount     bool
-	roles              map[uuid.UUID]struct{}
-	removedroles       map[uuid.UUID]struct{}
+	roles              map[string]struct{}
+	removedroles       map[string]struct{}
 	clearedroles       bool
-	tenant             *uuid.UUID
+	tenant             *string
 	clearedtenant      bool
-	environment        *uuid.UUID
+	environment        *string
 	clearedenvironment bool
 	done               bool
 	oldValue           func(context.Context) (*AccessPolicy, error)
@@ -98,7 +97,7 @@ func newAccessPolicyMutation(c config, op Op, opts ...accesspolicyOption) *Acces
 }
 
 // withAccessPolicyID sets the ID field of the mutation.
-func withAccessPolicyID(id uuid.UUID) accesspolicyOption {
+func withAccessPolicyID(id string) accesspolicyOption {
 	return func(m *AccessPolicyMutation) {
 		var (
 			err   error
@@ -150,13 +149,13 @@ func (m AccessPolicyMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of AccessPolicy entities.
-func (m *AccessPolicyMutation) SetID(id uuid.UUID) {
+func (m *AccessPolicyMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *AccessPolicyMutation) ID() (id uuid.UUID, exists bool) {
+func (m *AccessPolicyMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -167,12 +166,12 @@ func (m *AccessPolicyMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *AccessPolicyMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *AccessPolicyMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -483,9 +482,9 @@ func (m *AccessPolicyMutation) ResetPriority() {
 }
 
 // AddAccountIDs adds the "account" edge to the Account entity by ids.
-func (m *AccessPolicyMutation) AddAccountIDs(ids ...uuid.UUID) {
+func (m *AccessPolicyMutation) AddAccountIDs(ids ...string) {
 	if m.account == nil {
-		m.account = make(map[uuid.UUID]struct{})
+		m.account = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.account[ids[i]] = struct{}{}
@@ -503,9 +502,9 @@ func (m *AccessPolicyMutation) AccountCleared() bool {
 }
 
 // RemoveAccountIDs removes the "account" edge to the Account entity by IDs.
-func (m *AccessPolicyMutation) RemoveAccountIDs(ids ...uuid.UUID) {
+func (m *AccessPolicyMutation) RemoveAccountIDs(ids ...string) {
 	if m.removedaccount == nil {
-		m.removedaccount = make(map[uuid.UUID]struct{})
+		m.removedaccount = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.account, ids[i])
@@ -514,7 +513,7 @@ func (m *AccessPolicyMutation) RemoveAccountIDs(ids ...uuid.UUID) {
 }
 
 // RemovedAccount returns the removed IDs of the "account" edge to the Account entity.
-func (m *AccessPolicyMutation) RemovedAccountIDs() (ids []uuid.UUID) {
+func (m *AccessPolicyMutation) RemovedAccountIDs() (ids []string) {
 	for id := range m.removedaccount {
 		ids = append(ids, id)
 	}
@@ -522,7 +521,7 @@ func (m *AccessPolicyMutation) RemovedAccountIDs() (ids []uuid.UUID) {
 }
 
 // AccountIDs returns the "account" edge IDs in the mutation.
-func (m *AccessPolicyMutation) AccountIDs() (ids []uuid.UUID) {
+func (m *AccessPolicyMutation) AccountIDs() (ids []string) {
 	for id := range m.account {
 		ids = append(ids, id)
 	}
@@ -537,9 +536,9 @@ func (m *AccessPolicyMutation) ResetAccount() {
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by ids.
-func (m *AccessPolicyMutation) AddRoleIDs(ids ...uuid.UUID) {
+func (m *AccessPolicyMutation) AddRoleIDs(ids ...string) {
 	if m.roles == nil {
-		m.roles = make(map[uuid.UUID]struct{})
+		m.roles = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.roles[ids[i]] = struct{}{}
@@ -557,9 +556,9 @@ func (m *AccessPolicyMutation) RolesCleared() bool {
 }
 
 // RemoveRoleIDs removes the "roles" edge to the Role entity by IDs.
-func (m *AccessPolicyMutation) RemoveRoleIDs(ids ...uuid.UUID) {
+func (m *AccessPolicyMutation) RemoveRoleIDs(ids ...string) {
 	if m.removedroles == nil {
-		m.removedroles = make(map[uuid.UUID]struct{})
+		m.removedroles = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.roles, ids[i])
@@ -568,7 +567,7 @@ func (m *AccessPolicyMutation) RemoveRoleIDs(ids ...uuid.UUID) {
 }
 
 // RemovedRoles returns the removed IDs of the "roles" edge to the Role entity.
-func (m *AccessPolicyMutation) RemovedRolesIDs() (ids []uuid.UUID) {
+func (m *AccessPolicyMutation) RemovedRolesIDs() (ids []string) {
 	for id := range m.removedroles {
 		ids = append(ids, id)
 	}
@@ -576,7 +575,7 @@ func (m *AccessPolicyMutation) RemovedRolesIDs() (ids []uuid.UUID) {
 }
 
 // RolesIDs returns the "roles" edge IDs in the mutation.
-func (m *AccessPolicyMutation) RolesIDs() (ids []uuid.UUID) {
+func (m *AccessPolicyMutation) RolesIDs() (ids []string) {
 	for id := range m.roles {
 		ids = append(ids, id)
 	}
@@ -591,7 +590,7 @@ func (m *AccessPolicyMutation) ResetRoles() {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by id.
-func (m *AccessPolicyMutation) SetTenantID(id uuid.UUID) {
+func (m *AccessPolicyMutation) SetTenantID(id string) {
 	m.tenant = &id
 }
 
@@ -606,7 +605,7 @@ func (m *AccessPolicyMutation) TenantCleared() bool {
 }
 
 // TenantID returns the "tenant" edge ID in the mutation.
-func (m *AccessPolicyMutation) TenantID() (id uuid.UUID, exists bool) {
+func (m *AccessPolicyMutation) TenantID() (id string, exists bool) {
 	if m.tenant != nil {
 		return *m.tenant, true
 	}
@@ -616,7 +615,7 @@ func (m *AccessPolicyMutation) TenantID() (id uuid.UUID, exists bool) {
 // TenantIDs returns the "tenant" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // TenantID instead. It exists only for internal usage by the builders.
-func (m *AccessPolicyMutation) TenantIDs() (ids []uuid.UUID) {
+func (m *AccessPolicyMutation) TenantIDs() (ids []string) {
 	if id := m.tenant; id != nil {
 		ids = append(ids, *id)
 	}
@@ -630,7 +629,7 @@ func (m *AccessPolicyMutation) ResetTenant() {
 }
 
 // SetEnvironmentID sets the "environment" edge to the Environment entity by id.
-func (m *AccessPolicyMutation) SetEnvironmentID(id uuid.UUID) {
+func (m *AccessPolicyMutation) SetEnvironmentID(id string) {
 	m.environment = &id
 }
 
@@ -645,7 +644,7 @@ func (m *AccessPolicyMutation) EnvironmentCleared() bool {
 }
 
 // EnvironmentID returns the "environment" edge ID in the mutation.
-func (m *AccessPolicyMutation) EnvironmentID() (id uuid.UUID, exists bool) {
+func (m *AccessPolicyMutation) EnvironmentID() (id string, exists bool) {
 	if m.environment != nil {
 		return *m.environment, true
 	}
@@ -655,7 +654,7 @@ func (m *AccessPolicyMutation) EnvironmentID() (id uuid.UUID, exists bool) {
 // EnvironmentIDs returns the "environment" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // EnvironmentID instead. It exists only for internal usage by the builders.
-func (m *AccessPolicyMutation) EnvironmentIDs() (ids []uuid.UUID) {
+func (m *AccessPolicyMutation) EnvironmentIDs() (ids []string) {
 	if id := m.environment; id != nil {
 		ids = append(ids, *id)
 	}
@@ -1076,23 +1075,23 @@ type AccountMutation struct {
 	config
 	op                     Op
 	typ                    string
-	id                     *uuid.UUID
+	id                     *string
 	created_at             *time.Time
 	updated_at             *time.Time
 	name                   *string
 	description            *string
 	status                 *account.Status
 	clearedFields          map[string]struct{}
-	users                  map[uuid.UUID]struct{}
-	removedusers           map[uuid.UUID]struct{}
+	users                  map[string]struct{}
+	removedusers           map[string]struct{}
 	clearedusers           bool
-	roles                  map[uuid.UUID]struct{}
-	removedroles           map[uuid.UUID]struct{}
+	roles                  map[string]struct{}
+	removedroles           map[string]struct{}
 	clearedroles           bool
-	access_policies        map[uuid.UUID]struct{}
-	removedaccess_policies map[uuid.UUID]struct{}
+	access_policies        map[string]struct{}
+	removedaccess_policies map[string]struct{}
 	clearedaccess_policies bool
-	resource               *uuid.UUID
+	resource               *string
 	clearedresource        bool
 	done                   bool
 	oldValue               func(context.Context) (*Account, error)
@@ -1119,7 +1118,7 @@ func newAccountMutation(c config, op Op, opts ...accountOption) *AccountMutation
 }
 
 // withAccountID sets the ID field of the mutation.
-func withAccountID(id uuid.UUID) accountOption {
+func withAccountID(id string) accountOption {
 	return func(m *AccountMutation) {
 		var (
 			err   error
@@ -1171,13 +1170,13 @@ func (m AccountMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Account entities.
-func (m *AccountMutation) SetID(id uuid.UUID) {
+func (m *AccountMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *AccountMutation) ID() (id uuid.UUID, exists bool) {
+func (m *AccountMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -1188,12 +1187,12 @@ func (m *AccountMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *AccountMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *AccountMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -1397,9 +1396,9 @@ func (m *AccountMutation) ResetStatus() {
 }
 
 // AddUserIDs adds the "users" edge to the User entity by ids.
-func (m *AccountMutation) AddUserIDs(ids ...uuid.UUID) {
+func (m *AccountMutation) AddUserIDs(ids ...string) {
 	if m.users == nil {
-		m.users = make(map[uuid.UUID]struct{})
+		m.users = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.users[ids[i]] = struct{}{}
@@ -1417,9 +1416,9 @@ func (m *AccountMutation) UsersCleared() bool {
 }
 
 // RemoveUserIDs removes the "users" edge to the User entity by IDs.
-func (m *AccountMutation) RemoveUserIDs(ids ...uuid.UUID) {
+func (m *AccountMutation) RemoveUserIDs(ids ...string) {
 	if m.removedusers == nil {
-		m.removedusers = make(map[uuid.UUID]struct{})
+		m.removedusers = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.users, ids[i])
@@ -1428,7 +1427,7 @@ func (m *AccountMutation) RemoveUserIDs(ids ...uuid.UUID) {
 }
 
 // RemovedUsers returns the removed IDs of the "users" edge to the User entity.
-func (m *AccountMutation) RemovedUsersIDs() (ids []uuid.UUID) {
+func (m *AccountMutation) RemovedUsersIDs() (ids []string) {
 	for id := range m.removedusers {
 		ids = append(ids, id)
 	}
@@ -1436,7 +1435,7 @@ func (m *AccountMutation) RemovedUsersIDs() (ids []uuid.UUID) {
 }
 
 // UsersIDs returns the "users" edge IDs in the mutation.
-func (m *AccountMutation) UsersIDs() (ids []uuid.UUID) {
+func (m *AccountMutation) UsersIDs() (ids []string) {
 	for id := range m.users {
 		ids = append(ids, id)
 	}
@@ -1451,9 +1450,9 @@ func (m *AccountMutation) ResetUsers() {
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by ids.
-func (m *AccountMutation) AddRoleIDs(ids ...uuid.UUID) {
+func (m *AccountMutation) AddRoleIDs(ids ...string) {
 	if m.roles == nil {
-		m.roles = make(map[uuid.UUID]struct{})
+		m.roles = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.roles[ids[i]] = struct{}{}
@@ -1471,9 +1470,9 @@ func (m *AccountMutation) RolesCleared() bool {
 }
 
 // RemoveRoleIDs removes the "roles" edge to the Role entity by IDs.
-func (m *AccountMutation) RemoveRoleIDs(ids ...uuid.UUID) {
+func (m *AccountMutation) RemoveRoleIDs(ids ...string) {
 	if m.removedroles == nil {
-		m.removedroles = make(map[uuid.UUID]struct{})
+		m.removedroles = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.roles, ids[i])
@@ -1482,7 +1481,7 @@ func (m *AccountMutation) RemoveRoleIDs(ids ...uuid.UUID) {
 }
 
 // RemovedRoles returns the removed IDs of the "roles" edge to the Role entity.
-func (m *AccountMutation) RemovedRolesIDs() (ids []uuid.UUID) {
+func (m *AccountMutation) RemovedRolesIDs() (ids []string) {
 	for id := range m.removedroles {
 		ids = append(ids, id)
 	}
@@ -1490,7 +1489,7 @@ func (m *AccountMutation) RemovedRolesIDs() (ids []uuid.UUID) {
 }
 
 // RolesIDs returns the "roles" edge IDs in the mutation.
-func (m *AccountMutation) RolesIDs() (ids []uuid.UUID) {
+func (m *AccountMutation) RolesIDs() (ids []string) {
 	for id := range m.roles {
 		ids = append(ids, id)
 	}
@@ -1505,9 +1504,9 @@ func (m *AccountMutation) ResetRoles() {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
-func (m *AccountMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
+func (m *AccountMutation) AddAccessPolicyIDs(ids ...string) {
 	if m.access_policies == nil {
-		m.access_policies = make(map[uuid.UUID]struct{})
+		m.access_policies = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.access_policies[ids[i]] = struct{}{}
@@ -1525,9 +1524,9 @@ func (m *AccountMutation) AccessPoliciesCleared() bool {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
-func (m *AccountMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
+func (m *AccountMutation) RemoveAccessPolicyIDs(ids ...string) {
 	if m.removedaccess_policies == nil {
-		m.removedaccess_policies = make(map[uuid.UUID]struct{})
+		m.removedaccess_policies = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.access_policies, ids[i])
@@ -1536,7 +1535,7 @@ func (m *AccountMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
 }
 
 // RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
-func (m *AccountMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
+func (m *AccountMutation) RemovedAccessPoliciesIDs() (ids []string) {
 	for id := range m.removedaccess_policies {
 		ids = append(ids, id)
 	}
@@ -1544,7 +1543,7 @@ func (m *AccountMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
 }
 
 // AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
-func (m *AccountMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
+func (m *AccountMutation) AccessPoliciesIDs() (ids []string) {
 	for id := range m.access_policies {
 		ids = append(ids, id)
 	}
@@ -1559,7 +1558,7 @@ func (m *AccountMutation) ResetAccessPolicies() {
 }
 
 // SetResourceID sets the "resource" edge to the Resource entity by id.
-func (m *AccountMutation) SetResourceID(id uuid.UUID) {
+func (m *AccountMutation) SetResourceID(id string) {
 	m.resource = &id
 }
 
@@ -1574,7 +1573,7 @@ func (m *AccountMutation) ResourceCleared() bool {
 }
 
 // ResourceID returns the "resource" edge ID in the mutation.
-func (m *AccountMutation) ResourceID() (id uuid.UUID, exists bool) {
+func (m *AccountMutation) ResourceID() (id string, exists bool) {
 	if m.resource != nil {
 		return *m.resource, true
 	}
@@ -1584,7 +1583,7 @@ func (m *AccountMutation) ResourceID() (id uuid.UUID, exists bool) {
 // ResourceIDs returns the "resource" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // ResourceID instead. It exists only for internal usage by the builders.
-func (m *AccountMutation) ResourceIDs() (ids []uuid.UUID) {
+func (m *AccountMutation) ResourceIDs() (ids []string) {
 	if id := m.resource; id != nil {
 		ids = append(ids, *id)
 	}
@@ -1964,7 +1963,7 @@ type AuditLogMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *uuid.UUID
+	id            *string
 	created_at    *time.Time
 	updated_at    *time.Time
 	session_id    *string
@@ -1976,7 +1975,7 @@ type AuditLogMutation struct {
 	detail        *map[string]interface{}
 	s3_path       *string
 	clearedFields map[string]struct{}
-	user          *uuid.UUID
+	user          *string
 	cleareduser   bool
 	done          bool
 	oldValue      func(context.Context) (*AuditLog, error)
@@ -2003,7 +2002,7 @@ func newAuditLogMutation(c config, op Op, opts ...auditlogOption) *AuditLogMutat
 }
 
 // withAuditLogID sets the ID field of the mutation.
-func withAuditLogID(id uuid.UUID) auditlogOption {
+func withAuditLogID(id string) auditlogOption {
 	return func(m *AuditLogMutation) {
 		var (
 			err   error
@@ -2055,13 +2054,13 @@ func (m AuditLogMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of AuditLog entities.
-func (m *AuditLogMutation) SetID(id uuid.UUID) {
+func (m *AuditLogMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *AuditLogMutation) ID() (id uuid.UUID, exists bool) {
+func (m *AuditLogMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -2072,12 +2071,12 @@ func (m *AuditLogMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *AuditLogMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *AuditLogMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -2487,7 +2486,7 @@ func (m *AuditLogMutation) ResetS3Path() {
 }
 
 // SetUserID sets the "user" edge to the User entity by id.
-func (m *AuditLogMutation) SetUserID(id uuid.UUID) {
+func (m *AuditLogMutation) SetUserID(id string) {
 	m.user = &id
 }
 
@@ -2502,7 +2501,7 @@ func (m *AuditLogMutation) UserCleared() bool {
 }
 
 // UserID returns the "user" edge ID in the mutation.
-func (m *AuditLogMutation) UserID() (id uuid.UUID, exists bool) {
+func (m *AuditLogMutation) UserID() (id string, exists bool) {
 	if m.user != nil {
 		return *m.user, true
 	}
@@ -2512,7 +2511,7 @@ func (m *AuditLogMutation) UserID() (id uuid.UUID, exists bool) {
 // UserIDs returns the "user" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // UserID instead. It exists only for internal usage by the builders.
-func (m *AuditLogMutation) UserIDs() (ids []uuid.UUID) {
+func (m *AuditLogMutation) UserIDs() (ids []string) {
 	if id := m.user; id != nil {
 		ids = append(ids, *id)
 	}
@@ -2909,7 +2908,7 @@ type EnvironmentMutation struct {
 	config
 	op                     Op
 	typ                    string
-	id                     *uuid.UUID
+	id                     *string
 	created_at             *time.Time
 	updated_at             *time.Time
 	name                   *string
@@ -2923,9 +2922,9 @@ type EnvironmentMutation struct {
 	appendvolumes          []map[string]interface{}
 	status                 *environment.Status
 	clearedFields          map[string]struct{}
-	tenant                 *uuid.UUID
+	tenant                 *string
 	clearedtenant          bool
-	access_policies        *uuid.UUID
+	access_policies        *string
 	clearedaccess_policies bool
 	done                   bool
 	oldValue               func(context.Context) (*Environment, error)
@@ -2952,7 +2951,7 @@ func newEnvironmentMutation(c config, op Op, opts ...environmentOption) *Environ
 }
 
 // withEnvironmentID sets the ID field of the mutation.
-func withEnvironmentID(id uuid.UUID) environmentOption {
+func withEnvironmentID(id string) environmentOption {
 	return func(m *EnvironmentMutation) {
 		var (
 			err   error
@@ -3004,13 +3003,13 @@ func (m EnvironmentMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Environment entities.
-func (m *EnvironmentMutation) SetID(id uuid.UUID) {
+func (m *EnvironmentMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *EnvironmentMutation) ID() (id uuid.UUID, exists bool) {
+func (m *EnvironmentMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -3021,12 +3020,12 @@ func (m *EnvironmentMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *EnvironmentMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *EnvironmentMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -3485,7 +3484,7 @@ func (m *EnvironmentMutation) ResetStatus() {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by id.
-func (m *EnvironmentMutation) SetTenantID(id uuid.UUID) {
+func (m *EnvironmentMutation) SetTenantID(id string) {
 	m.tenant = &id
 }
 
@@ -3500,7 +3499,7 @@ func (m *EnvironmentMutation) TenantCleared() bool {
 }
 
 // TenantID returns the "tenant" edge ID in the mutation.
-func (m *EnvironmentMutation) TenantID() (id uuid.UUID, exists bool) {
+func (m *EnvironmentMutation) TenantID() (id string, exists bool) {
 	if m.tenant != nil {
 		return *m.tenant, true
 	}
@@ -3510,7 +3509,7 @@ func (m *EnvironmentMutation) TenantID() (id uuid.UUID, exists bool) {
 // TenantIDs returns the "tenant" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // TenantID instead. It exists only for internal usage by the builders.
-func (m *EnvironmentMutation) TenantIDs() (ids []uuid.UUID) {
+func (m *EnvironmentMutation) TenantIDs() (ids []string) {
 	if id := m.tenant; id != nil {
 		ids = append(ids, *id)
 	}
@@ -3524,7 +3523,7 @@ func (m *EnvironmentMutation) ResetTenant() {
 }
 
 // SetAccessPoliciesID sets the "access_policies" edge to the AccessPolicy entity by id.
-func (m *EnvironmentMutation) SetAccessPoliciesID(id uuid.UUID) {
+func (m *EnvironmentMutation) SetAccessPoliciesID(id string) {
 	m.access_policies = &id
 }
 
@@ -3539,7 +3538,7 @@ func (m *EnvironmentMutation) AccessPoliciesCleared() bool {
 }
 
 // AccessPoliciesID returns the "access_policies" edge ID in the mutation.
-func (m *EnvironmentMutation) AccessPoliciesID() (id uuid.UUID, exists bool) {
+func (m *EnvironmentMutation) AccessPoliciesID() (id string, exists bool) {
 	if m.access_policies != nil {
 		return *m.access_policies, true
 	}
@@ -3549,7 +3548,7 @@ func (m *EnvironmentMutation) AccessPoliciesID() (id uuid.UUID, exists bool) {
 // AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AccessPoliciesID instead. It exists only for internal usage by the builders.
-func (m *EnvironmentMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
+func (m *EnvironmentMutation) AccessPoliciesIDs() (ids []string) {
 	if id := m.access_policies; id != nil {
 		ids = append(ids, *id)
 	}
@@ -3985,7 +3984,7 @@ type PlatformMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *uuid.UUID
+	id            *string
 	created_at    *time.Time
 	updated_at    *time.Time
 	name          *string
@@ -4020,7 +4019,7 @@ func newPlatformMutation(c config, op Op, opts ...platformOption) *PlatformMutat
 }
 
 // withPlatformID sets the ID field of the mutation.
-func withPlatformID(id uuid.UUID) platformOption {
+func withPlatformID(id string) platformOption {
 	return func(m *PlatformMutation) {
 		var (
 			err   error
@@ -4072,13 +4071,13 @@ func (m PlatformMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Platform entities.
-func (m *PlatformMutation) SetID(id uuid.UUID) {
+func (m *PlatformMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *PlatformMutation) ID() (id uuid.UUID, exists bool) {
+func (m *PlatformMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -4089,12 +4088,12 @@ func (m *PlatformMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *PlatformMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *PlatformMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -4793,7 +4792,7 @@ type ResourceMutation struct {
 	config
 	op              Op
 	typ             string
-	id              *uuid.UUID
+	id              *string
 	created_at      *time.Time
 	updated_at      *time.Time
 	name            *string
@@ -4805,9 +4804,9 @@ type ResourceMutation struct {
 	status          *resource.Status
 	metadata        *map[string]interface{}
 	clearedFields   map[string]struct{}
-	tenant          *uuid.UUID
+	tenant          *string
 	clearedtenant   bool
-	accounts        *uuid.UUID
+	accounts        *string
 	clearedaccounts bool
 	done            bool
 	oldValue        func(context.Context) (*Resource, error)
@@ -4834,7 +4833,7 @@ func newResourceMutation(c config, op Op, opts ...resourceOption) *ResourceMutat
 }
 
 // withResourceID sets the ID field of the mutation.
-func withResourceID(id uuid.UUID) resourceOption {
+func withResourceID(id string) resourceOption {
 	return func(m *ResourceMutation) {
 		var (
 			err   error
@@ -4886,13 +4885,13 @@ func (m ResourceMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Resource entities.
-func (m *ResourceMutation) SetID(id uuid.UUID) {
+func (m *ResourceMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *ResourceMutation) ID() (id uuid.UUID, exists bool) {
+func (m *ResourceMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -4903,12 +4902,12 @@ func (m *ResourceMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *ResourceMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *ResourceMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -5289,7 +5288,7 @@ func (m *ResourceMutation) ResetMetadata() {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by id.
-func (m *ResourceMutation) SetTenantID(id uuid.UUID) {
+func (m *ResourceMutation) SetTenantID(id string) {
 	m.tenant = &id
 }
 
@@ -5304,7 +5303,7 @@ func (m *ResourceMutation) TenantCleared() bool {
 }
 
 // TenantID returns the "tenant" edge ID in the mutation.
-func (m *ResourceMutation) TenantID() (id uuid.UUID, exists bool) {
+func (m *ResourceMutation) TenantID() (id string, exists bool) {
 	if m.tenant != nil {
 		return *m.tenant, true
 	}
@@ -5314,7 +5313,7 @@ func (m *ResourceMutation) TenantID() (id uuid.UUID, exists bool) {
 // TenantIDs returns the "tenant" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // TenantID instead. It exists only for internal usage by the builders.
-func (m *ResourceMutation) TenantIDs() (ids []uuid.UUID) {
+func (m *ResourceMutation) TenantIDs() (ids []string) {
 	if id := m.tenant; id != nil {
 		ids = append(ids, *id)
 	}
@@ -5328,7 +5327,7 @@ func (m *ResourceMutation) ResetTenant() {
 }
 
 // SetAccountsID sets the "accounts" edge to the Account entity by id.
-func (m *ResourceMutation) SetAccountsID(id uuid.UUID) {
+func (m *ResourceMutation) SetAccountsID(id string) {
 	m.accounts = &id
 }
 
@@ -5343,7 +5342,7 @@ func (m *ResourceMutation) AccountsCleared() bool {
 }
 
 // AccountsID returns the "accounts" edge ID in the mutation.
-func (m *ResourceMutation) AccountsID() (id uuid.UUID, exists bool) {
+func (m *ResourceMutation) AccountsID() (id string, exists bool) {
 	if m.accounts != nil {
 		return *m.accounts, true
 	}
@@ -5353,7 +5352,7 @@ func (m *ResourceMutation) AccountsID() (id uuid.UUID, exists bool) {
 // AccountsIDs returns the "accounts" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AccountsID instead. It exists only for internal usage by the builders.
-func (m *ResourceMutation) AccountsIDs() (ids []uuid.UUID) {
+func (m *ResourceMutation) AccountsIDs() (ids []string) {
 	if id := m.accounts; id != nil {
 		ids = append(ids, *id)
 	}
@@ -5760,7 +5759,7 @@ type RoleMutation struct {
 	config
 	op                     Op
 	typ                    string
-	id                     *uuid.UUID
+	id                     *string
 	created_at             *time.Time
 	updated_at             *time.Time
 	name                   *string
@@ -5768,19 +5767,19 @@ type RoleMutation struct {
 	is_disabled            *bool
 	is_default             *bool
 	clearedFields          map[string]struct{}
-	account                *uuid.UUID
+	account                *string
 	clearedaccount         bool
-	users                  map[uuid.UUID]struct{}
-	removedusers           map[uuid.UUID]struct{}
+	users                  map[string]struct{}
+	removedusers           map[string]struct{}
 	clearedusers           bool
-	access_policies        map[uuid.UUID]struct{}
-	removedaccess_policies map[uuid.UUID]struct{}
+	access_policies        map[string]struct{}
+	removedaccess_policies map[string]struct{}
 	clearedaccess_policies bool
-	parent_role            map[uuid.UUID]struct{}
-	removedparent_role     map[uuid.UUID]struct{}
+	parent_role            map[string]struct{}
+	removedparent_role     map[string]struct{}
 	clearedparent_role     bool
-	child_roles            map[uuid.UUID]struct{}
-	removedchild_roles     map[uuid.UUID]struct{}
+	child_roles            map[string]struct{}
+	removedchild_roles     map[string]struct{}
 	clearedchild_roles     bool
 	done                   bool
 	oldValue               func(context.Context) (*Role, error)
@@ -5807,7 +5806,7 @@ func newRoleMutation(c config, op Op, opts ...roleOption) *RoleMutation {
 }
 
 // withRoleID sets the ID field of the mutation.
-func withRoleID(id uuid.UUID) roleOption {
+func withRoleID(id string) roleOption {
 	return func(m *RoleMutation) {
 		var (
 			err   error
@@ -5859,13 +5858,13 @@ func (m RoleMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Role entities.
-func (m *RoleMutation) SetID(id uuid.UUID) {
+func (m *RoleMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *RoleMutation) ID() (id uuid.UUID, exists bool) {
+func (m *RoleMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -5876,12 +5875,12 @@ func (m *RoleMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *RoleMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *RoleMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -6121,7 +6120,7 @@ func (m *RoleMutation) ResetIsDefault() {
 }
 
 // SetAccountID sets the "account" edge to the Account entity by id.
-func (m *RoleMutation) SetAccountID(id uuid.UUID) {
+func (m *RoleMutation) SetAccountID(id string) {
 	m.account = &id
 }
 
@@ -6136,7 +6135,7 @@ func (m *RoleMutation) AccountCleared() bool {
 }
 
 // AccountID returns the "account" edge ID in the mutation.
-func (m *RoleMutation) AccountID() (id uuid.UUID, exists bool) {
+func (m *RoleMutation) AccountID() (id string, exists bool) {
 	if m.account != nil {
 		return *m.account, true
 	}
@@ -6146,7 +6145,7 @@ func (m *RoleMutation) AccountID() (id uuid.UUID, exists bool) {
 // AccountIDs returns the "account" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AccountID instead. It exists only for internal usage by the builders.
-func (m *RoleMutation) AccountIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) AccountIDs() (ids []string) {
 	if id := m.account; id != nil {
 		ids = append(ids, *id)
 	}
@@ -6160,9 +6159,9 @@ func (m *RoleMutation) ResetAccount() {
 }
 
 // AddUserIDs adds the "users" edge to the User entity by ids.
-func (m *RoleMutation) AddUserIDs(ids ...uuid.UUID) {
+func (m *RoleMutation) AddUserIDs(ids ...string) {
 	if m.users == nil {
-		m.users = make(map[uuid.UUID]struct{})
+		m.users = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.users[ids[i]] = struct{}{}
@@ -6180,9 +6179,9 @@ func (m *RoleMutation) UsersCleared() bool {
 }
 
 // RemoveUserIDs removes the "users" edge to the User entity by IDs.
-func (m *RoleMutation) RemoveUserIDs(ids ...uuid.UUID) {
+func (m *RoleMutation) RemoveUserIDs(ids ...string) {
 	if m.removedusers == nil {
-		m.removedusers = make(map[uuid.UUID]struct{})
+		m.removedusers = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.users, ids[i])
@@ -6191,7 +6190,7 @@ func (m *RoleMutation) RemoveUserIDs(ids ...uuid.UUID) {
 }
 
 // RemovedUsers returns the removed IDs of the "users" edge to the User entity.
-func (m *RoleMutation) RemovedUsersIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) RemovedUsersIDs() (ids []string) {
 	for id := range m.removedusers {
 		ids = append(ids, id)
 	}
@@ -6199,7 +6198,7 @@ func (m *RoleMutation) RemovedUsersIDs() (ids []uuid.UUID) {
 }
 
 // UsersIDs returns the "users" edge IDs in the mutation.
-func (m *RoleMutation) UsersIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) UsersIDs() (ids []string) {
 	for id := range m.users {
 		ids = append(ids, id)
 	}
@@ -6214,9 +6213,9 @@ func (m *RoleMutation) ResetUsers() {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
-func (m *RoleMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
+func (m *RoleMutation) AddAccessPolicyIDs(ids ...string) {
 	if m.access_policies == nil {
-		m.access_policies = make(map[uuid.UUID]struct{})
+		m.access_policies = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.access_policies[ids[i]] = struct{}{}
@@ -6234,9 +6233,9 @@ func (m *RoleMutation) AccessPoliciesCleared() bool {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
-func (m *RoleMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
+func (m *RoleMutation) RemoveAccessPolicyIDs(ids ...string) {
 	if m.removedaccess_policies == nil {
-		m.removedaccess_policies = make(map[uuid.UUID]struct{})
+		m.removedaccess_policies = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.access_policies, ids[i])
@@ -6245,7 +6244,7 @@ func (m *RoleMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
 }
 
 // RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
-func (m *RoleMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) RemovedAccessPoliciesIDs() (ids []string) {
 	for id := range m.removedaccess_policies {
 		ids = append(ids, id)
 	}
@@ -6253,7 +6252,7 @@ func (m *RoleMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
 }
 
 // AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
-func (m *RoleMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) AccessPoliciesIDs() (ids []string) {
 	for id := range m.access_policies {
 		ids = append(ids, id)
 	}
@@ -6268,9 +6267,9 @@ func (m *RoleMutation) ResetAccessPolicies() {
 }
 
 // AddParentRoleIDs adds the "parent_role" edge to the Role entity by ids.
-func (m *RoleMutation) AddParentRoleIDs(ids ...uuid.UUID) {
+func (m *RoleMutation) AddParentRoleIDs(ids ...string) {
 	if m.parent_role == nil {
-		m.parent_role = make(map[uuid.UUID]struct{})
+		m.parent_role = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.parent_role[ids[i]] = struct{}{}
@@ -6288,9 +6287,9 @@ func (m *RoleMutation) ParentRoleCleared() bool {
 }
 
 // RemoveParentRoleIDs removes the "parent_role" edge to the Role entity by IDs.
-func (m *RoleMutation) RemoveParentRoleIDs(ids ...uuid.UUID) {
+func (m *RoleMutation) RemoveParentRoleIDs(ids ...string) {
 	if m.removedparent_role == nil {
-		m.removedparent_role = make(map[uuid.UUID]struct{})
+		m.removedparent_role = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.parent_role, ids[i])
@@ -6299,7 +6298,7 @@ func (m *RoleMutation) RemoveParentRoleIDs(ids ...uuid.UUID) {
 }
 
 // RemovedParentRole returns the removed IDs of the "parent_role" edge to the Role entity.
-func (m *RoleMutation) RemovedParentRoleIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) RemovedParentRoleIDs() (ids []string) {
 	for id := range m.removedparent_role {
 		ids = append(ids, id)
 	}
@@ -6307,7 +6306,7 @@ func (m *RoleMutation) RemovedParentRoleIDs() (ids []uuid.UUID) {
 }
 
 // ParentRoleIDs returns the "parent_role" edge IDs in the mutation.
-func (m *RoleMutation) ParentRoleIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) ParentRoleIDs() (ids []string) {
 	for id := range m.parent_role {
 		ids = append(ids, id)
 	}
@@ -6322,9 +6321,9 @@ func (m *RoleMutation) ResetParentRole() {
 }
 
 // AddChildRoleIDs adds the "child_roles" edge to the Role entity by ids.
-func (m *RoleMutation) AddChildRoleIDs(ids ...uuid.UUID) {
+func (m *RoleMutation) AddChildRoleIDs(ids ...string) {
 	if m.child_roles == nil {
-		m.child_roles = make(map[uuid.UUID]struct{})
+		m.child_roles = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.child_roles[ids[i]] = struct{}{}
@@ -6342,9 +6341,9 @@ func (m *RoleMutation) ChildRolesCleared() bool {
 }
 
 // RemoveChildRoleIDs removes the "child_roles" edge to the Role entity by IDs.
-func (m *RoleMutation) RemoveChildRoleIDs(ids ...uuid.UUID) {
+func (m *RoleMutation) RemoveChildRoleIDs(ids ...string) {
 	if m.removedchild_roles == nil {
-		m.removedchild_roles = make(map[uuid.UUID]struct{})
+		m.removedchild_roles = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.child_roles, ids[i])
@@ -6353,7 +6352,7 @@ func (m *RoleMutation) RemoveChildRoleIDs(ids ...uuid.UUID) {
 }
 
 // RemovedChildRoles returns the removed IDs of the "child_roles" edge to the Role entity.
-func (m *RoleMutation) RemovedChildRolesIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) RemovedChildRolesIDs() (ids []string) {
 	for id := range m.removedchild_roles {
 		ids = append(ids, id)
 	}
@@ -6361,7 +6360,7 @@ func (m *RoleMutation) RemovedChildRolesIDs() (ids []uuid.UUID) {
 }
 
 // ChildRolesIDs returns the "child_roles" edge IDs in the mutation.
-func (m *RoleMutation) ChildRolesIDs() (ids []uuid.UUID) {
+func (m *RoleMutation) ChildRolesIDs() (ids []string) {
 	for id := range m.child_roles {
 		ids = append(ids, id)
 	}
@@ -6785,7 +6784,7 @@ type SessionMutation struct {
 	config
 	op              Op
 	typ             string
-	id              *uuid.UUID
+	id              *string
 	created_at      *time.Time
 	updated_at      *time.Time
 	session_id      *string
@@ -6824,7 +6823,7 @@ func newSessionMutation(c config, op Op, opts ...sessionOption) *SessionMutation
 }
 
 // withSessionID sets the ID field of the mutation.
-func withSessionID(id uuid.UUID) sessionOption {
+func withSessionID(id string) sessionOption {
 	return func(m *SessionMutation) {
 		var (
 			err   error
@@ -6876,13 +6875,13 @@ func (m SessionMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Session entities.
-func (m *SessionMutation) SetID(id uuid.UUID) {
+func (m *SessionMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *SessionMutation) ID() (id uuid.UUID, exists bool) {
+func (m *SessionMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -6893,12 +6892,12 @@ func (m *SessionMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *SessionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *SessionMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -7809,21 +7808,21 @@ type TenantMutation struct {
 	config
 	op                     Op
 	typ                    string
-	id                     *uuid.UUID
+	id                     *string
 	created_at             *time.Time
 	updated_at             *time.Time
 	name                   *string
 	description            *string
 	status                 *tenant.Status
 	clearedFields          map[string]struct{}
-	environments           map[uuid.UUID]struct{}
-	removedenvironments    map[uuid.UUID]struct{}
+	environments           map[string]struct{}
+	removedenvironments    map[string]struct{}
 	clearedenvironments    bool
-	resources              map[uuid.UUID]struct{}
-	removedresources       map[uuid.UUID]struct{}
+	resources              map[string]struct{}
+	removedresources       map[string]struct{}
 	clearedresources       bool
-	access_policies        map[uuid.UUID]struct{}
-	removedaccess_policies map[uuid.UUID]struct{}
+	access_policies        map[string]struct{}
+	removedaccess_policies map[string]struct{}
 	clearedaccess_policies bool
 	done                   bool
 	oldValue               func(context.Context) (*Tenant, error)
@@ -7850,7 +7849,7 @@ func newTenantMutation(c config, op Op, opts ...tenantOption) *TenantMutation {
 }
 
 // withTenantID sets the ID field of the mutation.
-func withTenantID(id uuid.UUID) tenantOption {
+func withTenantID(id string) tenantOption {
 	return func(m *TenantMutation) {
 		var (
 			err   error
@@ -7902,13 +7901,13 @@ func (m TenantMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Tenant entities.
-func (m *TenantMutation) SetID(id uuid.UUID) {
+func (m *TenantMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *TenantMutation) ID() (id uuid.UUID, exists bool) {
+func (m *TenantMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -7919,12 +7918,12 @@ func (m *TenantMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *TenantMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *TenantMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -8128,9 +8127,9 @@ func (m *TenantMutation) ResetStatus() {
 }
 
 // AddEnvironmentIDs adds the "environments" edge to the Environment entity by ids.
-func (m *TenantMutation) AddEnvironmentIDs(ids ...uuid.UUID) {
+func (m *TenantMutation) AddEnvironmentIDs(ids ...string) {
 	if m.environments == nil {
-		m.environments = make(map[uuid.UUID]struct{})
+		m.environments = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.environments[ids[i]] = struct{}{}
@@ -8148,9 +8147,9 @@ func (m *TenantMutation) EnvironmentsCleared() bool {
 }
 
 // RemoveEnvironmentIDs removes the "environments" edge to the Environment entity by IDs.
-func (m *TenantMutation) RemoveEnvironmentIDs(ids ...uuid.UUID) {
+func (m *TenantMutation) RemoveEnvironmentIDs(ids ...string) {
 	if m.removedenvironments == nil {
-		m.removedenvironments = make(map[uuid.UUID]struct{})
+		m.removedenvironments = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.environments, ids[i])
@@ -8159,7 +8158,7 @@ func (m *TenantMutation) RemoveEnvironmentIDs(ids ...uuid.UUID) {
 }
 
 // RemovedEnvironments returns the removed IDs of the "environments" edge to the Environment entity.
-func (m *TenantMutation) RemovedEnvironmentsIDs() (ids []uuid.UUID) {
+func (m *TenantMutation) RemovedEnvironmentsIDs() (ids []string) {
 	for id := range m.removedenvironments {
 		ids = append(ids, id)
 	}
@@ -8167,7 +8166,7 @@ func (m *TenantMutation) RemovedEnvironmentsIDs() (ids []uuid.UUID) {
 }
 
 // EnvironmentsIDs returns the "environments" edge IDs in the mutation.
-func (m *TenantMutation) EnvironmentsIDs() (ids []uuid.UUID) {
+func (m *TenantMutation) EnvironmentsIDs() (ids []string) {
 	for id := range m.environments {
 		ids = append(ids, id)
 	}
@@ -8182,9 +8181,9 @@ func (m *TenantMutation) ResetEnvironments() {
 }
 
 // AddResourceIDs adds the "resources" edge to the Resource entity by ids.
-func (m *TenantMutation) AddResourceIDs(ids ...uuid.UUID) {
+func (m *TenantMutation) AddResourceIDs(ids ...string) {
 	if m.resources == nil {
-		m.resources = make(map[uuid.UUID]struct{})
+		m.resources = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.resources[ids[i]] = struct{}{}
@@ -8202,9 +8201,9 @@ func (m *TenantMutation) ResourcesCleared() bool {
 }
 
 // RemoveResourceIDs removes the "resources" edge to the Resource entity by IDs.
-func (m *TenantMutation) RemoveResourceIDs(ids ...uuid.UUID) {
+func (m *TenantMutation) RemoveResourceIDs(ids ...string) {
 	if m.removedresources == nil {
-		m.removedresources = make(map[uuid.UUID]struct{})
+		m.removedresources = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.resources, ids[i])
@@ -8213,7 +8212,7 @@ func (m *TenantMutation) RemoveResourceIDs(ids ...uuid.UUID) {
 }
 
 // RemovedResources returns the removed IDs of the "resources" edge to the Resource entity.
-func (m *TenantMutation) RemovedResourcesIDs() (ids []uuid.UUID) {
+func (m *TenantMutation) RemovedResourcesIDs() (ids []string) {
 	for id := range m.removedresources {
 		ids = append(ids, id)
 	}
@@ -8221,7 +8220,7 @@ func (m *TenantMutation) RemovedResourcesIDs() (ids []uuid.UUID) {
 }
 
 // ResourcesIDs returns the "resources" edge IDs in the mutation.
-func (m *TenantMutation) ResourcesIDs() (ids []uuid.UUID) {
+func (m *TenantMutation) ResourcesIDs() (ids []string) {
 	for id := range m.resources {
 		ids = append(ids, id)
 	}
@@ -8236,9 +8235,9 @@ func (m *TenantMutation) ResetResources() {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by ids.
-func (m *TenantMutation) AddAccessPolicyIDs(ids ...uuid.UUID) {
+func (m *TenantMutation) AddAccessPolicyIDs(ids ...string) {
 	if m.access_policies == nil {
-		m.access_policies = make(map[uuid.UUID]struct{})
+		m.access_policies = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.access_policies[ids[i]] = struct{}{}
@@ -8256,9 +8255,9 @@ func (m *TenantMutation) AccessPoliciesCleared() bool {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to the AccessPolicy entity by IDs.
-func (m *TenantMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
+func (m *TenantMutation) RemoveAccessPolicyIDs(ids ...string) {
 	if m.removedaccess_policies == nil {
-		m.removedaccess_policies = make(map[uuid.UUID]struct{})
+		m.removedaccess_policies = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.access_policies, ids[i])
@@ -8267,7 +8266,7 @@ func (m *TenantMutation) RemoveAccessPolicyIDs(ids ...uuid.UUID) {
 }
 
 // RemovedAccessPolicies returns the removed IDs of the "access_policies" edge to the AccessPolicy entity.
-func (m *TenantMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
+func (m *TenantMutation) RemovedAccessPoliciesIDs() (ids []string) {
 	for id := range m.removedaccess_policies {
 		ids = append(ids, id)
 	}
@@ -8275,7 +8274,7 @@ func (m *TenantMutation) RemovedAccessPoliciesIDs() (ids []uuid.UUID) {
 }
 
 // AccessPoliciesIDs returns the "access_policies" edge IDs in the mutation.
-func (m *TenantMutation) AccessPoliciesIDs() (ids []uuid.UUID) {
+func (m *TenantMutation) AccessPoliciesIDs() (ids []string) {
 	for id := range m.access_policies {
 		ids = append(ids, id)
 	}
@@ -8638,7 +8637,7 @@ type UserMutation struct {
 	config
 	op                    Op
 	typ                   string
-	id                    *uuid.UUID
+	id                    *string
 	created_at            *time.Time
 	updated_at            *time.Time
 	avatar                *string
@@ -8661,12 +8660,12 @@ type UserMutation struct {
 	is_default            *bool
 	ssh_public_key        *string
 	clearedFields         map[string]struct{}
-	account               *uuid.UUID
+	account               *string
 	clearedaccount        bool
-	role                  *uuid.UUID
+	role                  *string
 	clearedrole           bool
-	audit_logs            map[uuid.UUID]struct{}
-	removedaudit_logs     map[uuid.UUID]struct{}
+	audit_logs            map[string]struct{}
+	removedaudit_logs     map[string]struct{}
 	clearedaudit_logs     bool
 	done                  bool
 	oldValue              func(context.Context) (*User, error)
@@ -8693,7 +8692,7 @@ func newUserMutation(c config, op Op, opts ...userOption) *UserMutation {
 }
 
 // withUserID sets the ID field of the mutation.
-func withUserID(id uuid.UUID) userOption {
+func withUserID(id string) userOption {
 	return func(m *UserMutation) {
 		var (
 			err   error
@@ -8745,13 +8744,13 @@ func (m UserMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of User entities.
-func (m *UserMutation) SetID(id uuid.UUID) {
+func (m *UserMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *UserMutation) ID() (id uuid.UUID, exists bool) {
+func (m *UserMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -8762,12 +8761,12 @@ func (m *UserMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *UserMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *UserMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -9622,7 +9621,7 @@ func (m *UserMutation) ResetSSHPublicKey() {
 }
 
 // SetAccountID sets the "account" edge to the Account entity by id.
-func (m *UserMutation) SetAccountID(id uuid.UUID) {
+func (m *UserMutation) SetAccountID(id string) {
 	m.account = &id
 }
 
@@ -9637,7 +9636,7 @@ func (m *UserMutation) AccountCleared() bool {
 }
 
 // AccountID returns the "account" edge ID in the mutation.
-func (m *UserMutation) AccountID() (id uuid.UUID, exists bool) {
+func (m *UserMutation) AccountID() (id string, exists bool) {
 	if m.account != nil {
 		return *m.account, true
 	}
@@ -9647,7 +9646,7 @@ func (m *UserMutation) AccountID() (id uuid.UUID, exists bool) {
 // AccountIDs returns the "account" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AccountID instead. It exists only for internal usage by the builders.
-func (m *UserMutation) AccountIDs() (ids []uuid.UUID) {
+func (m *UserMutation) AccountIDs() (ids []string) {
 	if id := m.account; id != nil {
 		ids = append(ids, *id)
 	}
@@ -9661,7 +9660,7 @@ func (m *UserMutation) ResetAccount() {
 }
 
 // SetRoleID sets the "role" edge to the Role entity by id.
-func (m *UserMutation) SetRoleID(id uuid.UUID) {
+func (m *UserMutation) SetRoleID(id string) {
 	m.role = &id
 }
 
@@ -9676,7 +9675,7 @@ func (m *UserMutation) RoleCleared() bool {
 }
 
 // RoleID returns the "role" edge ID in the mutation.
-func (m *UserMutation) RoleID() (id uuid.UUID, exists bool) {
+func (m *UserMutation) RoleID() (id string, exists bool) {
 	if m.role != nil {
 		return *m.role, true
 	}
@@ -9686,7 +9685,7 @@ func (m *UserMutation) RoleID() (id uuid.UUID, exists bool) {
 // RoleIDs returns the "role" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // RoleID instead. It exists only for internal usage by the builders.
-func (m *UserMutation) RoleIDs() (ids []uuid.UUID) {
+func (m *UserMutation) RoleIDs() (ids []string) {
 	if id := m.role; id != nil {
 		ids = append(ids, *id)
 	}
@@ -9700,9 +9699,9 @@ func (m *UserMutation) ResetRole() {
 }
 
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by ids.
-func (m *UserMutation) AddAuditLogIDs(ids ...uuid.UUID) {
+func (m *UserMutation) AddAuditLogIDs(ids ...string) {
 	if m.audit_logs == nil {
-		m.audit_logs = make(map[uuid.UUID]struct{})
+		m.audit_logs = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.audit_logs[ids[i]] = struct{}{}
@@ -9720,9 +9719,9 @@ func (m *UserMutation) AuditLogsCleared() bool {
 }
 
 // RemoveAuditLogIDs removes the "audit_logs" edge to the AuditLog entity by IDs.
-func (m *UserMutation) RemoveAuditLogIDs(ids ...uuid.UUID) {
+func (m *UserMutation) RemoveAuditLogIDs(ids ...string) {
 	if m.removedaudit_logs == nil {
-		m.removedaudit_logs = make(map[uuid.UUID]struct{})
+		m.removedaudit_logs = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.audit_logs, ids[i])
@@ -9731,7 +9730,7 @@ func (m *UserMutation) RemoveAuditLogIDs(ids ...uuid.UUID) {
 }
 
 // RemovedAuditLogs returns the removed IDs of the "audit_logs" edge to the AuditLog entity.
-func (m *UserMutation) RemovedAuditLogsIDs() (ids []uuid.UUID) {
+func (m *UserMutation) RemovedAuditLogsIDs() (ids []string) {
 	for id := range m.removedaudit_logs {
 		ids = append(ids, id)
 	}
@@ -9739,7 +9738,7 @@ func (m *UserMutation) RemovedAuditLogsIDs() (ids []uuid.UUID) {
 }
 
 // AuditLogsIDs returns the "audit_logs" edge IDs in the mutation.
-func (m *UserMutation) AuditLogsIDs() (ids []uuid.UUID) {
+func (m *UserMutation) AuditLogsIDs() (ids []string) {
 	for id := range m.audit_logs {
 		ids = append(ids, id)
 	}

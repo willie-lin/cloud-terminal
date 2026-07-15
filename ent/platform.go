@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/platform"
 )
 
@@ -18,7 +17,8 @@ import (
 type Platform struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	// UUID primary key
+	ID string `json:"id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -45,12 +45,10 @@ func (*Platform) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case platform.FieldConfig:
 			values[i] = new([]byte)
-		case platform.FieldName, platform.FieldDescription, platform.FieldRegion, platform.FieldVersion, platform.FieldStatus:
+		case platform.FieldID, platform.FieldName, platform.FieldDescription, platform.FieldRegion, platform.FieldVersion, platform.FieldStatus:
 			values[i] = new(sql.NullString)
 		case platform.FieldCreatedAt, platform.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case platform.FieldID:
-			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -67,10 +65,10 @@ func (_m *Platform) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case platform.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			} else if value.Valid {
+				_m.ID = value.String
 			}
 		case platform.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {

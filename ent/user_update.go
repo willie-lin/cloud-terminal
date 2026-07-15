@@ -11,10 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/user"
@@ -23,9 +21,8 @@ import (
 // UserUpdate is the builder for updating User entities.
 type UserUpdate struct {
 	config
-	hooks     []Hook
-	mutation  *UserMutation
-	modifiers []func(*sql.UpdateBuilder)
+	hooks    []Hook
+	mutation *UserMutation
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -340,7 +337,7 @@ func (_u *UserUpdate) ClearSSHPublicKey() *UserUpdate {
 }
 
 // SetAccountID sets the "account" edge to the Account entity by ID.
-func (_u *UserUpdate) SetAccountID(id uuid.UUID) *UserUpdate {
+func (_u *UserUpdate) SetAccountID(id string) *UserUpdate {
 	_u.mutation.SetAccountID(id)
 	return _u
 }
@@ -351,7 +348,7 @@ func (_u *UserUpdate) SetAccount(v *Account) *UserUpdate {
 }
 
 // SetRoleID sets the "role" edge to the Role entity by ID.
-func (_u *UserUpdate) SetRoleID(id uuid.UUID) *UserUpdate {
+func (_u *UserUpdate) SetRoleID(id string) *UserUpdate {
 	_u.mutation.SetRoleID(id)
 	return _u
 }
@@ -362,14 +359,14 @@ func (_u *UserUpdate) SetRole(v *Role) *UserUpdate {
 }
 
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
-func (_u *UserUpdate) AddAuditLogIDs(ids ...uuid.UUID) *UserUpdate {
+func (_u *UserUpdate) AddAuditLogIDs(ids ...string) *UserUpdate {
 	_u.mutation.AddAuditLogIDs(ids...)
 	return _u
 }
 
 // AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
 func (_u *UserUpdate) AddAuditLogs(v ...*AuditLog) *UserUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -400,14 +397,14 @@ func (_u *UserUpdate) ClearAuditLogs() *UserUpdate {
 }
 
 // RemoveAuditLogIDs removes the "audit_logs" edge to AuditLog entities by IDs.
-func (_u *UserUpdate) RemoveAuditLogIDs(ids ...uuid.UUID) *UserUpdate {
+func (_u *UserUpdate) RemoveAuditLogIDs(ids ...string) *UserUpdate {
 	_u.mutation.RemoveAuditLogIDs(ids...)
 	return _u
 }
 
 // RemoveAuditLogs removes "audit_logs" edges to AuditLog entities.
 func (_u *UserUpdate) RemoveAuditLogs(v ...*AuditLog) *UserUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -486,17 +483,11 @@ func (_u *UserUpdate) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *UserUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *UserUpdate {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -596,10 +587,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
@@ -610,10 +600,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -627,10 +616,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RoleIDs(); len(nodes) > 0 {
@@ -641,10 +629,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -658,10 +645,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !_u.mutation.AuditLogsCleared() {
@@ -672,10 +658,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -689,18 +674,14 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.User
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -716,10 +697,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // UserUpdateOne is the builder for updating a single User entity.
 type UserUpdateOne struct {
 	config
-	fields    []string
-	hooks     []Hook
-	mutation  *UserMutation
-	modifiers []func(*sql.UpdateBuilder)
+	fields   []string
+	hooks    []Hook
+	mutation *UserMutation
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -1028,7 +1008,7 @@ func (_u *UserUpdateOne) ClearSSHPublicKey() *UserUpdateOne {
 }
 
 // SetAccountID sets the "account" edge to the Account entity by ID.
-func (_u *UserUpdateOne) SetAccountID(id uuid.UUID) *UserUpdateOne {
+func (_u *UserUpdateOne) SetAccountID(id string) *UserUpdateOne {
 	_u.mutation.SetAccountID(id)
 	return _u
 }
@@ -1039,7 +1019,7 @@ func (_u *UserUpdateOne) SetAccount(v *Account) *UserUpdateOne {
 }
 
 // SetRoleID sets the "role" edge to the Role entity by ID.
-func (_u *UserUpdateOne) SetRoleID(id uuid.UUID) *UserUpdateOne {
+func (_u *UserUpdateOne) SetRoleID(id string) *UserUpdateOne {
 	_u.mutation.SetRoleID(id)
 	return _u
 }
@@ -1050,14 +1030,14 @@ func (_u *UserUpdateOne) SetRole(v *Role) *UserUpdateOne {
 }
 
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
-func (_u *UserUpdateOne) AddAuditLogIDs(ids ...uuid.UUID) *UserUpdateOne {
+func (_u *UserUpdateOne) AddAuditLogIDs(ids ...string) *UserUpdateOne {
 	_u.mutation.AddAuditLogIDs(ids...)
 	return _u
 }
 
 // AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
 func (_u *UserUpdateOne) AddAuditLogs(v ...*AuditLog) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -1088,14 +1068,14 @@ func (_u *UserUpdateOne) ClearAuditLogs() *UserUpdateOne {
 }
 
 // RemoveAuditLogIDs removes the "audit_logs" edge to AuditLog entities by IDs.
-func (_u *UserUpdateOne) RemoveAuditLogIDs(ids ...uuid.UUID) *UserUpdateOne {
+func (_u *UserUpdateOne) RemoveAuditLogIDs(ids ...string) *UserUpdateOne {
 	_u.mutation.RemoveAuditLogIDs(ids...)
 	return _u
 }
 
 // RemoveAuditLogs removes "audit_logs" edges to AuditLog entities.
 func (_u *UserUpdateOne) RemoveAuditLogs(v ...*AuditLog) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -1187,17 +1167,11 @@ func (_u *UserUpdateOne) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *UserUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *UserUpdateOne {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "User.id" for update`)}
@@ -1314,10 +1288,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
@@ -1328,10 +1301,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1345,10 +1317,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RoleIDs(); len(nodes) > 0 {
@@ -1359,10 +1330,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1376,10 +1346,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !_u.mutation.AuditLogsCleared() {
@@ -1390,10 +1359,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1407,18 +1375,14 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.User
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	_node = &User{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

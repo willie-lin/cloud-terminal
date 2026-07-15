@@ -7,54 +7,62 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uuid.UUID) predicate.AuditLog {
+func ID(id string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uuid.UUID) predicate.AuditLog {
+func IDEQ(id string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uuid.UUID) predicate.AuditLog {
+func IDNEQ(id string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uuid.UUID) predicate.AuditLog {
+func IDIn(ids ...string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uuid.UUID) predicate.AuditLog {
+func IDNotIn(ids ...string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uuid.UUID) predicate.AuditLog {
+func IDGT(id string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uuid.UUID) predicate.AuditLog {
+func IDGTE(id string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uuid.UUID) predicate.AuditLog {
+func IDLT(id string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uuid.UUID) predicate.AuditLog {
+func IDLTE(id string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldLTE(FieldID, id))
+}
+
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEqualFold(FieldID, id))
+}
+
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldContainsFold(FieldID, id))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -624,9 +632,6 @@ func HasUser() predicate.AuditLog {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.AuditLog
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -635,9 +640,6 @@ func HasUser() predicate.AuditLog {
 func HasUserWith(preds ...predicate.User) predicate.AuditLog {
 	return predicate.AuditLog(func(s *sql.Selector) {
 		step := newUserStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.AuditLog
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

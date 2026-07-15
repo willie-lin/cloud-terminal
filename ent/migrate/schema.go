@@ -10,7 +10,7 @@ import (
 var (
 	// AccessPoliciesColumns holds the columns for the "access_policies" table.
 	AccessPoliciesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
@@ -18,7 +18,7 @@ var (
 		{Name: "statements", Type: field.TypeJSON},
 		{Name: "immutable", Type: field.TypeBool, Default: false},
 		{Name: "priority", Type: field.TypeInt, Default: 0},
-		{Name: "tenant_access_policies", Type: field.TypeUUID, Nullable: true},
+		{Name: "tenant_access_policies", Type: field.TypeString, Nullable: true},
 	}
 	// AccessPoliciesTable holds the schema information for the "access_policies" table.
 	AccessPoliciesTable = &schema.Table{
@@ -36,7 +36,7 @@ var (
 	}
 	// AccountsColumns holds the columns for the "accounts" table.
 	AccountsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
@@ -51,7 +51,7 @@ var (
 	}
 	// AuditLogsColumns holds the columns for the "audit_logs" table.
 	AuditLogsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "session_id", Type: field.TypeString, Unique: true},
@@ -62,7 +62,7 @@ var (
 		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
 		{Name: "detail", Type: field.TypeJSON, Nullable: true},
 		{Name: "s3_path", Type: field.TypeString, Nullable: true},
-		{Name: "user_audit_logs", Type: field.TypeUUID, Nullable: true},
+		{Name: "user_audit_logs", Type: field.TypeString, Nullable: true},
 	}
 	// AuditLogsTable holds the schema information for the "audit_logs" table.
 	AuditLogsTable = &schema.Table{
@@ -92,7 +92,7 @@ var (
 	}
 	// EnvironmentsColumns holds the columns for the "environments" table.
 	EnvironmentsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
@@ -103,8 +103,8 @@ var (
 		{Name: "env_vars", Type: field.TypeJSON, Nullable: true},
 		{Name: "volumes", Type: field.TypeJSON, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive"}, Default: "active"},
-		{Name: "access_policy_environment", Type: field.TypeUUID, Unique: true, Nullable: true},
-		{Name: "tenant_environments", Type: field.TypeUUID, Nullable: true},
+		{Name: "access_policy_environment", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "tenant_environments", Type: field.TypeString, Nullable: true},
 	}
 	// EnvironmentsTable holds the schema information for the "environments" table.
 	EnvironmentsTable = &schema.Table{
@@ -128,7 +128,7 @@ var (
 	}
 	// PlatformsColumns holds the columns for the "platforms" table.
 	PlatformsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
@@ -146,7 +146,7 @@ var (
 	}
 	// ResourcesColumns holds the columns for the "resources" table.
 	ResourcesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
@@ -156,8 +156,8 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive"}, Default: "active"},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
-		{Name: "account_resource", Type: field.TypeUUID, Unique: true, Nullable: true},
-		{Name: "tenant_resources", Type: field.TypeUUID, Nullable: true},
+		{Name: "account_resource", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "tenant_resources", Type: field.TypeString, Nullable: true},
 	}
 	// ResourcesTable holds the schema information for the "resources" table.
 	ResourcesTable = &schema.Table{
@@ -181,14 +181,14 @@ var (
 	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "is_disabled", Type: field.TypeBool, Default: false},
 		{Name: "is_default", Type: field.TypeBool, Default: false},
-		{Name: "account_roles", Type: field.TypeUUID, Nullable: true},
+		{Name: "account_roles", Type: field.TypeString, Nullable: true},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
@@ -213,7 +213,7 @@ var (
 	}
 	// SessionsColumns holds the columns for the "sessions" table.
 	SessionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "session_id", Type: field.TypeString, Unique: true},
@@ -235,7 +235,7 @@ var (
 	}
 	// TenantsColumns holds the columns for the "tenants" table.
 	TenantsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
@@ -250,7 +250,7 @@ var (
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "avatar", Type: field.TypeString, Nullable: true},
@@ -271,8 +271,8 @@ var (
 		{Name: "social_logins", Type: field.TypeJSON, Nullable: true},
 		{Name: "is_default", Type: field.TypeBool, Default: false},
 		{Name: "ssh_public_key", Type: field.TypeString, Nullable: true},
-		{Name: "account_users", Type: field.TypeUUID},
-		{Name: "user_role", Type: field.TypeUUID},
+		{Name: "account_users", Type: field.TypeString},
+		{Name: "user_role", Type: field.TypeString},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -308,8 +308,8 @@ var (
 	}
 	// AccountAccessPoliciesColumns holds the columns for the "account_access_policies" table.
 	AccountAccessPoliciesColumns = []*schema.Column{
-		{Name: "account_id", Type: field.TypeUUID},
-		{Name: "access_policy_id", Type: field.TypeUUID},
+		{Name: "account_id", Type: field.TypeString},
+		{Name: "access_policy_id", Type: field.TypeString},
 	}
 	// AccountAccessPoliciesTable holds the schema information for the "account_access_policies" table.
 	AccountAccessPoliciesTable = &schema.Table{
@@ -333,8 +333,8 @@ var (
 	}
 	// RoleAccessPoliciesColumns holds the columns for the "role_access_policies" table.
 	RoleAccessPoliciesColumns = []*schema.Column{
-		{Name: "role_id", Type: field.TypeUUID},
-		{Name: "access_policy_id", Type: field.TypeUUID},
+		{Name: "role_id", Type: field.TypeString},
+		{Name: "access_policy_id", Type: field.TypeString},
 	}
 	// RoleAccessPoliciesTable holds the schema information for the "role_access_policies" table.
 	RoleAccessPoliciesTable = &schema.Table{
@@ -358,8 +358,8 @@ var (
 	}
 	// RoleChildRolesColumns holds the columns for the "role_child_roles" table.
 	RoleChildRolesColumns = []*schema.Column{
-		{Name: "role_id", Type: field.TypeUUID},
-		{Name: "parent_role_id", Type: field.TypeUUID},
+		{Name: "role_id", Type: field.TypeString},
+		{Name: "parent_role_id", Type: field.TypeString},
 	}
 	// RoleChildRolesTable holds the schema information for the "role_child_roles" table.
 	RoleChildRolesTable = &schema.Table{

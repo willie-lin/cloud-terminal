@@ -8,11 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"entgo.io/ent/dialect"
-	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
@@ -23,7 +20,6 @@ type ResourceCreate struct {
 	config
 	mutation *ResourceMutation
 	hooks    []Hook
-	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -121,13 +117,13 @@ func (_c *ResourceCreate) SetMetadata(v map[string]interface{}) *ResourceCreate 
 }
 
 // SetID sets the "id" field.
-func (_c *ResourceCreate) SetID(v uuid.UUID) *ResourceCreate {
+func (_c *ResourceCreate) SetID(v string) *ResourceCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (_c *ResourceCreate) SetNillableID(v *uuid.UUID) *ResourceCreate {
+func (_c *ResourceCreate) SetNillableID(v *string) *ResourceCreate {
 	if v != nil {
 		_c.SetID(*v)
 	}
@@ -135,13 +131,13 @@ func (_c *ResourceCreate) SetNillableID(v *uuid.UUID) *ResourceCreate {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (_c *ResourceCreate) SetTenantID(id uuid.UUID) *ResourceCreate {
+func (_c *ResourceCreate) SetTenantID(id string) *ResourceCreate {
 	_c.mutation.SetTenantID(id)
 	return _c
 }
 
 // SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (_c *ResourceCreate) SetNillableTenantID(id *uuid.UUID) *ResourceCreate {
+func (_c *ResourceCreate) SetNillableTenantID(id *string) *ResourceCreate {
 	if id != nil {
 		_c = _c.SetTenantID(*id)
 	}
@@ -154,13 +150,13 @@ func (_c *ResourceCreate) SetTenant(v *Tenant) *ResourceCreate {
 }
 
 // SetAccountsID sets the "accounts" edge to the Account entity by ID.
-func (_c *ResourceCreate) SetAccountsID(id uuid.UUID) *ResourceCreate {
+func (_c *ResourceCreate) SetAccountsID(id string) *ResourceCreate {
 	_c.mutation.SetAccountsID(id)
 	return _c
 }
 
 // SetNillableAccountsID sets the "accounts" edge to the Account entity by ID if the given value is not nil.
-func (_c *ResourceCreate) SetNillableAccountsID(id *uuid.UUID) *ResourceCreate {
+func (_c *ResourceCreate) SetNillableAccountsID(id *string) *ResourceCreate {
 	if id != nil {
 		_c = _c.SetAccountsID(*id)
 	}
@@ -287,10 +283,10 @@ func (_c *ResourceCreate) sqlSave(ctx context.Context) (*Resource, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Resource.ID type: %T", _spec.ID.Value)
 		}
 	}
 	_c.mutation.id = &_node.ID
@@ -301,13 +297,11 @@ func (_c *ResourceCreate) sqlSave(ctx context.Context) (*Resource, error) {
 func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Resource{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(resource.Table, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(resource.Table, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString))
 	)
-	_spec.Schema = _c.schemaConfig.Resource
-	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = &id
+		_spec.ID.Value = id
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(resource.FieldCreatedAt, field.TypeTime, value)
@@ -353,10 +347,9 @@ func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 			Columns: []string{resource.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -371,10 +364,9 @@ func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 			Columns: []string{resource.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -384,397 +376,11 @@ func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
-// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
-// of the `INSERT` statement. For example:
-//
-//	client.Resource.Create().
-//		SetCreatedAt(v).
-//		OnConflict(
-//			// Update the row with the new values
-//			// the was proposed for insertion.
-//			sql.ResolveWithNewValues(),
-//		).
-//		// Override some of the fields with custom
-//		// update values.
-//		Update(func(u *ent.ResourceUpsert) {
-//			SetCreatedAt(v+v).
-//		}).
-//		Exec(ctx)
-func (_c *ResourceCreate) OnConflict(opts ...sql.ConflictOption) *ResourceUpsertOne {
-	_c.conflict = opts
-	return &ResourceUpsertOne{
-		create: _c,
-	}
-}
-
-// OnConflictColumns calls `OnConflict` and configures the columns
-// as conflict target. Using this option is equivalent to using:
-//
-//	client.Resource.Create().
-//		OnConflict(sql.ConflictColumns(columns...)).
-//		Exec(ctx)
-func (_c *ResourceCreate) OnConflictColumns(columns ...string) *ResourceUpsertOne {
-	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
-	return &ResourceUpsertOne{
-		create: _c,
-	}
-}
-
-type (
-	// ResourceUpsertOne is the builder for "upsert"-ing
-	//  one Resource node.
-	ResourceUpsertOne struct {
-		create *ResourceCreate
-	}
-
-	// ResourceUpsert is the "OnConflict" setter.
-	ResourceUpsert struct {
-		*sql.UpdateSet
-	}
-)
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *ResourceUpsert) SetUpdatedAt(v time.Time) *ResourceUpsert {
-	u.Set(resource.FieldUpdatedAt, v)
-	return u
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateUpdatedAt() *ResourceUpsert {
-	u.SetExcluded(resource.FieldUpdatedAt)
-	return u
-}
-
-// SetName sets the "name" field.
-func (u *ResourceUpsert) SetName(v string) *ResourceUpsert {
-	u.Set(resource.FieldName, v)
-	return u
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateName() *ResourceUpsert {
-	u.SetExcluded(resource.FieldName)
-	return u
-}
-
-// SetHost sets the "host" field.
-func (u *ResourceUpsert) SetHost(v string) *ResourceUpsert {
-	u.Set(resource.FieldHost, v)
-	return u
-}
-
-// UpdateHost sets the "host" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateHost() *ResourceUpsert {
-	u.SetExcluded(resource.FieldHost)
-	return u
-}
-
-// SetPort sets the "port" field.
-func (u *ResourceUpsert) SetPort(v int) *ResourceUpsert {
-	u.Set(resource.FieldPort, v)
-	return u
-}
-
-// UpdatePort sets the "port" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdatePort() *ResourceUpsert {
-	u.SetExcluded(resource.FieldPort)
-	return u
-}
-
-// AddPort adds v to the "port" field.
-func (u *ResourceUpsert) AddPort(v int) *ResourceUpsert {
-	u.Add(resource.FieldPort, v)
-	return u
-}
-
-// SetType sets the "type" field.
-func (u *ResourceUpsert) SetType(v resource.Type) *ResourceUpsert {
-	u.Set(resource.FieldType, v)
-	return u
-}
-
-// UpdateType sets the "type" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateType() *ResourceUpsert {
-	u.SetExcluded(resource.FieldType)
-	return u
-}
-
-// SetDescription sets the "description" field.
-func (u *ResourceUpsert) SetDescription(v string) *ResourceUpsert {
-	u.Set(resource.FieldDescription, v)
-	return u
-}
-
-// UpdateDescription sets the "description" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateDescription() *ResourceUpsert {
-	u.SetExcluded(resource.FieldDescription)
-	return u
-}
-
-// ClearDescription clears the value of the "description" field.
-func (u *ResourceUpsert) ClearDescription() *ResourceUpsert {
-	u.SetNull(resource.FieldDescription)
-	return u
-}
-
-// SetStatus sets the "status" field.
-func (u *ResourceUpsert) SetStatus(v resource.Status) *ResourceUpsert {
-	u.Set(resource.FieldStatus, v)
-	return u
-}
-
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateStatus() *ResourceUpsert {
-	u.SetExcluded(resource.FieldStatus)
-	return u
-}
-
-// SetMetadata sets the "metadata" field.
-func (u *ResourceUpsert) SetMetadata(v map[string]interface{}) *ResourceUpsert {
-	u.Set(resource.FieldMetadata, v)
-	return u
-}
-
-// UpdateMetadata sets the "metadata" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateMetadata() *ResourceUpsert {
-	u.SetExcluded(resource.FieldMetadata)
-	return u
-}
-
-// ClearMetadata clears the value of the "metadata" field.
-func (u *ResourceUpsert) ClearMetadata() *ResourceUpsert {
-	u.SetNull(resource.FieldMetadata)
-	return u
-}
-
-// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
-// Using this option is equivalent to using:
-//
-//	client.Resource.Create().
-//		OnConflict(
-//			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(resource.FieldID)
-//			}),
-//		).
-//		Exec(ctx)
-func (u *ResourceUpsertOne) UpdateNewValues() *ResourceUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(resource.FieldID)
-		}
-		if _, exists := u.create.mutation.CreatedAt(); exists {
-			s.SetIgnore(resource.FieldCreatedAt)
-		}
-	}))
-	return u
-}
-
-// Ignore sets each column to itself in case of conflict.
-// Using this option is equivalent to using:
-//
-//	client.Resource.Create().
-//	    OnConflict(sql.ResolveWithIgnore()).
-//	    Exec(ctx)
-func (u *ResourceUpsertOne) Ignore() *ResourceUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
-	return u
-}
-
-// DoNothing configures the conflict_action to `DO NOTHING`.
-// Supported only by SQLite and PostgreSQL.
-func (u *ResourceUpsertOne) DoNothing() *ResourceUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.DoNothing())
-	return u
-}
-
-// Update allows overriding fields `UPDATE` values. See the ResourceCreate.OnConflict
-// documentation for more info.
-func (u *ResourceUpsertOne) Update(set func(*ResourceUpsert)) *ResourceUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&ResourceUpsert{UpdateSet: update})
-	}))
-	return u
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *ResourceUpsertOne) SetUpdatedAt(v time.Time) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetUpdatedAt(v)
-	})
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateUpdatedAt() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateUpdatedAt()
-	})
-}
-
-// SetName sets the "name" field.
-func (u *ResourceUpsertOne) SetName(v string) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetName(v)
-	})
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateName() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateName()
-	})
-}
-
-// SetHost sets the "host" field.
-func (u *ResourceUpsertOne) SetHost(v string) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetHost(v)
-	})
-}
-
-// UpdateHost sets the "host" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateHost() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateHost()
-	})
-}
-
-// SetPort sets the "port" field.
-func (u *ResourceUpsertOne) SetPort(v int) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetPort(v)
-	})
-}
-
-// AddPort adds v to the "port" field.
-func (u *ResourceUpsertOne) AddPort(v int) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.AddPort(v)
-	})
-}
-
-// UpdatePort sets the "port" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdatePort() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdatePort()
-	})
-}
-
-// SetType sets the "type" field.
-func (u *ResourceUpsertOne) SetType(v resource.Type) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetType(v)
-	})
-}
-
-// UpdateType sets the "type" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateType() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateType()
-	})
-}
-
-// SetDescription sets the "description" field.
-func (u *ResourceUpsertOne) SetDescription(v string) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetDescription(v)
-	})
-}
-
-// UpdateDescription sets the "description" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateDescription() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateDescription()
-	})
-}
-
-// ClearDescription clears the value of the "description" field.
-func (u *ResourceUpsertOne) ClearDescription() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.ClearDescription()
-	})
-}
-
-// SetStatus sets the "status" field.
-func (u *ResourceUpsertOne) SetStatus(v resource.Status) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetStatus(v)
-	})
-}
-
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateStatus() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateStatus()
-	})
-}
-
-// SetMetadata sets the "metadata" field.
-func (u *ResourceUpsertOne) SetMetadata(v map[string]interface{}) *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetMetadata(v)
-	})
-}
-
-// UpdateMetadata sets the "metadata" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateMetadata() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateMetadata()
-	})
-}
-
-// ClearMetadata clears the value of the "metadata" field.
-func (u *ResourceUpsertOne) ClearMetadata() *ResourceUpsertOne {
-	return u.Update(func(s *ResourceUpsert) {
-		s.ClearMetadata()
-	})
-}
-
-// Exec executes the query.
-func (u *ResourceUpsertOne) Exec(ctx context.Context) error {
-	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for ResourceCreate.OnConflict")
-	}
-	return u.create.Exec(ctx)
-}
-
-// ExecX is like Exec, but panics if an error occurs.
-func (u *ResourceUpsertOne) ExecX(ctx context.Context) {
-	if err := u.create.Exec(ctx); err != nil {
-		panic(err)
-	}
-}
-
-// Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *ResourceUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
-	if u.create.driver.Dialect() == dialect.MySQL {
-		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
-		// fields from the database since MySQL does not support the RETURNING clause.
-		return id, errors.New("ent: ResourceUpsertOne.ID is not supported by MySQL driver. Use ResourceUpsertOne.Exec instead")
-	}
-	node, err := u.create.Save(ctx)
-	if err != nil {
-		return id, err
-	}
-	return node.ID, nil
-}
-
-// IDX is like ID, but panics if an error occurs.
-func (u *ResourceUpsertOne) IDX(ctx context.Context) uuid.UUID {
-	id, err := u.ID(ctx)
-	if err != nil {
-		panic(err)
-	}
-	return id
-}
-
 // ResourceCreateBulk is the builder for creating many Resource entities in bulk.
 type ResourceCreateBulk struct {
 	config
 	err      error
 	builders []*ResourceCreate
-	conflict []sql.ConflictOption
 }
 
 // Save creates the Resource entities in the database.
@@ -804,7 +410,6 @@ func (_c *ResourceCreateBulk) Save(ctx context.Context) ([]*Resource, error) {
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -851,256 +456,6 @@ func (_c *ResourceCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *ResourceCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
-		panic(err)
-	}
-}
-
-// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
-// of the `INSERT` statement. For example:
-//
-//	client.Resource.CreateBulk(builders...).
-//		OnConflict(
-//			// Update the row with the new values
-//			// the was proposed for insertion.
-//			sql.ResolveWithNewValues(),
-//		).
-//		// Override some of the fields with custom
-//		// update values.
-//		Update(func(u *ent.ResourceUpsert) {
-//			SetCreatedAt(v+v).
-//		}).
-//		Exec(ctx)
-func (_c *ResourceCreateBulk) OnConflict(opts ...sql.ConflictOption) *ResourceUpsertBulk {
-	_c.conflict = opts
-	return &ResourceUpsertBulk{
-		create: _c,
-	}
-}
-
-// OnConflictColumns calls `OnConflict` and configures the columns
-// as conflict target. Using this option is equivalent to using:
-//
-//	client.Resource.Create().
-//		OnConflict(sql.ConflictColumns(columns...)).
-//		Exec(ctx)
-func (_c *ResourceCreateBulk) OnConflictColumns(columns ...string) *ResourceUpsertBulk {
-	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
-	return &ResourceUpsertBulk{
-		create: _c,
-	}
-}
-
-// ResourceUpsertBulk is the builder for "upsert"-ing
-// a bulk of Resource nodes.
-type ResourceUpsertBulk struct {
-	create *ResourceCreateBulk
-}
-
-// UpdateNewValues updates the mutable fields using the new values that
-// were set on create. Using this option is equivalent to using:
-//
-//	client.Resource.Create().
-//		OnConflict(
-//			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(resource.FieldID)
-//			}),
-//		).
-//		Exec(ctx)
-func (u *ResourceUpsertBulk) UpdateNewValues() *ResourceUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		for _, b := range u.create.builders {
-			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(resource.FieldID)
-			}
-			if _, exists := b.mutation.CreatedAt(); exists {
-				s.SetIgnore(resource.FieldCreatedAt)
-			}
-		}
-	}))
-	return u
-}
-
-// Ignore sets each column to itself in case of conflict.
-// Using this option is equivalent to using:
-//
-//	client.Resource.Create().
-//		OnConflict(sql.ResolveWithIgnore()).
-//		Exec(ctx)
-func (u *ResourceUpsertBulk) Ignore() *ResourceUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
-	return u
-}
-
-// DoNothing configures the conflict_action to `DO NOTHING`.
-// Supported only by SQLite and PostgreSQL.
-func (u *ResourceUpsertBulk) DoNothing() *ResourceUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.DoNothing())
-	return u
-}
-
-// Update allows overriding fields `UPDATE` values. See the ResourceCreateBulk.OnConflict
-// documentation for more info.
-func (u *ResourceUpsertBulk) Update(set func(*ResourceUpsert)) *ResourceUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&ResourceUpsert{UpdateSet: update})
-	}))
-	return u
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *ResourceUpsertBulk) SetUpdatedAt(v time.Time) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetUpdatedAt(v)
-	})
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateUpdatedAt() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateUpdatedAt()
-	})
-}
-
-// SetName sets the "name" field.
-func (u *ResourceUpsertBulk) SetName(v string) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetName(v)
-	})
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateName() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateName()
-	})
-}
-
-// SetHost sets the "host" field.
-func (u *ResourceUpsertBulk) SetHost(v string) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetHost(v)
-	})
-}
-
-// UpdateHost sets the "host" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateHost() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateHost()
-	})
-}
-
-// SetPort sets the "port" field.
-func (u *ResourceUpsertBulk) SetPort(v int) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetPort(v)
-	})
-}
-
-// AddPort adds v to the "port" field.
-func (u *ResourceUpsertBulk) AddPort(v int) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.AddPort(v)
-	})
-}
-
-// UpdatePort sets the "port" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdatePort() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdatePort()
-	})
-}
-
-// SetType sets the "type" field.
-func (u *ResourceUpsertBulk) SetType(v resource.Type) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetType(v)
-	})
-}
-
-// UpdateType sets the "type" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateType() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateType()
-	})
-}
-
-// SetDescription sets the "description" field.
-func (u *ResourceUpsertBulk) SetDescription(v string) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetDescription(v)
-	})
-}
-
-// UpdateDescription sets the "description" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateDescription() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateDescription()
-	})
-}
-
-// ClearDescription clears the value of the "description" field.
-func (u *ResourceUpsertBulk) ClearDescription() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.ClearDescription()
-	})
-}
-
-// SetStatus sets the "status" field.
-func (u *ResourceUpsertBulk) SetStatus(v resource.Status) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetStatus(v)
-	})
-}
-
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateStatus() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateStatus()
-	})
-}
-
-// SetMetadata sets the "metadata" field.
-func (u *ResourceUpsertBulk) SetMetadata(v map[string]interface{}) *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.SetMetadata(v)
-	})
-}
-
-// UpdateMetadata sets the "metadata" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateMetadata() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateMetadata()
-	})
-}
-
-// ClearMetadata clears the value of the "metadata" field.
-func (u *ResourceUpsertBulk) ClearMetadata() *ResourceUpsertBulk {
-	return u.Update(func(s *ResourceUpsert) {
-		s.ClearMetadata()
-	})
-}
-
-// Exec executes the query.
-func (u *ResourceUpsertBulk) Exec(ctx context.Context) error {
-	if u.create.err != nil {
-		return u.create.err
-	}
-	for i, b := range u.create.builders {
-		if len(b.conflict) != 0 {
-			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ResourceCreateBulk instead", i)
-		}
-	}
-	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for ResourceCreateBulk.OnConflict")
-	}
-	return u.create.Exec(ctx)
-}
-
-// ExecX is like Exec, but panics if an error occurs.
-func (u *ResourceUpsertBulk) ExecX(ctx context.Context) {
-	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

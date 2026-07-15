@@ -67,8 +67,8 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetEmail(dto.Email).
 			SetUsername(utils.GenerateUsername()).
 			SetPassword(string(hashedPassword)).
-			SetRoleID(dto.RoleID).
-			SetAccountID(accountID).
+			SetRoleID(dto.RoleID.String()).
+			SetAccountID(accountID.String()).
 			SetOnline(dto.Online).
 			SetStatus(dto.Status).
 			Save(c.Request().Context())
@@ -76,7 +76,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error creating user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
 		}
-		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
+		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID})
 	}
 }
 
@@ -117,14 +117,14 @@ func GetAllUsersByTenant(client *ent.Client) echo.HandlerFunc {
 			users, err = client.User.Query().
 				Where(user.HasAccountWith(
 					account.And(
-						account.ID(accountID),
+						account.ID(accountID.String()),
 					),
 				)).
 				All(ctx)
 		} else {
 			// Regular users can only view their own information
 			users, err = client.User.Query().
-				Where(user.IDEQ(userID)).
+				Where(user.IDEQ(userID.String())).
 				All(ctx)
 		}
 
@@ -424,7 +424,7 @@ func UpdateUserByUUID(client *ent.Client) echo.HandlerFunc {
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
 		defer cancel()
 
-		user, err := client.User.UpdateOneID(id).SetEmail(u.Email).SetNickname(u.Nickname).Save(ctx)
+		user, err := client.User.UpdateOneID(id.String()).SetEmail(u.Email).SetNickname(u.Nickname).Save(ctx)
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
 			return c.JSON(http.StatusNotFound, "User not found")

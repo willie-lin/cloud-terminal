@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/google/uuid"
 	"context"
 	"fmt"
 	"github.com/gorilla/sessions"
@@ -228,7 +229,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			SetAccount(act).
 			SetRole(tenantRole).
 			Save(ctx)
-		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID.String()})
+		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID})
 		//return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
 	}
 }
@@ -339,13 +340,13 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(r.Description)
 
 		// 生成包含租户信息的accessToken
-		accessToken, err := utils.CreateAccessToken(us.ID, tenant.ID, sa.ID, us.Email, us.Username, r.Name)
+		accessToken, err := utils.CreateAccessToken(uuid.MustParse(us.ID), uuid.MustParse(tenant.ID), uuid.MustParse(sa.ID), us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 		// 生成包含租户信息的RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(us.ID, tenant.ID, sa.ID, us.Email, us.Username, r.Name)
+		refreshToken, err := utils.CreateRefreshToken(uuid.MustParse(us.ID), uuid.MustParse(tenant.ID), uuid.MustParse(sa.ID), us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})

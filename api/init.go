@@ -7,7 +7,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/platform"
 	"github.com/willie-lin/cloud-terminal/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
@@ -172,26 +171,9 @@ import (
 func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	// 使用 privacy.DecisionContext 跳过隐私检查
 	ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
-	platformName := utils.PlatformName // 或者其他你想要的默认平台名称
+	var err error // 或者其他你想要的默认平台名称
+	platformName := utils.PlatformName
 
-	// 0. 检查或创建 Platform
-	_, err := client.Platform.Query().Where(platform.NameEQ(platformName)).Only(ctx)
-	if err != nil && !ent.IsNotFound(err) {
-		return err
-	}
-	if ent.IsNotFound(err) {
-		_, err = client.Platform.Create().
-			SetName(platformName).
-			Save(ctx)
-		if err != nil {
-			return err
-		}
-		log.Print("Created CloudSecPlatform platform")
-	} else {
-		log.Print("CloudSecPlatform platform already exists.")
-	}
-
-	// 1. 检查或创建 "management" 租户（用于管理）
 	tenantName := utils.ManagementTenant
 	_, err = client.Tenant.Query().Where(tenant.NameEQ(tenantName)).Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {

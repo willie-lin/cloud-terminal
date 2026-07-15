@@ -8,7 +8,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/platform"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
@@ -41,9 +40,7 @@ func (_d *PlatformDelete) ExecX(ctx context.Context) int {
 }
 
 func (_d *PlatformDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(platform.Table, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
-	_spec.Node.Schema = _d.schemaConfig.Platform
-	ctx = internal.NewSchemaConfigContext(ctx, _d.schemaConfig)
+	_spec := sqlgraph.NewDeleteSpec(platform.Table, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeString))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

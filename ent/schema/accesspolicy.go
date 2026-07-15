@@ -4,7 +4,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // AccessPolicy holds the schema definition for the AccessPolicy entity.
@@ -14,7 +13,8 @@ type AccessPolicy struct {
 
 func (AccessPolicy) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		BaseMixin{},
+		IDMixin{},
+		TimeMixin{},
 	}
 }
 
@@ -28,7 +28,6 @@ type PolicyStatement struct {
 // Fields of the AccessPolicy.
 func (AccessPolicy) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").NotEmpty(),
 		field.String("description").Optional(),
 		field.JSON("statements", []PolicyStatement{}).Default([]PolicyStatement{}),

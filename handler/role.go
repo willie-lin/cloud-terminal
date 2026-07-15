@@ -74,7 +74,7 @@ func GetAllRolesByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 		var err error
 
 		if isSuperAdmin || isTenantAdmin {
-			roles, err = client.Role.Query().Where(role.HasAccountWith(account.ID(accountID))).All(c.Request().Context())
+			roles, err = client.Role.Query().Where(role.HasAccountWith(account.ID(accountID.String()))).All(c.Request().Context())
 		} else {
 			roles, err = client.Role.Query().Where(role.NameEQ(roleName)).All(c.Request().Context())
 		}
@@ -124,7 +124,7 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 			r, err := client.Role.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
-				SetAccountID(accountID).
+				SetAccountID(accountID.String()).
 				Save(c.Request().Context())
 			if err != nil {
 				log.Printf("Error creating role: %v", err)

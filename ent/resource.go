@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
@@ -20,7 +19,8 @@ import (
 type Resource struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	// UUID primary key
+	ID string `json:"id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -42,8 +42,8 @@ type Resource struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ResourceQuery when eager-loading is set.
 	Edges            ResourceEdges `json:"edges"`
-	account_resource *uuid.UUID
-	tenant_resources *uuid.UUID
+	account_resource *string
+	tenant_resources *string
 	selectValues     sql.SelectValues
 }
 
@@ -89,16 +89,14 @@ func (*Resource) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case resource.FieldPort:
 			values[i] = new(sql.NullInt64)
-		case resource.FieldName, resource.FieldHost, resource.FieldType, resource.FieldDescription, resource.FieldStatus:
+		case resource.FieldID, resource.FieldName, resource.FieldHost, resource.FieldType, resource.FieldDescription, resource.FieldStatus:
 			values[i] = new(sql.NullString)
 		case resource.FieldCreatedAt, resource.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case resource.FieldID:
-			values[i] = new(uuid.UUID)
 		case resource.ForeignKeys[0]: // account_resource
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		case resource.ForeignKeys[1]: // tenant_resources
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -115,10 +113,10 @@ func (_m *Resource) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case resource.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			} else if value.Valid {
+				_m.ID = value.String
 			}
 		case resource.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -177,18 +175,18 @@ func (_m *Resource) assignValues(columns []string, values []any) error {
 				}
 			}
 		case resource.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field account_resource", values[i])
 			} else if value.Valid {
-				_m.account_resource = new(uuid.UUID)
-				*_m.account_resource = *value.S.(*uuid.UUID)
+				_m.account_resource = new(string)
+				*_m.account_resource = value.String
 			}
 		case resource.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_resources", values[i])
 			} else if value.Valid {
-				_m.tenant_resources = new(uuid.UUID)
-				*_m.tenant_resources = *value.S.(*uuid.UUID)
+				_m.tenant_resources = new(string)
+				*_m.tenant_resources = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

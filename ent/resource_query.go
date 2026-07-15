@@ -8,13 +8,10 @@ import (
 	"math"
 
 	"entgo.io/ent"
-	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
@@ -30,7 +27,6 @@ type ResourceQuery struct {
 	withTenant   *TenantQuery
 	withAccounts *AccountQuery
 	withFKs      bool
-	modifiers    []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -83,9 +79,6 @@ func (_q *ResourceQuery) QueryTenant() *TenantQuery {
 			sqlgraph.To(tenant.Table, tenant.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, resource.TenantTable, resource.TenantColumn),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.Resource
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -108,9 +101,6 @@ func (_q *ResourceQuery) QueryAccounts() *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, resource.AccountsTable, resource.AccountsColumn),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.Resource
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -141,8 +131,8 @@ func (_q *ResourceQuery) FirstX(ctx context.Context) *Resource {
 
 // FirstID returns the first Resource ID from the query.
 // Returns a *NotFoundError when no Resource ID was found.
-func (_q *ResourceQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *ResourceQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -154,7 +144,7 @@ func (_q *ResourceQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) 
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *ResourceQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *ResourceQuery) FirstIDX(ctx context.Context) string {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -192,8 +182,8 @@ func (_q *ResourceQuery) OnlyX(ctx context.Context) *Resource {
 // OnlyID is like Only, but returns the only Resource ID in the query.
 // Returns a *NotSingularError when more than one Resource ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *ResourceQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *ResourceQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -209,7 +199,7 @@ func (_q *ResourceQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *ResourceQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *ResourceQuery) OnlyIDX(ctx context.Context) string {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -237,7 +227,7 @@ func (_q *ResourceQuery) AllX(ctx context.Context) []*Resource {
 }
 
 // IDs executes the query and returns a list of Resource IDs.
-func (_q *ResourceQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (_q *ResourceQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -249,7 +239,7 @@ func (_q *ResourceQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *ResourceQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *ResourceQuery) IDsX(ctx context.Context) []string {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -312,9 +302,8 @@ func (_q *ResourceQuery) Clone() *ResourceQuery {
 		withTenant:   _q.withTenant.Clone(),
 		withAccounts: _q.withAccounts.Clone(),
 		// clone intermediate query.
-		sql:       _q.sql.Clone(),
-		path:      _q.path,
-		modifiers: append([]func(*sql.Selector){}, _q.modifiers...),
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
@@ -439,11 +428,6 @@ func (_q *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
-	_spec.Node.Schema = _q.schemaConfig.Resource
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -461,12 +445,7 @@ func (_q *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 	}
 	if query := _q.withAccounts; query != nil {
 		if err := _q.loadAccounts(ctx, query, nodes, nil,
-			func(n *Resource, e *Account) {
-				n.Edges.Accounts = e
-				if !e.Edges.loadedTypes[3] {
-					e.Edges.Resource = n
-				}
-			}); err != nil {
+			func(n *Resource, e *Account) { n.Edges.Accounts = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -474,8 +453,8 @@ func (_q *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 }
 
 func (_q *ResourceQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Tenant)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Resource)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*Resource)
 	for i := range nodes {
 		if nodes[i].tenant_resources == nil {
 			continue
@@ -506,8 +485,8 @@ func (_q *ResourceQuery) loadTenant(ctx context.Context, query *TenantQuery, nod
 	return nil
 }
 func (_q *ResourceQuery) loadAccounts(ctx context.Context, query *AccountQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Account)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Resource)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*Resource)
 	for i := range nodes {
 		if nodes[i].account_resource == nil {
 			continue
@@ -540,11 +519,6 @@ func (_q *ResourceQuery) loadAccounts(ctx context.Context, query *AccountQuery, 
 
 func (_q *ResourceQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
-	_spec.Node.Schema = _q.schemaConfig.Resource
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
 		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
@@ -553,7 +527,7 @@ func (_q *ResourceQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *ResourceQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(resource.Table, resource.Columns, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(resource.Table, resource.Columns, sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -607,12 +581,6 @@ func (_q *ResourceQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	t1.Schema(_q.schemaConfig.Resource)
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	selector.WithContext(ctx)
-	for _, m := range _q.modifiers {
-		m(selector)
-	}
 	for _, p := range _q.predicates {
 		p(selector)
 	}
@@ -628,38 +596,6 @@ func (_q *ResourceQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
-// updated, deleted or "selected ... for update" by other sessions, until the transaction is
-// either committed or rolled-back.
-func (_q *ResourceQuery) ForUpdate(opts ...sql.LockOption) *ResourceQuery {
-	if _q.driver.Dialect() == dialect.Postgres {
-		_q.Unique(false)
-	}
-	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
-		s.ForUpdate(opts...)
-	})
-	return _q
-}
-
-// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
-// on any rows that are read. Other sessions can read the rows, but cannot modify them
-// until your transaction commits.
-func (_q *ResourceQuery) ForShare(opts ...sql.LockOption) *ResourceQuery {
-	if _q.driver.Dialect() == dialect.Postgres {
-		_q.Unique(false)
-	}
-	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
-		s.ForShare(opts...)
-	})
-	return _q
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (_q *ResourceQuery) Modify(modifiers ...func(s *sql.Selector)) *ResourceSelect {
-	_q.modifiers = append(_q.modifiers, modifiers...)
-	return _q.Select()
 }
 
 // ResourceGroupBy is the group-by builder for Resource entities.
@@ -750,10 +686,4 @@ func (_s *ResourceSelect) sqlScan(ctx context.Context, root *ResourceQuery, v an
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (_s *ResourceSelect) Modify(modifiers ...func(s *sql.Selector)) *ResourceSelect {
-	_s.modifiers = append(_s.modifiers, modifiers...)
-	return _s
 }

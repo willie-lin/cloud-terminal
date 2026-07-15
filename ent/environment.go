@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
@@ -20,7 +19,8 @@ import (
 type Environment struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	// UUID primary key
+	ID string `json:"id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -44,8 +44,8 @@ type Environment struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EnvironmentQuery when eager-loading is set.
 	Edges                     EnvironmentEdges `json:"edges"`
-	access_policy_environment *uuid.UUID
-	tenant_environments       *uuid.UUID
+	access_policy_environment *string
+	tenant_environments       *string
 	selectValues              sql.SelectValues
 }
 
@@ -91,16 +91,14 @@ func (*Environment) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case environment.FieldPort:
 			values[i] = new(sql.NullInt64)
-		case environment.FieldName, environment.FieldDescription, environment.FieldImage, environment.FieldStatus:
+		case environment.FieldID, environment.FieldName, environment.FieldDescription, environment.FieldImage, environment.FieldStatus:
 			values[i] = new(sql.NullString)
 		case environment.FieldCreatedAt, environment.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case environment.FieldID:
-			values[i] = new(uuid.UUID)
 		case environment.ForeignKeys[0]: // access_policy_environment
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		case environment.ForeignKeys[1]: // tenant_environments
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -117,10 +115,10 @@ func (_m *Environment) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case environment.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			} else if value.Valid {
+				_m.ID = value.String
 			}
 		case environment.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -189,18 +187,18 @@ func (_m *Environment) assignValues(columns []string, values []any) error {
 				_m.Status = environment.Status(value.String)
 			}
 		case environment.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field access_policy_environment", values[i])
 			} else if value.Valid {
-				_m.access_policy_environment = new(uuid.UUID)
-				*_m.access_policy_environment = *value.S.(*uuid.UUID)
+				_m.access_policy_environment = new(string)
+				*_m.access_policy_environment = value.String
 			}
 		case environment.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_environments", values[i])
 			} else if value.Valid {
-				_m.tenant_environments = new(uuid.UUID)
-				*_m.tenant_environments = *value.S.(*uuid.UUID)
+				_m.tenant_environments = new(string)
+				*_m.tenant_environments = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

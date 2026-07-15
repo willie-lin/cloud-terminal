@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
@@ -19,7 +18,8 @@ import (
 type AuditLog struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	// UUID primary key
+	ID string `json:"id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -43,7 +43,7 @@ type AuditLog struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AuditLogQuery when eager-loading is set.
 	Edges           AuditLogEdges `json:"edges"`
-	user_audit_logs *uuid.UUID
+	user_audit_logs *string
 	selectValues    sql.SelectValues
 }
 
@@ -74,14 +74,12 @@ func (*AuditLog) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case auditlog.FieldDetail:
 			values[i] = new([]byte)
-		case auditlog.FieldSessionID, auditlog.FieldUsername, auditlog.FieldAction, auditlog.FieldResult, auditlog.FieldS3Path:
+		case auditlog.FieldID, auditlog.FieldSessionID, auditlog.FieldUsername, auditlog.FieldAction, auditlog.FieldResult, auditlog.FieldS3Path:
 			values[i] = new(sql.NullString)
 		case auditlog.FieldCreatedAt, auditlog.FieldUpdatedAt, auditlog.FieldStartedAt, auditlog.FieldEndedAt:
 			values[i] = new(sql.NullTime)
-		case auditlog.FieldID:
-			values[i] = new(uuid.UUID)
 		case auditlog.ForeignKeys[0]: // user_audit_logs
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -98,10 +96,10 @@ func (_m *AuditLog) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case auditlog.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			} else if value.Valid {
+				_m.ID = value.String
 			}
 		case auditlog.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -167,11 +165,11 @@ func (_m *AuditLog) assignValues(columns []string, values []any) error {
 				_m.S3Path = value.String
 			}
 		case auditlog.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_audit_logs", values[i])
 			} else if value.Valid {
-				_m.user_audit_logs = new(uuid.UUID)
-				*_m.user_audit_logs = *value.S.(*uuid.UUID)
+				_m.user_audit_logs = new(string)
+				*_m.user_audit_logs = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

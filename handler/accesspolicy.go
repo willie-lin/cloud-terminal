@@ -62,7 +62,7 @@ func GetAllAccessPolicyByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 		var err error
 
 		if isSuperAdmin || isTenantAdmin {
-			accessPolicies, err = client.AccessPolicy.Query().Where(accesspolicy.HasAccountWith(account.ID(accountID))).All(c.Request().Context())
+			accessPolicies, err = client.AccessPolicy.Query().Where(accesspolicy.HasAccountWith(account.ID(accountID.String()))).All(c.Request().Context())
 		} else {
 			accessPolicies, err = client.AccessPolicy.Query().All(c.Request().Context())
 		}

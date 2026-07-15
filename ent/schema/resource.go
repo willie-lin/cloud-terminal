@@ -4,7 +4,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // Resource holds the schema definition for the Resource entity.
@@ -14,13 +13,13 @@ type Resource struct {
 
 func (Resource) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		BaseMixin{},
+		IDMixin{},
+		TimeMixin{},
 	}
 }
 
 func (Resource) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").NotEmpty().Comment("资源名称"),
 		field.String("host").NotEmpty().Comment("目标地址"),
 		field.Int("port").Default(22).Comment("目标端口"),

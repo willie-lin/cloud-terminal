@@ -4,7 +4,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // Account holds the schema definition for the Account entity.
@@ -15,13 +14,13 @@ type Account struct {
 
 func (Account) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		BaseMixin{},
+		IDMixin{},
+		TimeMixin{},
 	}
 }
 
 func (Account) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("name").NotEmpty().Comment("账号名称"),
 		field.String("description").Optional().Comment("账号描述"),
 		field.Enum("status").Values("active", "inactive", "suspended").Default("active"),

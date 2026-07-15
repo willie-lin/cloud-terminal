@@ -9,14 +9,11 @@ import (
 	"math"
 
 	"entgo.io/ent"
-	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/user"
@@ -25,21 +22,16 @@ import (
 // RoleQuery is the builder for querying Role entities.
 type RoleQuery struct {
 	config
-	ctx                     *QueryContext
-	order                   []role.OrderOption
-	inters                  []Interceptor
-	predicates              []predicate.Role
-	withAccount             *AccountQuery
-	withUsers               *UserQuery
-	withAccessPolicies      *AccessPolicyQuery
-	withParentRole          *RoleQuery
-	withChildRoles          *RoleQuery
-	withFKs                 bool
-	modifiers               []func(*sql.Selector)
-	withNamedUsers          map[string]*UserQuery
-	withNamedAccessPolicies map[string]*AccessPolicyQuery
-	withNamedParentRole     map[string]*RoleQuery
-	withNamedChildRoles     map[string]*RoleQuery
+	ctx                *QueryContext
+	order              []role.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.Role
+	withAccount        *AccountQuery
+	withUsers          *UserQuery
+	withAccessPolicies *AccessPolicyQuery
+	withParentRole     *RoleQuery
+	withChildRoles     *RoleQuery
+	withFKs            bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -92,9 +84,6 @@ func (_q *RoleQuery) QueryAccount() *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountTable, role.AccountColumn),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.Role
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -117,9 +106,6 @@ func (_q *RoleQuery) QueryUsers() *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, role.UsersTable, role.UsersColumn),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.User
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -142,9 +128,6 @@ func (_q *RoleQuery) QueryAccessPolicies() *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.AccessPoliciesTable, role.AccessPoliciesPrimaryKey...),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.AccessPolicy
-		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -167,9 +150,6 @@ func (_q *RoleQuery) QueryParentRole() *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, role.ParentRoleTable, role.ParentRolePrimaryKey...),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.RoleChildRoles
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -192,9 +172,6 @@ func (_q *RoleQuery) QueryChildRoles() *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.ChildRolesTable, role.ChildRolesPrimaryKey...),
 		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.RoleChildRoles
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -225,8 +202,8 @@ func (_q *RoleQuery) FirstX(ctx context.Context) *Role {
 
 // FirstID returns the first Role ID from the query.
 // Returns a *NotFoundError when no Role ID was found.
-func (_q *RoleQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *RoleQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -238,7 +215,7 @@ func (_q *RoleQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *RoleQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *RoleQuery) FirstIDX(ctx context.Context) string {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -276,8 +253,8 @@ func (_q *RoleQuery) OnlyX(ctx context.Context) *Role {
 // OnlyID is like Only, but returns the only Role ID in the query.
 // Returns a *NotSingularError when more than one Role ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *RoleQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *RoleQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -293,7 +270,7 @@ func (_q *RoleQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *RoleQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *RoleQuery) OnlyIDX(ctx context.Context) string {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -321,7 +298,7 @@ func (_q *RoleQuery) AllX(ctx context.Context) []*Role {
 }
 
 // IDs executes the query and returns a list of Role IDs.
-func (_q *RoleQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (_q *RoleQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -333,7 +310,7 @@ func (_q *RoleQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *RoleQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *RoleQuery) IDsX(ctx context.Context) []string {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -399,9 +376,8 @@ func (_q *RoleQuery) Clone() *RoleQuery {
 		withParentRole:     _q.withParentRole.Clone(),
 		withChildRoles:     _q.withChildRoles.Clone(),
 		// clone intermediate query.
-		sql:       _q.sql.Clone(),
-		path:      _q.path,
-		modifiers: append([]func(*sql.Selector){}, _q.modifiers...),
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
@@ -562,11 +538,6 @@ func (_q *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
-	_spec.Node.Schema = _q.schemaConfig.Role
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -585,12 +556,7 @@ func (_q *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 	if query := _q.withUsers; query != nil {
 		if err := _q.loadUsers(ctx, query, nodes,
 			func(n *Role) { n.Edges.Users = []*User{} },
-			func(n *Role, e *User) {
-				n.Edges.Users = append(n.Edges.Users, e)
-				if !e.Edges.loadedTypes[1] {
-					e.Edges.Role = n
-				}
-			}); err != nil {
+			func(n *Role, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -615,45 +581,12 @@ func (_q *RoleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Role, e
 			return nil, err
 		}
 	}
-	for name, query := range _q.withNamedUsers {
-		if err := _q.loadUsers(ctx, query, nodes,
-			func(n *Role) { n.appendNamedUsers(name) },
-			func(n *Role, e *User) {
-				n.appendNamedUsers(name, e)
-				if !e.Edges.loadedTypes[1] {
-					e.Edges.Role = n
-				}
-			}); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range _q.withNamedAccessPolicies {
-		if err := _q.loadAccessPolicies(ctx, query, nodes,
-			func(n *Role) { n.appendNamedAccessPolicies(name) },
-			func(n *Role, e *AccessPolicy) { n.appendNamedAccessPolicies(name, e) }); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range _q.withNamedParentRole {
-		if err := _q.loadParentRole(ctx, query, nodes,
-			func(n *Role) { n.appendNamedParentRole(name) },
-			func(n *Role, e *Role) { n.appendNamedParentRole(name, e) }); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range _q.withNamedChildRoles {
-		if err := _q.loadChildRoles(ctx, query, nodes,
-			func(n *Role) { n.appendNamedChildRoles(name) },
-			func(n *Role, e *Role) { n.appendNamedChildRoles(name, e) }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
 func (_q *RoleQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*Role, init func(*Role), assign func(*Role, *Account)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Role)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*Role)
 	for i := range nodes {
 		if nodes[i].account_roles == nil {
 			continue
@@ -685,7 +618,7 @@ func (_q *RoleQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes
 }
 func (_q *RoleQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*Role, init func(*Role), assign func(*Role, *User)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Role)
+	nodeids := make(map[string]*Role)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -716,8 +649,8 @@ func (_q *RoleQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*R
 }
 func (_q *RoleQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicyQuery, nodes []*Role, init func(*Role), assign func(*Role, *AccessPolicy)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*Role)
-	nids := make(map[uuid.UUID]map[*Role]struct{})
+	byID := make(map[string]*Role)
+	nids := make(map[string]map[*Role]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -727,7 +660,6 @@ func (_q *RoleQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicy
 	}
 	query.Where(func(s *sql.Selector) {
 		joinT := sql.Table(role.AccessPoliciesTable)
-		joinT.Schema(_q.schemaConfig.RoleAccessPolicies)
 		s.Join(joinT).On(s.C(accesspolicy.FieldID), joinT.C(role.AccessPoliciesPrimaryKey[1]))
 		s.Where(sql.InValues(joinT.C(role.AccessPoliciesPrimaryKey[0]), edgeIDs...))
 		columns := s.SelectedColumns()
@@ -747,11 +679,11 @@ func (_q *RoleQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicy
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(uuid.UUID)}, values...), nil
+				return append([]any{new(sql.NullString)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
 				if nids[inValue] == nil {
 					nids[inValue] = map[*Role]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])
@@ -778,8 +710,8 @@ func (_q *RoleQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicy
 }
 func (_q *RoleQuery) loadParentRole(ctx context.Context, query *RoleQuery, nodes []*Role, init func(*Role), assign func(*Role, *Role)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*Role)
-	nids := make(map[uuid.UUID]map[*Role]struct{})
+	byID := make(map[string]*Role)
+	nids := make(map[string]map[*Role]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -789,7 +721,6 @@ func (_q *RoleQuery) loadParentRole(ctx context.Context, query *RoleQuery, nodes
 	}
 	query.Where(func(s *sql.Selector) {
 		joinT := sql.Table(role.ParentRoleTable)
-		joinT.Schema(_q.schemaConfig.RoleChildRoles)
 		s.Join(joinT).On(s.C(role.FieldID), joinT.C(role.ParentRolePrimaryKey[0]))
 		s.Where(sql.InValues(joinT.C(role.ParentRolePrimaryKey[1]), edgeIDs...))
 		columns := s.SelectedColumns()
@@ -809,11 +740,11 @@ func (_q *RoleQuery) loadParentRole(ctx context.Context, query *RoleQuery, nodes
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(uuid.UUID)}, values...), nil
+				return append([]any{new(sql.NullString)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
 				if nids[inValue] == nil {
 					nids[inValue] = map[*Role]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])
@@ -840,8 +771,8 @@ func (_q *RoleQuery) loadParentRole(ctx context.Context, query *RoleQuery, nodes
 }
 func (_q *RoleQuery) loadChildRoles(ctx context.Context, query *RoleQuery, nodes []*Role, init func(*Role), assign func(*Role, *Role)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*Role)
-	nids := make(map[uuid.UUID]map[*Role]struct{})
+	byID := make(map[string]*Role)
+	nids := make(map[string]map[*Role]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -851,7 +782,6 @@ func (_q *RoleQuery) loadChildRoles(ctx context.Context, query *RoleQuery, nodes
 	}
 	query.Where(func(s *sql.Selector) {
 		joinT := sql.Table(role.ChildRolesTable)
-		joinT.Schema(_q.schemaConfig.RoleChildRoles)
 		s.Join(joinT).On(s.C(role.FieldID), joinT.C(role.ChildRolesPrimaryKey[1]))
 		s.Where(sql.InValues(joinT.C(role.ChildRolesPrimaryKey[0]), edgeIDs...))
 		columns := s.SelectedColumns()
@@ -871,11 +801,11 @@ func (_q *RoleQuery) loadChildRoles(ctx context.Context, query *RoleQuery, nodes
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(uuid.UUID)}, values...), nil
+				return append([]any{new(sql.NullString)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
 				if nids[inValue] == nil {
 					nids[inValue] = map[*Role]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])
@@ -903,11 +833,6 @@ func (_q *RoleQuery) loadChildRoles(ctx context.Context, query *RoleQuery, nodes
 
 func (_q *RoleQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
-	_spec.Node.Schema = _q.schemaConfig.Role
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	if len(_q.modifiers) > 0 {
-		_spec.Modifiers = _q.modifiers
-	}
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
 		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
@@ -916,7 +841,7 @@ func (_q *RoleQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *RoleQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(role.Table, role.Columns, sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(role.Table, role.Columns, sqlgraph.NewFieldSpec(role.FieldID, field.TypeString))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -970,12 +895,6 @@ func (_q *RoleQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	t1.Schema(_q.schemaConfig.Role)
-	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
-	selector.WithContext(ctx)
-	for _, m := range _q.modifiers {
-		m(selector)
-	}
 	for _, p := range _q.predicates {
 		p(selector)
 	}
@@ -991,94 +910,6 @@ func (_q *RoleQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
-// updated, deleted or "selected ... for update" by other sessions, until the transaction is
-// either committed or rolled-back.
-func (_q *RoleQuery) ForUpdate(opts ...sql.LockOption) *RoleQuery {
-	if _q.driver.Dialect() == dialect.Postgres {
-		_q.Unique(false)
-	}
-	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
-		s.ForUpdate(opts...)
-	})
-	return _q
-}
-
-// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
-// on any rows that are read. Other sessions can read the rows, but cannot modify them
-// until your transaction commits.
-func (_q *RoleQuery) ForShare(opts ...sql.LockOption) *RoleQuery {
-	if _q.driver.Dialect() == dialect.Postgres {
-		_q.Unique(false)
-	}
-	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
-		s.ForShare(opts...)
-	})
-	return _q
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (_q *RoleQuery) Modify(modifiers ...func(s *sql.Selector)) *RoleSelect {
-	_q.modifiers = append(_q.modifiers, modifiers...)
-	return _q.Select()
-}
-
-// WithNamedUsers tells the query-builder to eager-load the nodes that are connected to the "users"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (_q *RoleQuery) WithNamedUsers(name string, opts ...func(*UserQuery)) *RoleQuery {
-	query := (&UserClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if _q.withNamedUsers == nil {
-		_q.withNamedUsers = make(map[string]*UserQuery)
-	}
-	_q.withNamedUsers[name] = query
-	return _q
-}
-
-// WithNamedAccessPolicies tells the query-builder to eager-load the nodes that are connected to the "access_policies"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (_q *RoleQuery) WithNamedAccessPolicies(name string, opts ...func(*AccessPolicyQuery)) *RoleQuery {
-	query := (&AccessPolicyClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if _q.withNamedAccessPolicies == nil {
-		_q.withNamedAccessPolicies = make(map[string]*AccessPolicyQuery)
-	}
-	_q.withNamedAccessPolicies[name] = query
-	return _q
-}
-
-// WithNamedParentRole tells the query-builder to eager-load the nodes that are connected to the "parent_role"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (_q *RoleQuery) WithNamedParentRole(name string, opts ...func(*RoleQuery)) *RoleQuery {
-	query := (&RoleClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if _q.withNamedParentRole == nil {
-		_q.withNamedParentRole = make(map[string]*RoleQuery)
-	}
-	_q.withNamedParentRole[name] = query
-	return _q
-}
-
-// WithNamedChildRoles tells the query-builder to eager-load the nodes that are connected to the "child_roles"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (_q *RoleQuery) WithNamedChildRoles(name string, opts ...func(*RoleQuery)) *RoleQuery {
-	query := (&RoleClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if _q.withNamedChildRoles == nil {
-		_q.withNamedChildRoles = make(map[string]*RoleQuery)
-	}
-	_q.withNamedChildRoles[name] = query
-	return _q
 }
 
 // RoleGroupBy is the group-by builder for Role entities.
@@ -1169,10 +1000,4 @@ func (_s *RoleSelect) sqlScan(ctx context.Context, root *RoleQuery, v any) error
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
-}
-
-// Modify adds a query modifier for attaching custom logic to queries.
-func (_s *RoleSelect) Modify(modifiers ...func(s *sql.Selector)) *RoleSelect {
-	_s.modifiers = append(_s.modifiers, modifiers...)
-	return _s
 }

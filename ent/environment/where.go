@@ -7,54 +7,62 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uuid.UUID) predicate.Environment {
+func ID(id string) predicate.Environment {
 	return predicate.Environment(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uuid.UUID) predicate.Environment {
+func IDEQ(id string) predicate.Environment {
 	return predicate.Environment(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uuid.UUID) predicate.Environment {
+func IDNEQ(id string) predicate.Environment {
 	return predicate.Environment(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uuid.UUID) predicate.Environment {
+func IDIn(ids ...string) predicate.Environment {
 	return predicate.Environment(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uuid.UUID) predicate.Environment {
+func IDNotIn(ids ...string) predicate.Environment {
 	return predicate.Environment(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uuid.UUID) predicate.Environment {
+func IDGT(id string) predicate.Environment {
 	return predicate.Environment(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uuid.UUID) predicate.Environment {
+func IDGTE(id string) predicate.Environment {
 	return predicate.Environment(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uuid.UUID) predicate.Environment {
+func IDLT(id string) predicate.Environment {
 	return predicate.Environment(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uuid.UUID) predicate.Environment {
+func IDLTE(id string) predicate.Environment {
 	return predicate.Environment(sql.FieldLTE(FieldID, id))
+}
+
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.Environment {
+	return predicate.Environment(sql.FieldEqualFold(FieldID, id))
+}
+
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.Environment {
+	return predicate.Environment(sql.FieldContainsFold(FieldID, id))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -469,9 +477,6 @@ func HasTenant() predicate.Environment {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
 		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.Environment
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -480,9 +485,6 @@ func HasTenant() predicate.Environment {
 func HasTenantWith(preds ...predicate.Tenant) predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
 		step := newTenantStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.Environment
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -498,9 +500,6 @@ func HasAccessPolicies() predicate.Environment {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, AccessPoliciesTable, AccessPoliciesColumn),
 		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.AccessPolicy
-		step.Edge.Schema = schemaConfig.Environment
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -509,9 +508,6 @@ func HasAccessPolicies() predicate.Environment {
 func HasAccessPoliciesWith(preds ...predicate.AccessPolicy) predicate.Environment {
 	return predicate.Environment(func(s *sql.Selector) {
 		step := newAccessPoliciesStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.AccessPolicy
-		step.Edge.Schema = schemaConfig.Environment
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

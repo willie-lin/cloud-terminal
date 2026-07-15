@@ -11,10 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/user"
@@ -23,9 +21,8 @@ import (
 // RoleUpdate is the builder for updating Role entities.
 type RoleUpdate struct {
 	config
-	hooks     []Hook
-	mutation  *RoleMutation
-	modifiers []func(*sql.UpdateBuilder)
+	hooks    []Hook
+	mutation *RoleMutation
 }
 
 // Where appends a list predicates to the RoleUpdate builder.
@@ -103,13 +100,13 @@ func (_u *RoleUpdate) SetNillableIsDefault(v *bool) *RoleUpdate {
 }
 
 // SetAccountID sets the "account" edge to the Account entity by ID.
-func (_u *RoleUpdate) SetAccountID(id uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) SetAccountID(id string) *RoleUpdate {
 	_u.mutation.SetAccountID(id)
 	return _u
 }
 
 // SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
-func (_u *RoleUpdate) SetNillableAccountID(id *uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) SetNillableAccountID(id *string) *RoleUpdate {
 	if id != nil {
 		_u = _u.SetAccountID(*id)
 	}
@@ -122,14 +119,14 @@ func (_u *RoleUpdate) SetAccount(v *Account) *RoleUpdate {
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (_u *RoleUpdate) AddUserIDs(ids ...uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) AddUserIDs(ids ...string) *RoleUpdate {
 	_u.mutation.AddUserIDs(ids...)
 	return _u
 }
 
 // AddUsers adds the "users" edges to the User entity.
 func (_u *RoleUpdate) AddUsers(v ...*User) *RoleUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -137,14 +134,14 @@ func (_u *RoleUpdate) AddUsers(v ...*User) *RoleUpdate {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (_u *RoleUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) AddAccessPolicyIDs(ids ...string) *RoleUpdate {
 	_u.mutation.AddAccessPolicyIDs(ids...)
 	return _u
 }
 
 // AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
 func (_u *RoleUpdate) AddAccessPolicies(v ...*AccessPolicy) *RoleUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -152,14 +149,14 @@ func (_u *RoleUpdate) AddAccessPolicies(v ...*AccessPolicy) *RoleUpdate {
 }
 
 // AddParentRoleIDs adds the "parent_role" edge to the Role entity by IDs.
-func (_u *RoleUpdate) AddParentRoleIDs(ids ...uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) AddParentRoleIDs(ids ...string) *RoleUpdate {
 	_u.mutation.AddParentRoleIDs(ids...)
 	return _u
 }
 
 // AddParentRole adds the "parent_role" edges to the Role entity.
 func (_u *RoleUpdate) AddParentRole(v ...*Role) *RoleUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -167,14 +164,14 @@ func (_u *RoleUpdate) AddParentRole(v ...*Role) *RoleUpdate {
 }
 
 // AddChildRoleIDs adds the "child_roles" edge to the Role entity by IDs.
-func (_u *RoleUpdate) AddChildRoleIDs(ids ...uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) AddChildRoleIDs(ids ...string) *RoleUpdate {
 	_u.mutation.AddChildRoleIDs(ids...)
 	return _u
 }
 
 // AddChildRoles adds the "child_roles" edges to the Role entity.
 func (_u *RoleUpdate) AddChildRoles(v ...*Role) *RoleUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -199,14 +196,14 @@ func (_u *RoleUpdate) ClearUsers() *RoleUpdate {
 }
 
 // RemoveUserIDs removes the "users" edge to User entities by IDs.
-func (_u *RoleUpdate) RemoveUserIDs(ids ...uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) RemoveUserIDs(ids ...string) *RoleUpdate {
 	_u.mutation.RemoveUserIDs(ids...)
 	return _u
 }
 
 // RemoveUsers removes "users" edges to User entities.
 func (_u *RoleUpdate) RemoveUsers(v ...*User) *RoleUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -220,14 +217,14 @@ func (_u *RoleUpdate) ClearAccessPolicies() *RoleUpdate {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (_u *RoleUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) RemoveAccessPolicyIDs(ids ...string) *RoleUpdate {
 	_u.mutation.RemoveAccessPolicyIDs(ids...)
 	return _u
 }
 
 // RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
 func (_u *RoleUpdate) RemoveAccessPolicies(v ...*AccessPolicy) *RoleUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -241,14 +238,14 @@ func (_u *RoleUpdate) ClearParentRole() *RoleUpdate {
 }
 
 // RemoveParentRoleIDs removes the "parent_role" edge to Role entities by IDs.
-func (_u *RoleUpdate) RemoveParentRoleIDs(ids ...uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) RemoveParentRoleIDs(ids ...string) *RoleUpdate {
 	_u.mutation.RemoveParentRoleIDs(ids...)
 	return _u
 }
 
 // RemoveParentRole removes "parent_role" edges to Role entities.
 func (_u *RoleUpdate) RemoveParentRole(v ...*Role) *RoleUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -262,14 +259,14 @@ func (_u *RoleUpdate) ClearChildRoles() *RoleUpdate {
 }
 
 // RemoveChildRoleIDs removes the "child_roles" edge to Role entities by IDs.
-func (_u *RoleUpdate) RemoveChildRoleIDs(ids ...uuid.UUID) *RoleUpdate {
+func (_u *RoleUpdate) RemoveChildRoleIDs(ids ...string) *RoleUpdate {
 	_u.mutation.RemoveChildRoleIDs(ids...)
 	return _u
 }
 
 // RemoveChildRoles removes "child_roles" edges to Role entities.
 func (_u *RoleUpdate) RemoveChildRoles(v ...*Role) *RoleUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -322,17 +319,11 @@ func (_u *RoleUpdate) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *RoleUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *RoleUpdate {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(role.Table, role.Columns, sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(role.Table, role.Columns, sqlgraph.NewFieldSpec(role.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -366,10 +357,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{role.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
@@ -380,10 +370,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{role.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -397,10 +386,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{role.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
@@ -411,10 +399,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{role.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -428,10 +415,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{role.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -445,10 +431,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !_u.mutation.AccessPoliciesCleared() {
@@ -459,10 +444,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -476,10 +460,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -493,10 +476,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.ParentRolePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedParentRoleIDs(); len(nodes) > 0 && !_u.mutation.ParentRoleCleared() {
@@ -507,10 +489,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.ParentRolePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -524,10 +505,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.ParentRolePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -541,10 +521,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.ChildRolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedChildRolesIDs(); len(nodes) > 0 && !_u.mutation.ChildRolesCleared() {
@@ -555,10 +534,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.ChildRolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -572,18 +550,14 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: role.ChildRolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.Role
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{role.Label}
@@ -599,10 +573,9 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // RoleUpdateOne is the builder for updating a single Role entity.
 type RoleUpdateOne struct {
 	config
-	fields    []string
-	hooks     []Hook
-	mutation  *RoleMutation
-	modifiers []func(*sql.UpdateBuilder)
+	fields   []string
+	hooks    []Hook
+	mutation *RoleMutation
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -674,13 +647,13 @@ func (_u *RoleUpdateOne) SetNillableIsDefault(v *bool) *RoleUpdateOne {
 }
 
 // SetAccountID sets the "account" edge to the Account entity by ID.
-func (_u *RoleUpdateOne) SetAccountID(id uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) SetAccountID(id string) *RoleUpdateOne {
 	_u.mutation.SetAccountID(id)
 	return _u
 }
 
 // SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
-func (_u *RoleUpdateOne) SetNillableAccountID(id *uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) SetNillableAccountID(id *string) *RoleUpdateOne {
 	if id != nil {
 		_u = _u.SetAccountID(*id)
 	}
@@ -693,14 +666,14 @@ func (_u *RoleUpdateOne) SetAccount(v *Account) *RoleUpdateOne {
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (_u *RoleUpdateOne) AddUserIDs(ids ...uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) AddUserIDs(ids ...string) *RoleUpdateOne {
 	_u.mutation.AddUserIDs(ids...)
 	return _u
 }
 
 // AddUsers adds the "users" edges to the User entity.
 func (_u *RoleUpdateOne) AddUsers(v ...*User) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -708,14 +681,14 @@ func (_u *RoleUpdateOne) AddUsers(v ...*User) *RoleUpdateOne {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (_u *RoleUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) AddAccessPolicyIDs(ids ...string) *RoleUpdateOne {
 	_u.mutation.AddAccessPolicyIDs(ids...)
 	return _u
 }
 
 // AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
 func (_u *RoleUpdateOne) AddAccessPolicies(v ...*AccessPolicy) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -723,14 +696,14 @@ func (_u *RoleUpdateOne) AddAccessPolicies(v ...*AccessPolicy) *RoleUpdateOne {
 }
 
 // AddParentRoleIDs adds the "parent_role" edge to the Role entity by IDs.
-func (_u *RoleUpdateOne) AddParentRoleIDs(ids ...uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) AddParentRoleIDs(ids ...string) *RoleUpdateOne {
 	_u.mutation.AddParentRoleIDs(ids...)
 	return _u
 }
 
 // AddParentRole adds the "parent_role" edges to the Role entity.
 func (_u *RoleUpdateOne) AddParentRole(v ...*Role) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -738,14 +711,14 @@ func (_u *RoleUpdateOne) AddParentRole(v ...*Role) *RoleUpdateOne {
 }
 
 // AddChildRoleIDs adds the "child_roles" edge to the Role entity by IDs.
-func (_u *RoleUpdateOne) AddChildRoleIDs(ids ...uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) AddChildRoleIDs(ids ...string) *RoleUpdateOne {
 	_u.mutation.AddChildRoleIDs(ids...)
 	return _u
 }
 
 // AddChildRoles adds the "child_roles" edges to the Role entity.
 func (_u *RoleUpdateOne) AddChildRoles(v ...*Role) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -770,14 +743,14 @@ func (_u *RoleUpdateOne) ClearUsers() *RoleUpdateOne {
 }
 
 // RemoveUserIDs removes the "users" edge to User entities by IDs.
-func (_u *RoleUpdateOne) RemoveUserIDs(ids ...uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) RemoveUserIDs(ids ...string) *RoleUpdateOne {
 	_u.mutation.RemoveUserIDs(ids...)
 	return _u
 }
 
 // RemoveUsers removes "users" edges to User entities.
 func (_u *RoleUpdateOne) RemoveUsers(v ...*User) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -791,14 +764,14 @@ func (_u *RoleUpdateOne) ClearAccessPolicies() *RoleUpdateOne {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (_u *RoleUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) RemoveAccessPolicyIDs(ids ...string) *RoleUpdateOne {
 	_u.mutation.RemoveAccessPolicyIDs(ids...)
 	return _u
 }
 
 // RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
 func (_u *RoleUpdateOne) RemoveAccessPolicies(v ...*AccessPolicy) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -812,14 +785,14 @@ func (_u *RoleUpdateOne) ClearParentRole() *RoleUpdateOne {
 }
 
 // RemoveParentRoleIDs removes the "parent_role" edge to Role entities by IDs.
-func (_u *RoleUpdateOne) RemoveParentRoleIDs(ids ...uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) RemoveParentRoleIDs(ids ...string) *RoleUpdateOne {
 	_u.mutation.RemoveParentRoleIDs(ids...)
 	return _u
 }
 
 // RemoveParentRole removes "parent_role" edges to Role entities.
 func (_u *RoleUpdateOne) RemoveParentRole(v ...*Role) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -833,14 +806,14 @@ func (_u *RoleUpdateOne) ClearChildRoles() *RoleUpdateOne {
 }
 
 // RemoveChildRoleIDs removes the "child_roles" edge to Role entities by IDs.
-func (_u *RoleUpdateOne) RemoveChildRoleIDs(ids ...uuid.UUID) *RoleUpdateOne {
+func (_u *RoleUpdateOne) RemoveChildRoleIDs(ids ...string) *RoleUpdateOne {
 	_u.mutation.RemoveChildRoleIDs(ids...)
 	return _u
 }
 
 // RemoveChildRoles removes "child_roles" edges to Role entities.
 func (_u *RoleUpdateOne) RemoveChildRoles(v ...*Role) *RoleUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -906,17 +879,11 @@ func (_u *RoleUpdateOne) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *RoleUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *RoleUpdateOne {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(role.Table, role.Columns, sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(role.Table, role.Columns, sqlgraph.NewFieldSpec(role.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Role.id" for update`)}
@@ -967,10 +934,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: []string{role.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
@@ -981,10 +947,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: []string{role.AccountColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -998,10 +963,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: []string{role.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
@@ -1012,10 +976,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: []string{role.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1029,10 +992,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: []string{role.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1046,10 +1008,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !_u.mutation.AccessPoliciesCleared() {
@@ -1060,10 +1021,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1077,10 +1037,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1094,10 +1053,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.ParentRolePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedParentRoleIDs(); len(nodes) > 0 && !_u.mutation.ParentRoleCleared() {
@@ -1108,10 +1066,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.ParentRolePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1125,10 +1082,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.ParentRolePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1142,10 +1098,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.ChildRolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedChildRolesIDs(); len(nodes) > 0 && !_u.mutation.ChildRolesCleared() {
@@ -1156,10 +1111,9 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.ChildRolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1173,18 +1127,14 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			Columns: role.ChildRolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.RoleChildRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.Role
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	_node = &Role{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

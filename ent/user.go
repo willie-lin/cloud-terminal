@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/user"
@@ -20,10 +19,11 @@ import (
 type User struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// UUID primary key
+	ID string `json:"id,omitempty"`
+	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
+	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Avatar holds the value of the "avatar" field.
 	Avatar string `json:"avatar,omitempty"`
@@ -64,8 +64,8 @@ type User struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges         UserEdges `json:"edges"`
-	account_users *uuid.UUID
-	user_role     *uuid.UUID
+	account_users *string
+	user_role     *string
 	selectValues  sql.SelectValues
 }
 
@@ -79,8 +79,7 @@ type UserEdges struct {
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes    [3]bool
-	namedAuditLogs map[string][]*AuditLog
+	loadedTypes [3]bool
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -125,16 +124,14 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldLoginAttempts:
 			values[i] = new(sql.NullInt64)
-		case user.FieldAvatar, user.FieldNickname, user.FieldBio, user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldPhoneNumber, user.FieldTotpSecret, user.FieldSSHPublicKey:
+		case user.FieldID, user.FieldAvatar, user.FieldNickname, user.FieldBio, user.FieldUsername, user.FieldPassword, user.FieldEmail, user.FieldPhoneNumber, user.FieldTotpSecret, user.FieldSSHPublicKey:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLockoutTime, user.FieldLastLoginTime:
 			values[i] = new(sql.NullTime)
-		case user.FieldID:
-			values[i] = new(uuid.UUID)
 		case user.ForeignKeys[0]: // account_users
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		case user.ForeignKeys[1]: // user_role
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -151,10 +148,10 @@ func (_m *User) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case user.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			} else if value.Valid {
+				_m.ID = value.String
 			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -279,18 +276,18 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.SSHPublicKey = value.String
 			}
 		case user.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field account_users", values[i])
 			} else if value.Valid {
-				_m.account_users = new(uuid.UUID)
-				*_m.account_users = *value.S.(*uuid.UUID)
+				_m.account_users = new(string)
+				*_m.account_users = value.String
 			}
 		case user.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_role", values[i])
 			} else if value.Valid {
-				_m.user_role = new(uuid.UUID)
-				*_m.user_role = *value.S.(*uuid.UUID)
+				_m.user_role = new(string)
+				*_m.user_role = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -403,30 +400,6 @@ func (_m *User) String() string {
 	builder.WriteString(_m.SSHPublicKey)
 	builder.WriteByte(')')
 	return builder.String()
-}
-
-// NamedAuditLogs returns the AuditLogs named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (_m *User) NamedAuditLogs(name string) ([]*AuditLog, error) {
-	if _m.Edges.namedAuditLogs == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := _m.Edges.namedAuditLogs[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (_m *User) appendNamedAuditLogs(name string, edges ...*AuditLog) {
-	if _m.Edges.namedAuditLogs == nil {
-		_m.Edges.namedAuditLogs = make(map[string][]*AuditLog)
-	}
-	if len(edges) == 0 {
-		_m.Edges.namedAuditLogs[name] = []*AuditLog{}
-	} else {
-		_m.Edges.namedAuditLogs[name] = append(_m.Edges.namedAuditLogs[name], edges...)
-	}
 }
 
 // Users is a parsable slice of User.

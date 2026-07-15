@@ -5,7 +5,6 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/google/uuid"
 )
 
 // AuditLog holds the schema definition for the AuditLog entity.
@@ -15,13 +14,13 @@ type AuditLog struct {
 
 func (AuditLog) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		BaseMixin{},
+		IDMixin{},
+		TimeMixin{},
 	}
 }
 
 func (AuditLog) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
 		field.String("session_id").Unique().Comment("会话ID"),
 		field.String("username").Comment("用户名"),
 		field.String("action").Comment("操作动作"),

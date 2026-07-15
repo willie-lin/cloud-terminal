@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/platform"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
@@ -19,9 +18,8 @@ import (
 // PlatformUpdate is the builder for updating Platform entities.
 type PlatformUpdate struct {
 	config
-	hooks     []Hook
-	mutation  *PlatformMutation
-	modifiers []func(*sql.UpdateBuilder)
+	hooks    []Hook
+	mutation *PlatformMutation
 }
 
 // Where appends a list predicates to the PlatformUpdate builder.
@@ -198,17 +196,11 @@ func (_u *PlatformUpdate) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *PlatformUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *PlatformUpdate {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *PlatformUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -252,9 +244,6 @@ func (_u *PlatformUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ConfigCleared() {
 		_spec.ClearField(platform.FieldConfig, field.TypeJSON)
 	}
-	_spec.Node.Schema = _u.schemaConfig.Platform
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{platform.Label}
@@ -270,10 +259,9 @@ func (_u *PlatformUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // PlatformUpdateOne is the builder for updating a single Platform entity.
 type PlatformUpdateOne struct {
 	config
-	fields    []string
-	hooks     []Hook
-	mutation  *PlatformMutation
-	modifiers []func(*sql.UpdateBuilder)
+	fields   []string
+	hooks    []Hook
+	mutation *PlatformMutation
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -457,17 +445,11 @@ func (_u *PlatformUpdateOne) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *PlatformUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *PlatformUpdateOne {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Platform.id" for update`)}
@@ -528,9 +510,6 @@ func (_u *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err 
 	if _u.mutation.ConfigCleared() {
 		_spec.ClearField(platform.FieldConfig, field.TypeJSON)
 	}
-	_spec.Node.Schema = _u.schemaConfig.Platform
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	_node = &Platform{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

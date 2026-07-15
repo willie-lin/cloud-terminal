@@ -9,7 +9,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
 
@@ -41,9 +40,7 @@ func (_d *EnvironmentDelete) ExecX(ctx context.Context) int {
 }
 
 func (_d *EnvironmentDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(environment.Table, sqlgraph.NewFieldSpec(environment.FieldID, field.TypeUUID))
-	_spec.Node.Schema = _d.schemaConfig.Environment
-	ctx = internal.NewSchemaConfigContext(ctx, _d.schemaConfig)
+	_spec := sqlgraph.NewDeleteSpec(environment.Table, sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

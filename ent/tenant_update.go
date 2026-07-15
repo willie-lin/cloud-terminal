@@ -11,10 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
@@ -23,9 +21,8 @@ import (
 // TenantUpdate is the builder for updating Tenant entities.
 type TenantUpdate struct {
 	config
-	hooks     []Hook
-	mutation  *TenantMutation
-	modifiers []func(*sql.UpdateBuilder)
+	hooks    []Hook
+	mutation *TenantMutation
 }
 
 // Where appends a list predicates to the TenantUpdate builder.
@@ -89,14 +86,14 @@ func (_u *TenantUpdate) SetNillableStatus(v *tenant.Status) *TenantUpdate {
 }
 
 // AddEnvironmentIDs adds the "environments" edge to the Environment entity by IDs.
-func (_u *TenantUpdate) AddEnvironmentIDs(ids ...uuid.UUID) *TenantUpdate {
+func (_u *TenantUpdate) AddEnvironmentIDs(ids ...string) *TenantUpdate {
 	_u.mutation.AddEnvironmentIDs(ids...)
 	return _u
 }
 
 // AddEnvironments adds the "environments" edges to the Environment entity.
 func (_u *TenantUpdate) AddEnvironments(v ...*Environment) *TenantUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -104,14 +101,14 @@ func (_u *TenantUpdate) AddEnvironments(v ...*Environment) *TenantUpdate {
 }
 
 // AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
-func (_u *TenantUpdate) AddResourceIDs(ids ...uuid.UUID) *TenantUpdate {
+func (_u *TenantUpdate) AddResourceIDs(ids ...string) *TenantUpdate {
 	_u.mutation.AddResourceIDs(ids...)
 	return _u
 }
 
 // AddResources adds the "resources" edges to the Resource entity.
 func (_u *TenantUpdate) AddResources(v ...*Resource) *TenantUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -119,14 +116,14 @@ func (_u *TenantUpdate) AddResources(v ...*Resource) *TenantUpdate {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (_u *TenantUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdate {
+func (_u *TenantUpdate) AddAccessPolicyIDs(ids ...string) *TenantUpdate {
 	_u.mutation.AddAccessPolicyIDs(ids...)
 	return _u
 }
 
 // AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
 func (_u *TenantUpdate) AddAccessPolicies(v ...*AccessPolicy) *TenantUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -145,14 +142,14 @@ func (_u *TenantUpdate) ClearEnvironments() *TenantUpdate {
 }
 
 // RemoveEnvironmentIDs removes the "environments" edge to Environment entities by IDs.
-func (_u *TenantUpdate) RemoveEnvironmentIDs(ids ...uuid.UUID) *TenantUpdate {
+func (_u *TenantUpdate) RemoveEnvironmentIDs(ids ...string) *TenantUpdate {
 	_u.mutation.RemoveEnvironmentIDs(ids...)
 	return _u
 }
 
 // RemoveEnvironments removes "environments" edges to Environment entities.
 func (_u *TenantUpdate) RemoveEnvironments(v ...*Environment) *TenantUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -166,14 +163,14 @@ func (_u *TenantUpdate) ClearResources() *TenantUpdate {
 }
 
 // RemoveResourceIDs removes the "resources" edge to Resource entities by IDs.
-func (_u *TenantUpdate) RemoveResourceIDs(ids ...uuid.UUID) *TenantUpdate {
+func (_u *TenantUpdate) RemoveResourceIDs(ids ...string) *TenantUpdate {
 	_u.mutation.RemoveResourceIDs(ids...)
 	return _u
 }
 
 // RemoveResources removes "resources" edges to Resource entities.
 func (_u *TenantUpdate) RemoveResources(v ...*Resource) *TenantUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -187,14 +184,14 @@ func (_u *TenantUpdate) ClearAccessPolicies() *TenantUpdate {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (_u *TenantUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdate {
+func (_u *TenantUpdate) RemoveAccessPolicyIDs(ids ...string) *TenantUpdate {
 	_u.mutation.RemoveAccessPolicyIDs(ids...)
 	return _u
 }
 
 // RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
 func (_u *TenantUpdate) RemoveAccessPolicies(v ...*AccessPolicy) *TenantUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -252,17 +249,11 @@ func (_u *TenantUpdate) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *TenantUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *TenantUpdate {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -293,10 +284,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.EnvironmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedEnvironmentsIDs(); len(nodes) > 0 && !_u.mutation.EnvironmentsCleared() {
@@ -307,10 +297,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.EnvironmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -324,10 +313,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.EnvironmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -341,10 +329,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !_u.mutation.ResourcesCleared() {
@@ -355,10 +342,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -372,10 +358,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -389,10 +374,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.AccessPoliciesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !_u.mutation.AccessPoliciesCleared() {
@@ -403,10 +387,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.AccessPoliciesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -420,18 +403,14 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{tenant.AccessPoliciesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.Tenant
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tenant.Label}
@@ -447,10 +426,9 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // TenantUpdateOne is the builder for updating a single Tenant entity.
 type TenantUpdateOne struct {
 	config
-	fields    []string
-	hooks     []Hook
-	mutation  *TenantMutation
-	modifiers []func(*sql.UpdateBuilder)
+	fields   []string
+	hooks    []Hook
+	mutation *TenantMutation
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -508,14 +486,14 @@ func (_u *TenantUpdateOne) SetNillableStatus(v *tenant.Status) *TenantUpdateOne 
 }
 
 // AddEnvironmentIDs adds the "environments" edge to the Environment entity by IDs.
-func (_u *TenantUpdateOne) AddEnvironmentIDs(ids ...uuid.UUID) *TenantUpdateOne {
+func (_u *TenantUpdateOne) AddEnvironmentIDs(ids ...string) *TenantUpdateOne {
 	_u.mutation.AddEnvironmentIDs(ids...)
 	return _u
 }
 
 // AddEnvironments adds the "environments" edges to the Environment entity.
 func (_u *TenantUpdateOne) AddEnvironments(v ...*Environment) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -523,14 +501,14 @@ func (_u *TenantUpdateOne) AddEnvironments(v ...*Environment) *TenantUpdateOne {
 }
 
 // AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
-func (_u *TenantUpdateOne) AddResourceIDs(ids ...uuid.UUID) *TenantUpdateOne {
+func (_u *TenantUpdateOne) AddResourceIDs(ids ...string) *TenantUpdateOne {
 	_u.mutation.AddResourceIDs(ids...)
 	return _u
 }
 
 // AddResources adds the "resources" edges to the Resource entity.
 func (_u *TenantUpdateOne) AddResources(v ...*Resource) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -538,14 +516,14 @@ func (_u *TenantUpdateOne) AddResources(v ...*Resource) *TenantUpdateOne {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (_u *TenantUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdateOne {
+func (_u *TenantUpdateOne) AddAccessPolicyIDs(ids ...string) *TenantUpdateOne {
 	_u.mutation.AddAccessPolicyIDs(ids...)
 	return _u
 }
 
 // AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
 func (_u *TenantUpdateOne) AddAccessPolicies(v ...*AccessPolicy) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -564,14 +542,14 @@ func (_u *TenantUpdateOne) ClearEnvironments() *TenantUpdateOne {
 }
 
 // RemoveEnvironmentIDs removes the "environments" edge to Environment entities by IDs.
-func (_u *TenantUpdateOne) RemoveEnvironmentIDs(ids ...uuid.UUID) *TenantUpdateOne {
+func (_u *TenantUpdateOne) RemoveEnvironmentIDs(ids ...string) *TenantUpdateOne {
 	_u.mutation.RemoveEnvironmentIDs(ids...)
 	return _u
 }
 
 // RemoveEnvironments removes "environments" edges to Environment entities.
 func (_u *TenantUpdateOne) RemoveEnvironments(v ...*Environment) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -585,14 +563,14 @@ func (_u *TenantUpdateOne) ClearResources() *TenantUpdateOne {
 }
 
 // RemoveResourceIDs removes the "resources" edge to Resource entities by IDs.
-func (_u *TenantUpdateOne) RemoveResourceIDs(ids ...uuid.UUID) *TenantUpdateOne {
+func (_u *TenantUpdateOne) RemoveResourceIDs(ids ...string) *TenantUpdateOne {
 	_u.mutation.RemoveResourceIDs(ids...)
 	return _u
 }
 
 // RemoveResources removes "resources" edges to Resource entities.
 func (_u *TenantUpdateOne) RemoveResources(v ...*Resource) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -606,14 +584,14 @@ func (_u *TenantUpdateOne) ClearAccessPolicies() *TenantUpdateOne {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (_u *TenantUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *TenantUpdateOne {
+func (_u *TenantUpdateOne) RemoveAccessPolicyIDs(ids ...string) *TenantUpdateOne {
 	_u.mutation.RemoveAccessPolicyIDs(ids...)
 	return _u
 }
 
 // RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
 func (_u *TenantUpdateOne) RemoveAccessPolicies(v ...*AccessPolicy) *TenantUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -684,17 +662,11 @@ func (_u *TenantUpdateOne) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *TenantUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *TenantUpdateOne {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Tenant.id" for update`)}
@@ -742,10 +714,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.EnvironmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedEnvironmentsIDs(); len(nodes) > 0 && !_u.mutation.EnvironmentsCleared() {
@@ -756,10 +727,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.EnvironmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -773,10 +743,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.EnvironmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -790,10 +759,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !_u.mutation.ResourcesCleared() {
@@ -804,10 +772,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -821,10 +788,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.ResourcesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -838,10 +804,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.AccessPoliciesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !_u.mutation.AccessPoliciesCleared() {
@@ -852,10 +817,9 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.AccessPoliciesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -869,18 +833,14 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 			Columns: []string{tenant.AccessPoliciesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.Tenant
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	_node = &Tenant{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

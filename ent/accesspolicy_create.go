@@ -8,11 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"entgo.io/ent/dialect"
-	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
@@ -26,7 +23,6 @@ type AccessPolicyCreate struct {
 	config
 	mutation *AccessPolicyMutation
 	hooks    []Hook
-	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -112,13 +108,13 @@ func (_c *AccessPolicyCreate) SetNillablePriority(v *int) *AccessPolicyCreate {
 }
 
 // SetID sets the "id" field.
-func (_c *AccessPolicyCreate) SetID(v uuid.UUID) *AccessPolicyCreate {
+func (_c *AccessPolicyCreate) SetID(v string) *AccessPolicyCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (_c *AccessPolicyCreate) SetNillableID(v *uuid.UUID) *AccessPolicyCreate {
+func (_c *AccessPolicyCreate) SetNillableID(v *string) *AccessPolicyCreate {
 	if v != nil {
 		_c.SetID(*v)
 	}
@@ -126,14 +122,14 @@ func (_c *AccessPolicyCreate) SetNillableID(v *uuid.UUID) *AccessPolicyCreate {
 }
 
 // AddAccountIDs adds the "account" edge to the Account entity by IDs.
-func (_c *AccessPolicyCreate) AddAccountIDs(ids ...uuid.UUID) *AccessPolicyCreate {
+func (_c *AccessPolicyCreate) AddAccountIDs(ids ...string) *AccessPolicyCreate {
 	_c.mutation.AddAccountIDs(ids...)
 	return _c
 }
 
 // AddAccount adds the "account" edges to the Account entity.
 func (_c *AccessPolicyCreate) AddAccount(v ...*Account) *AccessPolicyCreate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -141,14 +137,14 @@ func (_c *AccessPolicyCreate) AddAccount(v ...*Account) *AccessPolicyCreate {
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (_c *AccessPolicyCreate) AddRoleIDs(ids ...uuid.UUID) *AccessPolicyCreate {
+func (_c *AccessPolicyCreate) AddRoleIDs(ids ...string) *AccessPolicyCreate {
 	_c.mutation.AddRoleIDs(ids...)
 	return _c
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
 func (_c *AccessPolicyCreate) AddRoles(v ...*Role) *AccessPolicyCreate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -156,13 +152,13 @@ func (_c *AccessPolicyCreate) AddRoles(v ...*Role) *AccessPolicyCreate {
 }
 
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (_c *AccessPolicyCreate) SetTenantID(id uuid.UUID) *AccessPolicyCreate {
+func (_c *AccessPolicyCreate) SetTenantID(id string) *AccessPolicyCreate {
 	_c.mutation.SetTenantID(id)
 	return _c
 }
 
 // SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (_c *AccessPolicyCreate) SetNillableTenantID(id *uuid.UUID) *AccessPolicyCreate {
+func (_c *AccessPolicyCreate) SetNillableTenantID(id *string) *AccessPolicyCreate {
 	if id != nil {
 		_c = _c.SetTenantID(*id)
 	}
@@ -175,13 +171,13 @@ func (_c *AccessPolicyCreate) SetTenant(v *Tenant) *AccessPolicyCreate {
 }
 
 // SetEnvironmentID sets the "environment" edge to the Environment entity by ID.
-func (_c *AccessPolicyCreate) SetEnvironmentID(id uuid.UUID) *AccessPolicyCreate {
+func (_c *AccessPolicyCreate) SetEnvironmentID(id string) *AccessPolicyCreate {
 	_c.mutation.SetEnvironmentID(id)
 	return _c
 }
 
 // SetNillableEnvironmentID sets the "environment" edge to the Environment entity by ID if the given value is not nil.
-func (_c *AccessPolicyCreate) SetNillableEnvironmentID(id *uuid.UUID) *AccessPolicyCreate {
+func (_c *AccessPolicyCreate) SetNillableEnvironmentID(id *string) *AccessPolicyCreate {
 	if id != nil {
 		_c = _c.SetEnvironmentID(*id)
 	}
@@ -294,10 +290,10 @@ func (_c *AccessPolicyCreate) sqlSave(ctx context.Context) (*AccessPolicy, error
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected AccessPolicy.ID type: %T", _spec.ID.Value)
 		}
 	}
 	_c.mutation.id = &_node.ID
@@ -308,13 +304,11 @@ func (_c *AccessPolicyCreate) sqlSave(ctx context.Context) (*AccessPolicy, error
 func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec) {
 	var (
 		_node = &AccessPolicy{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(accesspolicy.Table, sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(accesspolicy.Table, sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString))
 	)
-	_spec.Schema = _c.schemaConfig.AccessPolicy
-	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = &id
+		_spec.ID.Value = id
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(accesspolicy.FieldCreatedAt, field.TypeTime, value)
@@ -352,10 +346,9 @@ func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec)
 			Columns: accesspolicy.AccountPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -369,10 +362,9 @@ func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec)
 			Columns: accesspolicy.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -386,10 +378,9 @@ func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec)
 			Columns: []string{accesspolicy.TenantColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -404,10 +395,9 @@ func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec)
 			Columns: []string{accesspolicy.EnvironmentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -416,332 +406,11 @@ func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec)
 	return _node, _spec
 }
 
-// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
-// of the `INSERT` statement. For example:
-//
-//	client.AccessPolicy.Create().
-//		SetCreatedAt(v).
-//		OnConflict(
-//			// Update the row with the new values
-//			// the was proposed for insertion.
-//			sql.ResolveWithNewValues(),
-//		).
-//		// Override some of the fields with custom
-//		// update values.
-//		Update(func(u *ent.AccessPolicyUpsert) {
-//			SetCreatedAt(v+v).
-//		}).
-//		Exec(ctx)
-func (_c *AccessPolicyCreate) OnConflict(opts ...sql.ConflictOption) *AccessPolicyUpsertOne {
-	_c.conflict = opts
-	return &AccessPolicyUpsertOne{
-		create: _c,
-	}
-}
-
-// OnConflictColumns calls `OnConflict` and configures the columns
-// as conflict target. Using this option is equivalent to using:
-//
-//	client.AccessPolicy.Create().
-//		OnConflict(sql.ConflictColumns(columns...)).
-//		Exec(ctx)
-func (_c *AccessPolicyCreate) OnConflictColumns(columns ...string) *AccessPolicyUpsertOne {
-	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
-	return &AccessPolicyUpsertOne{
-		create: _c,
-	}
-}
-
-type (
-	// AccessPolicyUpsertOne is the builder for "upsert"-ing
-	//  one AccessPolicy node.
-	AccessPolicyUpsertOne struct {
-		create *AccessPolicyCreate
-	}
-
-	// AccessPolicyUpsert is the "OnConflict" setter.
-	AccessPolicyUpsert struct {
-		*sql.UpdateSet
-	}
-)
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *AccessPolicyUpsert) SetUpdatedAt(v time.Time) *AccessPolicyUpsert {
-	u.Set(accesspolicy.FieldUpdatedAt, v)
-	return u
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *AccessPolicyUpsert) UpdateUpdatedAt() *AccessPolicyUpsert {
-	u.SetExcluded(accesspolicy.FieldUpdatedAt)
-	return u
-}
-
-// SetName sets the "name" field.
-func (u *AccessPolicyUpsert) SetName(v string) *AccessPolicyUpsert {
-	u.Set(accesspolicy.FieldName, v)
-	return u
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *AccessPolicyUpsert) UpdateName() *AccessPolicyUpsert {
-	u.SetExcluded(accesspolicy.FieldName)
-	return u
-}
-
-// SetDescription sets the "description" field.
-func (u *AccessPolicyUpsert) SetDescription(v string) *AccessPolicyUpsert {
-	u.Set(accesspolicy.FieldDescription, v)
-	return u
-}
-
-// UpdateDescription sets the "description" field to the value that was provided on create.
-func (u *AccessPolicyUpsert) UpdateDescription() *AccessPolicyUpsert {
-	u.SetExcluded(accesspolicy.FieldDescription)
-	return u
-}
-
-// ClearDescription clears the value of the "description" field.
-func (u *AccessPolicyUpsert) ClearDescription() *AccessPolicyUpsert {
-	u.SetNull(accesspolicy.FieldDescription)
-	return u
-}
-
-// SetStatements sets the "statements" field.
-func (u *AccessPolicyUpsert) SetStatements(v []schema.PolicyStatement) *AccessPolicyUpsert {
-	u.Set(accesspolicy.FieldStatements, v)
-	return u
-}
-
-// UpdateStatements sets the "statements" field to the value that was provided on create.
-func (u *AccessPolicyUpsert) UpdateStatements() *AccessPolicyUpsert {
-	u.SetExcluded(accesspolicy.FieldStatements)
-	return u
-}
-
-// SetImmutable sets the "immutable" field.
-func (u *AccessPolicyUpsert) SetImmutable(v bool) *AccessPolicyUpsert {
-	u.Set(accesspolicy.FieldImmutable, v)
-	return u
-}
-
-// UpdateImmutable sets the "immutable" field to the value that was provided on create.
-func (u *AccessPolicyUpsert) UpdateImmutable() *AccessPolicyUpsert {
-	u.SetExcluded(accesspolicy.FieldImmutable)
-	return u
-}
-
-// SetPriority sets the "priority" field.
-func (u *AccessPolicyUpsert) SetPriority(v int) *AccessPolicyUpsert {
-	u.Set(accesspolicy.FieldPriority, v)
-	return u
-}
-
-// UpdatePriority sets the "priority" field to the value that was provided on create.
-func (u *AccessPolicyUpsert) UpdatePriority() *AccessPolicyUpsert {
-	u.SetExcluded(accesspolicy.FieldPriority)
-	return u
-}
-
-// AddPriority adds v to the "priority" field.
-func (u *AccessPolicyUpsert) AddPriority(v int) *AccessPolicyUpsert {
-	u.Add(accesspolicy.FieldPriority, v)
-	return u
-}
-
-// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
-// Using this option is equivalent to using:
-//
-//	client.AccessPolicy.Create().
-//		OnConflict(
-//			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(accesspolicy.FieldID)
-//			}),
-//		).
-//		Exec(ctx)
-func (u *AccessPolicyUpsertOne) UpdateNewValues() *AccessPolicyUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(accesspolicy.FieldID)
-		}
-		if _, exists := u.create.mutation.CreatedAt(); exists {
-			s.SetIgnore(accesspolicy.FieldCreatedAt)
-		}
-	}))
-	return u
-}
-
-// Ignore sets each column to itself in case of conflict.
-// Using this option is equivalent to using:
-//
-//	client.AccessPolicy.Create().
-//	    OnConflict(sql.ResolveWithIgnore()).
-//	    Exec(ctx)
-func (u *AccessPolicyUpsertOne) Ignore() *AccessPolicyUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
-	return u
-}
-
-// DoNothing configures the conflict_action to `DO NOTHING`.
-// Supported only by SQLite and PostgreSQL.
-func (u *AccessPolicyUpsertOne) DoNothing() *AccessPolicyUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.DoNothing())
-	return u
-}
-
-// Update allows overriding fields `UPDATE` values. See the AccessPolicyCreate.OnConflict
-// documentation for more info.
-func (u *AccessPolicyUpsertOne) Update(set func(*AccessPolicyUpsert)) *AccessPolicyUpsertOne {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&AccessPolicyUpsert{UpdateSet: update})
-	}))
-	return u
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *AccessPolicyUpsertOne) SetUpdatedAt(v time.Time) *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetUpdatedAt(v)
-	})
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *AccessPolicyUpsertOne) UpdateUpdatedAt() *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateUpdatedAt()
-	})
-}
-
-// SetName sets the "name" field.
-func (u *AccessPolicyUpsertOne) SetName(v string) *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetName(v)
-	})
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *AccessPolicyUpsertOne) UpdateName() *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateName()
-	})
-}
-
-// SetDescription sets the "description" field.
-func (u *AccessPolicyUpsertOne) SetDescription(v string) *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetDescription(v)
-	})
-}
-
-// UpdateDescription sets the "description" field to the value that was provided on create.
-func (u *AccessPolicyUpsertOne) UpdateDescription() *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateDescription()
-	})
-}
-
-// ClearDescription clears the value of the "description" field.
-func (u *AccessPolicyUpsertOne) ClearDescription() *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.ClearDescription()
-	})
-}
-
-// SetStatements sets the "statements" field.
-func (u *AccessPolicyUpsertOne) SetStatements(v []schema.PolicyStatement) *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetStatements(v)
-	})
-}
-
-// UpdateStatements sets the "statements" field to the value that was provided on create.
-func (u *AccessPolicyUpsertOne) UpdateStatements() *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateStatements()
-	})
-}
-
-// SetImmutable sets the "immutable" field.
-func (u *AccessPolicyUpsertOne) SetImmutable(v bool) *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetImmutable(v)
-	})
-}
-
-// UpdateImmutable sets the "immutable" field to the value that was provided on create.
-func (u *AccessPolicyUpsertOne) UpdateImmutable() *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateImmutable()
-	})
-}
-
-// SetPriority sets the "priority" field.
-func (u *AccessPolicyUpsertOne) SetPriority(v int) *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetPriority(v)
-	})
-}
-
-// AddPriority adds v to the "priority" field.
-func (u *AccessPolicyUpsertOne) AddPriority(v int) *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.AddPriority(v)
-	})
-}
-
-// UpdatePriority sets the "priority" field to the value that was provided on create.
-func (u *AccessPolicyUpsertOne) UpdatePriority() *AccessPolicyUpsertOne {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdatePriority()
-	})
-}
-
-// Exec executes the query.
-func (u *AccessPolicyUpsertOne) Exec(ctx context.Context) error {
-	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for AccessPolicyCreate.OnConflict")
-	}
-	return u.create.Exec(ctx)
-}
-
-// ExecX is like Exec, but panics if an error occurs.
-func (u *AccessPolicyUpsertOne) ExecX(ctx context.Context) {
-	if err := u.create.Exec(ctx); err != nil {
-		panic(err)
-	}
-}
-
-// Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *AccessPolicyUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
-	if u.create.driver.Dialect() == dialect.MySQL {
-		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
-		// fields from the database since MySQL does not support the RETURNING clause.
-		return id, errors.New("ent: AccessPolicyUpsertOne.ID is not supported by MySQL driver. Use AccessPolicyUpsertOne.Exec instead")
-	}
-	node, err := u.create.Save(ctx)
-	if err != nil {
-		return id, err
-	}
-	return node.ID, nil
-}
-
-// IDX is like ID, but panics if an error occurs.
-func (u *AccessPolicyUpsertOne) IDX(ctx context.Context) uuid.UUID {
-	id, err := u.ID(ctx)
-	if err != nil {
-		panic(err)
-	}
-	return id
-}
-
 // AccessPolicyCreateBulk is the builder for creating many AccessPolicy entities in bulk.
 type AccessPolicyCreateBulk struct {
 	config
 	err      error
 	builders []*AccessPolicyCreate
-	conflict []sql.ConflictOption
 }
 
 // Save creates the AccessPolicy entities in the database.
@@ -771,7 +440,6 @@ func (_c *AccessPolicyCreateBulk) Save(ctx context.Context) ([]*AccessPolicy, er
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
-					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -818,221 +486,6 @@ func (_c *AccessPolicyCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *AccessPolicyCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
-		panic(err)
-	}
-}
-
-// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
-// of the `INSERT` statement. For example:
-//
-//	client.AccessPolicy.CreateBulk(builders...).
-//		OnConflict(
-//			// Update the row with the new values
-//			// the was proposed for insertion.
-//			sql.ResolveWithNewValues(),
-//		).
-//		// Override some of the fields with custom
-//		// update values.
-//		Update(func(u *ent.AccessPolicyUpsert) {
-//			SetCreatedAt(v+v).
-//		}).
-//		Exec(ctx)
-func (_c *AccessPolicyCreateBulk) OnConflict(opts ...sql.ConflictOption) *AccessPolicyUpsertBulk {
-	_c.conflict = opts
-	return &AccessPolicyUpsertBulk{
-		create: _c,
-	}
-}
-
-// OnConflictColumns calls `OnConflict` and configures the columns
-// as conflict target. Using this option is equivalent to using:
-//
-//	client.AccessPolicy.Create().
-//		OnConflict(sql.ConflictColumns(columns...)).
-//		Exec(ctx)
-func (_c *AccessPolicyCreateBulk) OnConflictColumns(columns ...string) *AccessPolicyUpsertBulk {
-	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
-	return &AccessPolicyUpsertBulk{
-		create: _c,
-	}
-}
-
-// AccessPolicyUpsertBulk is the builder for "upsert"-ing
-// a bulk of AccessPolicy nodes.
-type AccessPolicyUpsertBulk struct {
-	create *AccessPolicyCreateBulk
-}
-
-// UpdateNewValues updates the mutable fields using the new values that
-// were set on create. Using this option is equivalent to using:
-//
-//	client.AccessPolicy.Create().
-//		OnConflict(
-//			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(accesspolicy.FieldID)
-//			}),
-//		).
-//		Exec(ctx)
-func (u *AccessPolicyUpsertBulk) UpdateNewValues() *AccessPolicyUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		for _, b := range u.create.builders {
-			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(accesspolicy.FieldID)
-			}
-			if _, exists := b.mutation.CreatedAt(); exists {
-				s.SetIgnore(accesspolicy.FieldCreatedAt)
-			}
-		}
-	}))
-	return u
-}
-
-// Ignore sets each column to itself in case of conflict.
-// Using this option is equivalent to using:
-//
-//	client.AccessPolicy.Create().
-//		OnConflict(sql.ResolveWithIgnore()).
-//		Exec(ctx)
-func (u *AccessPolicyUpsertBulk) Ignore() *AccessPolicyUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
-	return u
-}
-
-// DoNothing configures the conflict_action to `DO NOTHING`.
-// Supported only by SQLite and PostgreSQL.
-func (u *AccessPolicyUpsertBulk) DoNothing() *AccessPolicyUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.DoNothing())
-	return u
-}
-
-// Update allows overriding fields `UPDATE` values. See the AccessPolicyCreateBulk.OnConflict
-// documentation for more info.
-func (u *AccessPolicyUpsertBulk) Update(set func(*AccessPolicyUpsert)) *AccessPolicyUpsertBulk {
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&AccessPolicyUpsert{UpdateSet: update})
-	}))
-	return u
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *AccessPolicyUpsertBulk) SetUpdatedAt(v time.Time) *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetUpdatedAt(v)
-	})
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *AccessPolicyUpsertBulk) UpdateUpdatedAt() *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateUpdatedAt()
-	})
-}
-
-// SetName sets the "name" field.
-func (u *AccessPolicyUpsertBulk) SetName(v string) *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetName(v)
-	})
-}
-
-// UpdateName sets the "name" field to the value that was provided on create.
-func (u *AccessPolicyUpsertBulk) UpdateName() *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateName()
-	})
-}
-
-// SetDescription sets the "description" field.
-func (u *AccessPolicyUpsertBulk) SetDescription(v string) *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetDescription(v)
-	})
-}
-
-// UpdateDescription sets the "description" field to the value that was provided on create.
-func (u *AccessPolicyUpsertBulk) UpdateDescription() *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateDescription()
-	})
-}
-
-// ClearDescription clears the value of the "description" field.
-func (u *AccessPolicyUpsertBulk) ClearDescription() *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.ClearDescription()
-	})
-}
-
-// SetStatements sets the "statements" field.
-func (u *AccessPolicyUpsertBulk) SetStatements(v []schema.PolicyStatement) *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetStatements(v)
-	})
-}
-
-// UpdateStatements sets the "statements" field to the value that was provided on create.
-func (u *AccessPolicyUpsertBulk) UpdateStatements() *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateStatements()
-	})
-}
-
-// SetImmutable sets the "immutable" field.
-func (u *AccessPolicyUpsertBulk) SetImmutable(v bool) *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetImmutable(v)
-	})
-}
-
-// UpdateImmutable sets the "immutable" field to the value that was provided on create.
-func (u *AccessPolicyUpsertBulk) UpdateImmutable() *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdateImmutable()
-	})
-}
-
-// SetPriority sets the "priority" field.
-func (u *AccessPolicyUpsertBulk) SetPriority(v int) *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.SetPriority(v)
-	})
-}
-
-// AddPriority adds v to the "priority" field.
-func (u *AccessPolicyUpsertBulk) AddPriority(v int) *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.AddPriority(v)
-	})
-}
-
-// UpdatePriority sets the "priority" field to the value that was provided on create.
-func (u *AccessPolicyUpsertBulk) UpdatePriority() *AccessPolicyUpsertBulk {
-	return u.Update(func(s *AccessPolicyUpsert) {
-		s.UpdatePriority()
-	})
-}
-
-// Exec executes the query.
-func (u *AccessPolicyUpsertBulk) Exec(ctx context.Context) error {
-	if u.create.err != nil {
-		return u.create.err
-	}
-	for i, b := range u.create.builders {
-		if len(b.conflict) != 0 {
-			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the AccessPolicyCreateBulk instead", i)
-		}
-	}
-	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for AccessPolicyCreateBulk.OnConflict")
-	}
-	return u.create.Exec(ctx)
-}
-
-// ExecX is like Exec, but panics if an error occurs.
-func (u *AccessPolicyUpsertBulk) ExecX(ctx context.Context) {
-	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

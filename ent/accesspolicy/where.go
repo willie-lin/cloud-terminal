@@ -7,54 +7,62 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uuid.UUID) predicate.AccessPolicy {
+func ID(id string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uuid.UUID) predicate.AccessPolicy {
+func IDEQ(id string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uuid.UUID) predicate.AccessPolicy {
+func IDNEQ(id string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uuid.UUID) predicate.AccessPolicy {
+func IDIn(ids ...string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uuid.UUID) predicate.AccessPolicy {
+func IDNotIn(ids ...string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uuid.UUID) predicate.AccessPolicy {
+func IDGT(id string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uuid.UUID) predicate.AccessPolicy {
+func IDGTE(id string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uuid.UUID) predicate.AccessPolicy {
+func IDLT(id string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uuid.UUID) predicate.AccessPolicy {
+func IDLTE(id string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldLTE(FieldID, id))
+}
+
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEqualFold(FieldID, id))
+}
+
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldContainsFold(FieldID, id))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -364,9 +372,6 @@ func HasAccount() predicate.AccessPolicy {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, AccountTable, AccountPrimaryKey...),
 		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.AccountAccessPolicies
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -375,9 +380,6 @@ func HasAccount() predicate.AccessPolicy {
 func HasAccountWith(preds ...predicate.Account) predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := newAccountStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.AccountAccessPolicies
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -393,9 +395,6 @@ func HasRoles() predicate.AccessPolicy {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, RolesTable, RolesPrimaryKey...),
 		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -404,9 +403,6 @@ func HasRoles() predicate.AccessPolicy {
 func HasRolesWith(preds ...predicate.Role) predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := newRolesStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -422,9 +418,6 @@ func HasTenant() predicate.AccessPolicy {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
 		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.AccessPolicy
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -433,9 +426,6 @@ func HasTenant() predicate.AccessPolicy {
 func HasTenantWith(preds ...predicate.Tenant) predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := newTenantStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.AccessPolicy
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -451,9 +441,6 @@ func HasEnvironment() predicate.AccessPolicy {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, EnvironmentTable, EnvironmentColumn),
 		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Environment
-		step.Edge.Schema = schemaConfig.Environment
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -462,9 +449,6 @@ func HasEnvironment() predicate.AccessPolicy {
 func HasEnvironmentWith(preds ...predicate.Environment) predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := newEnvironmentStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Environment
-		step.Edge.Schema = schemaConfig.Environment
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

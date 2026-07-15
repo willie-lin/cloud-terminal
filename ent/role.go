@@ -9,7 +9,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 )
@@ -18,7 +17,8 @@ import (
 type Role struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	// UUID primary key
+	ID string `json:"id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -34,7 +34,7 @@ type Role struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoleQuery when eager-loading is set.
 	Edges         RoleEdges `json:"edges"`
-	account_roles *uuid.UUID
+	account_roles *string
 	selectValues  sql.SelectValues
 }
 
@@ -52,11 +52,7 @@ type RoleEdges struct {
 	ChildRoles []*Role `json:"child_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes         [5]bool
-	namedUsers          map[string][]*User
-	namedAccessPolicies map[string][]*AccessPolicy
-	namedParentRole     map[string][]*Role
-	namedChildRoles     map[string][]*Role
+	loadedTypes [5]bool
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -113,14 +109,12 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case role.FieldIsDisabled, role.FieldIsDefault:
 			values[i] = new(sql.NullBool)
-		case role.FieldName, role.FieldDescription:
+		case role.FieldID, role.FieldName, role.FieldDescription:
 			values[i] = new(sql.NullString)
 		case role.FieldCreatedAt, role.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case role.FieldID:
-			values[i] = new(uuid.UUID)
 		case role.ForeignKeys[0]: // account_roles
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -137,10 +131,10 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case role.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			} else if value.Valid {
+				_m.ID = value.String
 			}
 		case role.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -179,11 +173,11 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 				_m.IsDefault = value.Bool
 			}
 		case role.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field account_roles", values[i])
 			} else if value.Valid {
-				_m.account_roles = new(uuid.UUID)
-				*_m.account_roles = *value.S.(*uuid.UUID)
+				_m.account_roles = new(string)
+				*_m.account_roles = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -265,102 +259,6 @@ func (_m *Role) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.IsDefault))
 	builder.WriteByte(')')
 	return builder.String()
-}
-
-// NamedUsers returns the Users named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (_m *Role) NamedUsers(name string) ([]*User, error) {
-	if _m.Edges.namedUsers == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := _m.Edges.namedUsers[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (_m *Role) appendNamedUsers(name string, edges ...*User) {
-	if _m.Edges.namedUsers == nil {
-		_m.Edges.namedUsers = make(map[string][]*User)
-	}
-	if len(edges) == 0 {
-		_m.Edges.namedUsers[name] = []*User{}
-	} else {
-		_m.Edges.namedUsers[name] = append(_m.Edges.namedUsers[name], edges...)
-	}
-}
-
-// NamedAccessPolicies returns the AccessPolicies named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (_m *Role) NamedAccessPolicies(name string) ([]*AccessPolicy, error) {
-	if _m.Edges.namedAccessPolicies == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := _m.Edges.namedAccessPolicies[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (_m *Role) appendNamedAccessPolicies(name string, edges ...*AccessPolicy) {
-	if _m.Edges.namedAccessPolicies == nil {
-		_m.Edges.namedAccessPolicies = make(map[string][]*AccessPolicy)
-	}
-	if len(edges) == 0 {
-		_m.Edges.namedAccessPolicies[name] = []*AccessPolicy{}
-	} else {
-		_m.Edges.namedAccessPolicies[name] = append(_m.Edges.namedAccessPolicies[name], edges...)
-	}
-}
-
-// NamedParentRole returns the ParentRole named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (_m *Role) NamedParentRole(name string) ([]*Role, error) {
-	if _m.Edges.namedParentRole == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := _m.Edges.namedParentRole[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (_m *Role) appendNamedParentRole(name string, edges ...*Role) {
-	if _m.Edges.namedParentRole == nil {
-		_m.Edges.namedParentRole = make(map[string][]*Role)
-	}
-	if len(edges) == 0 {
-		_m.Edges.namedParentRole[name] = []*Role{}
-	} else {
-		_m.Edges.namedParentRole[name] = append(_m.Edges.namedParentRole[name], edges...)
-	}
-}
-
-// NamedChildRoles returns the ChildRoles named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (_m *Role) NamedChildRoles(name string) ([]*Role, error) {
-	if _m.Edges.namedChildRoles == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := _m.Edges.namedChildRoles[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (_m *Role) appendNamedChildRoles(name string, edges ...*Role) {
-	if _m.Edges.namedChildRoles == nil {
-		_m.Edges.namedChildRoles = make(map[string][]*Role)
-	}
-	if len(edges) == 0 {
-		_m.Edges.namedChildRoles[name] = []*Role{}
-	} else {
-		_m.Edges.namedChildRoles[name] = append(_m.Edges.namedChildRoles[name], edges...)
-	}
 }
 
 // Roles is a parsable slice of Role.

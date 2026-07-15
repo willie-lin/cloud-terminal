@@ -9,7 +9,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
 
@@ -17,10 +16,11 @@ import (
 type Tenant struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// UUID primary key
+	ID string `json:"id,omitempty"`
+	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
+	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
@@ -44,10 +44,7 @@ type TenantEdges struct {
 	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes         [3]bool
-	namedEnvironments   map[string][]*Environment
-	namedResources      map[string][]*Resource
-	namedAccessPolicies map[string][]*AccessPolicy
+	loadedTypes [3]bool
 }
 
 // EnvironmentsOrErr returns the Environments value or an error if the edge
@@ -82,12 +79,10 @@ func (*Tenant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tenant.FieldName, tenant.FieldDescription, tenant.FieldStatus:
+		case tenant.FieldID, tenant.FieldName, tenant.FieldDescription, tenant.FieldStatus:
 			values[i] = new(sql.NullString)
 		case tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case tenant.FieldID:
-			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -104,10 +99,10 @@ func (_m *Tenant) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case tenant.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			} else if value.Valid {
+				_m.ID = value.String
 			}
 		case tenant.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -206,78 +201,6 @@ func (_m *Tenant) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteByte(')')
 	return builder.String()
-}
-
-// NamedEnvironments returns the Environments named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (_m *Tenant) NamedEnvironments(name string) ([]*Environment, error) {
-	if _m.Edges.namedEnvironments == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := _m.Edges.namedEnvironments[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (_m *Tenant) appendNamedEnvironments(name string, edges ...*Environment) {
-	if _m.Edges.namedEnvironments == nil {
-		_m.Edges.namedEnvironments = make(map[string][]*Environment)
-	}
-	if len(edges) == 0 {
-		_m.Edges.namedEnvironments[name] = []*Environment{}
-	} else {
-		_m.Edges.namedEnvironments[name] = append(_m.Edges.namedEnvironments[name], edges...)
-	}
-}
-
-// NamedResources returns the Resources named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (_m *Tenant) NamedResources(name string) ([]*Resource, error) {
-	if _m.Edges.namedResources == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := _m.Edges.namedResources[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (_m *Tenant) appendNamedResources(name string, edges ...*Resource) {
-	if _m.Edges.namedResources == nil {
-		_m.Edges.namedResources = make(map[string][]*Resource)
-	}
-	if len(edges) == 0 {
-		_m.Edges.namedResources[name] = []*Resource{}
-	} else {
-		_m.Edges.namedResources[name] = append(_m.Edges.namedResources[name], edges...)
-	}
-}
-
-// NamedAccessPolicies returns the AccessPolicies named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (_m *Tenant) NamedAccessPolicies(name string) ([]*AccessPolicy, error) {
-	if _m.Edges.namedAccessPolicies == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := _m.Edges.namedAccessPolicies[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (_m *Tenant) appendNamedAccessPolicies(name string, edges ...*AccessPolicy) {
-	if _m.Edges.namedAccessPolicies == nil {
-		_m.Edges.namedAccessPolicies = make(map[string][]*AccessPolicy)
-	}
-	if len(edges) == 0 {
-		_m.Edges.namedAccessPolicies[name] = []*AccessPolicy{}
-	} else {
-		_m.Edges.namedAccessPolicies[name] = append(_m.Edges.namedAccessPolicies[name], edges...)
-	}
 }
 
 // Tenants is a parsable slice of Tenant.

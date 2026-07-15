@@ -11,10 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
@@ -24,9 +22,8 @@ import (
 // AccountUpdate is the builder for updating Account entities.
 type AccountUpdate struct {
 	config
-	hooks     []Hook
-	mutation  *AccountMutation
-	modifiers []func(*sql.UpdateBuilder)
+	hooks    []Hook
+	mutation *AccountMutation
 }
 
 // Where appends a list predicates to the AccountUpdate builder.
@@ -90,14 +87,14 @@ func (_u *AccountUpdate) SetNillableStatus(v *account.Status) *AccountUpdate {
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (_u *AccountUpdate) AddUserIDs(ids ...uuid.UUID) *AccountUpdate {
+func (_u *AccountUpdate) AddUserIDs(ids ...string) *AccountUpdate {
 	_u.mutation.AddUserIDs(ids...)
 	return _u
 }
 
 // AddUsers adds the "users" edges to the User entity.
 func (_u *AccountUpdate) AddUsers(v ...*User) *AccountUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -105,14 +102,14 @@ func (_u *AccountUpdate) AddUsers(v ...*User) *AccountUpdate {
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (_u *AccountUpdate) AddRoleIDs(ids ...uuid.UUID) *AccountUpdate {
+func (_u *AccountUpdate) AddRoleIDs(ids ...string) *AccountUpdate {
 	_u.mutation.AddRoleIDs(ids...)
 	return _u
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
 func (_u *AccountUpdate) AddRoles(v ...*Role) *AccountUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -120,14 +117,14 @@ func (_u *AccountUpdate) AddRoles(v ...*Role) *AccountUpdate {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (_u *AccountUpdate) AddAccessPolicyIDs(ids ...uuid.UUID) *AccountUpdate {
+func (_u *AccountUpdate) AddAccessPolicyIDs(ids ...string) *AccountUpdate {
 	_u.mutation.AddAccessPolicyIDs(ids...)
 	return _u
 }
 
 // AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
 func (_u *AccountUpdate) AddAccessPolicies(v ...*AccessPolicy) *AccountUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -135,13 +132,13 @@ func (_u *AccountUpdate) AddAccessPolicies(v ...*AccessPolicy) *AccountUpdate {
 }
 
 // SetResourceID sets the "resource" edge to the Resource entity by ID.
-func (_u *AccountUpdate) SetResourceID(id uuid.UUID) *AccountUpdate {
+func (_u *AccountUpdate) SetResourceID(id string) *AccountUpdate {
 	_u.mutation.SetResourceID(id)
 	return _u
 }
 
 // SetNillableResourceID sets the "resource" edge to the Resource entity by ID if the given value is not nil.
-func (_u *AccountUpdate) SetNillableResourceID(id *uuid.UUID) *AccountUpdate {
+func (_u *AccountUpdate) SetNillableResourceID(id *string) *AccountUpdate {
 	if id != nil {
 		_u = _u.SetResourceID(*id)
 	}
@@ -165,14 +162,14 @@ func (_u *AccountUpdate) ClearUsers() *AccountUpdate {
 }
 
 // RemoveUserIDs removes the "users" edge to User entities by IDs.
-func (_u *AccountUpdate) RemoveUserIDs(ids ...uuid.UUID) *AccountUpdate {
+func (_u *AccountUpdate) RemoveUserIDs(ids ...string) *AccountUpdate {
 	_u.mutation.RemoveUserIDs(ids...)
 	return _u
 }
 
 // RemoveUsers removes "users" edges to User entities.
 func (_u *AccountUpdate) RemoveUsers(v ...*User) *AccountUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -186,14 +183,14 @@ func (_u *AccountUpdate) ClearRoles() *AccountUpdate {
 }
 
 // RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (_u *AccountUpdate) RemoveRoleIDs(ids ...uuid.UUID) *AccountUpdate {
+func (_u *AccountUpdate) RemoveRoleIDs(ids ...string) *AccountUpdate {
 	_u.mutation.RemoveRoleIDs(ids...)
 	return _u
 }
 
 // RemoveRoles removes "roles" edges to Role entities.
 func (_u *AccountUpdate) RemoveRoles(v ...*Role) *AccountUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -207,14 +204,14 @@ func (_u *AccountUpdate) ClearAccessPolicies() *AccountUpdate {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (_u *AccountUpdate) RemoveAccessPolicyIDs(ids ...uuid.UUID) *AccountUpdate {
+func (_u *AccountUpdate) RemoveAccessPolicyIDs(ids ...string) *AccountUpdate {
 	_u.mutation.RemoveAccessPolicyIDs(ids...)
 	return _u
 }
 
 // RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
 func (_u *AccountUpdate) RemoveAccessPolicies(v ...*AccessPolicy) *AccountUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -278,17 +275,11 @@ func (_u *AccountUpdate) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *AccountUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *AccountUpdate {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(account.Table, account.Columns, sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(account.Table, account.Columns, sqlgraph.NewFieldSpec(account.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -319,10 +310,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{account.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
@@ -333,10 +323,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{account.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -350,10 +339,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{account.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -367,10 +355,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{account.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
@@ -381,10 +368,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{account.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -398,10 +384,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{account.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -415,10 +400,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: account.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !_u.mutation.AccessPoliciesCleared() {
@@ -429,10 +413,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: account.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -446,10 +429,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: account.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -463,10 +445,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{account.ResourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.ResourceIDs(); len(nodes) > 0 {
@@ -477,18 +458,14 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{account.ResourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.Account
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{account.Label}
@@ -504,10 +481,9 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // AccountUpdateOne is the builder for updating a single Account entity.
 type AccountUpdateOne struct {
 	config
-	fields    []string
-	hooks     []Hook
-	mutation  *AccountMutation
-	modifiers []func(*sql.UpdateBuilder)
+	fields   []string
+	hooks    []Hook
+	mutation *AccountMutation
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -565,14 +541,14 @@ func (_u *AccountUpdateOne) SetNillableStatus(v *account.Status) *AccountUpdateO
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (_u *AccountUpdateOne) AddUserIDs(ids ...uuid.UUID) *AccountUpdateOne {
+func (_u *AccountUpdateOne) AddUserIDs(ids ...string) *AccountUpdateOne {
 	_u.mutation.AddUserIDs(ids...)
 	return _u
 }
 
 // AddUsers adds the "users" edges to the User entity.
 func (_u *AccountUpdateOne) AddUsers(v ...*User) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -580,14 +556,14 @@ func (_u *AccountUpdateOne) AddUsers(v ...*User) *AccountUpdateOne {
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (_u *AccountUpdateOne) AddRoleIDs(ids ...uuid.UUID) *AccountUpdateOne {
+func (_u *AccountUpdateOne) AddRoleIDs(ids ...string) *AccountUpdateOne {
 	_u.mutation.AddRoleIDs(ids...)
 	return _u
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
 func (_u *AccountUpdateOne) AddRoles(v ...*Role) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -595,14 +571,14 @@ func (_u *AccountUpdateOne) AddRoles(v ...*Role) *AccountUpdateOne {
 }
 
 // AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
-func (_u *AccountUpdateOne) AddAccessPolicyIDs(ids ...uuid.UUID) *AccountUpdateOne {
+func (_u *AccountUpdateOne) AddAccessPolicyIDs(ids ...string) *AccountUpdateOne {
 	_u.mutation.AddAccessPolicyIDs(ids...)
 	return _u
 }
 
 // AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
 func (_u *AccountUpdateOne) AddAccessPolicies(v ...*AccessPolicy) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -610,13 +586,13 @@ func (_u *AccountUpdateOne) AddAccessPolicies(v ...*AccessPolicy) *AccountUpdate
 }
 
 // SetResourceID sets the "resource" edge to the Resource entity by ID.
-func (_u *AccountUpdateOne) SetResourceID(id uuid.UUID) *AccountUpdateOne {
+func (_u *AccountUpdateOne) SetResourceID(id string) *AccountUpdateOne {
 	_u.mutation.SetResourceID(id)
 	return _u
 }
 
 // SetNillableResourceID sets the "resource" edge to the Resource entity by ID if the given value is not nil.
-func (_u *AccountUpdateOne) SetNillableResourceID(id *uuid.UUID) *AccountUpdateOne {
+func (_u *AccountUpdateOne) SetNillableResourceID(id *string) *AccountUpdateOne {
 	if id != nil {
 		_u = _u.SetResourceID(*id)
 	}
@@ -640,14 +616,14 @@ func (_u *AccountUpdateOne) ClearUsers() *AccountUpdateOne {
 }
 
 // RemoveUserIDs removes the "users" edge to User entities by IDs.
-func (_u *AccountUpdateOne) RemoveUserIDs(ids ...uuid.UUID) *AccountUpdateOne {
+func (_u *AccountUpdateOne) RemoveUserIDs(ids ...string) *AccountUpdateOne {
 	_u.mutation.RemoveUserIDs(ids...)
 	return _u
 }
 
 // RemoveUsers removes "users" edges to User entities.
 func (_u *AccountUpdateOne) RemoveUsers(v ...*User) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -661,14 +637,14 @@ func (_u *AccountUpdateOne) ClearRoles() *AccountUpdateOne {
 }
 
 // RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (_u *AccountUpdateOne) RemoveRoleIDs(ids ...uuid.UUID) *AccountUpdateOne {
+func (_u *AccountUpdateOne) RemoveRoleIDs(ids ...string) *AccountUpdateOne {
 	_u.mutation.RemoveRoleIDs(ids...)
 	return _u
 }
 
 // RemoveRoles removes "roles" edges to Role entities.
 func (_u *AccountUpdateOne) RemoveRoles(v ...*Role) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -682,14 +658,14 @@ func (_u *AccountUpdateOne) ClearAccessPolicies() *AccountUpdateOne {
 }
 
 // RemoveAccessPolicyIDs removes the "access_policies" edge to AccessPolicy entities by IDs.
-func (_u *AccountUpdateOne) RemoveAccessPolicyIDs(ids ...uuid.UUID) *AccountUpdateOne {
+func (_u *AccountUpdateOne) RemoveAccessPolicyIDs(ids ...string) *AccountUpdateOne {
 	_u.mutation.RemoveAccessPolicyIDs(ids...)
 	return _u
 }
 
 // RemoveAccessPolicies removes "access_policies" edges to AccessPolicy entities.
 func (_u *AccountUpdateOne) RemoveAccessPolicies(v ...*AccessPolicy) *AccountUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -766,17 +742,11 @@ func (_u *AccountUpdateOne) check() error {
 	return nil
 }
 
-// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
-func (_u *AccountUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *AccountUpdateOne {
-	_u.modifiers = append(_u.modifiers, modifiers...)
-	return _u
-}
-
 func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(account.Table, account.Columns, sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(account.Table, account.Columns, sqlgraph.NewFieldSpec(account.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Account.id" for update`)}
@@ -824,10 +794,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: []string{account.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
@@ -838,10 +807,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: []string{account.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -855,10 +823,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: []string{account.UsersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -872,10 +839,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: []string{account.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
@@ -886,10 +852,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: []string{account.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -903,10 +868,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: []string{account.RolesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Role
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -920,10 +884,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: account.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !_u.mutation.AccessPoliciesCleared() {
@@ -934,10 +897,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: account.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -951,10 +913,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: account.AccessPoliciesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -968,10 +929,9 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: []string{account.ResourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.ResourceIDs(); len(nodes) > 0 {
@@ -982,18 +942,14 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 			Columns: []string{account.ResourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_spec.Node.Schema = _u.schemaConfig.Account
-	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
-	_spec.AddModifiers(_u.modifiers...)
 	_node = &Account{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
