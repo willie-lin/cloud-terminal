@@ -36,11 +36,11 @@ type Tenant struct {
 
 // TenantEdges holds the relations/edges for other nodes in the graph.
 type TenantEdges struct {
-	// 租户下的环境模板
+	// Environments holds the value of the environments edge.
 	Environments []*Environment `json:"environments,omitempty"`
-	// 租户下的资源
+	// Resources holds the value of the resources edge.
 	Resources []*Resource `json:"resources,omitempty"`
-	// 租户下的访问策略
+	// AccessPolicies holds the value of the access_policies edge.
 	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.

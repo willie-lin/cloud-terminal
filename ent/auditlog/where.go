@@ -106,6 +106,11 @@ func EndedAt(v time.Time) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldEQ(FieldEndedAt, v))
 }
 
+// ResourceUrnSnapshot applies equality check predicate on the "resource_urn_snapshot" field. It's identical to ResourceUrnSnapshotEQ.
+func ResourceUrnSnapshot(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEQ(FieldResourceUrnSnapshot, v))
+}
+
 // S3Path applies equality check predicate on the "s3_path" field. It's identical to S3PathEQ.
 func S3Path(v string) predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldEQ(FieldS3Path, v))
@@ -541,6 +546,81 @@ func EndedAtNotNil() predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldNotNull(FieldEndedAt))
 }
 
+// ResourceUrnSnapshotEQ applies the EQ predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotEQ(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEQ(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotNEQ applies the NEQ predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotNEQ(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNEQ(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotIn applies the In predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotIn(vs ...string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldIn(FieldResourceUrnSnapshot, vs...))
+}
+
+// ResourceUrnSnapshotNotIn applies the NotIn predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotNotIn(vs ...string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNotIn(FieldResourceUrnSnapshot, vs...))
+}
+
+// ResourceUrnSnapshotGT applies the GT predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotGT(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldGT(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotGTE applies the GTE predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotGTE(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldGTE(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotLT applies the LT predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotLT(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldLT(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotLTE applies the LTE predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotLTE(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldLTE(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotContains applies the Contains predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotContains(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldContains(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotHasPrefix applies the HasPrefix predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotHasPrefix(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldHasPrefix(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotHasSuffix applies the HasSuffix predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotHasSuffix(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldHasSuffix(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotIsNil applies the IsNil predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotIsNil() predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldIsNull(FieldResourceUrnSnapshot))
+}
+
+// ResourceUrnSnapshotNotNil applies the NotNil predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotNotNil() predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldNotNull(FieldResourceUrnSnapshot))
+}
+
+// ResourceUrnSnapshotEqualFold applies the EqualFold predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotEqualFold(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldEqualFold(FieldResourceUrnSnapshot, v))
+}
+
+// ResourceUrnSnapshotContainsFold applies the ContainsFold predicate on the "resource_urn_snapshot" field.
+func ResourceUrnSnapshotContainsFold(v string) predicate.AuditLog {
+	return predicate.AuditLog(sql.FieldContainsFold(FieldResourceUrnSnapshot, v))
+}
+
 // DetailIsNil applies the IsNil predicate on the "detail" field.
 func DetailIsNil() predicate.AuditLog {
 	return predicate.AuditLog(sql.FieldIsNull(FieldDetail))
@@ -646,6 +726,35 @@ func HasUserWith(preds ...predicate.User) predicate.AuditLog {
 		step := newUserStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.AuditLog
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasResource applies the HasEdge predicate on the "resource" edge.
+func HasResource() predicate.AuditLog {
+	return predicate.AuditLog(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ResourceTable, ResourceColumn),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.AuditLog
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasResourceWith applies the HasEdge predicate on the "resource" edge with a given conditions (other predicates).
+func HasResourceWith(preds ...predicate.Resource) predicate.AuditLog {
+	return predicate.AuditLog(func(s *sql.Selector) {
+		step := newResourceStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Resource
 		step.Edge.Schema = schemaConfig.AuditLog
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

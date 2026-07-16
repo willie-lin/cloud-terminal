@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
@@ -25,37 +24,48 @@ type Resource struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// 逻辑主键 urn:ct:<env>:<region>:<type>:<name>
+	Urn string `json:"urn,omitempty"`
 	// 资源名称
 	Name string `json:"name,omitempty"`
-	// 目标地址
-	Host string `json:"host,omitempty"`
-	// 目标端口
-	Port int `json:"port,omitempty"`
-	// 协议类型
+	// Type holds the value of the "type" field.
 	Type resource.Type `json:"type,omitempty"`
+	// IP holds the value of the "ip" field.
+	IP string `json:"ip,omitempty"`
+	// Port holds the value of the "port" field.
+	Port int `json:"port,omitempty"`
+	// Env holds the value of the "env" field.
+	Env resource.Env `json:"env,omitempty"`
+	// Region holds the value of the "region" field.
+	Region string `json:"region,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
 	// Status holds the value of the "status" field.
 	Status resource.Status `json:"status,omitempty"`
-	// 扩展属性
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	// Details holds the value of the "details" field.
+	Details map[string]interface{} `json:"details,omitempty"`
+	// AuthData holds the value of the "auth_data" field.
+	AuthData map[string]interface{} `json:"-"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ResourceQuery when eager-loading is set.
 	Edges            ResourceEdges `json:"edges"`
-	account_resource *string
 	tenant_resources *string
 	selectValues     sql.SelectValues
 }
 
 // ResourceEdges holds the relations/edges for other nodes in the graph.
 type ResourceEdges struct {
-	// 所属租户
+	// Tenant holds the value of the tenant edge.
 	Tenant *Tenant `json:"tenant,omitempty"`
-	// 关联的凭据
-	Accounts *Account `json:"accounts,omitempty"`
+	// AuditLogs holds the value of the audit_logs edge.
+	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
+	// 附加到资源的策略，实现 ResourcePolicy
+	Policies []*AccessPolicy `json:"policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes    [3]bool
+	namedAuditLogs map[string][]*AuditLog
+	namedPolicies  map[string][]*AccessPolicy
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -69,15 +79,22 @@ func (e ResourceEdges) TenantOrErr() (*Tenant, error) {
 	return nil, &NotLoadedError{edge: "tenant"}
 }
 
-// AccountsOrErr returns the Accounts value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e ResourceEdges) AccountsOrErr() (*Account, error) {
-	if e.Accounts != nil {
-		return e.Accounts, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: account.Label}
+// AuditLogsOrErr returns the AuditLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResourceEdges) AuditLogsOrErr() ([]*AuditLog, error) {
+	if e.loadedTypes[1] {
+		return e.AuditLogs, nil
 	}
-	return nil, &NotLoadedError{edge: "accounts"}
+	return nil, &NotLoadedError{edge: "audit_logs"}
+}
+
+// PoliciesOrErr returns the Policies value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResourceEdges) PoliciesOrErr() ([]*AccessPolicy, error) {
+	if e.loadedTypes[2] {
+		return e.Policies, nil
+	}
+	return nil, &NotLoadedError{edge: "policies"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -85,17 +102,15 @@ func (*Resource) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resource.FieldMetadata:
+		case resource.FieldDetails, resource.FieldAuthData:
 			values[i] = new([]byte)
 		case resource.FieldPort:
 			values[i] = new(sql.NullInt64)
-		case resource.FieldID, resource.FieldName, resource.FieldHost, resource.FieldType, resource.FieldDescription, resource.FieldStatus:
+		case resource.FieldID, resource.FieldUrn, resource.FieldName, resource.FieldType, resource.FieldIP, resource.FieldEnv, resource.FieldRegion, resource.FieldDescription, resource.FieldStatus:
 			values[i] = new(sql.NullString)
 		case resource.FieldCreatedAt, resource.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case resource.ForeignKeys[0]: // account_resource
-			values[i] = new(sql.NullString)
-		case resource.ForeignKeys[1]: // tenant_resources
+		case resource.ForeignKeys[0]: // tenant_resources
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -130,17 +145,29 @@ func (_m *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
+		case resource.FieldUrn:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field urn", values[i])
+			} else if value.Valid {
+				_m.Urn = value.String
+			}
 		case resource.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
 			}
-		case resource.FieldHost:
+		case resource.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field host", values[i])
+				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				_m.Host = value.String
+				_m.Type = resource.Type(value.String)
+			}
+		case resource.FieldIP:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ip", values[i])
+			} else if value.Valid {
+				_m.IP = value.String
 			}
 		case resource.FieldPort:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -148,11 +175,17 @@ func (_m *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Port = int(value.Int64)
 			}
-		case resource.FieldType:
+		case resource.FieldEnv:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field type", values[i])
+				return fmt.Errorf("unexpected type %T for field env", values[i])
 			} else if value.Valid {
-				_m.Type = resource.Type(value.String)
+				_m.Env = resource.Env(value.String)
+			}
+		case resource.FieldRegion:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field region", values[i])
+			} else if value.Valid {
+				_m.Region = value.String
 			}
 		case resource.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -166,22 +199,23 @@ func (_m *Resource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Status = resource.Status(value.String)
 			}
-		case resource.FieldMetadata:
+		case resource.FieldDetails:
 			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field metadata", values[i])
+				return fmt.Errorf("unexpected type %T for field details", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &_m.Metadata); err != nil {
-					return fmt.Errorf("unmarshal field metadata: %w", err)
+				if err := json.Unmarshal(*value, &_m.Details); err != nil {
+					return fmt.Errorf("unmarshal field details: %w", err)
+				}
+			}
+		case resource.FieldAuthData:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field auth_data", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.AuthData); err != nil {
+					return fmt.Errorf("unmarshal field auth_data: %w", err)
 				}
 			}
 		case resource.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field account_resource", values[i])
-			} else if value.Valid {
-				_m.account_resource = new(string)
-				*_m.account_resource = value.String
-			}
-		case resource.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_resources", values[i])
 			} else if value.Valid {
@@ -206,9 +240,14 @@ func (_m *Resource) QueryTenant() *TenantQuery {
 	return NewResourceClient(_m.config).QueryTenant(_m)
 }
 
-// QueryAccounts queries the "accounts" edge of the Resource entity.
-func (_m *Resource) QueryAccounts() *AccountQuery {
-	return NewResourceClient(_m.config).QueryAccounts(_m)
+// QueryAuditLogs queries the "audit_logs" edge of the Resource entity.
+func (_m *Resource) QueryAuditLogs() *AuditLogQuery {
+	return NewResourceClient(_m.config).QueryAuditLogs(_m)
+}
+
+// QueryPolicies queries the "policies" edge of the Resource entity.
+func (_m *Resource) QueryPolicies() *AccessPolicyQuery {
+	return NewResourceClient(_m.config).QueryPolicies(_m)
 }
 
 // Update returns a builder for updating this Resource.
@@ -240,17 +279,26 @@ func (_m *Resource) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("urn=")
+	builder.WriteString(_m.Urn)
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
-	builder.WriteString("host=")
-	builder.WriteString(_m.Host)
+	builder.WriteString("type=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Type))
+	builder.WriteString(", ")
+	builder.WriteString("ip=")
+	builder.WriteString(_m.IP)
 	builder.WriteString(", ")
 	builder.WriteString("port=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Port))
 	builder.WriteString(", ")
-	builder.WriteString("type=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Type))
+	builder.WriteString("env=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Env))
+	builder.WriteString(", ")
+	builder.WriteString("region=")
+	builder.WriteString(_m.Region)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(_m.Description)
@@ -258,10 +306,60 @@ func (_m *Resource) String() string {
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteString(", ")
-	builder.WriteString("metadata=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))
+	builder.WriteString("details=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Details))
+	builder.WriteString(", ")
+	builder.WriteString("auth_data=<sensitive>")
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedAuditLogs returns the AuditLogs named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Resource) NamedAuditLogs(name string) ([]*AuditLog, error) {
+	if _m.Edges.namedAuditLogs == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAuditLogs[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Resource) appendNamedAuditLogs(name string, edges ...*AuditLog) {
+	if _m.Edges.namedAuditLogs == nil {
+		_m.Edges.namedAuditLogs = make(map[string][]*AuditLog)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAuditLogs[name] = []*AuditLog{}
+	} else {
+		_m.Edges.namedAuditLogs[name] = append(_m.Edges.namedAuditLogs[name], edges...)
+	}
+}
+
+// NamedPolicies returns the Policies named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Resource) NamedPolicies(name string) ([]*AccessPolicy, error) {
+	if _m.Edges.namedPolicies == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPolicies[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Resource) appendNamedPolicies(name string, edges ...*AccessPolicy) {
+	if _m.Edges.namedPolicies == nil {
+		_m.Edges.namedPolicies = make(map[string][]*AccessPolicy)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPolicies[name] = []*AccessPolicy{}
+	} else {
+		_m.Edges.namedPolicies[name] = append(_m.Edges.namedPolicies[name], edges...)
+	}
 }
 
 // Resources is a parsable slice of Resource.

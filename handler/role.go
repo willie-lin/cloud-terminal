@@ -4,7 +4,6 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/ent"
-	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/viewer"
 	"net/http"
@@ -62,10 +61,9 @@ func GetAllRolesByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
 		tenantID := v.TenantID
-		accountID := v.AccountID
 		userID := v.UserID
 		roleName := v.RoleName
-		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
+		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", userID, tenantID, roleName)
 
 		isSuperAdmin := roleName == "super_admin"
 		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin") // Or use a more precise matching logic
@@ -74,7 +72,7 @@ func GetAllRolesByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 		var err error
 
 		if isSuperAdmin || isTenantAdmin {
-			roles, err = client.Role.Query().Where(role.HasAccountWith(account.ID(accountID.String()))).All(c.Request().Context())
+			roles, err = client.Role.Query().All(c.Request().Context())
 		} else {
 			roles, err = client.Role.Query().Where(role.NameEQ(roleName)).All(c.Request().Context())
 		}
@@ -99,10 +97,9 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 		tenantID := v.TenantID
-		accountID := v.AccountID
 		userID := v.UserID
 		roleName := v.RoleName
-		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
+		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", userID, tenantID, roleName)
 
 		isSuperAdmin := roleName == "super_admin"
 		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin") // Or use a more precise matching logic
@@ -124,7 +121,6 @@ func CreateRole(client *ent.Client) echo.HandlerFunc {
 			r, err := client.Role.Create().
 				SetName(dto.Name).
 				SetDescription(dto.Description).
-				SetAccountID(accountID.String()).
 				Save(c.Request().Context())
 			if err != nil {
 				log.Printf("Error creating role: %v", err)

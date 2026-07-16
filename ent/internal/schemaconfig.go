@@ -7,19 +7,22 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	AccessPolicy          string // AccessPolicy table.
-	Account               string // Account table.
-	AccountAccessPolicies string // Account-access_policies->AccessPolicy table.
-	AuditLog              string // AuditLog table.
-	Environment           string // Environment table.
-	Platform              string // Platform table.
-	Resource              string // Resource table.
-	Role                  string // Role table.
-	RoleAccessPolicies    string // Role-access_policies->AccessPolicy table.
-	RoleChildRoles        string // Role-child_roles->Role table.
-	Session               string // Session table.
-	Tenant                string // Tenant table.
-	User                  string // User table.
+	AccessPolicy        string // AccessPolicy table.
+	AuditLog            string // AuditLog table.
+	Environment         string // Environment table.
+	Group               string // Group table.
+	GroupAccessPolicies string // Group-access_policies->AccessPolicy table.
+	Platform            string // Platform table.
+	Resource            string // Resource table.
+	ResourcePolicies    string // Resource-policies->AccessPolicy table.
+	Role                string // Role table.
+	RoleAccessPolicies  string // Role-access_policies->AccessPolicy table.
+	RoleChildRoles      string // Role-child_roles->Role table.
+	Session             string // Session table.
+	Tenant              string // Tenant table.
+	User                string // User table.
+	UserRoles           string // User-roles->Role table.
+	UserAccessPolicies  string // User-access_policies->AccessPolicy table.
 }
 
 type schemaCtxKey struct{}

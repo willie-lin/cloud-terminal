@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
+	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
@@ -96,6 +97,20 @@ func (_c *AuditLogCreate) SetNillableEndedAt(v *time.Time) *AuditLogCreate {
 	return _c
 }
 
+// SetResourceUrnSnapshot sets the "resource_urn_snapshot" field.
+func (_c *AuditLogCreate) SetResourceUrnSnapshot(v string) *AuditLogCreate {
+	_c.mutation.SetResourceUrnSnapshot(v)
+	return _c
+}
+
+// SetNillableResourceUrnSnapshot sets the "resource_urn_snapshot" field if the given value is not nil.
+func (_c *AuditLogCreate) SetNillableResourceUrnSnapshot(v *string) *AuditLogCreate {
+	if v != nil {
+		_c.SetResourceUrnSnapshot(*v)
+	}
+	return _c
+}
+
 // SetDetail sets the "detail" field.
 func (_c *AuditLogCreate) SetDetail(v map[string]interface{}) *AuditLogCreate {
 	_c.mutation.SetDetail(v)
@@ -147,6 +162,25 @@ func (_c *AuditLogCreate) SetNillableUserID(id *string) *AuditLogCreate {
 // SetUser sets the "user" edge to the User entity.
 func (_c *AuditLogCreate) SetUser(v *User) *AuditLogCreate {
 	return _c.SetUserID(v.ID)
+}
+
+// SetResourceID sets the "resource" edge to the Resource entity by ID.
+func (_c *AuditLogCreate) SetResourceID(id string) *AuditLogCreate {
+	_c.mutation.SetResourceID(id)
+	return _c
+}
+
+// SetNillableResourceID sets the "resource" edge to the Resource entity by ID if the given value is not nil.
+func (_c *AuditLogCreate) SetNillableResourceID(id *string) *AuditLogCreate {
+	if id != nil {
+		_c = _c.SetResourceID(*id)
+	}
+	return _c
+}
+
+// SetResource sets the "resource" edge to the Resource entity.
+func (_c *AuditLogCreate) SetResource(v *Resource) *AuditLogCreate {
+	return _c.SetResourceID(v.ID)
 }
 
 // Mutation returns the AuditLogMutation object of the builder.
@@ -290,6 +324,10 @@ func (_c *AuditLogCreate) createSpec() (*AuditLog, *sqlgraph.CreateSpec) {
 		_spec.SetField(auditlog.FieldEndedAt, field.TypeTime, value)
 		_node.EndedAt = &value
 	}
+	if value, ok := _c.mutation.ResourceUrnSnapshot(); ok {
+		_spec.SetField(auditlog.FieldResourceUrnSnapshot, field.TypeString, value)
+		_node.ResourceUrnSnapshot = value
+	}
 	if value, ok := _c.mutation.Detail(); ok {
 		_spec.SetField(auditlog.FieldDetail, field.TypeJSON, value)
 		_node.Detail = value
@@ -314,6 +352,24 @@ func (_c *AuditLogCreate) createSpec() (*AuditLog, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_audit_logs = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ResourceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   auditlog.ResourceTable,
+			Columns: []string{auditlog.ResourceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _c.schemaConfig.AuditLog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.resource_audit_logs = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -455,6 +511,24 @@ func (u *AuditLogUpsert) UpdateEndedAt() *AuditLogUpsert {
 // ClearEndedAt clears the value of the "ended_at" field.
 func (u *AuditLogUpsert) ClearEndedAt() *AuditLogUpsert {
 	u.SetNull(auditlog.FieldEndedAt)
+	return u
+}
+
+// SetResourceUrnSnapshot sets the "resource_urn_snapshot" field.
+func (u *AuditLogUpsert) SetResourceUrnSnapshot(v string) *AuditLogUpsert {
+	u.Set(auditlog.FieldResourceUrnSnapshot, v)
+	return u
+}
+
+// UpdateResourceUrnSnapshot sets the "resource_urn_snapshot" field to the value that was provided on create.
+func (u *AuditLogUpsert) UpdateResourceUrnSnapshot() *AuditLogUpsert {
+	u.SetExcluded(auditlog.FieldResourceUrnSnapshot)
+	return u
+}
+
+// ClearResourceUrnSnapshot clears the value of the "resource_urn_snapshot" field.
+func (u *AuditLogUpsert) ClearResourceUrnSnapshot() *AuditLogUpsert {
+	u.SetNull(auditlog.FieldResourceUrnSnapshot)
 	return u
 }
 
@@ -647,6 +721,27 @@ func (u *AuditLogUpsertOne) UpdateEndedAt() *AuditLogUpsertOne {
 func (u *AuditLogUpsertOne) ClearEndedAt() *AuditLogUpsertOne {
 	return u.Update(func(s *AuditLogUpsert) {
 		s.ClearEndedAt()
+	})
+}
+
+// SetResourceUrnSnapshot sets the "resource_urn_snapshot" field.
+func (u *AuditLogUpsertOne) SetResourceUrnSnapshot(v string) *AuditLogUpsertOne {
+	return u.Update(func(s *AuditLogUpsert) {
+		s.SetResourceUrnSnapshot(v)
+	})
+}
+
+// UpdateResourceUrnSnapshot sets the "resource_urn_snapshot" field to the value that was provided on create.
+func (u *AuditLogUpsertOne) UpdateResourceUrnSnapshot() *AuditLogUpsertOne {
+	return u.Update(func(s *AuditLogUpsert) {
+		s.UpdateResourceUrnSnapshot()
+	})
+}
+
+// ClearResourceUrnSnapshot clears the value of the "resource_urn_snapshot" field.
+func (u *AuditLogUpsertOne) ClearResourceUrnSnapshot() *AuditLogUpsertOne {
+	return u.Update(func(s *AuditLogUpsert) {
+		s.ClearResourceUrnSnapshot()
 	})
 }
 
@@ -1012,6 +1107,27 @@ func (u *AuditLogUpsertBulk) UpdateEndedAt() *AuditLogUpsertBulk {
 func (u *AuditLogUpsertBulk) ClearEndedAt() *AuditLogUpsertBulk {
 	return u.Update(func(s *AuditLogUpsert) {
 		s.ClearEndedAt()
+	})
+}
+
+// SetResourceUrnSnapshot sets the "resource_urn_snapshot" field.
+func (u *AuditLogUpsertBulk) SetResourceUrnSnapshot(v string) *AuditLogUpsertBulk {
+	return u.Update(func(s *AuditLogUpsert) {
+		s.SetResourceUrnSnapshot(v)
+	})
+}
+
+// UpdateResourceUrnSnapshot sets the "resource_urn_snapshot" field to the value that was provided on create.
+func (u *AuditLogUpsertBulk) UpdateResourceUrnSnapshot() *AuditLogUpsertBulk {
+	return u.Update(func(s *AuditLogUpsert) {
+		s.UpdateResourceUrnSnapshot()
+	})
+}
+
+// ClearResourceUrnSnapshot clears the value of the "resource_urn_snapshot" field.
+func (u *AuditLogUpsertBulk) ClearResourceUrnSnapshot() *AuditLogUpsertBulk {
+	return u.Update(func(s *AuditLogUpsert) {
+		s.ClearResourceUrnSnapshot()
 	})
 }
 

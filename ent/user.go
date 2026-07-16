@@ -10,8 +10,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/role"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
@@ -59,50 +58,53 @@ type User struct {
 	SocialLogins map[string]string `json:"social_logins,omitempty"`
 	// IsDefault holds the value of the "is_default" field.
 	IsDefault bool `json:"is_default,omitempty"`
-	// SSH公钥，用于登录ContainerSSH
+	// SSH公钥
 	SSHPublicKey string `json:"ssh_public_key,omitempty"`
+	// 预留扩展属性
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges         UserEdges `json:"edges"`
-	account_users *string
-	user_role     *string
-	selectValues  sql.SelectValues
+	Edges        UserEdges `json:"edges"`
+	group_users  *string
+	selectValues sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// 用户所属的账户
-	Account *Account `json:"account,omitempty"`
-	// 用户拥有的角色
-	Role *Role `json:"role,omitempty"`
+	// 用户所属的组
+	Group *Group `json:"group,omitempty"`
+	// 用户可 Assume 的角色
+	Roles []*Role `json:"roles,omitempty"`
 	// 用户的审计日志
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
+	// 直接分配给用户的策略
+	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes    [3]bool
-	namedAuditLogs map[string][]*AuditLog
+	loadedTypes         [4]bool
+	namedRoles          map[string][]*Role
+	namedAuditLogs      map[string][]*AuditLog
+	namedAccessPolicies map[string][]*AccessPolicy
 }
 
-// AccountOrErr returns the Account value or an error if the edge
+// GroupOrErr returns the Group value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e UserEdges) AccountOrErr() (*Account, error) {
-	if e.Account != nil {
-		return e.Account, nil
+func (e UserEdges) GroupOrErr() (*Group, error) {
+	if e.Group != nil {
+		return e.Group, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: account.Label}
+		return nil, &NotFoundError{label: group.Label}
 	}
-	return nil, &NotLoadedError{edge: "account"}
+	return nil, &NotLoadedError{edge: "group"}
 }
 
-// RoleOrErr returns the Role value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e UserEdges) RoleOrErr() (*Role, error) {
-	if e.Role != nil {
-		return e.Role, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: role.Label}
+// RolesOrErr returns the Roles value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) RolesOrErr() ([]*Role, error) {
+	if e.loadedTypes[1] {
+		return e.Roles, nil
 	}
-	return nil, &NotLoadedError{edge: "role"}
+	return nil, &NotLoadedError{edge: "roles"}
 }
 
 // AuditLogsOrErr returns the AuditLogs value or an error if the edge
@@ -114,12 +116,21 @@ func (e UserEdges) AuditLogsOrErr() ([]*AuditLog, error) {
 	return nil, &NotLoadedError{edge: "audit_logs"}
 }
 
+// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
+	if e.loadedTypes[3] {
+		return e.AccessPolicies, nil
+	}
+	return nil, &NotLoadedError{edge: "access_policies"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldSocialLogins:
+		case user.FieldSocialLogins, user.FieldAttributes:
 			values[i] = new([]byte)
 		case user.FieldEmailVerified, user.FieldPhoneNumberVerified, user.FieldOnline, user.FieldStatus, user.FieldIsDefault:
 			values[i] = new(sql.NullBool)
@@ -129,9 +140,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldLockoutTime, user.FieldLastLoginTime:
 			values[i] = new(sql.NullTime)
-		case user.ForeignKeys[0]: // account_users
-			values[i] = new(sql.NullString)
-		case user.ForeignKeys[1]: // user_role
+		case user.ForeignKeys[0]: // group_users
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -276,19 +285,20 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.SSHPublicKey = value.String
 			}
+		case user.FieldAttributes:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field attributes", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Attributes); err != nil {
+					return fmt.Errorf("unmarshal field attributes: %w", err)
+				}
+			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field account_users", values[i])
+				return fmt.Errorf("unexpected type %T for field group_users", values[i])
 			} else if value.Valid {
-				_m.account_users = new(string)
-				*_m.account_users = value.String
-			}
-		case user.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field user_role", values[i])
-			} else if value.Valid {
-				_m.user_role = new(string)
-				*_m.user_role = value.String
+				_m.group_users = new(string)
+				*_m.group_users = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -303,19 +313,24 @@ func (_m *User) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryAccount queries the "account" edge of the User entity.
-func (_m *User) QueryAccount() *AccountQuery {
-	return NewUserClient(_m.config).QueryAccount(_m)
+// QueryGroup queries the "group" edge of the User entity.
+func (_m *User) QueryGroup() *GroupQuery {
+	return NewUserClient(_m.config).QueryGroup(_m)
 }
 
-// QueryRole queries the "role" edge of the User entity.
-func (_m *User) QueryRole() *RoleQuery {
-	return NewUserClient(_m.config).QueryRole(_m)
+// QueryRoles queries the "roles" edge of the User entity.
+func (_m *User) QueryRoles() *RoleQuery {
+	return NewUserClient(_m.config).QueryRoles(_m)
 }
 
 // QueryAuditLogs queries the "audit_logs" edge of the User entity.
 func (_m *User) QueryAuditLogs() *AuditLogQuery {
 	return NewUserClient(_m.config).QueryAuditLogs(_m)
+}
+
+// QueryAccessPolicies queries the "access_policies" edge of the User entity.
+func (_m *User) QueryAccessPolicies() *AccessPolicyQuery {
+	return NewUserClient(_m.config).QueryAccessPolicies(_m)
 }
 
 // Update returns a builder for updating this User.
@@ -399,8 +414,35 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("ssh_public_key=")
 	builder.WriteString(_m.SSHPublicKey)
+	builder.WriteString(", ")
+	builder.WriteString("attributes=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Attributes))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedRoles returns the Roles named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedRoles(name string) ([]*Role, error) {
+	if _m.Edges.namedRoles == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedRoles[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedRoles(name string, edges ...*Role) {
+	if _m.Edges.namedRoles == nil {
+		_m.Edges.namedRoles = make(map[string][]*Role)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedRoles[name] = []*Role{}
+	} else {
+		_m.Edges.namedRoles[name] = append(_m.Edges.namedRoles[name], edges...)
+	}
 }
 
 // NamedAuditLogs returns the AuditLogs named value or an error if the edge was not
@@ -424,6 +466,30 @@ func (_m *User) appendNamedAuditLogs(name string, edges ...*AuditLog) {
 		_m.Edges.namedAuditLogs[name] = []*AuditLog{}
 	} else {
 		_m.Edges.namedAuditLogs[name] = append(_m.Edges.namedAuditLogs[name], edges...)
+	}
+}
+
+// NamedAccessPolicies returns the AccessPolicies named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedAccessPolicies(name string) ([]*AccessPolicy, error) {
+	if _m.Edges.namedAccessPolicies == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAccessPolicies[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedAccessPolicies(name string, edges ...*AccessPolicy) {
+	if _m.Edges.namedAccessPolicies == nil {
+		_m.Edges.namedAccessPolicies = make(map[string][]*AccessPolicy)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAccessPolicies[name] = []*AccessPolicy{}
+	} else {
+		_m.Edges.namedAccessPolicies[name] = append(_m.Edges.namedAccessPolicies[name], edges...)
 	}
 }
 

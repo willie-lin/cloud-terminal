@@ -124,12 +124,6 @@ func (_u *PlatformUpdate) SetNillableStatus(v *platform.Status) *PlatformUpdate 
 	return _u
 }
 
-// ClearStatus clears the value of the "status" field.
-func (_u *PlatformUpdate) ClearStatus() *PlatformUpdate {
-	_u.mutation.ClearStatus()
-	return _u
-}
-
 // SetConfig sets the "config" field.
 func (_u *PlatformUpdate) SetConfig(v map[string]interface{}) *PlatformUpdate {
 	_u.mutation.SetConfig(v)
@@ -242,9 +236,6 @@ func (_u *PlatformUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(platform.FieldStatus, field.TypeEnum, value)
-	}
-	if _u.mutation.StatusCleared() {
-		_spec.ClearField(platform.FieldStatus, field.TypeEnum)
 	}
 	if value, ok := _u.mutation.Config(); ok {
 		_spec.SetField(platform.FieldConfig, field.TypeJSON, value)
@@ -367,12 +358,6 @@ func (_u *PlatformUpdateOne) SetNillableStatus(v *platform.Status) *PlatformUpda
 	if v != nil {
 		_u.SetStatus(*v)
 	}
-	return _u
-}
-
-// ClearStatus clears the value of the "status" field.
-func (_u *PlatformUpdateOne) ClearStatus() *PlatformUpdateOne {
-	_u.mutation.ClearStatus()
 	return _u
 }
 
@@ -518,9 +503,6 @@ func (_u *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err 
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(platform.FieldStatus, field.TypeEnum, value)
-	}
-	if _u.mutation.StatusCleared() {
-		_spec.ClearField(platform.FieldStatus, field.TypeEnum)
 	}
 	if value, ok := _u.mutation.Config(); ok {
 		_spec.SetField(platform.FieldConfig, field.TypeJSON, value)

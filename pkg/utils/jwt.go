@@ -9,14 +9,14 @@ import (
 	"time"
 )
 
-// JwtCustomClaims 在全局范围内定义你的jwtCustomClaims类型
+// JwtCustomClaims JWT 自定义声明
 type JwtCustomClaims struct {
-	UserID    uuid.UUID `json:"user_id"`
-	Email     string    `json:"email"`
-	Username  string    `json:"username"`
-	TenantID  uuid.UUID `json:"tenant_id"`
-	RoleName  string    `json:"role_name"`
-	AccountID uuid.UUID `json:"account_id"`
+	UserID   uuid.UUID `json:"user_id"`
+	Email    string    `json:"email"`
+	Username string    `json:"username"`
+	TenantID uuid.UUID `json:"tenant_id"`
+	RoleName string    `json:"role_name"`
+	GroupID  uuid.UUID `json:"group_id"`
 	jwt.RegisteredClaims
 }
 
@@ -38,14 +38,14 @@ func init() {
 }
 
 // CreateAccessToken 创建JWT访问令牌
-func CreateAccessToken(userID, tenantID, accountID uuid.UUID, email, username, roleName string) (string, error) {
+func CreateAccessToken(userID, tenantID, groupID uuid.UUID, email, username, roleName string) (string, error) {
 	claims := &JwtCustomClaims{
-		UserID:    userID,
-		Email:     email,
-		Username:  username,
-		TenantID:  tenantID,
-		RoleName:  roleName,
-		AccountID: accountID,
+		UserID:   userID,
+		Email:    email,
+		Username: username,
+		TenantID: tenantID,
+		RoleName: roleName,
+		GroupID:  groupID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 		},
@@ -55,14 +55,14 @@ func CreateAccessToken(userID, tenantID, accountID uuid.UUID, email, username, r
 }
 
 // CreateRefreshToken 创建刷新令牌
-func CreateRefreshToken(userID, tenantID, accountID uuid.UUID, email, username, roleName string) (string, error) {
+func CreateRefreshToken(userID, tenantID, groupID uuid.UUID, email, username, roleName string) (string, error) {
 	claims := &JwtCustomClaims{
-		UserID:    userID,
-		Email:     email,
-		Username:  username,
-		TenantID:  tenantID,
-		RoleName:  roleName,
-		AccountID: accountID,
+		UserID:   userID,
+		Email:    email,
+		Username: username,
+		TenantID: tenantID,
+		RoleName: roleName,
+		GroupID:  groupID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 144)),
 		},
@@ -96,7 +96,7 @@ func CheckAccessToken(next echo.HandlerFunc) echo.HandlerFunc {
 			})
 
 			if err == nil && token.Valid {
-				newAccessToken, err := CreateAccessToken(refreshClaims.UserID, refreshClaims.TenantID, refreshClaims.AccountID, refreshClaims.Email, refreshClaims.Username, refreshClaims.RoleName)
+				newAccessToken, err := CreateAccessToken(refreshClaims.UserID, refreshClaims.TenantID, refreshClaims.GroupID, refreshClaims.Email, refreshClaims.Username, refreshClaims.RoleName)
 				if err != nil {
 					return err
 				}

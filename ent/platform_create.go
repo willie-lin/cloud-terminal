@@ -202,6 +202,9 @@ func (_c *PlatformCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
+	if _, ok := _c.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Platform.status"`)}
+	}
 	if v, ok := _c.mutation.Status(); ok {
 		if err := platform.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Platform.status": %w`, err)}
@@ -418,12 +421,6 @@ func (u *PlatformUpsert) UpdateStatus() *PlatformUpsert {
 	return u
 }
 
-// ClearStatus clears the value of the "status" field.
-func (u *PlatformUpsert) ClearStatus() *PlatformUpsert {
-	u.SetNull(platform.FieldStatus)
-	return u
-}
-
 // SetConfig sets the "config" field.
 func (u *PlatformUpsert) SetConfig(v map[string]interface{}) *PlatformUpsert {
 	u.Set(platform.FieldConfig, v)
@@ -595,13 +592,6 @@ func (u *PlatformUpsertOne) SetStatus(v platform.Status) *PlatformUpsertOne {
 func (u *PlatformUpsertOne) UpdateStatus() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.UpdateStatus()
-	})
-}
-
-// ClearStatus clears the value of the "status" field.
-func (u *PlatformUpsertOne) ClearStatus() *PlatformUpsertOne {
-	return u.Update(func(s *PlatformUpsert) {
-		s.ClearStatus()
 	})
 }
 
@@ -946,13 +936,6 @@ func (u *PlatformUpsertBulk) SetStatus(v platform.Status) *PlatformUpsertBulk {
 func (u *PlatformUpsertBulk) UpdateStatus() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.UpdateStatus()
-	})
-}
-
-// ClearStatus clears the value of the "status" field.
-func (u *PlatformUpsertBulk) ClearStatus() *PlatformUpsertBulk {
-	return u.Update(func(s *PlatformUpsert) {
-		s.ClearStatus()
 	})
 }
 

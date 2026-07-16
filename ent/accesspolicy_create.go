@@ -13,11 +13,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/group"
+	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
-	"github.com/willie-lin/cloud-terminal/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
 // AccessPolicyCreate is the builder for creating a AccessPolicy entity.
@@ -76,6 +76,20 @@ func (_c *AccessPolicyCreate) SetNillableDescription(v *string) *AccessPolicyCre
 	return _c
 }
 
+// SetVersion sets the "version" field.
+func (_c *AccessPolicyCreate) SetVersion(v string) *AccessPolicyCreate {
+	_c.mutation.SetVersion(v)
+	return _c
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_c *AccessPolicyCreate) SetNillableVersion(v *string) *AccessPolicyCreate {
+	if v != nil {
+		_c.SetVersion(*v)
+	}
+	return _c
+}
+
 // SetStatements sets the "statements" field.
 func (_c *AccessPolicyCreate) SetStatements(v []schema.PolicyStatement) *AccessPolicyCreate {
 	_c.mutation.SetStatements(v)
@@ -110,6 +124,34 @@ func (_c *AccessPolicyCreate) SetNillablePriority(v *int) *AccessPolicyCreate {
 	return _c
 }
 
+// SetEffectiveDate sets the "effective_date" field.
+func (_c *AccessPolicyCreate) SetEffectiveDate(v time.Time) *AccessPolicyCreate {
+	_c.mutation.SetEffectiveDate(v)
+	return _c
+}
+
+// SetNillableEffectiveDate sets the "effective_date" field if the given value is not nil.
+func (_c *AccessPolicyCreate) SetNillableEffectiveDate(v *time.Time) *AccessPolicyCreate {
+	if v != nil {
+		_c.SetEffectiveDate(*v)
+	}
+	return _c
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (_c *AccessPolicyCreate) SetExpiryDate(v time.Time) *AccessPolicyCreate {
+	_c.mutation.SetExpiryDate(v)
+	return _c
+}
+
+// SetNillableExpiryDate sets the "expiry_date" field if the given value is not nil.
+func (_c *AccessPolicyCreate) SetNillableExpiryDate(v *time.Time) *AccessPolicyCreate {
+	if v != nil {
+		_c.SetExpiryDate(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *AccessPolicyCreate) SetID(v string) *AccessPolicyCreate {
 	_c.mutation.SetID(v)
@@ -124,19 +166,49 @@ func (_c *AccessPolicyCreate) SetNillableID(v *string) *AccessPolicyCreate {
 	return _c
 }
 
-// AddAccountIDs adds the "account" edge to the Account entity by IDs.
-func (_c *AccessPolicyCreate) AddAccountIDs(ids ...string) *AccessPolicyCreate {
-	_c.mutation.AddAccountIDs(ids...)
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (_c *AccessPolicyCreate) AddGroupIDs(ids ...string) *AccessPolicyCreate {
+	_c.mutation.AddGroupIDs(ids...)
 	return _c
 }
 
-// AddAccount adds the "account" edges to the Account entity.
-func (_c *AccessPolicyCreate) AddAccount(v ...*Account) *AccessPolicyCreate {
+// AddGroups adds the "groups" edges to the Group entity.
+func (_c *AccessPolicyCreate) AddGroups(v ...*Group) *AccessPolicyCreate {
 	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _c.AddAccountIDs(ids...)
+	return _c.AddGroupIDs(ids...)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (_c *AccessPolicyCreate) AddUserIDs(ids ...string) *AccessPolicyCreate {
+	_c.mutation.AddUserIDs(ids...)
+	return _c
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (_c *AccessPolicyCreate) AddUsers(v ...*User) *AccessPolicyCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUserIDs(ids...)
+}
+
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (_c *AccessPolicyCreate) AddResourceIDs(ids ...string) *AccessPolicyCreate {
+	_c.mutation.AddResourceIDs(ids...)
+	return _c
+}
+
+// AddResources adds the "resources" edges to the Resource entity.
+func (_c *AccessPolicyCreate) AddResources(v ...*Resource) *AccessPolicyCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddResourceIDs(ids...)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -152,44 +224,6 @@ func (_c *AccessPolicyCreate) AddRoles(v ...*Role) *AccessPolicyCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddRoleIDs(ids...)
-}
-
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (_c *AccessPolicyCreate) SetTenantID(id string) *AccessPolicyCreate {
-	_c.mutation.SetTenantID(id)
-	return _c
-}
-
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (_c *AccessPolicyCreate) SetNillableTenantID(id *string) *AccessPolicyCreate {
-	if id != nil {
-		_c = _c.SetTenantID(*id)
-	}
-	return _c
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (_c *AccessPolicyCreate) SetTenant(v *Tenant) *AccessPolicyCreate {
-	return _c.SetTenantID(v.ID)
-}
-
-// SetEnvironmentID sets the "environment" edge to the Environment entity by ID.
-func (_c *AccessPolicyCreate) SetEnvironmentID(id string) *AccessPolicyCreate {
-	_c.mutation.SetEnvironmentID(id)
-	return _c
-}
-
-// SetNillableEnvironmentID sets the "environment" edge to the Environment entity by ID if the given value is not nil.
-func (_c *AccessPolicyCreate) SetNillableEnvironmentID(id *string) *AccessPolicyCreate {
-	if id != nil {
-		_c = _c.SetEnvironmentID(*id)
-	}
-	return _c
-}
-
-// SetEnvironment sets the "environment" edge to the Environment entity.
-func (_c *AccessPolicyCreate) SetEnvironment(v *Environment) *AccessPolicyCreate {
-	return _c.SetEnvironmentID(v.ID)
 }
 
 // Mutation returns the AccessPolicyMutation object of the builder.
@@ -235,6 +269,10 @@ func (_c *AccessPolicyCreate) defaults() {
 		v := accesspolicy.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.Version(); !ok {
+		v := accesspolicy.DefaultVersion
+		_c.mutation.SetVersion(v)
+	}
 	if _, ok := _c.mutation.Statements(); !ok {
 		v := accesspolicy.DefaultStatements
 		_c.mutation.SetStatements(v)
@@ -268,6 +306,9 @@ func (_c *AccessPolicyCreate) check() error {
 		if err := accesspolicy.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "AccessPolicy.name": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "AccessPolicy.version"`)}
 	}
 	if _, ok := _c.mutation.Statements(); !ok {
 		return &ValidationError{Name: "statements", err: errors.New(`ent: missing required field "AccessPolicy.statements"`)}
@@ -331,6 +372,10 @@ func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec)
 		_spec.SetField(accesspolicy.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
+	if value, ok := _c.mutation.Version(); ok {
+		_spec.SetField(accesspolicy.FieldVersion, field.TypeString, value)
+		_node.Version = value
+	}
 	if value, ok := _c.mutation.Statements(); ok {
 		_spec.SetField(accesspolicy.FieldStatements, field.TypeJSON, value)
 		_node.Statements = value
@@ -343,18 +388,60 @@ func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec)
 		_spec.SetField(accesspolicy.FieldPriority, field.TypeInt, value)
 		_node.Priority = value
 	}
-	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
+	if value, ok := _c.mutation.EffectiveDate(); ok {
+		_spec.SetField(accesspolicy.FieldEffectiveDate, field.TypeTime, value)
+		_node.EffectiveDate = &value
+	}
+	if value, ok := _c.mutation.ExpiryDate(); ok {
+		_spec.SetField(accesspolicy.FieldExpiryDate, field.TypeTime, value)
+		_node.ExpiryDate = &value
+	}
+	if nodes := _c.mutation.GroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   accesspolicy.AccountTable,
-			Columns: accesspolicy.AccountPrimaryKey,
+			Table:   accesspolicy.GroupsTable,
+			Columns: accesspolicy.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.AccountAccessPolicies
+		edge.Schema = _c.schemaConfig.GroupAccessPolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.UsersTable,
+			Columns: accesspolicy.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _c.schemaConfig.UserAccessPolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ResourcesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.ResourcesTable,
+			Columns: accesspolicy.ResourcesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _c.schemaConfig.ResourcePolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -372,41 +459,6 @@ func (_c *AccessPolicyCreate) createSpec() (*AccessPolicy, *sqlgraph.CreateSpec)
 			},
 		}
 		edge.Schema = _c.schemaConfig.RoleAccessPolicies
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   accesspolicy.TenantTable,
-			Columns: []string{accesspolicy.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _c.schemaConfig.AccessPolicy
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.tenant_access_policies = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.EnvironmentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   accesspolicy.EnvironmentTable,
-			Columns: []string{accesspolicy.EnvironmentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _c.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -506,6 +558,18 @@ func (u *AccessPolicyUpsert) ClearDescription() *AccessPolicyUpsert {
 	return u
 }
 
+// SetVersion sets the "version" field.
+func (u *AccessPolicyUpsert) SetVersion(v string) *AccessPolicyUpsert {
+	u.Set(accesspolicy.FieldVersion, v)
+	return u
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *AccessPolicyUpsert) UpdateVersion() *AccessPolicyUpsert {
+	u.SetExcluded(accesspolicy.FieldVersion)
+	return u
+}
+
 // SetStatements sets the "statements" field.
 func (u *AccessPolicyUpsert) SetStatements(v []schema.PolicyStatement) *AccessPolicyUpsert {
 	u.Set(accesspolicy.FieldStatements, v)
@@ -545,6 +609,42 @@ func (u *AccessPolicyUpsert) UpdatePriority() *AccessPolicyUpsert {
 // AddPriority adds v to the "priority" field.
 func (u *AccessPolicyUpsert) AddPriority(v int) *AccessPolicyUpsert {
 	u.Add(accesspolicy.FieldPriority, v)
+	return u
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (u *AccessPolicyUpsert) SetEffectiveDate(v time.Time) *AccessPolicyUpsert {
+	u.Set(accesspolicy.FieldEffectiveDate, v)
+	return u
+}
+
+// UpdateEffectiveDate sets the "effective_date" field to the value that was provided on create.
+func (u *AccessPolicyUpsert) UpdateEffectiveDate() *AccessPolicyUpsert {
+	u.SetExcluded(accesspolicy.FieldEffectiveDate)
+	return u
+}
+
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (u *AccessPolicyUpsert) ClearEffectiveDate() *AccessPolicyUpsert {
+	u.SetNull(accesspolicy.FieldEffectiveDate)
+	return u
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (u *AccessPolicyUpsert) SetExpiryDate(v time.Time) *AccessPolicyUpsert {
+	u.Set(accesspolicy.FieldExpiryDate, v)
+	return u
+}
+
+// UpdateExpiryDate sets the "expiry_date" field to the value that was provided on create.
+func (u *AccessPolicyUpsert) UpdateExpiryDate() *AccessPolicyUpsert {
+	u.SetExcluded(accesspolicy.FieldExpiryDate)
+	return u
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (u *AccessPolicyUpsert) ClearExpiryDate() *AccessPolicyUpsert {
+	u.SetNull(accesspolicy.FieldExpiryDate)
 	return u
 }
 
@@ -648,6 +748,20 @@ func (u *AccessPolicyUpsertOne) ClearDescription() *AccessPolicyUpsertOne {
 	})
 }
 
+// SetVersion sets the "version" field.
+func (u *AccessPolicyUpsertOne) SetVersion(v string) *AccessPolicyUpsertOne {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *AccessPolicyUpsertOne) UpdateVersion() *AccessPolicyUpsertOne {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.UpdateVersion()
+	})
+}
+
 // SetStatements sets the "statements" field.
 func (u *AccessPolicyUpsertOne) SetStatements(v []schema.PolicyStatement) *AccessPolicyUpsertOne {
 	return u.Update(func(s *AccessPolicyUpsert) {
@@ -694,6 +808,48 @@ func (u *AccessPolicyUpsertOne) AddPriority(v int) *AccessPolicyUpsertOne {
 func (u *AccessPolicyUpsertOne) UpdatePriority() *AccessPolicyUpsertOne {
 	return u.Update(func(s *AccessPolicyUpsert) {
 		s.UpdatePriority()
+	})
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (u *AccessPolicyUpsertOne) SetEffectiveDate(v time.Time) *AccessPolicyUpsertOne {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.SetEffectiveDate(v)
+	})
+}
+
+// UpdateEffectiveDate sets the "effective_date" field to the value that was provided on create.
+func (u *AccessPolicyUpsertOne) UpdateEffectiveDate() *AccessPolicyUpsertOne {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.UpdateEffectiveDate()
+	})
+}
+
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (u *AccessPolicyUpsertOne) ClearEffectiveDate() *AccessPolicyUpsertOne {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.ClearEffectiveDate()
+	})
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (u *AccessPolicyUpsertOne) SetExpiryDate(v time.Time) *AccessPolicyUpsertOne {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.SetExpiryDate(v)
+	})
+}
+
+// UpdateExpiryDate sets the "expiry_date" field to the value that was provided on create.
+func (u *AccessPolicyUpsertOne) UpdateExpiryDate() *AccessPolicyUpsertOne {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.UpdateExpiryDate()
+	})
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (u *AccessPolicyUpsertOne) ClearExpiryDate() *AccessPolicyUpsertOne {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.ClearExpiryDate()
 	})
 }
 
@@ -964,6 +1120,20 @@ func (u *AccessPolicyUpsertBulk) ClearDescription() *AccessPolicyUpsertBulk {
 	})
 }
 
+// SetVersion sets the "version" field.
+func (u *AccessPolicyUpsertBulk) SetVersion(v string) *AccessPolicyUpsertBulk {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *AccessPolicyUpsertBulk) UpdateVersion() *AccessPolicyUpsertBulk {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.UpdateVersion()
+	})
+}
+
 // SetStatements sets the "statements" field.
 func (u *AccessPolicyUpsertBulk) SetStatements(v []schema.PolicyStatement) *AccessPolicyUpsertBulk {
 	return u.Update(func(s *AccessPolicyUpsert) {
@@ -1010,6 +1180,48 @@ func (u *AccessPolicyUpsertBulk) AddPriority(v int) *AccessPolicyUpsertBulk {
 func (u *AccessPolicyUpsertBulk) UpdatePriority() *AccessPolicyUpsertBulk {
 	return u.Update(func(s *AccessPolicyUpsert) {
 		s.UpdatePriority()
+	})
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (u *AccessPolicyUpsertBulk) SetEffectiveDate(v time.Time) *AccessPolicyUpsertBulk {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.SetEffectiveDate(v)
+	})
+}
+
+// UpdateEffectiveDate sets the "effective_date" field to the value that was provided on create.
+func (u *AccessPolicyUpsertBulk) UpdateEffectiveDate() *AccessPolicyUpsertBulk {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.UpdateEffectiveDate()
+	})
+}
+
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (u *AccessPolicyUpsertBulk) ClearEffectiveDate() *AccessPolicyUpsertBulk {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.ClearEffectiveDate()
+	})
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (u *AccessPolicyUpsertBulk) SetExpiryDate(v time.Time) *AccessPolicyUpsertBulk {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.SetExpiryDate(v)
+	})
+}
+
+// UpdateExpiryDate sets the "expiry_date" field to the value that was provided on create.
+func (u *AccessPolicyUpsertBulk) UpdateExpiryDate() *AccessPolicyUpsertBulk {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.UpdateExpiryDate()
+	})
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (u *AccessPolicyUpsertBulk) ClearExpiryDate() *AccessPolicyUpsertBulk {
+	return u.Update(func(s *AccessPolicyUpsert) {
+		s.ClearExpiryDate()
 	})
 }
 

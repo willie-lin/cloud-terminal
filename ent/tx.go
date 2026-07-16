@@ -16,12 +16,12 @@ type Tx struct {
 	config
 	// AccessPolicy is the client for interacting with the AccessPolicy builders.
 	AccessPolicy *AccessPolicyClient
-	// Account is the client for interacting with the Account builders.
-	Account *AccountClient
 	// AuditLog is the client for interacting with the AuditLog builders.
 	AuditLog *AuditLogClient
 	// Environment is the client for interacting with the Environment builders.
 	Environment *EnvironmentClient
+	// Group is the client for interacting with the Group builders.
+	Group *GroupClient
 	// Platform is the client for interacting with the Platform builders.
 	Platform *PlatformClient
 	// Resource is the client for interacting with the Resource builders.
@@ -166,9 +166,9 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.AccessPolicy = NewAccessPolicyClient(tx.config)
-	tx.Account = NewAccountClient(tx.config)
 	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.Environment = NewEnvironmentClient(tx.config)
+	tx.Group = NewGroupClient(tx.config)
 	tx.Platform = NewPlatformClient(tx.config)
 	tx.Resource = NewResourceClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)

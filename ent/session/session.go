@@ -26,8 +26,6 @@ const (
 	FieldResourceUrn = "resource_urn"
 	// FieldEnvironmentUrn holds the string denoting the environment_urn field in the database.
 	FieldEnvironmentUrn = "environment_urn"
-	// FieldAccountUrn holds the string denoting the account_urn field in the database.
-	FieldAccountUrn = "account_urn"
 	// FieldMode holds the string denoting the mode field in the database.
 	FieldMode = "mode"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -51,7 +49,6 @@ var Columns = []string{
 	FieldPrincipalUrn,
 	FieldResourceUrn,
 	FieldEnvironmentUrn,
-	FieldAccountUrn,
 	FieldMode,
 	FieldStatus,
 	FieldStartedAt,
@@ -171,11 +168,6 @@ func ByResourceUrn(opts ...sql.OrderTermOption) OrderOption {
 // ByEnvironmentUrn orders the results by the environment_urn field.
 func ByEnvironmentUrn(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEnvironmentUrn, opts...).ToFunc()
-}
-
-// ByAccountUrn orders the results by the account_urn field.
-func ByAccountUrn(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAccountUrn, opts...).ToFunc()
 }
 
 // ByMode orders the results by the mode field.

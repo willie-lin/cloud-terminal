@@ -11,7 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
@@ -38,6 +39,20 @@ func (_u *ResourceUpdate) SetUpdatedAt(v time.Time) *ResourceUpdate {
 	return _u
 }
 
+// SetUrn sets the "urn" field.
+func (_u *ResourceUpdate) SetUrn(v string) *ResourceUpdate {
+	_u.mutation.SetUrn(v)
+	return _u
+}
+
+// SetNillableUrn sets the "urn" field if the given value is not nil.
+func (_u *ResourceUpdate) SetNillableUrn(v *string) *ResourceUpdate {
+	if v != nil {
+		_u.SetUrn(*v)
+	}
+	return _u
+}
+
 // SetName sets the "name" field.
 func (_u *ResourceUpdate) SetName(v string) *ResourceUpdate {
 	_u.mutation.SetName(v)
@@ -52,16 +67,30 @@ func (_u *ResourceUpdate) SetNillableName(v *string) *ResourceUpdate {
 	return _u
 }
 
-// SetHost sets the "host" field.
-func (_u *ResourceUpdate) SetHost(v string) *ResourceUpdate {
-	_u.mutation.SetHost(v)
+// SetType sets the "type" field.
+func (_u *ResourceUpdate) SetType(v resource.Type) *ResourceUpdate {
+	_u.mutation.SetType(v)
 	return _u
 }
 
-// SetNillableHost sets the "host" field if the given value is not nil.
-func (_u *ResourceUpdate) SetNillableHost(v *string) *ResourceUpdate {
+// SetNillableType sets the "type" field if the given value is not nil.
+func (_u *ResourceUpdate) SetNillableType(v *resource.Type) *ResourceUpdate {
 	if v != nil {
-		_u.SetHost(*v)
+		_u.SetType(*v)
+	}
+	return _u
+}
+
+// SetIP sets the "ip" field.
+func (_u *ResourceUpdate) SetIP(v string) *ResourceUpdate {
+	_u.mutation.SetIP(v)
+	return _u
+}
+
+// SetNillableIP sets the "ip" field if the given value is not nil.
+func (_u *ResourceUpdate) SetNillableIP(v *string) *ResourceUpdate {
+	if v != nil {
+		_u.SetIP(*v)
 	}
 	return _u
 }
@@ -87,16 +116,30 @@ func (_u *ResourceUpdate) AddPort(v int) *ResourceUpdate {
 	return _u
 }
 
-// SetType sets the "type" field.
-func (_u *ResourceUpdate) SetType(v resource.Type) *ResourceUpdate {
-	_u.mutation.SetType(v)
+// SetEnv sets the "env" field.
+func (_u *ResourceUpdate) SetEnv(v resource.Env) *ResourceUpdate {
+	_u.mutation.SetEnv(v)
 	return _u
 }
 
-// SetNillableType sets the "type" field if the given value is not nil.
-func (_u *ResourceUpdate) SetNillableType(v *resource.Type) *ResourceUpdate {
+// SetNillableEnv sets the "env" field if the given value is not nil.
+func (_u *ResourceUpdate) SetNillableEnv(v *resource.Env) *ResourceUpdate {
 	if v != nil {
-		_u.SetType(*v)
+		_u.SetEnv(*v)
+	}
+	return _u
+}
+
+// SetRegion sets the "region" field.
+func (_u *ResourceUpdate) SetRegion(v string) *ResourceUpdate {
+	_u.mutation.SetRegion(v)
+	return _u
+}
+
+// SetNillableRegion sets the "region" field if the given value is not nil.
+func (_u *ResourceUpdate) SetNillableRegion(v *string) *ResourceUpdate {
+	if v != nil {
+		_u.SetRegion(*v)
 	}
 	return _u
 }
@@ -135,15 +178,27 @@ func (_u *ResourceUpdate) SetNillableStatus(v *resource.Status) *ResourceUpdate 
 	return _u
 }
 
-// SetMetadata sets the "metadata" field.
-func (_u *ResourceUpdate) SetMetadata(v map[string]interface{}) *ResourceUpdate {
-	_u.mutation.SetMetadata(v)
+// SetDetails sets the "details" field.
+func (_u *ResourceUpdate) SetDetails(v map[string]interface{}) *ResourceUpdate {
+	_u.mutation.SetDetails(v)
 	return _u
 }
 
-// ClearMetadata clears the value of the "metadata" field.
-func (_u *ResourceUpdate) ClearMetadata() *ResourceUpdate {
-	_u.mutation.ClearMetadata()
+// ClearDetails clears the value of the "details" field.
+func (_u *ResourceUpdate) ClearDetails() *ResourceUpdate {
+	_u.mutation.ClearDetails()
+	return _u
+}
+
+// SetAuthData sets the "auth_data" field.
+func (_u *ResourceUpdate) SetAuthData(v map[string]interface{}) *ResourceUpdate {
+	_u.mutation.SetAuthData(v)
+	return _u
+}
+
+// ClearAuthData clears the value of the "auth_data" field.
+func (_u *ResourceUpdate) ClearAuthData() *ResourceUpdate {
+	_u.mutation.ClearAuthData()
 	return _u
 }
 
@@ -166,23 +221,34 @@ func (_u *ResourceUpdate) SetTenant(v *Tenant) *ResourceUpdate {
 	return _u.SetTenantID(v.ID)
 }
 
-// SetAccountsID sets the "accounts" edge to the Account entity by ID.
-func (_u *ResourceUpdate) SetAccountsID(id string) *ResourceUpdate {
-	_u.mutation.SetAccountsID(id)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (_u *ResourceUpdate) AddAuditLogIDs(ids ...string) *ResourceUpdate {
+	_u.mutation.AddAuditLogIDs(ids...)
 	return _u
 }
 
-// SetNillableAccountsID sets the "accounts" edge to the Account entity by ID if the given value is not nil.
-func (_u *ResourceUpdate) SetNillableAccountsID(id *string) *ResourceUpdate {
-	if id != nil {
-		_u = _u.SetAccountsID(*id)
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (_u *ResourceUpdate) AddAuditLogs(v ...*AuditLog) *ResourceUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
+	return _u.AddAuditLogIDs(ids...)
+}
+
+// AddPolicyIDs adds the "policies" edge to the AccessPolicy entity by IDs.
+func (_u *ResourceUpdate) AddPolicyIDs(ids ...string) *ResourceUpdate {
+	_u.mutation.AddPolicyIDs(ids...)
 	return _u
 }
 
-// SetAccounts sets the "accounts" edge to the Account entity.
-func (_u *ResourceUpdate) SetAccounts(v *Account) *ResourceUpdate {
-	return _u.SetAccountsID(v.ID)
+// AddPolicies adds the "policies" edges to the AccessPolicy entity.
+func (_u *ResourceUpdate) AddPolicies(v ...*AccessPolicy) *ResourceUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPolicyIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -196,10 +262,46 @@ func (_u *ResourceUpdate) ClearTenant() *ResourceUpdate {
 	return _u
 }
 
-// ClearAccounts clears the "accounts" edge to the Account entity.
-func (_u *ResourceUpdate) ClearAccounts() *ResourceUpdate {
-	_u.mutation.ClearAccounts()
+// ClearAuditLogs clears all "audit_logs" edges to the AuditLog entity.
+func (_u *ResourceUpdate) ClearAuditLogs() *ResourceUpdate {
+	_u.mutation.ClearAuditLogs()
 	return _u
+}
+
+// RemoveAuditLogIDs removes the "audit_logs" edge to AuditLog entities by IDs.
+func (_u *ResourceUpdate) RemoveAuditLogIDs(ids ...string) *ResourceUpdate {
+	_u.mutation.RemoveAuditLogIDs(ids...)
+	return _u
+}
+
+// RemoveAuditLogs removes "audit_logs" edges to AuditLog entities.
+func (_u *ResourceUpdate) RemoveAuditLogs(v ...*AuditLog) *ResourceUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAuditLogIDs(ids...)
+}
+
+// ClearPolicies clears all "policies" edges to the AccessPolicy entity.
+func (_u *ResourceUpdate) ClearPolicies() *ResourceUpdate {
+	_u.mutation.ClearPolicies()
+	return _u
+}
+
+// RemovePolicyIDs removes the "policies" edge to AccessPolicy entities by IDs.
+func (_u *ResourceUpdate) RemovePolicyIDs(ids ...string) *ResourceUpdate {
+	_u.mutation.RemovePolicyIDs(ids...)
+	return _u
+}
+
+// RemovePolicies removes "policies" edges to AccessPolicy entities.
+func (_u *ResourceUpdate) RemovePolicies(v ...*AccessPolicy) *ResourceUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePolicyIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -240,19 +342,29 @@ func (_u *ResourceUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *ResourceUpdate) check() error {
+	if v, ok := _u.mutation.Urn(); ok {
+		if err := resource.UrnValidator(v); err != nil {
+			return &ValidationError{Name: "urn", err: fmt.Errorf(`ent: validator failed for field "Resource.urn": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Name(); ok {
 		if err := resource.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Resource.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Host(); ok {
-		if err := resource.HostValidator(v); err != nil {
-			return &ValidationError{Name: "host", err: fmt.Errorf(`ent: validator failed for field "Resource.host": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.GetType(); ok {
 		if err := resource.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.IP(); ok {
+		if err := resource.IPValidator(v); err != nil {
+			return &ValidationError{Name: "ip", err: fmt.Errorf(`ent: validator failed for field "Resource.ip": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Env(); ok {
+		if err := resource.EnvValidator(v); err != nil {
+			return &ValidationError{Name: "env", err: fmt.Errorf(`ent: validator failed for field "Resource.env": %w`, err)}
 		}
 	}
 	if v, ok := _u.mutation.Status(); ok {
@@ -284,11 +396,17 @@ func (_u *ResourceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(resource.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := _u.mutation.Urn(); ok {
+		_spec.SetField(resource.FieldUrn, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(resource.FieldName, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.Host(); ok {
-		_spec.SetField(resource.FieldHost, field.TypeString, value)
+	if value, ok := _u.mutation.GetType(); ok {
+		_spec.SetField(resource.FieldType, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.IP(); ok {
+		_spec.SetField(resource.FieldIP, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Port(); ok {
 		_spec.SetField(resource.FieldPort, field.TypeInt, value)
@@ -296,8 +414,11 @@ func (_u *ResourceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.AddedPort(); ok {
 		_spec.AddField(resource.FieldPort, field.TypeInt, value)
 	}
-	if value, ok := _u.mutation.GetType(); ok {
-		_spec.SetField(resource.FieldType, field.TypeEnum, value)
+	if value, ok := _u.mutation.Env(); ok {
+		_spec.SetField(resource.FieldEnv, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Region(); ok {
+		_spec.SetField(resource.FieldRegion, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
@@ -308,11 +429,17 @@ func (_u *ResourceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(resource.FieldStatus, field.TypeEnum, value)
 	}
-	if value, ok := _u.mutation.Metadata(); ok {
-		_spec.SetField(resource.FieldMetadata, field.TypeJSON, value)
+	if value, ok := _u.mutation.Details(); ok {
+		_spec.SetField(resource.FieldDetails, field.TypeJSON, value)
 	}
-	if _u.mutation.MetadataCleared() {
-		_spec.ClearField(resource.FieldMetadata, field.TypeJSON)
+	if _u.mutation.DetailsCleared() {
+		_spec.ClearField(resource.FieldDetails, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.AuthData(); ok {
+		_spec.SetField(resource.FieldAuthData, field.TypeJSON, value)
+	}
+	if _u.mutation.AuthDataCleared() {
+		_spec.ClearField(resource.FieldAuthData, field.TypeJSON)
 	}
 	if _u.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -345,32 +472,97 @@ func (_u *ResourceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if _u.mutation.AccountsCleared() {
+	if _u.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   resource.AccountsTable,
-			Columns: []string{resource.AccountsColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.AuditLogsTable,
+			Columns: []string{resource.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
+		edge.Schema = _u.schemaConfig.AuditLog
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !_u.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   resource.AccountsTable,
-			Columns: []string{resource.AccountsColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.AuditLogsTable,
+			Columns: []string{resource.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
+		edge.Schema = _u.schemaConfig.AuditLog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.AuditLogsTable,
+			Columns: []string{resource.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.AuditLog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PoliciesTable,
+			Columns: resource.PoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPoliciesIDs(); len(nodes) > 0 && !_u.mutation.PoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PoliciesTable,
+			Columns: resource.PoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PoliciesTable,
+			Columns: resource.PoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -406,6 +598,20 @@ func (_u *ResourceUpdateOne) SetUpdatedAt(v time.Time) *ResourceUpdateOne {
 	return _u
 }
 
+// SetUrn sets the "urn" field.
+func (_u *ResourceUpdateOne) SetUrn(v string) *ResourceUpdateOne {
+	_u.mutation.SetUrn(v)
+	return _u
+}
+
+// SetNillableUrn sets the "urn" field if the given value is not nil.
+func (_u *ResourceUpdateOne) SetNillableUrn(v *string) *ResourceUpdateOne {
+	if v != nil {
+		_u.SetUrn(*v)
+	}
+	return _u
+}
+
 // SetName sets the "name" field.
 func (_u *ResourceUpdateOne) SetName(v string) *ResourceUpdateOne {
 	_u.mutation.SetName(v)
@@ -420,16 +626,30 @@ func (_u *ResourceUpdateOne) SetNillableName(v *string) *ResourceUpdateOne {
 	return _u
 }
 
-// SetHost sets the "host" field.
-func (_u *ResourceUpdateOne) SetHost(v string) *ResourceUpdateOne {
-	_u.mutation.SetHost(v)
+// SetType sets the "type" field.
+func (_u *ResourceUpdateOne) SetType(v resource.Type) *ResourceUpdateOne {
+	_u.mutation.SetType(v)
 	return _u
 }
 
-// SetNillableHost sets the "host" field if the given value is not nil.
-func (_u *ResourceUpdateOne) SetNillableHost(v *string) *ResourceUpdateOne {
+// SetNillableType sets the "type" field if the given value is not nil.
+func (_u *ResourceUpdateOne) SetNillableType(v *resource.Type) *ResourceUpdateOne {
 	if v != nil {
-		_u.SetHost(*v)
+		_u.SetType(*v)
+	}
+	return _u
+}
+
+// SetIP sets the "ip" field.
+func (_u *ResourceUpdateOne) SetIP(v string) *ResourceUpdateOne {
+	_u.mutation.SetIP(v)
+	return _u
+}
+
+// SetNillableIP sets the "ip" field if the given value is not nil.
+func (_u *ResourceUpdateOne) SetNillableIP(v *string) *ResourceUpdateOne {
+	if v != nil {
+		_u.SetIP(*v)
 	}
 	return _u
 }
@@ -455,16 +675,30 @@ func (_u *ResourceUpdateOne) AddPort(v int) *ResourceUpdateOne {
 	return _u
 }
 
-// SetType sets the "type" field.
-func (_u *ResourceUpdateOne) SetType(v resource.Type) *ResourceUpdateOne {
-	_u.mutation.SetType(v)
+// SetEnv sets the "env" field.
+func (_u *ResourceUpdateOne) SetEnv(v resource.Env) *ResourceUpdateOne {
+	_u.mutation.SetEnv(v)
 	return _u
 }
 
-// SetNillableType sets the "type" field if the given value is not nil.
-func (_u *ResourceUpdateOne) SetNillableType(v *resource.Type) *ResourceUpdateOne {
+// SetNillableEnv sets the "env" field if the given value is not nil.
+func (_u *ResourceUpdateOne) SetNillableEnv(v *resource.Env) *ResourceUpdateOne {
 	if v != nil {
-		_u.SetType(*v)
+		_u.SetEnv(*v)
+	}
+	return _u
+}
+
+// SetRegion sets the "region" field.
+func (_u *ResourceUpdateOne) SetRegion(v string) *ResourceUpdateOne {
+	_u.mutation.SetRegion(v)
+	return _u
+}
+
+// SetNillableRegion sets the "region" field if the given value is not nil.
+func (_u *ResourceUpdateOne) SetNillableRegion(v *string) *ResourceUpdateOne {
+	if v != nil {
+		_u.SetRegion(*v)
 	}
 	return _u
 }
@@ -503,15 +737,27 @@ func (_u *ResourceUpdateOne) SetNillableStatus(v *resource.Status) *ResourceUpda
 	return _u
 }
 
-// SetMetadata sets the "metadata" field.
-func (_u *ResourceUpdateOne) SetMetadata(v map[string]interface{}) *ResourceUpdateOne {
-	_u.mutation.SetMetadata(v)
+// SetDetails sets the "details" field.
+func (_u *ResourceUpdateOne) SetDetails(v map[string]interface{}) *ResourceUpdateOne {
+	_u.mutation.SetDetails(v)
 	return _u
 }
 
-// ClearMetadata clears the value of the "metadata" field.
-func (_u *ResourceUpdateOne) ClearMetadata() *ResourceUpdateOne {
-	_u.mutation.ClearMetadata()
+// ClearDetails clears the value of the "details" field.
+func (_u *ResourceUpdateOne) ClearDetails() *ResourceUpdateOne {
+	_u.mutation.ClearDetails()
+	return _u
+}
+
+// SetAuthData sets the "auth_data" field.
+func (_u *ResourceUpdateOne) SetAuthData(v map[string]interface{}) *ResourceUpdateOne {
+	_u.mutation.SetAuthData(v)
+	return _u
+}
+
+// ClearAuthData clears the value of the "auth_data" field.
+func (_u *ResourceUpdateOne) ClearAuthData() *ResourceUpdateOne {
+	_u.mutation.ClearAuthData()
 	return _u
 }
 
@@ -534,23 +780,34 @@ func (_u *ResourceUpdateOne) SetTenant(v *Tenant) *ResourceUpdateOne {
 	return _u.SetTenantID(v.ID)
 }
 
-// SetAccountsID sets the "accounts" edge to the Account entity by ID.
-func (_u *ResourceUpdateOne) SetAccountsID(id string) *ResourceUpdateOne {
-	_u.mutation.SetAccountsID(id)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (_u *ResourceUpdateOne) AddAuditLogIDs(ids ...string) *ResourceUpdateOne {
+	_u.mutation.AddAuditLogIDs(ids...)
 	return _u
 }
 
-// SetNillableAccountsID sets the "accounts" edge to the Account entity by ID if the given value is not nil.
-func (_u *ResourceUpdateOne) SetNillableAccountsID(id *string) *ResourceUpdateOne {
-	if id != nil {
-		_u = _u.SetAccountsID(*id)
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (_u *ResourceUpdateOne) AddAuditLogs(v ...*AuditLog) *ResourceUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
+	return _u.AddAuditLogIDs(ids...)
+}
+
+// AddPolicyIDs adds the "policies" edge to the AccessPolicy entity by IDs.
+func (_u *ResourceUpdateOne) AddPolicyIDs(ids ...string) *ResourceUpdateOne {
+	_u.mutation.AddPolicyIDs(ids...)
 	return _u
 }
 
-// SetAccounts sets the "accounts" edge to the Account entity.
-func (_u *ResourceUpdateOne) SetAccounts(v *Account) *ResourceUpdateOne {
-	return _u.SetAccountsID(v.ID)
+// AddPolicies adds the "policies" edges to the AccessPolicy entity.
+func (_u *ResourceUpdateOne) AddPolicies(v ...*AccessPolicy) *ResourceUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPolicyIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -564,10 +821,46 @@ func (_u *ResourceUpdateOne) ClearTenant() *ResourceUpdateOne {
 	return _u
 }
 
-// ClearAccounts clears the "accounts" edge to the Account entity.
-func (_u *ResourceUpdateOne) ClearAccounts() *ResourceUpdateOne {
-	_u.mutation.ClearAccounts()
+// ClearAuditLogs clears all "audit_logs" edges to the AuditLog entity.
+func (_u *ResourceUpdateOne) ClearAuditLogs() *ResourceUpdateOne {
+	_u.mutation.ClearAuditLogs()
 	return _u
+}
+
+// RemoveAuditLogIDs removes the "audit_logs" edge to AuditLog entities by IDs.
+func (_u *ResourceUpdateOne) RemoveAuditLogIDs(ids ...string) *ResourceUpdateOne {
+	_u.mutation.RemoveAuditLogIDs(ids...)
+	return _u
+}
+
+// RemoveAuditLogs removes "audit_logs" edges to AuditLog entities.
+func (_u *ResourceUpdateOne) RemoveAuditLogs(v ...*AuditLog) *ResourceUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAuditLogIDs(ids...)
+}
+
+// ClearPolicies clears all "policies" edges to the AccessPolicy entity.
+func (_u *ResourceUpdateOne) ClearPolicies() *ResourceUpdateOne {
+	_u.mutation.ClearPolicies()
+	return _u
+}
+
+// RemovePolicyIDs removes the "policies" edge to AccessPolicy entities by IDs.
+func (_u *ResourceUpdateOne) RemovePolicyIDs(ids ...string) *ResourceUpdateOne {
+	_u.mutation.RemovePolicyIDs(ids...)
+	return _u
+}
+
+// RemovePolicies removes "policies" edges to AccessPolicy entities.
+func (_u *ResourceUpdateOne) RemovePolicies(v ...*AccessPolicy) *ResourceUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePolicyIDs(ids...)
 }
 
 // Where appends a list predicates to the ResourceUpdate builder.
@@ -621,19 +914,29 @@ func (_u *ResourceUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *ResourceUpdateOne) check() error {
+	if v, ok := _u.mutation.Urn(); ok {
+		if err := resource.UrnValidator(v); err != nil {
+			return &ValidationError{Name: "urn", err: fmt.Errorf(`ent: validator failed for field "Resource.urn": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Name(); ok {
 		if err := resource.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Resource.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Host(); ok {
-		if err := resource.HostValidator(v); err != nil {
-			return &ValidationError{Name: "host", err: fmt.Errorf(`ent: validator failed for field "Resource.host": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.GetType(); ok {
 		if err := resource.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.IP(); ok {
+		if err := resource.IPValidator(v); err != nil {
+			return &ValidationError{Name: "ip", err: fmt.Errorf(`ent: validator failed for field "Resource.ip": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Env(); ok {
+		if err := resource.EnvValidator(v); err != nil {
+			return &ValidationError{Name: "env", err: fmt.Errorf(`ent: validator failed for field "Resource.env": %w`, err)}
 		}
 	}
 	if v, ok := _u.mutation.Status(); ok {
@@ -682,11 +985,17 @@ func (_u *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err 
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(resource.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := _u.mutation.Urn(); ok {
+		_spec.SetField(resource.FieldUrn, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(resource.FieldName, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.Host(); ok {
-		_spec.SetField(resource.FieldHost, field.TypeString, value)
+	if value, ok := _u.mutation.GetType(); ok {
+		_spec.SetField(resource.FieldType, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.IP(); ok {
+		_spec.SetField(resource.FieldIP, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Port(); ok {
 		_spec.SetField(resource.FieldPort, field.TypeInt, value)
@@ -694,8 +1003,11 @@ func (_u *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err 
 	if value, ok := _u.mutation.AddedPort(); ok {
 		_spec.AddField(resource.FieldPort, field.TypeInt, value)
 	}
-	if value, ok := _u.mutation.GetType(); ok {
-		_spec.SetField(resource.FieldType, field.TypeEnum, value)
+	if value, ok := _u.mutation.Env(); ok {
+		_spec.SetField(resource.FieldEnv, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Region(); ok {
+		_spec.SetField(resource.FieldRegion, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
@@ -706,11 +1018,17 @@ func (_u *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err 
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(resource.FieldStatus, field.TypeEnum, value)
 	}
-	if value, ok := _u.mutation.Metadata(); ok {
-		_spec.SetField(resource.FieldMetadata, field.TypeJSON, value)
+	if value, ok := _u.mutation.Details(); ok {
+		_spec.SetField(resource.FieldDetails, field.TypeJSON, value)
 	}
-	if _u.mutation.MetadataCleared() {
-		_spec.ClearField(resource.FieldMetadata, field.TypeJSON)
+	if _u.mutation.DetailsCleared() {
+		_spec.ClearField(resource.FieldDetails, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.AuthData(); ok {
+		_spec.SetField(resource.FieldAuthData, field.TypeJSON, value)
+	}
+	if _u.mutation.AuthDataCleared() {
+		_spec.ClearField(resource.FieldAuthData, field.TypeJSON)
 	}
 	if _u.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -743,32 +1061,97 @@ func (_u *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if _u.mutation.AccountsCleared() {
+	if _u.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   resource.AccountsTable,
-			Columns: []string{resource.AccountsColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.AuditLogsTable,
+			Columns: []string{resource.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
+		edge.Schema = _u.schemaConfig.AuditLog
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !_u.mutation.AuditLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   resource.AccountsTable,
-			Columns: []string{resource.AccountsColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.AuditLogsTable,
+			Columns: []string{resource.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.Resource
+		edge.Schema = _u.schemaConfig.AuditLog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.AuditLogsTable,
+			Columns: []string{resource.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.AuditLog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PoliciesTable,
+			Columns: resource.PoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPoliciesIDs(); len(nodes) > 0 && !_u.mutation.PoliciesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PoliciesTable,
+			Columns: resource.PoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PoliciesTable,
+			Columns: resource.PoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}

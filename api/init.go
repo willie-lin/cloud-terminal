@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
@@ -209,25 +209,25 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 		log.Print("Default tenant already exists for %s platform.", platformName)
 	}
 
-	// 3. 检查或创建 "system" Account，并关联到 "management" Tenant
-	accountName := utils.Account
-	sa, err := client.Account.
+	// 3. 检查或创建 "system" Group
+	groupName := "SystemGroup"
+	sa, err := client.Group.
 		Query().
-		Where(account.NameEQ(accountName)).
+		Where(group.NameEQ(groupName)).
 		Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return err
 	}
 	if ent.IsNotFound(err) {
-		sa, err = client.Account.Create().
-			SetName(accountName).
+		sa, err = client.Group.Create().
+			SetName(groupName).
 			Save(ctx)
 		if err != nil {
 			return err
 		}
-		log.Printf("Created system account for %s platform", platformName)
+		log.Printf("Created system group for %s platform", platformName)
 	} else {
-		log.Printf("System account already exists for %s platform.", platformName)
+		log.Printf("System group already exists for %s platform.", platformName)
 	}
 
 	// 4. 创建平台角色，租户角色，和超级管理员账户
@@ -246,7 +246,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 			if err != nil {
 				return fmt.Errorf("create role %s failed: %w", roleName, err)
 			}
-			_, err = sa.Update().AddRoles(r).Save(ctx)
+			// Group no longer directly holds roles
 			if err != nil {
 				return fmt.Errorf("关联 system 账户和 role %s 角色失败: %w", err)
 			}
@@ -307,8 +307,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 					utils.ResourceUserAll, // 匹配所有租户和账户的用户
 					utils.ResourceConfigAll,
 					utils.ResourceTenantAll,
-					utils.ResourceAccountAll,
-					utils.ResourceRoleAll,
+										utils.ResourceRoleAll,
 					utils.ResourcePolicyAll,
 					utils.ResourceProjectAll,
 					utils.ResourceAuditLogAll,
@@ -333,9 +332,9 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	}
 
 	// 关联账户和策略
-	existsAccountPolicy, err := client.Account.Query().
-		Where(account.IDEQ(sa.ID)).
-		Where(account.HasAccessPoliciesWith(accesspolicy.IDEQ(superAdminPolicy.ID))).
+	existsAccountPolicy, err := client.Group.Query().
+		Where(group.IDEQ(sa.ID)).
+		Where(group.HasAccessPoliciesWith(accesspolicy.IDEQ(superAdminPolicy.ID))).
 		Exist(ctx)
 	if err != nil {
 		return fmt.Errorf("checking account policy existence: %w", err)
@@ -346,9 +345,9 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 		if err != nil {
 			return fmt.Errorf("关联账户和 super_admin 策略失败: %w", err)
 		}
-		log.Printf("关联账户和 super_admin 策略")
+		log.Printf("关联 Group 和 super_admin 策略")
 	} else {
-		log.Printf("账户和 super_admin 策略已经关联")
+		log.Printf("Group 和 super_admin 策略已经关联")
 	}
 
 	// 关联角色和策略（在检查角色 *之后* 进行）
@@ -365,7 +364,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 		if err != nil {
 			return fmt.Errorf("关联 super_admin 角色和 super_admin 策略失败: %w", err)
 		}
-		log.Printf("关联了 super_admin 角色和 super_admin 策略")
+		log.Printf("关联 super_admin 角色和 super_admin 策略")
 	} else {
 		log.Printf("super_admin 角色和 super_admin 策略已经关联")
 	}
@@ -393,8 +392,8 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 			SetEmail("superadmin@example.com").
 			SetPhoneNumber("19288888888").
 			SetIsDefault(true).
-			SetAccount(sa).
-			SetRole(superAdminRole).
+			SetGroup(sa).
+			AddRoles(superAdminRole).
 			Save(ctx)
 		if err != nil {
 			return fmt.Errorf("create super admin failed: %w", err)

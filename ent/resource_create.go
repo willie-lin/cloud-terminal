@@ -12,7 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
@@ -53,15 +54,35 @@ func (_c *ResourceCreate) SetNillableUpdatedAt(v *time.Time) *ResourceCreate {
 	return _c
 }
 
+// SetUrn sets the "urn" field.
+func (_c *ResourceCreate) SetUrn(v string) *ResourceCreate {
+	_c.mutation.SetUrn(v)
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *ResourceCreate) SetName(v string) *ResourceCreate {
 	_c.mutation.SetName(v)
 	return _c
 }
 
-// SetHost sets the "host" field.
-func (_c *ResourceCreate) SetHost(v string) *ResourceCreate {
-	_c.mutation.SetHost(v)
+// SetType sets the "type" field.
+func (_c *ResourceCreate) SetType(v resource.Type) *ResourceCreate {
+	_c.mutation.SetType(v)
+	return _c
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (_c *ResourceCreate) SetNillableType(v *resource.Type) *ResourceCreate {
+	if v != nil {
+		_c.SetType(*v)
+	}
+	return _c
+}
+
+// SetIP sets the "ip" field.
+func (_c *ResourceCreate) SetIP(v string) *ResourceCreate {
+	_c.mutation.SetIP(v)
 	return _c
 }
 
@@ -79,9 +100,31 @@ func (_c *ResourceCreate) SetNillablePort(v *int) *ResourceCreate {
 	return _c
 }
 
-// SetType sets the "type" field.
-func (_c *ResourceCreate) SetType(v resource.Type) *ResourceCreate {
-	_c.mutation.SetType(v)
+// SetEnv sets the "env" field.
+func (_c *ResourceCreate) SetEnv(v resource.Env) *ResourceCreate {
+	_c.mutation.SetEnv(v)
+	return _c
+}
+
+// SetNillableEnv sets the "env" field if the given value is not nil.
+func (_c *ResourceCreate) SetNillableEnv(v *resource.Env) *ResourceCreate {
+	if v != nil {
+		_c.SetEnv(*v)
+	}
+	return _c
+}
+
+// SetRegion sets the "region" field.
+func (_c *ResourceCreate) SetRegion(v string) *ResourceCreate {
+	_c.mutation.SetRegion(v)
+	return _c
+}
+
+// SetNillableRegion sets the "region" field if the given value is not nil.
+func (_c *ResourceCreate) SetNillableRegion(v *string) *ResourceCreate {
+	if v != nil {
+		_c.SetRegion(*v)
+	}
 	return _c
 }
 
@@ -113,9 +156,15 @@ func (_c *ResourceCreate) SetNillableStatus(v *resource.Status) *ResourceCreate 
 	return _c
 }
 
-// SetMetadata sets the "metadata" field.
-func (_c *ResourceCreate) SetMetadata(v map[string]interface{}) *ResourceCreate {
-	_c.mutation.SetMetadata(v)
+// SetDetails sets the "details" field.
+func (_c *ResourceCreate) SetDetails(v map[string]interface{}) *ResourceCreate {
+	_c.mutation.SetDetails(v)
+	return _c
+}
+
+// SetAuthData sets the "auth_data" field.
+func (_c *ResourceCreate) SetAuthData(v map[string]interface{}) *ResourceCreate {
+	_c.mutation.SetAuthData(v)
 	return _c
 }
 
@@ -152,23 +201,34 @@ func (_c *ResourceCreate) SetTenant(v *Tenant) *ResourceCreate {
 	return _c.SetTenantID(v.ID)
 }
 
-// SetAccountsID sets the "accounts" edge to the Account entity by ID.
-func (_c *ResourceCreate) SetAccountsID(id string) *ResourceCreate {
-	_c.mutation.SetAccountsID(id)
+// AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
+func (_c *ResourceCreate) AddAuditLogIDs(ids ...string) *ResourceCreate {
+	_c.mutation.AddAuditLogIDs(ids...)
 	return _c
 }
 
-// SetNillableAccountsID sets the "accounts" edge to the Account entity by ID if the given value is not nil.
-func (_c *ResourceCreate) SetNillableAccountsID(id *string) *ResourceCreate {
-	if id != nil {
-		_c = _c.SetAccountsID(*id)
+// AddAuditLogs adds the "audit_logs" edges to the AuditLog entity.
+func (_c *ResourceCreate) AddAuditLogs(v ...*AuditLog) *ResourceCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
+	return _c.AddAuditLogIDs(ids...)
+}
+
+// AddPolicyIDs adds the "policies" edge to the AccessPolicy entity by IDs.
+func (_c *ResourceCreate) AddPolicyIDs(ids ...string) *ResourceCreate {
+	_c.mutation.AddPolicyIDs(ids...)
 	return _c
 }
 
-// SetAccounts sets the "accounts" edge to the Account entity.
-func (_c *ResourceCreate) SetAccounts(v *Account) *ResourceCreate {
-	return _c.SetAccountsID(v.ID)
+// AddPolicies adds the "policies" edges to the AccessPolicy entity.
+func (_c *ResourceCreate) AddPolicies(v ...*AccessPolicy) *ResourceCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPolicyIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -214,9 +274,21 @@ func (_c *ResourceCreate) defaults() {
 		v := resource.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.GetType(); !ok {
+		v := resource.DefaultType
+		_c.mutation.SetType(v)
+	}
 	if _, ok := _c.mutation.Port(); !ok {
 		v := resource.DefaultPort
 		_c.mutation.SetPort(v)
+	}
+	if _, ok := _c.mutation.Env(); !ok {
+		v := resource.DefaultEnv
+		_c.mutation.SetEnv(v)
+	}
+	if _, ok := _c.mutation.Region(); !ok {
+		v := resource.DefaultRegion
+		_c.mutation.SetRegion(v)
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := resource.DefaultStatus
@@ -236,6 +308,14 @@ func (_c *ResourceCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Resource.updated_at"`)}
 	}
+	if _, ok := _c.mutation.Urn(); !ok {
+		return &ValidationError{Name: "urn", err: errors.New(`ent: missing required field "Resource.urn"`)}
+	}
+	if v, ok := _c.mutation.Urn(); ok {
+		if err := resource.UrnValidator(v); err != nil {
+			return &ValidationError{Name: "urn", err: fmt.Errorf(`ent: validator failed for field "Resource.urn": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Resource.name"`)}
 	}
@@ -244,17 +324,6 @@ func (_c *ResourceCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Resource.name": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.Host(); !ok {
-		return &ValidationError{Name: "host", err: errors.New(`ent: missing required field "Resource.host"`)}
-	}
-	if v, ok := _c.mutation.Host(); ok {
-		if err := resource.HostValidator(v); err != nil {
-			return &ValidationError{Name: "host", err: fmt.Errorf(`ent: validator failed for field "Resource.host": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.Port(); !ok {
-		return &ValidationError{Name: "port", err: errors.New(`ent: missing required field "Resource.port"`)}
-	}
 	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Resource.type"`)}
 	}
@@ -262,6 +331,28 @@ func (_c *ResourceCreate) check() error {
 		if err := resource.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Resource.type": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.IP(); !ok {
+		return &ValidationError{Name: "ip", err: errors.New(`ent: missing required field "Resource.ip"`)}
+	}
+	if v, ok := _c.mutation.IP(); ok {
+		if err := resource.IPValidator(v); err != nil {
+			return &ValidationError{Name: "ip", err: fmt.Errorf(`ent: validator failed for field "Resource.ip": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Port(); !ok {
+		return &ValidationError{Name: "port", err: errors.New(`ent: missing required field "Resource.port"`)}
+	}
+	if _, ok := _c.mutation.Env(); !ok {
+		return &ValidationError{Name: "env", err: errors.New(`ent: missing required field "Resource.env"`)}
+	}
+	if v, ok := _c.mutation.Env(); ok {
+		if err := resource.EnvValidator(v); err != nil {
+			return &ValidationError{Name: "env", err: fmt.Errorf(`ent: validator failed for field "Resource.env": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Region(); !ok {
+		return &ValidationError{Name: "region", err: errors.New(`ent: missing required field "Resource.region"`)}
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Resource.status"`)}
@@ -316,21 +407,33 @@ func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := _c.mutation.Urn(); ok {
+		_spec.SetField(resource.FieldUrn, field.TypeString, value)
+		_node.Urn = value
+	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(resource.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := _c.mutation.Host(); ok {
-		_spec.SetField(resource.FieldHost, field.TypeString, value)
-		_node.Host = value
+	if value, ok := _c.mutation.GetType(); ok {
+		_spec.SetField(resource.FieldType, field.TypeEnum, value)
+		_node.Type = value
+	}
+	if value, ok := _c.mutation.IP(); ok {
+		_spec.SetField(resource.FieldIP, field.TypeString, value)
+		_node.IP = value
 	}
 	if value, ok := _c.mutation.Port(); ok {
 		_spec.SetField(resource.FieldPort, field.TypeInt, value)
 		_node.Port = value
 	}
-	if value, ok := _c.mutation.GetType(); ok {
-		_spec.SetField(resource.FieldType, field.TypeEnum, value)
-		_node.Type = value
+	if value, ok := _c.mutation.Env(); ok {
+		_spec.SetField(resource.FieldEnv, field.TypeEnum, value)
+		_node.Env = value
+	}
+	if value, ok := _c.mutation.Region(); ok {
+		_spec.SetField(resource.FieldRegion, field.TypeString, value)
+		_node.Region = value
 	}
 	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(resource.FieldDescription, field.TypeString, value)
@@ -340,9 +443,13 @@ func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
 	}
-	if value, ok := _c.mutation.Metadata(); ok {
-		_spec.SetField(resource.FieldMetadata, field.TypeJSON, value)
-		_node.Metadata = value
+	if value, ok := _c.mutation.Details(); ok {
+		_spec.SetField(resource.FieldDetails, field.TypeJSON, value)
+		_node.Details = value
+	}
+	if value, ok := _c.mutation.AuthData(); ok {
+		_spec.SetField(resource.FieldAuthData, field.TypeJSON, value)
+		_node.AuthData = value
 	}
 	if nodes := _c.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -362,22 +469,38 @@ func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_node.tenant_resources = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := _c.mutation.AccountsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.AuditLogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   resource.AccountsTable,
-			Columns: []string{resource.AccountsColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.AuditLogsTable,
+			Columns: []string{resource.AuditLogsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.Resource
+		edge.Schema = _c.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.account_resource = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PoliciesTable,
+			Columns: resource.PoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _c.schemaConfig.ResourcePolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -444,6 +567,18 @@ func (u *ResourceUpsert) UpdateUpdatedAt() *ResourceUpsert {
 	return u
 }
 
+// SetUrn sets the "urn" field.
+func (u *ResourceUpsert) SetUrn(v string) *ResourceUpsert {
+	u.Set(resource.FieldUrn, v)
+	return u
+}
+
+// UpdateUrn sets the "urn" field to the value that was provided on create.
+func (u *ResourceUpsert) UpdateUrn() *ResourceUpsert {
+	u.SetExcluded(resource.FieldUrn)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *ResourceUpsert) SetName(v string) *ResourceUpsert {
 	u.Set(resource.FieldName, v)
@@ -456,15 +591,27 @@ func (u *ResourceUpsert) UpdateName() *ResourceUpsert {
 	return u
 }
 
-// SetHost sets the "host" field.
-func (u *ResourceUpsert) SetHost(v string) *ResourceUpsert {
-	u.Set(resource.FieldHost, v)
+// SetType sets the "type" field.
+func (u *ResourceUpsert) SetType(v resource.Type) *ResourceUpsert {
+	u.Set(resource.FieldType, v)
 	return u
 }
 
-// UpdateHost sets the "host" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateHost() *ResourceUpsert {
-	u.SetExcluded(resource.FieldHost)
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceUpsert) UpdateType() *ResourceUpsert {
+	u.SetExcluded(resource.FieldType)
+	return u
+}
+
+// SetIP sets the "ip" field.
+func (u *ResourceUpsert) SetIP(v string) *ResourceUpsert {
+	u.Set(resource.FieldIP, v)
+	return u
+}
+
+// UpdateIP sets the "ip" field to the value that was provided on create.
+func (u *ResourceUpsert) UpdateIP() *ResourceUpsert {
+	u.SetExcluded(resource.FieldIP)
 	return u
 }
 
@@ -486,15 +633,27 @@ func (u *ResourceUpsert) AddPort(v int) *ResourceUpsert {
 	return u
 }
 
-// SetType sets the "type" field.
-func (u *ResourceUpsert) SetType(v resource.Type) *ResourceUpsert {
-	u.Set(resource.FieldType, v)
+// SetEnv sets the "env" field.
+func (u *ResourceUpsert) SetEnv(v resource.Env) *ResourceUpsert {
+	u.Set(resource.FieldEnv, v)
 	return u
 }
 
-// UpdateType sets the "type" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateType() *ResourceUpsert {
-	u.SetExcluded(resource.FieldType)
+// UpdateEnv sets the "env" field to the value that was provided on create.
+func (u *ResourceUpsert) UpdateEnv() *ResourceUpsert {
+	u.SetExcluded(resource.FieldEnv)
+	return u
+}
+
+// SetRegion sets the "region" field.
+func (u *ResourceUpsert) SetRegion(v string) *ResourceUpsert {
+	u.Set(resource.FieldRegion, v)
+	return u
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *ResourceUpsert) UpdateRegion() *ResourceUpsert {
+	u.SetExcluded(resource.FieldRegion)
 	return u
 }
 
@@ -528,21 +687,39 @@ func (u *ResourceUpsert) UpdateStatus() *ResourceUpsert {
 	return u
 }
 
-// SetMetadata sets the "metadata" field.
-func (u *ResourceUpsert) SetMetadata(v map[string]interface{}) *ResourceUpsert {
-	u.Set(resource.FieldMetadata, v)
+// SetDetails sets the "details" field.
+func (u *ResourceUpsert) SetDetails(v map[string]interface{}) *ResourceUpsert {
+	u.Set(resource.FieldDetails, v)
 	return u
 }
 
-// UpdateMetadata sets the "metadata" field to the value that was provided on create.
-func (u *ResourceUpsert) UpdateMetadata() *ResourceUpsert {
-	u.SetExcluded(resource.FieldMetadata)
+// UpdateDetails sets the "details" field to the value that was provided on create.
+func (u *ResourceUpsert) UpdateDetails() *ResourceUpsert {
+	u.SetExcluded(resource.FieldDetails)
 	return u
 }
 
-// ClearMetadata clears the value of the "metadata" field.
-func (u *ResourceUpsert) ClearMetadata() *ResourceUpsert {
-	u.SetNull(resource.FieldMetadata)
+// ClearDetails clears the value of the "details" field.
+func (u *ResourceUpsert) ClearDetails() *ResourceUpsert {
+	u.SetNull(resource.FieldDetails)
+	return u
+}
+
+// SetAuthData sets the "auth_data" field.
+func (u *ResourceUpsert) SetAuthData(v map[string]interface{}) *ResourceUpsert {
+	u.Set(resource.FieldAuthData, v)
+	return u
+}
+
+// UpdateAuthData sets the "auth_data" field to the value that was provided on create.
+func (u *ResourceUpsert) UpdateAuthData() *ResourceUpsert {
+	u.SetExcluded(resource.FieldAuthData)
+	return u
+}
+
+// ClearAuthData clears the value of the "auth_data" field.
+func (u *ResourceUpsert) ClearAuthData() *ResourceUpsert {
+	u.SetNull(resource.FieldAuthData)
 	return u
 }
 
@@ -611,6 +788,20 @@ func (u *ResourceUpsertOne) UpdateUpdatedAt() *ResourceUpsertOne {
 	})
 }
 
+// SetUrn sets the "urn" field.
+func (u *ResourceUpsertOne) SetUrn(v string) *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetUrn(v)
+	})
+}
+
+// UpdateUrn sets the "urn" field to the value that was provided on create.
+func (u *ResourceUpsertOne) UpdateUrn() *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateUrn()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *ResourceUpsertOne) SetName(v string) *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
@@ -625,17 +816,31 @@ func (u *ResourceUpsertOne) UpdateName() *ResourceUpsertOne {
 	})
 }
 
-// SetHost sets the "host" field.
-func (u *ResourceUpsertOne) SetHost(v string) *ResourceUpsertOne {
+// SetType sets the "type" field.
+func (u *ResourceUpsertOne) SetType(v resource.Type) *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
-		s.SetHost(v)
+		s.SetType(v)
 	})
 }
 
-// UpdateHost sets the "host" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateHost() *ResourceUpsertOne {
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceUpsertOne) UpdateType() *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateHost()
+		s.UpdateType()
+	})
+}
+
+// SetIP sets the "ip" field.
+func (u *ResourceUpsertOne) SetIP(v string) *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetIP(v)
+	})
+}
+
+// UpdateIP sets the "ip" field to the value that was provided on create.
+func (u *ResourceUpsertOne) UpdateIP() *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateIP()
 	})
 }
 
@@ -660,17 +865,31 @@ func (u *ResourceUpsertOne) UpdatePort() *ResourceUpsertOne {
 	})
 }
 
-// SetType sets the "type" field.
-func (u *ResourceUpsertOne) SetType(v resource.Type) *ResourceUpsertOne {
+// SetEnv sets the "env" field.
+func (u *ResourceUpsertOne) SetEnv(v resource.Env) *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
-		s.SetType(v)
+		s.SetEnv(v)
 	})
 }
 
-// UpdateType sets the "type" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateType() *ResourceUpsertOne {
+// UpdateEnv sets the "env" field to the value that was provided on create.
+func (u *ResourceUpsertOne) UpdateEnv() *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateType()
+		s.UpdateEnv()
+	})
+}
+
+// SetRegion sets the "region" field.
+func (u *ResourceUpsertOne) SetRegion(v string) *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetRegion(v)
+	})
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *ResourceUpsertOne) UpdateRegion() *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateRegion()
 	})
 }
 
@@ -709,24 +928,45 @@ func (u *ResourceUpsertOne) UpdateStatus() *ResourceUpsertOne {
 	})
 }
 
-// SetMetadata sets the "metadata" field.
-func (u *ResourceUpsertOne) SetMetadata(v map[string]interface{}) *ResourceUpsertOne {
+// SetDetails sets the "details" field.
+func (u *ResourceUpsertOne) SetDetails(v map[string]interface{}) *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
-		s.SetMetadata(v)
+		s.SetDetails(v)
 	})
 }
 
-// UpdateMetadata sets the "metadata" field to the value that was provided on create.
-func (u *ResourceUpsertOne) UpdateMetadata() *ResourceUpsertOne {
+// UpdateDetails sets the "details" field to the value that was provided on create.
+func (u *ResourceUpsertOne) UpdateDetails() *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateMetadata()
+		s.UpdateDetails()
 	})
 }
 
-// ClearMetadata clears the value of the "metadata" field.
-func (u *ResourceUpsertOne) ClearMetadata() *ResourceUpsertOne {
+// ClearDetails clears the value of the "details" field.
+func (u *ResourceUpsertOne) ClearDetails() *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
-		s.ClearMetadata()
+		s.ClearDetails()
+	})
+}
+
+// SetAuthData sets the "auth_data" field.
+func (u *ResourceUpsertOne) SetAuthData(v map[string]interface{}) *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetAuthData(v)
+	})
+}
+
+// UpdateAuthData sets the "auth_data" field to the value that was provided on create.
+func (u *ResourceUpsertOne) UpdateAuthData() *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateAuthData()
+	})
+}
+
+// ClearAuthData clears the value of the "auth_data" field.
+func (u *ResourceUpsertOne) ClearAuthData() *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.ClearAuthData()
 	})
 }
 
@@ -962,6 +1202,20 @@ func (u *ResourceUpsertBulk) UpdateUpdatedAt() *ResourceUpsertBulk {
 	})
 }
 
+// SetUrn sets the "urn" field.
+func (u *ResourceUpsertBulk) SetUrn(v string) *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetUrn(v)
+	})
+}
+
+// UpdateUrn sets the "urn" field to the value that was provided on create.
+func (u *ResourceUpsertBulk) UpdateUrn() *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateUrn()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *ResourceUpsertBulk) SetName(v string) *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
@@ -976,17 +1230,31 @@ func (u *ResourceUpsertBulk) UpdateName() *ResourceUpsertBulk {
 	})
 }
 
-// SetHost sets the "host" field.
-func (u *ResourceUpsertBulk) SetHost(v string) *ResourceUpsertBulk {
+// SetType sets the "type" field.
+func (u *ResourceUpsertBulk) SetType(v resource.Type) *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
-		s.SetHost(v)
+		s.SetType(v)
 	})
 }
 
-// UpdateHost sets the "host" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateHost() *ResourceUpsertBulk {
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *ResourceUpsertBulk) UpdateType() *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateHost()
+		s.UpdateType()
+	})
+}
+
+// SetIP sets the "ip" field.
+func (u *ResourceUpsertBulk) SetIP(v string) *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetIP(v)
+	})
+}
+
+// UpdateIP sets the "ip" field to the value that was provided on create.
+func (u *ResourceUpsertBulk) UpdateIP() *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateIP()
 	})
 }
 
@@ -1011,17 +1279,31 @@ func (u *ResourceUpsertBulk) UpdatePort() *ResourceUpsertBulk {
 	})
 }
 
-// SetType sets the "type" field.
-func (u *ResourceUpsertBulk) SetType(v resource.Type) *ResourceUpsertBulk {
+// SetEnv sets the "env" field.
+func (u *ResourceUpsertBulk) SetEnv(v resource.Env) *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
-		s.SetType(v)
+		s.SetEnv(v)
 	})
 }
 
-// UpdateType sets the "type" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateType() *ResourceUpsertBulk {
+// UpdateEnv sets the "env" field to the value that was provided on create.
+func (u *ResourceUpsertBulk) UpdateEnv() *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateType()
+		s.UpdateEnv()
+	})
+}
+
+// SetRegion sets the "region" field.
+func (u *ResourceUpsertBulk) SetRegion(v string) *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetRegion(v)
+	})
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *ResourceUpsertBulk) UpdateRegion() *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateRegion()
 	})
 }
 
@@ -1060,24 +1342,45 @@ func (u *ResourceUpsertBulk) UpdateStatus() *ResourceUpsertBulk {
 	})
 }
 
-// SetMetadata sets the "metadata" field.
-func (u *ResourceUpsertBulk) SetMetadata(v map[string]interface{}) *ResourceUpsertBulk {
+// SetDetails sets the "details" field.
+func (u *ResourceUpsertBulk) SetDetails(v map[string]interface{}) *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
-		s.SetMetadata(v)
+		s.SetDetails(v)
 	})
 }
 
-// UpdateMetadata sets the "metadata" field to the value that was provided on create.
-func (u *ResourceUpsertBulk) UpdateMetadata() *ResourceUpsertBulk {
+// UpdateDetails sets the "details" field to the value that was provided on create.
+func (u *ResourceUpsertBulk) UpdateDetails() *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
-		s.UpdateMetadata()
+		s.UpdateDetails()
 	})
 }
 
-// ClearMetadata clears the value of the "metadata" field.
-func (u *ResourceUpsertBulk) ClearMetadata() *ResourceUpsertBulk {
+// ClearDetails clears the value of the "details" field.
+func (u *ResourceUpsertBulk) ClearDetails() *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
-		s.ClearMetadata()
+		s.ClearDetails()
+	})
+}
+
+// SetAuthData sets the "auth_data" field.
+func (u *ResourceUpsertBulk) SetAuthData(v map[string]interface{}) *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetAuthData(v)
+	})
+}
+
+// UpdateAuthData sets the "auth_data" field to the value that was provided on create.
+func (u *ResourceUpsertBulk) UpdateAuthData() *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateAuthData()
+	})
+}
+
+// ClearAuthData clears the value of the "auth_data" field.
+func (u *ResourceUpsertBulk) ClearAuthData() *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.ClearAuthData()
 	})
 }
 

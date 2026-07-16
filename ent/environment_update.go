@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
@@ -183,25 +182,6 @@ func (_u *EnvironmentUpdate) SetTenant(v *Tenant) *EnvironmentUpdate {
 	return _u.SetTenantID(v.ID)
 }
 
-// SetAccessPoliciesID sets the "access_policies" edge to the AccessPolicy entity by ID.
-func (_u *EnvironmentUpdate) SetAccessPoliciesID(id string) *EnvironmentUpdate {
-	_u.mutation.SetAccessPoliciesID(id)
-	return _u
-}
-
-// SetNillableAccessPoliciesID sets the "access_policies" edge to the AccessPolicy entity by ID if the given value is not nil.
-func (_u *EnvironmentUpdate) SetNillableAccessPoliciesID(id *string) *EnvironmentUpdate {
-	if id != nil {
-		_u = _u.SetAccessPoliciesID(*id)
-	}
-	return _u
-}
-
-// SetAccessPolicies sets the "access_policies" edge to the AccessPolicy entity.
-func (_u *EnvironmentUpdate) SetAccessPolicies(v *AccessPolicy) *EnvironmentUpdate {
-	return _u.SetAccessPoliciesID(v.ID)
-}
-
 // Mutation returns the EnvironmentMutation object of the builder.
 func (_u *EnvironmentUpdate) Mutation() *EnvironmentMutation {
 	return _u.mutation
@@ -210,12 +190,6 @@ func (_u *EnvironmentUpdate) Mutation() *EnvironmentMutation {
 // ClearTenant clears the "tenant" edge to the Tenant entity.
 func (_u *EnvironmentUpdate) ClearTenant() *EnvironmentUpdate {
 	_u.mutation.ClearTenant()
-	return _u
-}
-
-// ClearAccessPolicies clears the "access_policies" edge to the AccessPolicy entity.
-func (_u *EnvironmentUpdate) ClearAccessPolicies() *EnvironmentUpdate {
-	_u.mutation.ClearAccessPolicies()
 	return _u
 }
 
@@ -363,37 +337,6 @@ func (_u *EnvironmentUpdate) sqlSave(ctx context.Context) (_node int, err error)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Environment
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   environment.AccessPoliciesTable,
-			Columns: []string{environment.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Environment
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   environment.AccessPoliciesTable,
-			Columns: []string{environment.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
 		edge.Schema = _u.schemaConfig.Environment
@@ -576,25 +519,6 @@ func (_u *EnvironmentUpdateOne) SetTenant(v *Tenant) *EnvironmentUpdateOne {
 	return _u.SetTenantID(v.ID)
 }
 
-// SetAccessPoliciesID sets the "access_policies" edge to the AccessPolicy entity by ID.
-func (_u *EnvironmentUpdateOne) SetAccessPoliciesID(id string) *EnvironmentUpdateOne {
-	_u.mutation.SetAccessPoliciesID(id)
-	return _u
-}
-
-// SetNillableAccessPoliciesID sets the "access_policies" edge to the AccessPolicy entity by ID if the given value is not nil.
-func (_u *EnvironmentUpdateOne) SetNillableAccessPoliciesID(id *string) *EnvironmentUpdateOne {
-	if id != nil {
-		_u = _u.SetAccessPoliciesID(*id)
-	}
-	return _u
-}
-
-// SetAccessPolicies sets the "access_policies" edge to the AccessPolicy entity.
-func (_u *EnvironmentUpdateOne) SetAccessPolicies(v *AccessPolicy) *EnvironmentUpdateOne {
-	return _u.SetAccessPoliciesID(v.ID)
-}
-
 // Mutation returns the EnvironmentMutation object of the builder.
 func (_u *EnvironmentUpdateOne) Mutation() *EnvironmentMutation {
 	return _u.mutation
@@ -603,12 +527,6 @@ func (_u *EnvironmentUpdateOne) Mutation() *EnvironmentMutation {
 // ClearTenant clears the "tenant" edge to the Tenant entity.
 func (_u *EnvironmentUpdateOne) ClearTenant() *EnvironmentUpdateOne {
 	_u.mutation.ClearTenant()
-	return _u
-}
-
-// ClearAccessPolicies clears the "access_policies" edge to the AccessPolicy entity.
-func (_u *EnvironmentUpdateOne) ClearAccessPolicies() *EnvironmentUpdateOne {
-	_u.mutation.ClearAccessPolicies()
 	return _u
 }
 
@@ -786,37 +704,6 @@ func (_u *EnvironmentUpdateOne) sqlSave(ctx context.Context) (_node *Environment
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Environment
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.AccessPoliciesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   environment.AccessPoliciesTable,
-			Columns: []string{environment.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Environment
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   environment.AccessPoliciesTable,
-			Columns: []string{environment.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
 		edge.Schema = _u.schemaConfig.Environment

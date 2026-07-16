@@ -96,6 +96,16 @@ func IsDefault(v bool) predicate.Role {
 	return predicate.Role(sql.FieldEQ(FieldIsDefault, v))
 }
 
+// EffectiveDate applies equality check predicate on the "effective_date" field. It's identical to EffectiveDateEQ.
+func EffectiveDate(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldEQ(FieldEffectiveDate, v))
+}
+
+// ExpiryDate applies equality check predicate on the "expiry_date" field. It's identical to ExpiryDateEQ.
+func ExpiryDate(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldEQ(FieldExpiryDate, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Role {
 	return predicate.Role(sql.FieldEQ(FieldCreatedAt, v))
@@ -336,33 +346,114 @@ func IsDefaultNEQ(v bool) predicate.Role {
 	return predicate.Role(sql.FieldNEQ(FieldIsDefault, v))
 }
 
-// HasAccount applies the HasEdge predicate on the "account" edge.
-func HasAccount() predicate.Role {
-	return predicate.Role(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
-		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.Role
-		sqlgraph.HasNeighbors(s, step)
-	})
+// TrustPolicyIsNil applies the IsNil predicate on the "trust_policy" field.
+func TrustPolicyIsNil() predicate.Role {
+	return predicate.Role(sql.FieldIsNull(FieldTrustPolicy))
 }
 
-// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
-func HasAccountWith(preds ...predicate.Account) predicate.Role {
-	return predicate.Role(func(s *sql.Selector) {
-		step := newAccountStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.Role
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
+// TrustPolicyNotNil applies the NotNil predicate on the "trust_policy" field.
+func TrustPolicyNotNil() predicate.Role {
+	return predicate.Role(sql.FieldNotNull(FieldTrustPolicy))
+}
+
+// EffectiveDateEQ applies the EQ predicate on the "effective_date" field.
+func EffectiveDateEQ(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldEQ(FieldEffectiveDate, v))
+}
+
+// EffectiveDateNEQ applies the NEQ predicate on the "effective_date" field.
+func EffectiveDateNEQ(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldNEQ(FieldEffectiveDate, v))
+}
+
+// EffectiveDateIn applies the In predicate on the "effective_date" field.
+func EffectiveDateIn(vs ...time.Time) predicate.Role {
+	return predicate.Role(sql.FieldIn(FieldEffectiveDate, vs...))
+}
+
+// EffectiveDateNotIn applies the NotIn predicate on the "effective_date" field.
+func EffectiveDateNotIn(vs ...time.Time) predicate.Role {
+	return predicate.Role(sql.FieldNotIn(FieldEffectiveDate, vs...))
+}
+
+// EffectiveDateGT applies the GT predicate on the "effective_date" field.
+func EffectiveDateGT(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldGT(FieldEffectiveDate, v))
+}
+
+// EffectiveDateGTE applies the GTE predicate on the "effective_date" field.
+func EffectiveDateGTE(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldGTE(FieldEffectiveDate, v))
+}
+
+// EffectiveDateLT applies the LT predicate on the "effective_date" field.
+func EffectiveDateLT(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldLT(FieldEffectiveDate, v))
+}
+
+// EffectiveDateLTE applies the LTE predicate on the "effective_date" field.
+func EffectiveDateLTE(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldLTE(FieldEffectiveDate, v))
+}
+
+// EffectiveDateIsNil applies the IsNil predicate on the "effective_date" field.
+func EffectiveDateIsNil() predicate.Role {
+	return predicate.Role(sql.FieldIsNull(FieldEffectiveDate))
+}
+
+// EffectiveDateNotNil applies the NotNil predicate on the "effective_date" field.
+func EffectiveDateNotNil() predicate.Role {
+	return predicate.Role(sql.FieldNotNull(FieldEffectiveDate))
+}
+
+// ExpiryDateEQ applies the EQ predicate on the "expiry_date" field.
+func ExpiryDateEQ(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldEQ(FieldExpiryDate, v))
+}
+
+// ExpiryDateNEQ applies the NEQ predicate on the "expiry_date" field.
+func ExpiryDateNEQ(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldNEQ(FieldExpiryDate, v))
+}
+
+// ExpiryDateIn applies the In predicate on the "expiry_date" field.
+func ExpiryDateIn(vs ...time.Time) predicate.Role {
+	return predicate.Role(sql.FieldIn(FieldExpiryDate, vs...))
+}
+
+// ExpiryDateNotIn applies the NotIn predicate on the "expiry_date" field.
+func ExpiryDateNotIn(vs ...time.Time) predicate.Role {
+	return predicate.Role(sql.FieldNotIn(FieldExpiryDate, vs...))
+}
+
+// ExpiryDateGT applies the GT predicate on the "expiry_date" field.
+func ExpiryDateGT(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldGT(FieldExpiryDate, v))
+}
+
+// ExpiryDateGTE applies the GTE predicate on the "expiry_date" field.
+func ExpiryDateGTE(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldGTE(FieldExpiryDate, v))
+}
+
+// ExpiryDateLT applies the LT predicate on the "expiry_date" field.
+func ExpiryDateLT(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldLT(FieldExpiryDate, v))
+}
+
+// ExpiryDateLTE applies the LTE predicate on the "expiry_date" field.
+func ExpiryDateLTE(v time.Time) predicate.Role {
+	return predicate.Role(sql.FieldLTE(FieldExpiryDate, v))
+}
+
+// ExpiryDateIsNil applies the IsNil predicate on the "expiry_date" field.
+func ExpiryDateIsNil() predicate.Role {
+	return predicate.Role(sql.FieldIsNull(FieldExpiryDate))
+}
+
+// ExpiryDateNotNil applies the NotNil predicate on the "expiry_date" field.
+func ExpiryDateNotNil() predicate.Role {
+	return predicate.Role(sql.FieldNotNull(FieldExpiryDate))
 }
 
 // HasUsers applies the HasEdge predicate on the "users" edge.
@@ -370,11 +461,11 @@ func HasUsers() predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, UsersTable, UsersColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, UsersTable, UsersPrimaryKey...),
 		)
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.UserRoles
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -385,7 +476,7 @@ func HasUsersWith(preds ...predicate.User) predicate.Role {
 		step := newUsersStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.UserRoles
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -473,6 +564,35 @@ func HasChildRolesWith(preds ...predicate.Role) predicate.Role {
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.Role
 		step.Edge.Schema = schemaConfig.RoleChildRoles
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPermissionsBoundary applies the HasEdge predicate on the "permissions_boundary" edge.
+func HasPermissionsBoundary() predicate.Role {
+	return predicate.Role(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, PermissionsBoundaryTable, PermissionsBoundaryColumn),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.Role
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPermissionsBoundaryWith applies the HasEdge predicate on the "permissions_boundary" edge with a given conditions (other predicates).
+func HasPermissionsBoundaryWith(preds ...predicate.AccessPolicy) predicate.Role {
+	return predicate.Role(func(s *sql.Selector) {
+		step := newPermissionsBoundaryStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.Role
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

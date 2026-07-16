@@ -14,6 +14,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
@@ -127,6 +128,26 @@ func (_u *AuditLogUpdate) ClearEndedAt() *AuditLogUpdate {
 	return _u
 }
 
+// SetResourceUrnSnapshot sets the "resource_urn_snapshot" field.
+func (_u *AuditLogUpdate) SetResourceUrnSnapshot(v string) *AuditLogUpdate {
+	_u.mutation.SetResourceUrnSnapshot(v)
+	return _u
+}
+
+// SetNillableResourceUrnSnapshot sets the "resource_urn_snapshot" field if the given value is not nil.
+func (_u *AuditLogUpdate) SetNillableResourceUrnSnapshot(v *string) *AuditLogUpdate {
+	if v != nil {
+		_u.SetResourceUrnSnapshot(*v)
+	}
+	return _u
+}
+
+// ClearResourceUrnSnapshot clears the value of the "resource_urn_snapshot" field.
+func (_u *AuditLogUpdate) ClearResourceUrnSnapshot() *AuditLogUpdate {
+	_u.mutation.ClearResourceUrnSnapshot()
+	return _u
+}
+
 // SetDetail sets the "detail" field.
 func (_u *AuditLogUpdate) SetDetail(v map[string]interface{}) *AuditLogUpdate {
 	_u.mutation.SetDetail(v)
@@ -178,6 +199,25 @@ func (_u *AuditLogUpdate) SetUser(v *User) *AuditLogUpdate {
 	return _u.SetUserID(v.ID)
 }
 
+// SetResourceID sets the "resource" edge to the Resource entity by ID.
+func (_u *AuditLogUpdate) SetResourceID(id string) *AuditLogUpdate {
+	_u.mutation.SetResourceID(id)
+	return _u
+}
+
+// SetNillableResourceID sets the "resource" edge to the Resource entity by ID if the given value is not nil.
+func (_u *AuditLogUpdate) SetNillableResourceID(id *string) *AuditLogUpdate {
+	if id != nil {
+		_u = _u.SetResourceID(*id)
+	}
+	return _u
+}
+
+// SetResource sets the "resource" edge to the Resource entity.
+func (_u *AuditLogUpdate) SetResource(v *Resource) *AuditLogUpdate {
+	return _u.SetResourceID(v.ID)
+}
+
 // Mutation returns the AuditLogMutation object of the builder.
 func (_u *AuditLogUpdate) Mutation() *AuditLogMutation {
 	return _u.mutation
@@ -186,6 +226,12 @@ func (_u *AuditLogUpdate) Mutation() *AuditLogMutation {
 // ClearUser clears the "user" edge to the User entity.
 func (_u *AuditLogUpdate) ClearUser() *AuditLogUpdate {
 	_u.mutation.ClearUser()
+	return _u
+}
+
+// ClearResource clears the "resource" edge to the Resource entity.
+func (_u *AuditLogUpdate) ClearResource() *AuditLogUpdate {
+	_u.mutation.ClearResource()
 	return _u
 }
 
@@ -264,6 +310,12 @@ func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.EndedAtCleared() {
 		_spec.ClearField(auditlog.FieldEndedAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.ResourceUrnSnapshot(); ok {
+		_spec.SetField(auditlog.FieldResourceUrnSnapshot, field.TypeString, value)
+	}
+	if _u.mutation.ResourceUrnSnapshotCleared() {
+		_spec.ClearField(auditlog.FieldResourceUrnSnapshot, field.TypeString)
+	}
 	if value, ok := _u.mutation.Detail(); ok {
 		_spec.SetField(auditlog.FieldDetail, field.TypeJSON, value)
 	}
@@ -299,6 +351,37 @@ func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.AuditLog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ResourceCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   auditlog.ResourceTable,
+			Columns: []string{auditlog.ResourceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.AuditLog
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ResourceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   auditlog.ResourceTable,
+			Columns: []string{auditlog.ResourceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
 		edge.Schema = _u.schemaConfig.AuditLog
@@ -427,6 +510,26 @@ func (_u *AuditLogUpdateOne) ClearEndedAt() *AuditLogUpdateOne {
 	return _u
 }
 
+// SetResourceUrnSnapshot sets the "resource_urn_snapshot" field.
+func (_u *AuditLogUpdateOne) SetResourceUrnSnapshot(v string) *AuditLogUpdateOne {
+	_u.mutation.SetResourceUrnSnapshot(v)
+	return _u
+}
+
+// SetNillableResourceUrnSnapshot sets the "resource_urn_snapshot" field if the given value is not nil.
+func (_u *AuditLogUpdateOne) SetNillableResourceUrnSnapshot(v *string) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetResourceUrnSnapshot(*v)
+	}
+	return _u
+}
+
+// ClearResourceUrnSnapshot clears the value of the "resource_urn_snapshot" field.
+func (_u *AuditLogUpdateOne) ClearResourceUrnSnapshot() *AuditLogUpdateOne {
+	_u.mutation.ClearResourceUrnSnapshot()
+	return _u
+}
+
 // SetDetail sets the "detail" field.
 func (_u *AuditLogUpdateOne) SetDetail(v map[string]interface{}) *AuditLogUpdateOne {
 	_u.mutation.SetDetail(v)
@@ -478,6 +581,25 @@ func (_u *AuditLogUpdateOne) SetUser(v *User) *AuditLogUpdateOne {
 	return _u.SetUserID(v.ID)
 }
 
+// SetResourceID sets the "resource" edge to the Resource entity by ID.
+func (_u *AuditLogUpdateOne) SetResourceID(id string) *AuditLogUpdateOne {
+	_u.mutation.SetResourceID(id)
+	return _u
+}
+
+// SetNillableResourceID sets the "resource" edge to the Resource entity by ID if the given value is not nil.
+func (_u *AuditLogUpdateOne) SetNillableResourceID(id *string) *AuditLogUpdateOne {
+	if id != nil {
+		_u = _u.SetResourceID(*id)
+	}
+	return _u
+}
+
+// SetResource sets the "resource" edge to the Resource entity.
+func (_u *AuditLogUpdateOne) SetResource(v *Resource) *AuditLogUpdateOne {
+	return _u.SetResourceID(v.ID)
+}
+
 // Mutation returns the AuditLogMutation object of the builder.
 func (_u *AuditLogUpdateOne) Mutation() *AuditLogMutation {
 	return _u.mutation
@@ -486,6 +608,12 @@ func (_u *AuditLogUpdateOne) Mutation() *AuditLogMutation {
 // ClearUser clears the "user" edge to the User entity.
 func (_u *AuditLogUpdateOne) ClearUser() *AuditLogUpdateOne {
 	_u.mutation.ClearUser()
+	return _u
+}
+
+// ClearResource clears the "resource" edge to the Resource entity.
+func (_u *AuditLogUpdateOne) ClearResource() *AuditLogUpdateOne {
+	_u.mutation.ClearResource()
 	return _u
 }
 
@@ -594,6 +722,12 @@ func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err 
 	if _u.mutation.EndedAtCleared() {
 		_spec.ClearField(auditlog.FieldEndedAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.ResourceUrnSnapshot(); ok {
+		_spec.SetField(auditlog.FieldResourceUrnSnapshot, field.TypeString, value)
+	}
+	if _u.mutation.ResourceUrnSnapshotCleared() {
+		_spec.ClearField(auditlog.FieldResourceUrnSnapshot, field.TypeString)
+	}
 	if value, ok := _u.mutation.Detail(); ok {
 		_spec.SetField(auditlog.FieldDetail, field.TypeJSON, value)
 	}
@@ -629,6 +763,37 @@ func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.AuditLog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ResourceCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   auditlog.ResourceTable,
+			Columns: []string{auditlog.ResourceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.AuditLog
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ResourceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   auditlog.ResourceTable,
+			Columns: []string{auditlog.ResourceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
 		edge.Schema = _u.schemaConfig.AuditLog

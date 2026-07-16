@@ -13,8 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/role"
@@ -24,16 +25,19 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                *QueryContext
-	order              []user.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.User
-	withAccount        *AccountQuery
-	withRole           *RoleQuery
-	withAuditLogs      *AuditLogQuery
-	withFKs            bool
-	modifiers          []func(*sql.Selector)
-	withNamedAuditLogs map[string]*AuditLogQuery
+	ctx                     *QueryContext
+	order                   []user.OrderOption
+	inters                  []Interceptor
+	predicates              []predicate.User
+	withGroup               *GroupQuery
+	withRoles               *RoleQuery
+	withAuditLogs           *AuditLogQuery
+	withAccessPolicies      *AccessPolicyQuery
+	withFKs                 bool
+	modifiers               []func(*sql.Selector)
+	withNamedRoles          map[string]*RoleQuery
+	withNamedAuditLogs      map[string]*AuditLogQuery
+	withNamedAccessPolicies map[string]*AccessPolicyQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -70,9 +74,9 @@ func (_q *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	return _q
 }
 
-// QueryAccount chains the current query on the "account" edge.
-func (_q *UserQuery) QueryAccount() *AccountQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+// QueryGroup chains the current query on the "group" edge.
+func (_q *UserQuery) QueryGroup() *GroupQuery {
+	query := (&GroupClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -83,11 +87,11 @@ func (_q *UserQuery) QueryAccount() *AccountQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, user.AccountTable, user.AccountColumn),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.GroupTable, user.GroupColumn),
 		)
 		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Account
+		step.To.Schema = schemaConfig.Group
 		step.Edge.Schema = schemaConfig.User
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -95,8 +99,8 @@ func (_q *UserQuery) QueryAccount() *AccountQuery {
 	return query
 }
 
-// QueryRole chains the current query on the "role" edge.
-func (_q *UserQuery) QueryRole() *RoleQuery {
+// QueryRoles chains the current query on the "roles" edge.
+func (_q *UserQuery) QueryRoles() *RoleQuery {
 	query := (&RoleClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -109,11 +113,11 @@ func (_q *UserQuery) QueryRole() *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, user.RoleTable, user.RoleColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.RolesTable, user.RolesPrimaryKey...),
 		)
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.Role
-		step.Edge.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.UserRoles
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -139,6 +143,31 @@ func (_q *UserQuery) QueryAuditLogs() *AuditLogQuery {
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.AuditLog
 		step.Edge.Schema = schemaConfig.AuditLog
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAccessPolicies chains the current query on the "access_policies" edge.
+func (_q *UserQuery) QueryAccessPolicies() *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.AccessPoliciesTable, user.AccessPoliciesPrimaryKey...),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.UserAccessPolicies
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -332,14 +361,15 @@ func (_q *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:        _q.config,
-		ctx:           _q.ctx.Clone(),
-		order:         append([]user.OrderOption{}, _q.order...),
-		inters:        append([]Interceptor{}, _q.inters...),
-		predicates:    append([]predicate.User{}, _q.predicates...),
-		withAccount:   _q.withAccount.Clone(),
-		withRole:      _q.withRole.Clone(),
-		withAuditLogs: _q.withAuditLogs.Clone(),
+		config:             _q.config,
+		ctx:                _q.ctx.Clone(),
+		order:              append([]user.OrderOption{}, _q.order...),
+		inters:             append([]Interceptor{}, _q.inters...),
+		predicates:         append([]predicate.User{}, _q.predicates...),
+		withGroup:          _q.withGroup.Clone(),
+		withRoles:          _q.withRoles.Clone(),
+		withAuditLogs:      _q.withAuditLogs.Clone(),
+		withAccessPolicies: _q.withAccessPolicies.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -347,25 +377,25 @@ func (_q *UserQuery) Clone() *UserQuery {
 	}
 }
 
-// WithAccount tells the query-builder to eager-load the nodes that are connected to
-// the "account" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *UserQuery) WithAccount(opts ...func(*AccountQuery)) *UserQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+// WithGroup tells the query-builder to eager-load the nodes that are connected to
+// the "group" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithGroup(opts ...func(*GroupQuery)) *UserQuery {
+	query := (&GroupClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withAccount = query
+	_q.withGroup = query
 	return _q
 }
 
-// WithRole tells the query-builder to eager-load the nodes that are connected to
-// the "role" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *UserQuery) WithRole(opts ...func(*RoleQuery)) *UserQuery {
+// WithRoles tells the query-builder to eager-load the nodes that are connected to
+// the "roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithRoles(opts ...func(*RoleQuery)) *UserQuery {
 	query := (&RoleClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withRole = query
+	_q.withRoles = query
 	return _q
 }
 
@@ -377,6 +407,17 @@ func (_q *UserQuery) WithAuditLogs(opts ...func(*AuditLogQuery)) *UserQuery {
 		opt(query)
 	}
 	_q.withAuditLogs = query
+	return _q
+}
+
+// WithAccessPolicies tells the query-builder to eager-load the nodes that are connected to
+// the "access_policies" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAccessPolicies(opts ...func(*AccessPolicyQuery)) *UserQuery {
+	query := (&AccessPolicyClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAccessPolicies = query
 	return _q
 }
 
@@ -459,13 +500,14 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
-			_q.withAccount != nil,
-			_q.withRole != nil,
+		loadedTypes = [4]bool{
+			_q.withGroup != nil,
+			_q.withRoles != nil,
 			_q.withAuditLogs != nil,
+			_q.withAccessPolicies != nil,
 		}
 	)
-	if _q.withAccount != nil || _q.withRole != nil {
+	if _q.withGroup != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -494,15 +536,16 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withAccount; query != nil {
-		if err := _q.loadAccount(ctx, query, nodes, nil,
-			func(n *User, e *Account) { n.Edges.Account = e }); err != nil {
+	if query := _q.withGroup; query != nil {
+		if err := _q.loadGroup(ctx, query, nodes, nil,
+			func(n *User, e *Group) { n.Edges.Group = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := _q.withRole; query != nil {
-		if err := _q.loadRole(ctx, query, nodes, nil,
-			func(n *User, e *Role) { n.Edges.Role = e }); err != nil {
+	if query := _q.withRoles; query != nil {
+		if err := _q.loadRoles(ctx, query, nodes,
+			func(n *User) { n.Edges.Roles = []*Role{} },
+			func(n *User, e *Role) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -518,6 +561,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withAccessPolicies; query != nil {
+		if err := _q.loadAccessPolicies(ctx, query, nodes,
+			func(n *User) { n.Edges.AccessPolicies = []*AccessPolicy{} },
+			func(n *User, e *AccessPolicy) { n.Edges.AccessPolicies = append(n.Edges.AccessPolicies, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedRoles {
+		if err := _q.loadRoles(ctx, query, nodes,
+			func(n *User) { n.appendNamedRoles(name) },
+			func(n *User, e *Role) { n.appendNamedRoles(name, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedAuditLogs {
 		if err := _q.loadAuditLogs(ctx, query, nodes,
 			func(n *User) { n.appendNamedAuditLogs(name) },
@@ -530,17 +587,24 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	for name, query := range _q.withNamedAccessPolicies {
+		if err := _q.loadAccessPolicies(ctx, query, nodes,
+			func(n *User) { n.appendNamedAccessPolicies(name) },
+			func(n *User, e *AccessPolicy) { n.appendNamedAccessPolicies(name, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (_q *UserQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*User, init func(*User), assign func(*User, *Account)) error {
+func (_q *UserQuery) loadGroup(ctx context.Context, query *GroupQuery, nodes []*User, init func(*User), assign func(*User, *Group)) error {
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*User)
 	for i := range nodes {
-		if nodes[i].account_users == nil {
+		if nodes[i].group_users == nil {
 			continue
 		}
-		fk := *nodes[i].account_users
+		fk := *nodes[i].group_users
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -549,7 +613,7 @@ func (_q *UserQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(account.IDIn(ids...))
+	query.Where(group.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -557,7 +621,7 @@ func (_q *UserQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "account_users" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "group_users" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -565,34 +629,64 @@ func (_q *UserQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes
 	}
 	return nil
 }
-func (_q *UserQuery) loadRole(ctx context.Context, query *RoleQuery, nodes []*User, init func(*User), assign func(*User, *Role)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*User)
-	for i := range nodes {
-		if nodes[i].user_role == nil {
-			continue
+func (_q *UserQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*User, init func(*User), assign func(*User, *Role)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*User)
+	nids := make(map[string]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
 		}
-		fk := *nodes[i].user_role
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.RolesTable)
+		joinT.Schema(_q.schemaConfig.UserRoles)
+		s.Join(joinT).On(s.C(role.FieldID), joinT.C(user.RolesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(user.RolesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.RolesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
 	}
-	query.Where(role.IDIn(ids...))
-	neighbors, err := query.All(ctx)
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Role](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_role" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected "roles" node returned %v`, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil
@@ -625,6 +719,68 @@ func (_q *UserQuery) loadAuditLogs(ctx context.Context, query *AuditLogQuery, no
 			return fmt.Errorf(`unexpected referenced foreign-key "user_audit_logs" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicyQuery, nodes []*User, init func(*User), assign func(*User, *AccessPolicy)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*User)
+	nids := make(map[string]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.AccessPoliciesTable)
+		joinT.Schema(_q.schemaConfig.UserAccessPolicies)
+		s.Join(joinT).On(s.C(accesspolicy.FieldID), joinT.C(user.AccessPoliciesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(user.AccessPoliciesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.AccessPoliciesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*AccessPolicy](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "access_policies" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }
@@ -753,6 +909,20 @@ func (_q *UserQuery) Modify(modifiers ...func(s *sql.Selector)) *UserSelect {
 	return _q.Select()
 }
 
+// WithNamedRoles tells the query-builder to eager-load the nodes that are connected to the "roles"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedRoles(name string, opts ...func(*RoleQuery)) *UserQuery {
+	query := (&RoleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedRoles == nil {
+		_q.withNamedRoles = make(map[string]*RoleQuery)
+	}
+	_q.withNamedRoles[name] = query
+	return _q
+}
+
 // WithNamedAuditLogs tells the query-builder to eager-load the nodes that are connected to the "audit_logs"
 // edge with the given name. The optional arguments are used to configure the query builder of the edge.
 func (_q *UserQuery) WithNamedAuditLogs(name string, opts ...func(*AuditLogQuery)) *UserQuery {
@@ -764,6 +934,20 @@ func (_q *UserQuery) WithNamedAuditLogs(name string, opts ...func(*AuditLogQuery
 		_q.withNamedAuditLogs = make(map[string]*AuditLogQuery)
 	}
 	_q.withNamedAuditLogs[name] = query
+	return _q
+}
+
+// WithNamedAccessPolicies tells the query-builder to eager-load the nodes that are connected to the "access_policies"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedAccessPolicies(name string, opts ...func(*AccessPolicyQuery)) *UserQuery {
+	query := (&AccessPolicyClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAccessPolicies == nil {
+		_q.withNamedAccessPolicies = make(map[string]*AccessPolicyQuery)
+	}
+	_q.withNamedAccessPolicies[name] = query
 	return _q
 }
 

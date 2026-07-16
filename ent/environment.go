@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
@@ -25,39 +24,36 @@ type Environment struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// 环境名称
+	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// 容器镜像
+	// Image holds the value of the "image" field.
 	Image string `json:"image,omitempty"`
-	// SSH端口
+	// Port holds the value of the "port" field.
 	Port int `json:"port,omitempty"`
-	// 资源限制 {cpu, memory, disk}
+	// ResourceLimit holds the value of the "resource_limit" field.
 	ResourceLimit map[string]interface{} `json:"resource_limit,omitempty"`
-	// 环境变量
+	// EnvVars holds the value of the "env_vars" field.
 	EnvVars map[string]interface{} `json:"env_vars,omitempty"`
-	// 挂载卷
+	// Volumes holds the value of the "volumes" field.
 	Volumes []map[string]interface{} `json:"volumes,omitempty"`
 	// Status holds the value of the "status" field.
 	Status environment.Status `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EnvironmentQuery when eager-loading is set.
-	Edges                     EnvironmentEdges `json:"edges"`
-	access_policy_environment *string
-	tenant_environments       *string
-	selectValues              sql.SelectValues
+	Edges               EnvironmentEdges `json:"edges"`
+	tenant_environments *string
+	selectValues        sql.SelectValues
 }
 
 // EnvironmentEdges holds the relations/edges for other nodes in the graph.
 type EnvironmentEdges struct {
-	// 所属租户
+	// Tenant holds the value of the tenant edge.
 	Tenant *Tenant `json:"tenant,omitempty"`
-	// 关联的访问策略
-	AccessPolicies *AccessPolicy `json:"access_policies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -69,17 +65,6 @@ func (e EnvironmentEdges) TenantOrErr() (*Tenant, error) {
 		return nil, &NotFoundError{label: tenant.Label}
 	}
 	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e EnvironmentEdges) AccessPoliciesOrErr() (*AccessPolicy, error) {
-	if e.AccessPolicies != nil {
-		return e.AccessPolicies, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: accesspolicy.Label}
-	}
-	return nil, &NotLoadedError{edge: "access_policies"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -95,9 +80,7 @@ func (*Environment) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case environment.FieldCreatedAt, environment.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case environment.ForeignKeys[0]: // access_policy_environment
-			values[i] = new(sql.NullString)
-		case environment.ForeignKeys[1]: // tenant_environments
+		case environment.ForeignKeys[0]: // tenant_environments
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -188,13 +171,6 @@ func (_m *Environment) assignValues(columns []string, values []any) error {
 			}
 		case environment.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field access_policy_environment", values[i])
-			} else if value.Valid {
-				_m.access_policy_environment = new(string)
-				*_m.access_policy_environment = value.String
-			}
-		case environment.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_environments", values[i])
 			} else if value.Valid {
 				_m.tenant_environments = new(string)
@@ -216,11 +192,6 @@ func (_m *Environment) Value(name string) (ent.Value, error) {
 // QueryTenant queries the "tenant" edge of the Environment entity.
 func (_m *Environment) QueryTenant() *TenantQuery {
 	return NewEnvironmentClient(_m.config).QueryTenant(_m)
-}
-
-// QueryAccessPolicies queries the "access_policies" edge of the Environment entity.
-func (_m *Environment) QueryAccessPolicies() *AccessPolicyQuery {
-	return NewEnvironmentClient(_m.config).QueryAccessPolicies(_m)
 }
 
 // Update returns a builder for updating this Environment.

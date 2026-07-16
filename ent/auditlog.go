@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
+	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
@@ -32,28 +33,33 @@ type AuditLog struct {
 	Action string `json:"action,omitempty"`
 	// 操作结果
 	Result string `json:"result,omitempty"`
-	// 操作开始时间
+	// 开始时间
 	StartedAt time.Time `json:"started_at,omitempty"`
-	// 操作结束时间
+	// 结束时间
 	EndedAt *time.Time `json:"ended_at,omitempty"`
+	// 操作时刻的资源 URN 快照
+	ResourceUrnSnapshot string `json:"resource_urn_snapshot,omitempty"`
 	// 操作详情
 	Detail map[string]interface{} `json:"detail,omitempty"`
 	// S3存储路径
 	S3Path string `json:"s3_path,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AuditLogQuery when eager-loading is set.
-	Edges           AuditLogEdges `json:"edges"`
-	user_audit_logs *string
-	selectValues    sql.SelectValues
+	Edges               AuditLogEdges `json:"edges"`
+	resource_audit_logs *string
+	user_audit_logs     *string
+	selectValues        sql.SelectValues
 }
 
 // AuditLogEdges holds the relations/edges for other nodes in the graph.
 type AuditLogEdges struct {
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
+	// 被操作的资源
+	Resource *Resource `json:"resource,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -67,6 +73,17 @@ func (e AuditLogEdges) UserOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "user"}
 }
 
+// ResourceOrErr returns the Resource value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e AuditLogEdges) ResourceOrErr() (*Resource, error) {
+	if e.Resource != nil {
+		return e.Resource, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: resource.Label}
+	}
+	return nil, &NotLoadedError{edge: "resource"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*AuditLog) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -74,11 +91,13 @@ func (*AuditLog) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case auditlog.FieldDetail:
 			values[i] = new([]byte)
-		case auditlog.FieldID, auditlog.FieldSessionID, auditlog.FieldUsername, auditlog.FieldAction, auditlog.FieldResult, auditlog.FieldS3Path:
+		case auditlog.FieldID, auditlog.FieldSessionID, auditlog.FieldUsername, auditlog.FieldAction, auditlog.FieldResult, auditlog.FieldResourceUrnSnapshot, auditlog.FieldS3Path:
 			values[i] = new(sql.NullString)
 		case auditlog.FieldCreatedAt, auditlog.FieldUpdatedAt, auditlog.FieldStartedAt, auditlog.FieldEndedAt:
 			values[i] = new(sql.NullTime)
-		case auditlog.ForeignKeys[0]: // user_audit_logs
+		case auditlog.ForeignKeys[0]: // resource_audit_logs
+			values[i] = new(sql.NullString)
+		case auditlog.ForeignKeys[1]: // user_audit_logs
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -150,6 +169,12 @@ func (_m *AuditLog) assignValues(columns []string, values []any) error {
 				_m.EndedAt = new(time.Time)
 				*_m.EndedAt = value.Time
 			}
+		case auditlog.FieldResourceUrnSnapshot:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_urn_snapshot", values[i])
+			} else if value.Valid {
+				_m.ResourceUrnSnapshot = value.String
+			}
 		case auditlog.FieldDetail:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field detail", values[i])
@@ -165,6 +190,13 @@ func (_m *AuditLog) assignValues(columns []string, values []any) error {
 				_m.S3Path = value.String
 			}
 		case auditlog.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resource_audit_logs", values[i])
+			} else if value.Valid {
+				_m.resource_audit_logs = new(string)
+				*_m.resource_audit_logs = value.String
+			}
+		case auditlog.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_audit_logs", values[i])
 			} else if value.Valid {
@@ -187,6 +219,11 @@ func (_m *AuditLog) Value(name string) (ent.Value, error) {
 // QueryUser queries the "user" edge of the AuditLog entity.
 func (_m *AuditLog) QueryUser() *UserQuery {
 	return NewAuditLogClient(_m.config).QueryUser(_m)
+}
+
+// QueryResource queries the "resource" edge of the AuditLog entity.
+func (_m *AuditLog) QueryResource() *ResourceQuery {
+	return NewAuditLogClient(_m.config).QueryResource(_m)
 }
 
 // Update returns a builder for updating this AuditLog.
@@ -237,6 +274,9 @@ func (_m *AuditLog) String() string {
 		builder.WriteString("ended_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("resource_urn_snapshot=")
+	builder.WriteString(_m.ResourceUrnSnapshot)
 	builder.WriteString(", ")
 	builder.WriteString("detail=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Detail))

@@ -30,12 +30,16 @@ const (
 	FieldStartedAt = "started_at"
 	// FieldEndedAt holds the string denoting the ended_at field in the database.
 	FieldEndedAt = "ended_at"
+	// FieldResourceUrnSnapshot holds the string denoting the resource_urn_snapshot field in the database.
+	FieldResourceUrnSnapshot = "resource_urn_snapshot"
 	// FieldDetail holds the string denoting the detail field in the database.
 	FieldDetail = "detail"
 	// FieldS3Path holds the string denoting the s3_path field in the database.
 	FieldS3Path = "s3_path"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeResource holds the string denoting the resource edge name in mutations.
+	EdgeResource = "resource"
 	// Table holds the table name of the auditlog in the database.
 	Table = "audit_logs"
 	// UserTable is the table that holds the user relation/edge.
@@ -45,6 +49,13 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_audit_logs"
+	// ResourceTable is the table that holds the resource relation/edge.
+	ResourceTable = "audit_logs"
+	// ResourceInverseTable is the table name for the Resource entity.
+	// It exists in this package in order to avoid circular dependency with the "resource" package.
+	ResourceInverseTable = "resources"
+	// ResourceColumn is the table column denoting the resource relation/edge.
+	ResourceColumn = "resource_audit_logs"
 )
 
 // Columns holds all SQL columns for auditlog fields.
@@ -58,6 +69,7 @@ var Columns = []string{
 	FieldResult,
 	FieldStartedAt,
 	FieldEndedAt,
+	FieldResourceUrnSnapshot,
 	FieldDetail,
 	FieldS3Path,
 }
@@ -65,6 +77,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "audit_logs"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"resource_audit_logs",
 	"user_audit_logs",
 }
 
@@ -142,6 +155,11 @@ func ByEndedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEndedAt, opts...).ToFunc()
 }
 
+// ByResourceUrnSnapshot orders the results by the resource_urn_snapshot field.
+func ByResourceUrnSnapshot(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResourceUrnSnapshot, opts...).ToFunc()
+}
+
 // ByS3Path orders the results by the s3_path field.
 func ByS3Path(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldS3Path, opts...).ToFunc()
@@ -153,10 +171,24 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByResourceField orders the results by resource field.
+func ByResourceField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newResourceStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+	)
+}
+func newResourceStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ResourceInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ResourceTable, ResourceColumn),
 	)
 }

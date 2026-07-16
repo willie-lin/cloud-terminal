@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,7 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
@@ -22,14 +24,17 @@ import (
 // ResourceQuery is the builder for querying Resource entities.
 type ResourceQuery struct {
 	config
-	ctx          *QueryContext
-	order        []resource.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.Resource
-	withTenant   *TenantQuery
-	withAccounts *AccountQuery
-	withFKs      bool
-	modifiers    []func(*sql.Selector)
+	ctx                *QueryContext
+	order              []resource.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.Resource
+	withTenant         *TenantQuery
+	withAuditLogs      *AuditLogQuery
+	withPolicies       *AccessPolicyQuery
+	withFKs            bool
+	modifiers          []func(*sql.Selector)
+	withNamedAuditLogs map[string]*AuditLogQuery
+	withNamedPolicies  map[string]*AccessPolicyQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -91,9 +96,9 @@ func (_q *ResourceQuery) QueryTenant() *TenantQuery {
 	return query
 }
 
-// QueryAccounts chains the current query on the "accounts" edge.
-func (_q *ResourceQuery) QueryAccounts() *AccountQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+// QueryAuditLogs chains the current query on the "audit_logs" edge.
+func (_q *ResourceQuery) QueryAuditLogs() *AuditLogQuery {
+	query := (&AuditLogClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -104,12 +109,37 @@ func (_q *ResourceQuery) QueryAccounts() *AccountQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(resource.Table, resource.FieldID, selector),
-			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, resource.AccountsTable, resource.AccountsColumn),
+			sqlgraph.To(auditlog.Table, auditlog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resource.AuditLogsTable, resource.AuditLogsColumn),
 		)
 		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.Resource
+		step.To.Schema = schemaConfig.AuditLog
+		step.Edge.Schema = schemaConfig.AuditLog
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPolicies chains the current query on the "policies" edge.
+func (_q *ResourceQuery) QueryPolicies() *AccessPolicyQuery {
+	query := (&AccessPolicyClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resource.Table, resource.FieldID, selector),
+			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, resource.PoliciesTable, resource.PoliciesPrimaryKey...),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.ResourcePolicies
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -303,13 +333,14 @@ func (_q *ResourceQuery) Clone() *ResourceQuery {
 		return nil
 	}
 	return &ResourceQuery{
-		config:       _q.config,
-		ctx:          _q.ctx.Clone(),
-		order:        append([]resource.OrderOption{}, _q.order...),
-		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.Resource{}, _q.predicates...),
-		withTenant:   _q.withTenant.Clone(),
-		withAccounts: _q.withAccounts.Clone(),
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]resource.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.Resource{}, _q.predicates...),
+		withTenant:    _q.withTenant.Clone(),
+		withAuditLogs: _q.withAuditLogs.Clone(),
+		withPolicies:  _q.withPolicies.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -328,14 +359,25 @@ func (_q *ResourceQuery) WithTenant(opts ...func(*TenantQuery)) *ResourceQuery {
 	return _q
 }
 
-// WithAccounts tells the query-builder to eager-load the nodes that are connected to
-// the "accounts" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *ResourceQuery) WithAccounts(opts ...func(*AccountQuery)) *ResourceQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+// WithAuditLogs tells the query-builder to eager-load the nodes that are connected to
+// the "audit_logs" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ResourceQuery) WithAuditLogs(opts ...func(*AuditLogQuery)) *ResourceQuery {
+	query := (&AuditLogClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withAccounts = query
+	_q.withAuditLogs = query
+	return _q
+}
+
+// WithPolicies tells the query-builder to eager-load the nodes that are connected to
+// the "policies" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ResourceQuery) WithPolicies(opts ...func(*AccessPolicyQuery)) *ResourceQuery {
+	query := (&AccessPolicyClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPolicies = query
 	return _q
 }
 
@@ -418,12 +460,13 @@ func (_q *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 		nodes       = []*Resource{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withTenant != nil,
-			_q.withAccounts != nil,
+			_q.withAuditLogs != nil,
+			_q.withPolicies != nil,
 		}
 	)
-	if _q.withTenant != nil || _q.withAccounts != nil {
+	if _q.withTenant != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -458,14 +501,41 @@ func (_q *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 			return nil, err
 		}
 	}
-	if query := _q.withAccounts; query != nil {
-		if err := _q.loadAccounts(ctx, query, nodes, nil,
-			func(n *Resource, e *Account) {
-				n.Edges.Accounts = e
-				if !e.Edges.loadedTypes[3] {
+	if query := _q.withAuditLogs; query != nil {
+		if err := _q.loadAuditLogs(ctx, query, nodes,
+			func(n *Resource) { n.Edges.AuditLogs = []*AuditLog{} },
+			func(n *Resource, e *AuditLog) {
+				n.Edges.AuditLogs = append(n.Edges.AuditLogs, e)
+				if !e.Edges.loadedTypes[1] {
 					e.Edges.Resource = n
 				}
 			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPolicies; query != nil {
+		if err := _q.loadPolicies(ctx, query, nodes,
+			func(n *Resource) { n.Edges.Policies = []*AccessPolicy{} },
+			func(n *Resource, e *AccessPolicy) { n.Edges.Policies = append(n.Edges.Policies, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAuditLogs {
+		if err := _q.loadAuditLogs(ctx, query, nodes,
+			func(n *Resource) { n.appendNamedAuditLogs(name) },
+			func(n *Resource, e *AuditLog) {
+				n.appendNamedAuditLogs(name, e)
+				if !e.Edges.loadedTypes[1] {
+					e.Edges.Resource = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedPolicies {
+		if err := _q.loadPolicies(ctx, query, nodes,
+			func(n *Resource) { n.appendNamedPolicies(name) },
+			func(n *Resource, e *AccessPolicy) { n.appendNamedPolicies(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -504,34 +574,95 @@ func (_q *ResourceQuery) loadTenant(ctx context.Context, query *TenantQuery, nod
 	}
 	return nil
 }
-func (_q *ResourceQuery) loadAccounts(ctx context.Context, query *AccountQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Account)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*Resource)
+func (_q *ResourceQuery) loadAuditLogs(ctx context.Context, query *AuditLogQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *AuditLog)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*Resource)
 	for i := range nodes {
-		if nodes[i].account_resource == nil {
-			continue
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
 		}
-		fk := *nodes[i].account_resource
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(account.IDIn(ids...))
+	query.withFKs = true
+	query.Where(predicate.AuditLog(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(resource.AuditLogsColumn), fks...))
+	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "account_resource" returned %v`, n.ID)
+		fk := n.resource_audit_logs
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "resource_audit_logs" is nil for node %v`, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "resource_audit_logs" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ResourceQuery) loadPolicies(ctx context.Context, query *AccessPolicyQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *AccessPolicy)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*Resource)
+	nids := make(map[string]map[*Resource]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(resource.PoliciesTable)
+		joinT.Schema(_q.schemaConfig.ResourcePolicies)
+		s.Join(joinT).On(s.C(accesspolicy.FieldID), joinT.C(resource.PoliciesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(resource.PoliciesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(resource.PoliciesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Resource]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*AccessPolicy](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "policies" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil
@@ -659,6 +790,34 @@ func (_q *ResourceQuery) ForShare(opts ...sql.LockOption) *ResourceQuery {
 func (_q *ResourceQuery) Modify(modifiers ...func(s *sql.Selector)) *ResourceSelect {
 	_q.modifiers = append(_q.modifiers, modifiers...)
 	return _q.Select()
+}
+
+// WithNamedAuditLogs tells the query-builder to eager-load the nodes that are connected to the "audit_logs"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *ResourceQuery) WithNamedAuditLogs(name string, opts ...func(*AuditLogQuery)) *ResourceQuery {
+	query := (&AuditLogClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAuditLogs == nil {
+		_q.withNamedAuditLogs = make(map[string]*AuditLogQuery)
+	}
+	_q.withNamedAuditLogs[name] = query
+	return _q
+}
+
+// WithNamedPolicies tells the query-builder to eager-load the nodes that are connected to the "policies"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *ResourceQuery) WithNamedPolicies(name string, opts ...func(*AccessPolicyQuery)) *ResourceQuery {
+	query := (&AccessPolicyClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedPolicies == nil {
+		_q.withNamedPolicies = make(map[string]*AccessPolicyQuery)
+	}
+	_q.withNamedPolicies[name] = query
+	return _q
 }
 
 // ResourceGroupBy is the group-by builder for Resource entities.

@@ -7,41 +7,29 @@ import (
 	"entgo.io/ent/schema/index"
 )
 
-// Role holds the schema definition for the Role entity.
-type Role struct {
-	ent.Schema
-}
+type Role struct{ ent.Schema }
 
-func (Role) Mixin() []ent.Mixin {
-	return []ent.Mixin{
-		IDMixin{},
-		TimeMixin{},
-	}
-}
+func (Role) Mixin() []ent.Mixin { return []ent.Mixin{IDMixin{}, TimeMixin{}} }
 
-// Fields of the Role.
 func (Role) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
 		field.Bool("is_disabled").Default(false),
 		field.Bool("is_default").Default(false),
+		field.JSON("trust_policy", map[string]interface{}{}).Optional().Comment("信任策略：控制谁能 Assume 此角色"),
+		field.Time("effective_date").Optional().Nillable().Comment("角色生效时间"),
+		field.Time("expiry_date").Optional().Nillable().Comment("角色过期时间"),
 	}
 }
 
-// Edges of the Role.
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).Ref("roles").Unique().Comment("角色所属的账户"),
-		edge.From("users", User.Type).Ref("role").Comment("拥有该角色的用户"),
-		edge.To("access_policies", AccessPolicy.Type).Comment("分配给角色的策略"),
+		edge.From("users", User.Type).Ref("roles").Comment("可以 Assume 该角色的用户"),
+		edge.To("access_policies", AccessPolicy.Type).Comment("附加到此角色的权限策略"),
 		edge.To("child_roles", Role.Type).From("parent_role"),
+		edge.To("permissions_boundary", AccessPolicy.Type).Unique().Comment("权限边界"),
 	}
 }
 
-// Indexes of the Role.
-func (Role) Indexes() []ent.Index {
-	return []ent.Index{
-		index.Fields("name").Unique(),
-	}
-}
+func (Role) Indexes() []ent.Index { return []ent.Index{index.Fields("name").Unique()} }

@@ -19,24 +19,34 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldUrn holds the string denoting the urn field in the database.
+	FieldUrn = "urn"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldHost holds the string denoting the host field in the database.
-	FieldHost = "host"
-	// FieldPort holds the string denoting the port field in the database.
-	FieldPort = "port"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
+	// FieldIP holds the string denoting the ip field in the database.
+	FieldIP = "ip"
+	// FieldPort holds the string denoting the port field in the database.
+	FieldPort = "port"
+	// FieldEnv holds the string denoting the env field in the database.
+	FieldEnv = "env"
+	// FieldRegion holds the string denoting the region field in the database.
+	FieldRegion = "region"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
-	// FieldMetadata holds the string denoting the metadata field in the database.
-	FieldMetadata = "metadata"
+	// FieldDetails holds the string denoting the details field in the database.
+	FieldDetails = "details"
+	// FieldAuthData holds the string denoting the auth_data field in the database.
+	FieldAuthData = "auth_data"
 	// EdgeTenant holds the string denoting the tenant edge name in mutations.
 	EdgeTenant = "tenant"
-	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
-	EdgeAccounts = "accounts"
+	// EdgeAuditLogs holds the string denoting the audit_logs edge name in mutations.
+	EdgeAuditLogs = "audit_logs"
+	// EdgePolicies holds the string denoting the policies edge name in mutations.
+	EdgePolicies = "policies"
 	// Table holds the table name of the resource in the database.
 	Table = "resources"
 	// TenantTable is the table that holds the tenant relation/edge.
@@ -46,13 +56,18 @@ const (
 	TenantInverseTable = "tenants"
 	// TenantColumn is the table column denoting the tenant relation/edge.
 	TenantColumn = "tenant_resources"
-	// AccountsTable is the table that holds the accounts relation/edge.
-	AccountsTable = "resources"
-	// AccountsInverseTable is the table name for the Account entity.
-	// It exists in this package in order to avoid circular dependency with the "account" package.
-	AccountsInverseTable = "accounts"
-	// AccountsColumn is the table column denoting the accounts relation/edge.
-	AccountsColumn = "account_resource"
+	// AuditLogsTable is the table that holds the audit_logs relation/edge.
+	AuditLogsTable = "audit_logs"
+	// AuditLogsInverseTable is the table name for the AuditLog entity.
+	// It exists in this package in order to avoid circular dependency with the "auditlog" package.
+	AuditLogsInverseTable = "audit_logs"
+	// AuditLogsColumn is the table column denoting the audit_logs relation/edge.
+	AuditLogsColumn = "resource_audit_logs"
+	// PoliciesTable is the table that holds the policies relation/edge. The primary key declared below.
+	PoliciesTable = "resource_policies"
+	// PoliciesInverseTable is the table name for the AccessPolicy entity.
+	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
+	PoliciesInverseTable = "access_policies"
 )
 
 // Columns holds all SQL columns for resource fields.
@@ -60,21 +75,30 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldUrn,
 	FieldName,
-	FieldHost,
-	FieldPort,
 	FieldType,
+	FieldIP,
+	FieldPort,
+	FieldEnv,
+	FieldRegion,
 	FieldDescription,
 	FieldStatus,
-	FieldMetadata,
+	FieldDetails,
+	FieldAuthData,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "resources"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"account_resource",
 	"tenant_resources",
 }
+
+var (
+	// PoliciesPrimaryKey and PoliciesColumn2 are the table columns denoting the
+	// primary key for the policies relation (M2M).
+	PoliciesPrimaryKey = []string{"resource_id", "access_policy_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -98,12 +122,16 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// UrnValidator is a validator for the "urn" field. It is called by the builders before save.
+	UrnValidator func(string) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
-	// HostValidator is a validator for the "host" field. It is called by the builders before save.
-	HostValidator func(string) error
+	// IPValidator is a validator for the "ip" field. It is called by the builders before save.
+	IPValidator func(string) error
 	// DefaultPort holds the default value on creation for the "port" field.
 	DefaultPort int
+	// DefaultRegion holds the default value on creation for the "region" field.
+	DefaultRegion string
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() string
 )
@@ -111,12 +139,20 @@ var (
 // Type defines the type for the "type" enum field.
 type Type string
 
+// TypeSSH is the default value of the Type enum.
+const DefaultType = TypeSSH
+
 // Type values.
 const (
-	TypeSSH    Type = "ssh"
-	TypeRdp    Type = "rdp"
-	TypeVnc    Type = "vnc"
-	TypeTelnet Type = "telnet"
+	TypeMysql      Type = "mysql"
+	TypeRedis      Type = "redis"
+	TypeK8sService Type = "k8s-service"
+	TypeSSH        Type = "ssh"
+	TypeRdp        Type = "rdp"
+	TypeVnc        Type = "vnc"
+	TypeTelnet     Type = "telnet"
+	TypeHTTP       Type = "http"
+	TypeCustom     Type = "custom"
 )
 
 func (_type Type) String() string {
@@ -126,10 +162,39 @@ func (_type Type) String() string {
 // TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
 func TypeValidator(_type Type) error {
 	switch _type {
-	case TypeSSH, TypeRdp, TypeVnc, TypeTelnet:
+	case TypeMysql, TypeRedis, TypeK8sService, TypeSSH, TypeRdp, TypeVnc, TypeTelnet, TypeHTTP, TypeCustom:
 		return nil
 	default:
 		return fmt.Errorf("resource: invalid enum value for type field: %q", _type)
+	}
+}
+
+// Env defines the type for the "env" enum field.
+type Env string
+
+// EnvDev is the default value of the Env enum.
+const DefaultEnv = EnvDev
+
+// Env values.
+const (
+	EnvProd    Env = "prod"
+	EnvStaging Env = "staging"
+	EnvDev     Env = "dev"
+	EnvTest    Env = "test"
+	EnvDr      Env = "dr"
+)
+
+func (e Env) String() string {
+	return string(e)
+}
+
+// EnvValidator is a validator for the "env" field enum values. It is called by the builders before save.
+func EnvValidator(e Env) error {
+	switch e {
+	case EnvProd, EnvStaging, EnvDev, EnvTest, EnvDr:
+		return nil
+	default:
+		return fmt.Errorf("resource: invalid enum value for env field: %q", e)
 	}
 }
 
@@ -177,14 +242,24 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
+// ByUrn orders the results by the urn field.
+func ByUrn(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUrn, opts...).ToFunc()
+}
+
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByHost orders the results by the host field.
-func ByHost(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldHost, opts...).ToFunc()
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByIP orders the results by the ip field.
+func ByIP(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIP, opts...).ToFunc()
 }
 
 // ByPort orders the results by the port field.
@@ -192,9 +267,14 @@ func ByPort(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPort, opts...).ToFunc()
 }
 
-// ByType orders the results by the type field.
-func ByType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldType, opts...).ToFunc()
+// ByEnv orders the results by the env field.
+func ByEnv(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEnv, opts...).ToFunc()
+}
+
+// ByRegion orders the results by the region field.
+func ByRegion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRegion, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.
@@ -214,10 +294,31 @@ func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByAccountsField orders the results by accounts field.
-func ByAccountsField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByAuditLogsCount orders the results by audit_logs count.
+func ByAuditLogsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newAuditLogsStep(), opts...)
+	}
+}
+
+// ByAuditLogs orders the results by audit_logs terms.
+func ByAuditLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuditLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPoliciesCount orders the results by policies count.
+func ByPoliciesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPoliciesStep(), opts...)
+	}
+}
+
+// ByPolicies orders the results by policies terms.
+func ByPolicies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPoliciesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newTenantStep() *sqlgraph.Step {
@@ -227,10 +328,17 @@ func newTenantStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
 	)
 }
-func newAccountsStep() *sqlgraph.Step {
+func newAuditLogsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccountsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2O, true, AccountsTable, AccountsColumn),
+		sqlgraph.To(AuditLogsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AuditLogsTable, AuditLogsColumn),
+	)
+}
+func newPoliciesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PoliciesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, PoliciesTable, PoliciesPrimaryKey...),
 	)
 }

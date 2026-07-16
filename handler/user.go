@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"github.com/willie-lin/cloud-terminal/ent"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	
 	"github.com/willie-lin/cloud-terminal/ent/user"
 	"github.com/willie-lin/cloud-terminal/viewer"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
@@ -39,7 +39,6 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
-		accountID := v.AccountID
 
 		type UserDTO struct {
 			Email    string    `json:"email"`
@@ -67,8 +66,8 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			SetEmail(dto.Email).
 			SetUsername(utils.GenerateUsername()).
 			SetPassword(string(hashedPassword)).
-			SetRoleID(dto.RoleID.String()).
-			SetAccountID(accountID.String()).
+			AddRoleIDs(dto.RoleID.String()).
+			
 			SetOnline(dto.Online).
 			SetStatus(dto.Status).
 			Save(c.Request().Context())
@@ -100,10 +99,9 @@ func GetAllUsersByTenant(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
 		tenantID := v.TenantID
-		accountID := v.AccountID
 		userID := v.UserID
 		roleName := v.RoleName
-		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
+		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", userID, tenantID, roleName)
 
 		ctx := c.Request().Context()
 		var users []*ent.User
@@ -115,11 +113,6 @@ func GetAllUsersByTenant(client *ent.Client) echo.HandlerFunc {
 		if isSuperAdmin || isTenantAdmin {
 			// Super admin and tenant admin can view all users in the tenant
 			users, err = client.User.Query().
-				Where(user.HasAccountWith(
-					account.And(
-						account.ID(accountID.String()),
-					),
-				)).
 				All(ctx)
 		} else {
 			// Regular users can only view their own information

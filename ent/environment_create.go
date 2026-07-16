@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
@@ -156,25 +155,6 @@ func (_c *EnvironmentCreate) SetNillableTenantID(id *string) *EnvironmentCreate 
 // SetTenant sets the "tenant" edge to the Tenant entity.
 func (_c *EnvironmentCreate) SetTenant(v *Tenant) *EnvironmentCreate {
 	return _c.SetTenantID(v.ID)
-}
-
-// SetAccessPoliciesID sets the "access_policies" edge to the AccessPolicy entity by ID.
-func (_c *EnvironmentCreate) SetAccessPoliciesID(id string) *EnvironmentCreate {
-	_c.mutation.SetAccessPoliciesID(id)
-	return _c
-}
-
-// SetNillableAccessPoliciesID sets the "access_policies" edge to the AccessPolicy entity by ID if the given value is not nil.
-func (_c *EnvironmentCreate) SetNillableAccessPoliciesID(id *string) *EnvironmentCreate {
-	if id != nil {
-		_c = _c.SetAccessPoliciesID(*id)
-	}
-	return _c
-}
-
-// SetAccessPolicies sets the "access_policies" edge to the AccessPolicy entity.
-func (_c *EnvironmentCreate) SetAccessPolicies(v *AccessPolicy) *EnvironmentCreate {
-	return _c.SetAccessPoliciesID(v.ID)
 }
 
 // Mutation returns the EnvironmentMutation object of the builder.
@@ -362,24 +342,6 @@ func (_c *EnvironmentCreate) createSpec() (*Environment, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.tenant_environments = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   environment.AccessPoliciesTable,
-			Columns: []string{environment.AccessPoliciesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _c.schemaConfig.Environment
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.access_policy_environment = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

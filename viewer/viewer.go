@@ -5,11 +5,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// Viewer holds the current request context identity info.
 type Viewer struct {
-	UserID    uuid.UUID
-	TenantID  uuid.UUID
-	AccountID uuid.UUID
-	RoleName  string // 使用切片存储多个角色
+	UserID   uuid.UUID
+	TenantID uuid.UUID
+	GroupID  uuid.UUID
+	RoleName string
 }
 
 type viewerKey struct{}

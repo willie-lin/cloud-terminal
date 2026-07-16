@@ -11,9 +11,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/environment"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
-	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
 
 // AccessPolicy is the model entity for the AccessPolicy schema.
@@ -26,16 +24,22 @@ type AccessPolicy struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Name holds the value of the "name" field.
+	// 策略名称
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// Statements holds the value of the "statements" field.
+	// 策略版本
+	Version string `json:"version,omitempty"`
+	// 策略语句数组
 	Statements []schema.PolicyStatement `json:"statements,omitempty"`
 	// Immutable holds the value of the "immutable" field.
 	Immutable bool `json:"immutable,omitempty"`
-	// 策略优先级，数值越小优先级越高
+	// 优先级，数值越小优先级越高
 	Priority int `json:"priority,omitempty"`
+	// 生效时间
+	EffectiveDate *time.Time `json:"effective_date,omitempty"`
+	// 过期时间
+	ExpiryDate *time.Time `json:"expiry_date,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccessPolicyQuery when eager-loading is set.
 	Edges                  AccessPolicyEdges `json:"edges"`
@@ -45,59 +49,57 @@ type AccessPolicy struct {
 
 // AccessPolicyEdges holds the relations/edges for other nodes in the graph.
 type AccessPolicyEdges struct {
-	// 应用此策略的账户
-	Account []*Account `json:"account,omitempty"`
-	// 分配此策略的角色
+	// Groups holds the value of the groups edge.
+	Groups []*Group `json:"groups,omitempty"`
+	// Users holds the value of the users edge.
+	Users []*User `json:"users,omitempty"`
+	// Resources holds the value of the resources edge.
+	Resources []*Resource `json:"resources,omitempty"`
+	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
-	// 所属租户
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// 关联的环境模板
-	Environment *Environment `json:"environment,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes  [4]bool
-	namedAccount map[string][]*Account
-	namedRoles   map[string][]*Role
+	loadedTypes    [4]bool
+	namedGroups    map[string][]*Group
+	namedUsers     map[string][]*User
+	namedResources map[string][]*Resource
+	namedRoles     map[string][]*Role
 }
 
-// AccountOrErr returns the Account value or an error if the edge
+// GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
-func (e AccessPolicyEdges) AccountOrErr() ([]*Account, error) {
+func (e AccessPolicyEdges) GroupsOrErr() ([]*Group, error) {
 	if e.loadedTypes[0] {
-		return e.Account, nil
+		return e.Groups, nil
 	}
-	return nil, &NotLoadedError{edge: "account"}
+	return nil, &NotLoadedError{edge: "groups"}
+}
+
+// UsersOrErr returns the Users value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccessPolicyEdges) UsersOrErr() ([]*User, error) {
+	if e.loadedTypes[1] {
+		return e.Users, nil
+	}
+	return nil, &NotLoadedError{edge: "users"}
+}
+
+// ResourcesOrErr returns the Resources value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccessPolicyEdges) ResourcesOrErr() ([]*Resource, error) {
+	if e.loadedTypes[2] {
+		return e.Resources, nil
+	}
+	return nil, &NotLoadedError{edge: "resources"}
 }
 
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e AccessPolicyEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[3] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e AccessPolicyEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[2] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// EnvironmentOrErr returns the Environment value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e AccessPolicyEdges) EnvironmentOrErr() (*Environment, error) {
-	if e.Environment != nil {
-		return e.Environment, nil
-	} else if e.loadedTypes[3] {
-		return nil, &NotFoundError{label: environment.Label}
-	}
-	return nil, &NotLoadedError{edge: "environment"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -111,9 +113,9 @@ func (*AccessPolicy) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case accesspolicy.FieldPriority:
 			values[i] = new(sql.NullInt64)
-		case accesspolicy.FieldID, accesspolicy.FieldName, accesspolicy.FieldDescription:
+		case accesspolicy.FieldID, accesspolicy.FieldName, accesspolicy.FieldDescription, accesspolicy.FieldVersion:
 			values[i] = new(sql.NullString)
-		case accesspolicy.FieldCreatedAt, accesspolicy.FieldUpdatedAt:
+		case accesspolicy.FieldCreatedAt, accesspolicy.FieldUpdatedAt, accesspolicy.FieldEffectiveDate, accesspolicy.FieldExpiryDate:
 			values[i] = new(sql.NullTime)
 		case accesspolicy.ForeignKeys[0]: // tenant_access_policies
 			values[i] = new(sql.NullString)
@@ -162,6 +164,12 @@ func (_m *AccessPolicy) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Description = value.String
 			}
+		case accesspolicy.FieldVersion:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				_m.Version = value.String
+			}
 		case accesspolicy.FieldStatements:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field statements", values[i])
@@ -181,6 +189,20 @@ func (_m *AccessPolicy) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
 				_m.Priority = int(value.Int64)
+			}
+		case accesspolicy.FieldEffectiveDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field effective_date", values[i])
+			} else if value.Valid {
+				_m.EffectiveDate = new(time.Time)
+				*_m.EffectiveDate = value.Time
+			}
+		case accesspolicy.FieldExpiryDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field expiry_date", values[i])
+			} else if value.Valid {
+				_m.ExpiryDate = new(time.Time)
+				*_m.ExpiryDate = value.Time
 			}
 		case accesspolicy.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -202,24 +224,24 @@ func (_m *AccessPolicy) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryAccount queries the "account" edge of the AccessPolicy entity.
-func (_m *AccessPolicy) QueryAccount() *AccountQuery {
-	return NewAccessPolicyClient(_m.config).QueryAccount(_m)
+// QueryGroups queries the "groups" edge of the AccessPolicy entity.
+func (_m *AccessPolicy) QueryGroups() *GroupQuery {
+	return NewAccessPolicyClient(_m.config).QueryGroups(_m)
+}
+
+// QueryUsers queries the "users" edge of the AccessPolicy entity.
+func (_m *AccessPolicy) QueryUsers() *UserQuery {
+	return NewAccessPolicyClient(_m.config).QueryUsers(_m)
+}
+
+// QueryResources queries the "resources" edge of the AccessPolicy entity.
+func (_m *AccessPolicy) QueryResources() *ResourceQuery {
+	return NewAccessPolicyClient(_m.config).QueryResources(_m)
 }
 
 // QueryRoles queries the "roles" edge of the AccessPolicy entity.
 func (_m *AccessPolicy) QueryRoles() *RoleQuery {
 	return NewAccessPolicyClient(_m.config).QueryRoles(_m)
-}
-
-// QueryTenant queries the "tenant" edge of the AccessPolicy entity.
-func (_m *AccessPolicy) QueryTenant() *TenantQuery {
-	return NewAccessPolicyClient(_m.config).QueryTenant(_m)
-}
-
-// QueryEnvironment queries the "environment" edge of the AccessPolicy entity.
-func (_m *AccessPolicy) QueryEnvironment() *EnvironmentQuery {
-	return NewAccessPolicyClient(_m.config).QueryEnvironment(_m)
 }
 
 // Update returns a builder for updating this AccessPolicy.
@@ -257,6 +279,9 @@ func (_m *AccessPolicy) String() string {
 	builder.WriteString("description=")
 	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(_m.Version)
+	builder.WriteString(", ")
 	builder.WriteString("statements=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Statements))
 	builder.WriteString(", ")
@@ -265,31 +290,89 @@ func (_m *AccessPolicy) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Priority))
+	builder.WriteString(", ")
+	if v := _m.EffectiveDate; v != nil {
+		builder.WriteString("effective_date=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.ExpiryDate; v != nil {
+		builder.WriteString("expiry_date=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }
 
-// NamedAccount returns the Account named value or an error if the edge was not
+// NamedGroups returns the Groups named value or an error if the edge was not
 // loaded in eager-loading with this name.
-func (_m *AccessPolicy) NamedAccount(name string) ([]*Account, error) {
-	if _m.Edges.namedAccount == nil {
+func (_m *AccessPolicy) NamedGroups(name string) ([]*Group, error) {
+	if _m.Edges.namedGroups == nil {
 		return nil, &NotLoadedError{edge: name}
 	}
-	nodes, ok := _m.Edges.namedAccount[name]
+	nodes, ok := _m.Edges.namedGroups[name]
 	if !ok {
 		return nil, &NotLoadedError{edge: name}
 	}
 	return nodes, nil
 }
 
-func (_m *AccessPolicy) appendNamedAccount(name string, edges ...*Account) {
-	if _m.Edges.namedAccount == nil {
-		_m.Edges.namedAccount = make(map[string][]*Account)
+func (_m *AccessPolicy) appendNamedGroups(name string, edges ...*Group) {
+	if _m.Edges.namedGroups == nil {
+		_m.Edges.namedGroups = make(map[string][]*Group)
 	}
 	if len(edges) == 0 {
-		_m.Edges.namedAccount[name] = []*Account{}
+		_m.Edges.namedGroups[name] = []*Group{}
 	} else {
-		_m.Edges.namedAccount[name] = append(_m.Edges.namedAccount[name], edges...)
+		_m.Edges.namedGroups[name] = append(_m.Edges.namedGroups[name], edges...)
+	}
+}
+
+// NamedUsers returns the Users named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *AccessPolicy) NamedUsers(name string) ([]*User, error) {
+	if _m.Edges.namedUsers == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsers[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *AccessPolicy) appendNamedUsers(name string, edges ...*User) {
+	if _m.Edges.namedUsers == nil {
+		_m.Edges.namedUsers = make(map[string][]*User)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsers[name] = []*User{}
+	} else {
+		_m.Edges.namedUsers[name] = append(_m.Edges.namedUsers[name], edges...)
+	}
+}
+
+// NamedResources returns the Resources named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *AccessPolicy) NamedResources(name string) ([]*Resource, error) {
+	if _m.Edges.namedResources == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedResources[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *AccessPolicy) appendNamedResources(name string, edges ...*Resource) {
+	if _m.Edges.namedResources == nil {
+		_m.Edges.namedResources = make(map[string][]*Resource)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedResources[name] = []*Resource{}
+	} else {
+		_m.Edges.namedResources[name] = append(_m.Edges.namedResources[name], edges...)
 	}
 }
 

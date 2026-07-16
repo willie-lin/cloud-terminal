@@ -37,8 +37,6 @@ const (
 	FieldStatus = "status"
 	// EdgeTenant holds the string denoting the tenant edge name in mutations.
 	EdgeTenant = "tenant"
-	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
-	EdgeAccessPolicies = "access_policies"
 	// Table holds the table name of the environment in the database.
 	Table = "environments"
 	// TenantTable is the table that holds the tenant relation/edge.
@@ -48,13 +46,6 @@ const (
 	TenantInverseTable = "tenants"
 	// TenantColumn is the table column denoting the tenant relation/edge.
 	TenantColumn = "tenant_environments"
-	// AccessPoliciesTable is the table that holds the access_policies relation/edge.
-	AccessPoliciesTable = "environments"
-	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
-	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
-	AccessPoliciesInverseTable = "access_policies"
-	// AccessPoliciesColumn is the table column denoting the access_policies relation/edge.
-	AccessPoliciesColumn = "access_policy_environment"
 )
 
 // Columns holds all SQL columns for environment fields.
@@ -75,7 +66,6 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "environments"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"access_policy_environment",
 	"tenant_environments",
 }
 
@@ -186,24 +176,10 @@ func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
 	}
 }
-
-// ByAccessPoliciesField orders the results by access_policies field.
-func ByAccessPoliciesField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccessPoliciesStep(), sql.OrderByField(field, opts...))
-	}
-}
 func newTenantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TenantInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newAccessPoliciesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccessPoliciesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2O, true, AccessPoliciesTable, AccessPoliciesColumn),
 	)
 }

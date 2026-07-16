@@ -515,12 +515,7 @@ func (_q *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 	if query := _q.withAccessPolicies; query != nil {
 		if err := _q.loadAccessPolicies(ctx, query, nodes,
 			func(n *Tenant) { n.Edges.AccessPolicies = []*AccessPolicy{} },
-			func(n *Tenant, e *AccessPolicy) {
-				n.Edges.AccessPolicies = append(n.Edges.AccessPolicies, e)
-				if !e.Edges.loadedTypes[2] {
-					e.Edges.Tenant = n
-				}
-			}); err != nil {
+			func(n *Tenant, e *AccessPolicy) { n.Edges.AccessPolicies = append(n.Edges.AccessPolicies, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -551,12 +546,7 @@ func (_q *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 	for name, query := range _q.withNamedAccessPolicies {
 		if err := _q.loadAccessPolicies(ctx, query, nodes,
 			func(n *Tenant) { n.appendNamedAccessPolicies(name) },
-			func(n *Tenant, e *AccessPolicy) {
-				n.appendNamedAccessPolicies(name, e)
-				if !e.Edges.loadedTypes[2] {
-					e.Edges.Tenant = n
-				}
-			}); err != nil {
+			func(n *Tenant, e *AccessPolicy) { n.appendNamedAccessPolicies(name, e) }); err != nil {
 			return nil, err
 		}
 	}

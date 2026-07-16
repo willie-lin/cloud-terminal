@@ -6,17 +6,9 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// AccessPolicy holds the schema definition for the AccessPolicy entity.
-type AccessPolicy struct {
-	ent.Schema
-}
+type AccessPolicy struct{ ent.Schema }
 
-func (AccessPolicy) Mixin() []ent.Mixin {
-	return []ent.Mixin{
-		IDMixin{},
-		TimeMixin{},
-	}
-}
+func (AccessPolicy) Mixin() []ent.Mixin { return []ent.Mixin{IDMixin{}, TimeMixin{}} }
 
 type PolicyStatement struct {
 	Effect    string      `json:"Effect"`
@@ -25,23 +17,24 @@ type PolicyStatement struct {
 	Condition interface{} `json:"Condition,omitempty"`
 }
 
-// Fields of the AccessPolicy.
 func (AccessPolicy) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").NotEmpty(),
+		field.String("name").NotEmpty().Comment("策略名称"),
 		field.String("description").Optional(),
-		field.JSON("statements", []PolicyStatement{}).Default([]PolicyStatement{}),
+		field.String("version").Default("v1").Comment("策略版本"),
+		field.JSON("statements", []PolicyStatement{}).Default([]PolicyStatement{}).Comment("策略语句数组"),
 		field.Bool("immutable").Default(false),
-		field.Int("priority").Default(0).Comment("策略优先级，数值越小优先级越高"),
+		field.Int("priority").Default(0).Comment("优先级，数值越小优先级越高"),
+		field.Time("effective_date").Optional().Nillable().Comment("生效时间"),
+		field.Time("expiry_date").Optional().Nillable().Comment("过期时间"),
 	}
 }
 
-// Edges of the AccessPolicy.
 func (AccessPolicy) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).Ref("access_policies").Comment("应用此策略的账户"),
-		edge.From("roles", Role.Type).Ref("access_policies").Comment("分配此策略的角色"),
-		edge.From("tenant", Tenant.Type).Ref("access_policies").Unique().Comment("所属租户"),
-		edge.To("environment", Environment.Type).Unique().Comment("关联的环境模板"),
+		edge.From("groups", Group.Type).Ref("access_policies"),
+		edge.From("users", User.Type).Ref("access_policies"),
+		edge.From("resources", Resource.Type).Ref("policies"),
+		edge.From("roles", Role.Type).Ref("access_policies"),
 	}
 }

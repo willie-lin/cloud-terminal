@@ -3,13 +3,14 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 )
 
@@ -31,25 +32,31 @@ type Role struct {
 	IsDisabled bool `json:"is_disabled,omitempty"`
 	// IsDefault holds the value of the "is_default" field.
 	IsDefault bool `json:"is_default,omitempty"`
+	// 信任策略：控制谁能 Assume 此角色
+	TrustPolicy map[string]interface{} `json:"trust_policy,omitempty"`
+	// 角色生效时间
+	EffectiveDate *time.Time `json:"effective_date,omitempty"`
+	// 角色过期时间
+	ExpiryDate *time.Time `json:"expiry_date,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoleQuery when eager-loading is set.
-	Edges         RoleEdges `json:"edges"`
-	account_roles *string
-	selectValues  sql.SelectValues
+	Edges                     RoleEdges `json:"edges"`
+	role_permissions_boundary *string
+	selectValues              sql.SelectValues
 }
 
 // RoleEdges holds the relations/edges for other nodes in the graph.
 type RoleEdges struct {
-	// 角色所属的账户
-	Account *Account `json:"account,omitempty"`
-	// 拥有该角色的用户
+	// 可以 Assume 该角色的用户
 	Users []*User `json:"users,omitempty"`
-	// 分配给角色的策略
+	// 附加到此角色的权限策略
 	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
 	// ParentRole holds the value of the parent_role edge.
 	ParentRole []*Role `json:"parent_role,omitempty"`
 	// ChildRoles holds the value of the child_roles edge.
 	ChildRoles []*Role `json:"child_roles,omitempty"`
+	// 权限边界
+	PermissionsBoundary *AccessPolicy `json:"permissions_boundary,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes         [5]bool
@@ -59,21 +66,10 @@ type RoleEdges struct {
 	namedChildRoles     map[string][]*Role
 }
 
-// AccountOrErr returns the Account value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e RoleEdges) AccountOrErr() (*Account, error) {
-	if e.Account != nil {
-		return e.Account, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: account.Label}
-	}
-	return nil, &NotLoadedError{edge: "account"}
-}
-
 // UsersOrErr returns the Users value or an error if the edge
 // was not loaded in eager-loading.
 func (e RoleEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		return e.Users, nil
 	}
 	return nil, &NotLoadedError{edge: "users"}
@@ -82,7 +78,7 @@ func (e RoleEdges) UsersOrErr() ([]*User, error) {
 // AccessPoliciesOrErr returns the AccessPolicies value or an error if the edge
 // was not loaded in eager-loading.
 func (e RoleEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.AccessPolicies, nil
 	}
 	return nil, &NotLoadedError{edge: "access_policies"}
@@ -91,7 +87,7 @@ func (e RoleEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
 // ParentRoleOrErr returns the ParentRole value or an error if the edge
 // was not loaded in eager-loading.
 func (e RoleEdges) ParentRoleOrErr() ([]*Role, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.ParentRole, nil
 	}
 	return nil, &NotLoadedError{edge: "parent_role"}
@@ -100,10 +96,21 @@ func (e RoleEdges) ParentRoleOrErr() ([]*Role, error) {
 // ChildRolesOrErr returns the ChildRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e RoleEdges) ChildRolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[3] {
 		return e.ChildRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "child_roles"}
+}
+
+// PermissionsBoundaryOrErr returns the PermissionsBoundary value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RoleEdges) PermissionsBoundaryOrErr() (*AccessPolicy, error) {
+	if e.PermissionsBoundary != nil {
+		return e.PermissionsBoundary, nil
+	} else if e.loadedTypes[4] {
+		return nil, &NotFoundError{label: accesspolicy.Label}
+	}
+	return nil, &NotLoadedError{edge: "permissions_boundary"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -111,13 +118,15 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case role.FieldTrustPolicy:
+			values[i] = new([]byte)
 		case role.FieldIsDisabled, role.FieldIsDefault:
 			values[i] = new(sql.NullBool)
 		case role.FieldID, role.FieldName, role.FieldDescription:
 			values[i] = new(sql.NullString)
-		case role.FieldCreatedAt, role.FieldUpdatedAt:
+		case role.FieldCreatedAt, role.FieldUpdatedAt, role.FieldEffectiveDate, role.FieldExpiryDate:
 			values[i] = new(sql.NullTime)
-		case role.ForeignKeys[0]: // account_roles
+		case role.ForeignKeys[0]: // role_permissions_boundary
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -176,12 +185,34 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.IsDefault = value.Bool
 			}
+		case role.FieldTrustPolicy:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field trust_policy", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.TrustPolicy); err != nil {
+					return fmt.Errorf("unmarshal field trust_policy: %w", err)
+				}
+			}
+		case role.FieldEffectiveDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field effective_date", values[i])
+			} else if value.Valid {
+				_m.EffectiveDate = new(time.Time)
+				*_m.EffectiveDate = value.Time
+			}
+		case role.FieldExpiryDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field expiry_date", values[i])
+			} else if value.Valid {
+				_m.ExpiryDate = new(time.Time)
+				*_m.ExpiryDate = value.Time
+			}
 		case role.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field account_roles", values[i])
+				return fmt.Errorf("unexpected type %T for field role_permissions_boundary", values[i])
 			} else if value.Valid {
-				_m.account_roles = new(string)
-				*_m.account_roles = value.String
+				_m.role_permissions_boundary = new(string)
+				*_m.role_permissions_boundary = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -194,11 +225,6 @@ func (_m *Role) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Role) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
-}
-
-// QueryAccount queries the "account" edge of the Role entity.
-func (_m *Role) QueryAccount() *AccountQuery {
-	return NewRoleClient(_m.config).QueryAccount(_m)
 }
 
 // QueryUsers queries the "users" edge of the Role entity.
@@ -219,6 +245,11 @@ func (_m *Role) QueryParentRole() *RoleQuery {
 // QueryChildRoles queries the "child_roles" edge of the Role entity.
 func (_m *Role) QueryChildRoles() *RoleQuery {
 	return NewRoleClient(_m.config).QueryChildRoles(_m)
+}
+
+// QueryPermissionsBoundary queries the "permissions_boundary" edge of the Role entity.
+func (_m *Role) QueryPermissionsBoundary() *AccessPolicyQuery {
+	return NewRoleClient(_m.config).QueryPermissionsBoundary(_m)
 }
 
 // Update returns a builder for updating this Role.
@@ -261,6 +292,19 @@ func (_m *Role) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_default=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsDefault))
+	builder.WriteString(", ")
+	builder.WriteString("trust_policy=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TrustPolicy))
+	builder.WriteString(", ")
+	if v := _m.EffectiveDate; v != nil {
+		builder.WriteString("effective_date=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.ExpiryDate; v != nil {
+		builder.WriteString("expiry_date=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

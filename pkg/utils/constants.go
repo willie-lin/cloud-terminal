@@ -4,7 +4,6 @@ const (
 	PlatformName     = "CloudSecPlatform"
 	ManagementTenant = "systemTenant"
 	DefaultTenant    = "defaultTenant"
-	Account          = "systemAccount"
 	UserName         = "SuperAdmin"
 )
 
@@ -12,7 +11,6 @@ const (
 	UserResourceType     = "user"
 	ConfigResourceType   = "config"
 	TenantResourceType   = "tenant"
-	AccountResourceType  = "account"
 	ProjectResourceType  = "project"
 	AuditLogResourceType = "audit-log"
 	RoleResourceType     = "role"

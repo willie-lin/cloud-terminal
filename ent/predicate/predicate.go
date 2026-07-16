@@ -9,14 +9,14 @@ import (
 // AccessPolicy is the predicate function for accesspolicy builders.
 type AccessPolicy func(*sql.Selector)
 
-// Account is the predicate function for account builders.
-type Account func(*sql.Selector)
-
 // AuditLog is the predicate function for auditlog builders.
 type AuditLog func(*sql.Selector)
 
 // Environment is the predicate function for environment builders.
 type Environment func(*sql.Selector)
+
+// Group is the predicate function for group builders.
+type Group func(*sql.Selector)
 
 // Platform is the predicate function for platform builders.
 type Platform func(*sql.Selector)

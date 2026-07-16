@@ -4,35 +4,37 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
-// Resource holds the schema definition for the Resource entity.
-type Resource struct {
-	ent.Schema
-}
+type Resource struct{ ent.Schema }
 
-func (Resource) Mixin() []ent.Mixin {
-	return []ent.Mixin{
-		IDMixin{},
-		TimeMixin{},
-	}
-}
+func (Resource) Mixin() []ent.Mixin { return []ent.Mixin{IDMixin{}, TimeMixin{}} }
 
 func (Resource) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("urn").Unique().NotEmpty().Comment("逻辑主键 urn:ct:<env>:<region>:<type>:<name>"),
 		field.String("name").NotEmpty().Comment("资源名称"),
-		field.String("host").NotEmpty().Comment("目标地址"),
-		field.Int("port").Default(22).Comment("目标端口"),
-		field.Enum("type").Values("ssh", "rdp", "vnc", "telnet").Comment("协议类型"),
+		field.Enum("type").Values("mysql", "redis", "k8s-service", "ssh", "rdp", "vnc", "telnet", "http", "custom").Default("ssh"),
+		field.String("ip").NotEmpty(),
+		field.Int("port").Default(22),
+		field.Enum("env").Values("prod", "staging", "dev", "test", "dr").Default("dev"),
+		field.String("region").Default("default"),
 		field.String("description").Optional(),
 		field.Enum("status").Values("active", "inactive").Default("active"),
-		field.JSON("metadata", map[string]interface{}{}).Optional().Comment("扩展属性"),
+		field.JSON("details", map[string]interface{}{}).Optional(),
+		field.JSON("auth_data", map[string]interface{}{}).Optional().Sensitive(),
 	}
+}
+
+func (Resource) Indexes() []ent.Index {
+	return []ent.Index{index.Fields("urn").Unique(), index.Fields("type", "env", "region")}
 }
 
 func (Resource) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("tenant", Tenant.Type).Ref("resources").Unique().Comment("所属租户"),
-		edge.From("accounts", Account.Type).Ref("resource").Unique().Comment("关联的凭据"),
+		edge.From("tenant", Tenant.Type).Ref("resources").Unique(),
+		edge.To("audit_logs", AuditLog.Type),
+		edge.To("policies", AccessPolicy.Type).Comment("附加到资源的策略，实现 ResourcePolicy"),
 	}
 }

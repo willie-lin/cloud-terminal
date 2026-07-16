@@ -9,20 +9,10 @@ import (
 	"time"
 )
 
-// User holds the schema definition for the User entity.
-type User struct {
-	ent.Schema
-}
+type User struct{ ent.Schema }
 
-// Mixin MiXin Mixin User
-func (User) Mixin() []ent.Mixin {
-	return []ent.Mixin{
-		IDMixin{},
-		TimeMixin{},
-	}
-}
+func (User) Mixin() []ent.Mixin { return []ent.Mixin{IDMixin{}, TimeMixin{}} }
 
-// Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("avatar").Optional(),
@@ -42,16 +32,17 @@ func (User) Fields() []ent.Field {
 		field.Time("last_login_time").Default(time.Now),
 		field.JSON("social_logins", map[string]string{}).Optional(),
 		field.Bool("is_default").Default(false),
-		field.String("ssh_public_key").Optional().Comment("SSH公钥，用于登录ContainerSSH"),
+		field.String("ssh_public_key").Optional().Comment("SSH公钥"),
+		field.JSON("attributes", map[string]interface{}{}).Optional().Comment("预留扩展属性"),
 	}
 }
 
-// Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("account", Account.Type).Ref("users").Unique().Required().Comment("用户所属的账户"),
-		edge.To("role", Role.Type).Unique().Required().Comment("用户拥有的角色"),
+		edge.From("group", Group.Type).Ref("users").Unique().Comment("用户所属的组"),
+		edge.To("roles", Role.Type).Comment("用户可 Assume 的角色"),
 		edge.To("audit_logs", AuditLog.Type).Comment("用户的审计日志"),
+		edge.To("access_policies", AccessPolicy.Type).Comment("直接分配给用户的策略"),
 	}
 }
 

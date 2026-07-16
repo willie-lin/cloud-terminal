@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
@@ -102,6 +101,40 @@ func (_c *RoleCreate) SetNillableIsDefault(v *bool) *RoleCreate {
 	return _c
 }
 
+// SetTrustPolicy sets the "trust_policy" field.
+func (_c *RoleCreate) SetTrustPolicy(v map[string]interface{}) *RoleCreate {
+	_c.mutation.SetTrustPolicy(v)
+	return _c
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (_c *RoleCreate) SetEffectiveDate(v time.Time) *RoleCreate {
+	_c.mutation.SetEffectiveDate(v)
+	return _c
+}
+
+// SetNillableEffectiveDate sets the "effective_date" field if the given value is not nil.
+func (_c *RoleCreate) SetNillableEffectiveDate(v *time.Time) *RoleCreate {
+	if v != nil {
+		_c.SetEffectiveDate(*v)
+	}
+	return _c
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (_c *RoleCreate) SetExpiryDate(v time.Time) *RoleCreate {
+	_c.mutation.SetExpiryDate(v)
+	return _c
+}
+
+// SetNillableExpiryDate sets the "expiry_date" field if the given value is not nil.
+func (_c *RoleCreate) SetNillableExpiryDate(v *time.Time) *RoleCreate {
+	if v != nil {
+		_c.SetExpiryDate(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *RoleCreate) SetID(v string) *RoleCreate {
 	_c.mutation.SetID(v)
@@ -114,25 +147,6 @@ func (_c *RoleCreate) SetNillableID(v *string) *RoleCreate {
 		_c.SetID(*v)
 	}
 	return _c
-}
-
-// SetAccountID sets the "account" edge to the Account entity by ID.
-func (_c *RoleCreate) SetAccountID(id string) *RoleCreate {
-	_c.mutation.SetAccountID(id)
-	return _c
-}
-
-// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
-func (_c *RoleCreate) SetNillableAccountID(id *string) *RoleCreate {
-	if id != nil {
-		_c = _c.SetAccountID(*id)
-	}
-	return _c
-}
-
-// SetAccount sets the "account" edge to the Account entity.
-func (_c *RoleCreate) SetAccount(v *Account) *RoleCreate {
-	return _c.SetAccountID(v.ID)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -193,6 +207,25 @@ func (_c *RoleCreate) AddChildRoles(v ...*Role) *RoleCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddChildRoleIDs(ids...)
+}
+
+// SetPermissionsBoundaryID sets the "permissions_boundary" edge to the AccessPolicy entity by ID.
+func (_c *RoleCreate) SetPermissionsBoundaryID(id string) *RoleCreate {
+	_c.mutation.SetPermissionsBoundaryID(id)
+	return _c
+}
+
+// SetNillablePermissionsBoundaryID sets the "permissions_boundary" edge to the AccessPolicy entity by ID if the given value is not nil.
+func (_c *RoleCreate) SetNillablePermissionsBoundaryID(id *string) *RoleCreate {
+	if id != nil {
+		_c = _c.SetPermissionsBoundaryID(*id)
+	}
+	return _c
+}
+
+// SetPermissionsBoundary sets the "permissions_boundary" edge to the AccessPolicy entity.
+func (_c *RoleCreate) SetPermissionsBoundary(v *AccessPolicy) *RoleCreate {
+	return _c.SetPermissionsBoundaryID(v.ID)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -335,36 +368,30 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
 		_node.IsDefault = value
 	}
-	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   role.AccountTable,
-			Columns: []string{role.AccountColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _c.schemaConfig.Role
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.account_roles = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
+	if value, ok := _c.mutation.TrustPolicy(); ok {
+		_spec.SetField(role.FieldTrustPolicy, field.TypeJSON, value)
+		_node.TrustPolicy = value
+	}
+	if value, ok := _c.mutation.EffectiveDate(); ok {
+		_spec.SetField(role.FieldEffectiveDate, field.TypeTime, value)
+		_node.EffectiveDate = &value
+	}
+	if value, ok := _c.mutation.ExpiryDate(); ok {
+		_spec.SetField(role.FieldExpiryDate, field.TypeTime, value)
+		_node.ExpiryDate = &value
 	}
 	if nodes := _c.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
+			Columns: role.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.User
+		edge.Schema = _c.schemaConfig.UserRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -419,6 +446,24 @@ func (_c *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PermissionsBoundaryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   role.PermissionsBoundaryTable,
+			Columns: []string{role.PermissionsBoundaryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _c.schemaConfig.Role
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.role_permissions_boundary = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -536,6 +581,60 @@ func (u *RoleUpsert) SetIsDefault(v bool) *RoleUpsert {
 // UpdateIsDefault sets the "is_default" field to the value that was provided on create.
 func (u *RoleUpsert) UpdateIsDefault() *RoleUpsert {
 	u.SetExcluded(role.FieldIsDefault)
+	return u
+}
+
+// SetTrustPolicy sets the "trust_policy" field.
+func (u *RoleUpsert) SetTrustPolicy(v map[string]interface{}) *RoleUpsert {
+	u.Set(role.FieldTrustPolicy, v)
+	return u
+}
+
+// UpdateTrustPolicy sets the "trust_policy" field to the value that was provided on create.
+func (u *RoleUpsert) UpdateTrustPolicy() *RoleUpsert {
+	u.SetExcluded(role.FieldTrustPolicy)
+	return u
+}
+
+// ClearTrustPolicy clears the value of the "trust_policy" field.
+func (u *RoleUpsert) ClearTrustPolicy() *RoleUpsert {
+	u.SetNull(role.FieldTrustPolicy)
+	return u
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (u *RoleUpsert) SetEffectiveDate(v time.Time) *RoleUpsert {
+	u.Set(role.FieldEffectiveDate, v)
+	return u
+}
+
+// UpdateEffectiveDate sets the "effective_date" field to the value that was provided on create.
+func (u *RoleUpsert) UpdateEffectiveDate() *RoleUpsert {
+	u.SetExcluded(role.FieldEffectiveDate)
+	return u
+}
+
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (u *RoleUpsert) ClearEffectiveDate() *RoleUpsert {
+	u.SetNull(role.FieldEffectiveDate)
+	return u
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (u *RoleUpsert) SetExpiryDate(v time.Time) *RoleUpsert {
+	u.Set(role.FieldExpiryDate, v)
+	return u
+}
+
+// UpdateExpiryDate sets the "expiry_date" field to the value that was provided on create.
+func (u *RoleUpsert) UpdateExpiryDate() *RoleUpsert {
+	u.SetExcluded(role.FieldExpiryDate)
+	return u
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (u *RoleUpsert) ClearExpiryDate() *RoleUpsert {
+	u.SetNull(role.FieldExpiryDate)
 	return u
 }
 
@@ -664,6 +763,69 @@ func (u *RoleUpsertOne) SetIsDefault(v bool) *RoleUpsertOne {
 func (u *RoleUpsertOne) UpdateIsDefault() *RoleUpsertOne {
 	return u.Update(func(s *RoleUpsert) {
 		s.UpdateIsDefault()
+	})
+}
+
+// SetTrustPolicy sets the "trust_policy" field.
+func (u *RoleUpsertOne) SetTrustPolicy(v map[string]interface{}) *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.SetTrustPolicy(v)
+	})
+}
+
+// UpdateTrustPolicy sets the "trust_policy" field to the value that was provided on create.
+func (u *RoleUpsertOne) UpdateTrustPolicy() *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.UpdateTrustPolicy()
+	})
+}
+
+// ClearTrustPolicy clears the value of the "trust_policy" field.
+func (u *RoleUpsertOne) ClearTrustPolicy() *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.ClearTrustPolicy()
+	})
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (u *RoleUpsertOne) SetEffectiveDate(v time.Time) *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.SetEffectiveDate(v)
+	})
+}
+
+// UpdateEffectiveDate sets the "effective_date" field to the value that was provided on create.
+func (u *RoleUpsertOne) UpdateEffectiveDate() *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.UpdateEffectiveDate()
+	})
+}
+
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (u *RoleUpsertOne) ClearEffectiveDate() *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.ClearEffectiveDate()
+	})
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (u *RoleUpsertOne) SetExpiryDate(v time.Time) *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.SetExpiryDate(v)
+	})
+}
+
+// UpdateExpiryDate sets the "expiry_date" field to the value that was provided on create.
+func (u *RoleUpsertOne) UpdateExpiryDate() *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.UpdateExpiryDate()
+	})
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (u *RoleUpsertOne) ClearExpiryDate() *RoleUpsertOne {
+	return u.Update(func(s *RoleUpsert) {
+		s.ClearExpiryDate()
 	})
 }
 
@@ -959,6 +1121,69 @@ func (u *RoleUpsertBulk) SetIsDefault(v bool) *RoleUpsertBulk {
 func (u *RoleUpsertBulk) UpdateIsDefault() *RoleUpsertBulk {
 	return u.Update(func(s *RoleUpsert) {
 		s.UpdateIsDefault()
+	})
+}
+
+// SetTrustPolicy sets the "trust_policy" field.
+func (u *RoleUpsertBulk) SetTrustPolicy(v map[string]interface{}) *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.SetTrustPolicy(v)
+	})
+}
+
+// UpdateTrustPolicy sets the "trust_policy" field to the value that was provided on create.
+func (u *RoleUpsertBulk) UpdateTrustPolicy() *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.UpdateTrustPolicy()
+	})
+}
+
+// ClearTrustPolicy clears the value of the "trust_policy" field.
+func (u *RoleUpsertBulk) ClearTrustPolicy() *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.ClearTrustPolicy()
+	})
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (u *RoleUpsertBulk) SetEffectiveDate(v time.Time) *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.SetEffectiveDate(v)
+	})
+}
+
+// UpdateEffectiveDate sets the "effective_date" field to the value that was provided on create.
+func (u *RoleUpsertBulk) UpdateEffectiveDate() *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.UpdateEffectiveDate()
+	})
+}
+
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (u *RoleUpsertBulk) ClearEffectiveDate() *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.ClearEffectiveDate()
+	})
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (u *RoleUpsertBulk) SetExpiryDate(v time.Time) *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.SetExpiryDate(v)
+	})
+}
+
+// UpdateExpiryDate sets the "expiry_date" field to the value that was provided on create.
+func (u *RoleUpsertBulk) UpdateExpiryDate() *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.UpdateExpiryDate()
+	})
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (u *RoleUpsertBulk) ClearExpiryDate() *RoleUpsertBulk {
+	return u.Update(func(s *RoleUpsert) {
+		s.ClearExpiryDate()
 	})
 }
 

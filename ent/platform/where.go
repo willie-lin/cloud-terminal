@@ -484,16 +484,6 @@ func StatusNotIn(vs ...Status) predicate.Platform {
 	return predicate.Platform(sql.FieldNotIn(FieldStatus, vs...))
 }
 
-// StatusIsNil applies the IsNil predicate on the "status" field.
-func StatusIsNil() predicate.Platform {
-	return predicate.Platform(sql.FieldIsNull(FieldStatus))
-}
-
-// StatusNotNil applies the NotNil predicate on the "status" field.
-func StatusNotNil() predicate.Platform {
-	return predicate.Platform(sql.FieldNotNull(FieldStatus))
-}
-
 // ConfigIsNil applies the IsNil predicate on the "config" field.
 func ConfigIsNil() predicate.Platform {
 	return predicate.Platform(sql.FieldIsNull(FieldConfig))

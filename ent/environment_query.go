@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
@@ -22,14 +21,13 @@ import (
 // EnvironmentQuery is the builder for querying Environment entities.
 type EnvironmentQuery struct {
 	config
-	ctx                *QueryContext
-	order              []environment.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.Environment
-	withTenant         *TenantQuery
-	withAccessPolicies *AccessPolicyQuery
-	withFKs            bool
-	modifiers          []func(*sql.Selector)
+	ctx        *QueryContext
+	order      []environment.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Environment
+	withTenant *TenantQuery
+	withFKs    bool
+	modifiers  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -84,31 +82,6 @@ func (_q *EnvironmentQuery) QueryTenant() *TenantQuery {
 		)
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.Environment
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryAccessPolicies chains the current query on the "access_policies" edge.
-func (_q *EnvironmentQuery) QueryAccessPolicies() *AccessPolicyQuery {
-	query := (&AccessPolicyClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(environment.Table, environment.FieldID, selector),
-			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, environment.AccessPoliciesTable, environment.AccessPoliciesColumn),
-		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.AccessPolicy
 		step.Edge.Schema = schemaConfig.Environment
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -303,13 +276,12 @@ func (_q *EnvironmentQuery) Clone() *EnvironmentQuery {
 		return nil
 	}
 	return &EnvironmentQuery{
-		config:             _q.config,
-		ctx:                _q.ctx.Clone(),
-		order:              append([]environment.OrderOption{}, _q.order...),
-		inters:             append([]Interceptor{}, _q.inters...),
-		predicates:         append([]predicate.Environment{}, _q.predicates...),
-		withTenant:         _q.withTenant.Clone(),
-		withAccessPolicies: _q.withAccessPolicies.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]environment.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.Environment{}, _q.predicates...),
+		withTenant: _q.withTenant.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -325,17 +297,6 @@ func (_q *EnvironmentQuery) WithTenant(opts ...func(*TenantQuery)) *EnvironmentQ
 		opt(query)
 	}
 	_q.withTenant = query
-	return _q
-}
-
-// WithAccessPolicies tells the query-builder to eager-load the nodes that are connected to
-// the "access_policies" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *EnvironmentQuery) WithAccessPolicies(opts ...func(*AccessPolicyQuery)) *EnvironmentQuery {
-	query := (&AccessPolicyClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withAccessPolicies = query
 	return _q
 }
 
@@ -418,12 +379,11 @@ func (_q *EnvironmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 		nodes       = []*Environment{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [1]bool{
 			_q.withTenant != nil,
-			_q.withAccessPolicies != nil,
 		}
 	)
-	if _q.withTenant != nil || _q.withAccessPolicies != nil {
+	if _q.withTenant != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -458,17 +418,6 @@ func (_q *EnvironmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 			return nil, err
 		}
 	}
-	if query := _q.withAccessPolicies; query != nil {
-		if err := _q.loadAccessPolicies(ctx, query, nodes, nil,
-			func(n *Environment, e *AccessPolicy) {
-				n.Edges.AccessPolicies = e
-				if !e.Edges.loadedTypes[3] {
-					e.Edges.Environment = n
-				}
-			}); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
@@ -497,38 +446,6 @@ func (_q *EnvironmentQuery) loadTenant(ctx context.Context, query *TenantQuery, 
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "tenant_environments" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *EnvironmentQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicyQuery, nodes []*Environment, init func(*Environment), assign func(*Environment, *AccessPolicy)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*Environment)
-	for i := range nodes {
-		if nodes[i].access_policy_environment == nil {
-			continue
-		}
-		fk := *nodes[i].access_policy_environment
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(accesspolicy.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "access_policy_environment" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

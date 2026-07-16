@@ -22,25 +22,23 @@ type Session struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// 会话ID
+	// SessionID holds the value of the "session_id" field.
 	SessionID string `json:"session_id,omitempty"`
-	// 主体URN
+	// PrincipalUrn holds the value of the "principal_urn" field.
 	PrincipalUrn string `json:"principal_urn,omitempty"`
-	// 资源URN
+	// ResourceUrn holds the value of the "resource_urn" field.
 	ResourceUrn string `json:"resource_urn,omitempty"`
-	// 环境URN
+	// EnvironmentUrn holds the value of the "environment_urn" field.
 	EnvironmentUrn string `json:"environment_urn,omitempty"`
-	// 账号URN
-	AccountUrn string `json:"account_urn,omitempty"`
-	// 连接模式
+	// Mode holds the value of the "mode" field.
 	Mode session.Mode `json:"mode,omitempty"`
-	// 会话状态
+	// Status holds the value of the "status" field.
 	Status session.Status `json:"status,omitempty"`
-	// 开始时间
+	// StartedAt holds the value of the "started_at" field.
 	StartedAt time.Time `json:"started_at,omitempty"`
-	// 结束时间
+	// EndedAt holds the value of the "ended_at" field.
 	EndedAt *time.Time `json:"ended_at,omitempty"`
-	// 来源地址
+	// RemoteAddress holds the value of the "remote_address" field.
 	RemoteAddress string `json:"remote_address,omitempty"`
 	selectValues  sql.SelectValues
 }
@@ -50,7 +48,7 @@ func (*Session) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case session.FieldID, session.FieldSessionID, session.FieldPrincipalUrn, session.FieldResourceUrn, session.FieldEnvironmentUrn, session.FieldAccountUrn, session.FieldMode, session.FieldStatus, session.FieldRemoteAddress:
+		case session.FieldID, session.FieldSessionID, session.FieldPrincipalUrn, session.FieldResourceUrn, session.FieldEnvironmentUrn, session.FieldMode, session.FieldStatus, session.FieldRemoteAddress:
 			values[i] = new(sql.NullString)
 		case session.FieldCreatedAt, session.FieldUpdatedAt, session.FieldStartedAt, session.FieldEndedAt:
 			values[i] = new(sql.NullTime)
@@ -110,12 +108,6 @@ func (_m *Session) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field environment_urn", values[i])
 			} else if value.Valid {
 				_m.EnvironmentUrn = value.String
-			}
-		case session.FieldAccountUrn:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field account_urn", values[i])
-			} else if value.Valid {
-				_m.AccountUrn = value.String
 			}
 		case session.FieldMode:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -201,9 +193,6 @@ func (_m *Session) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("environment_urn=")
 	builder.WriteString(_m.EnvironmentUrn)
-	builder.WriteString(", ")
-	builder.WriteString("account_urn=")
-	builder.WriteString(_m.AccountUrn)
 	builder.WriteString(", ")
 	builder.WriteString("mode=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Mode))

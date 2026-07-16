@@ -1,0 +1,41 @@
+app:
+  name: "CloudTerminal"
+  version: "1.0.0"
+  environment: "development"
+
+server:
+  port: 8443
+
+# 数据库配置
+database:
+  driver: "sqlite3"
+  database: "CloudTerminal.db"  # SQLite 只需要指定文件名
+  host: "localhost"
+  port: 5432
+  username: "postgres" 
+  password: "postgres1234" 
+  ssl_mode: "disable"
+  max_open_conns: 20
+  max_idle_conns: 20
+  conn_max_lifetime: "1h"
+  conn_max_idle_time: "30m"
+  busy_timeout: 5000       # SQLite only
+  connect_timeout: 10      # Postgres only
+  auto_migrate: true
+
+
+# 日志配置
+logger:
+  level: "info"  # debug, info, warn, error
+  format: "console"  # console, json
+  development: true
+  enable_console: true
+  console_to_std: "stdout"
+  enable_file: true
+  file_path: "logs/app.log"
+  file_max_age: 7
+
+# AI大脑与回测策略核心配置
+brain:
+  enabled: true              # 是否启动交易大脑核心（包含策略管道运行）
+  disable_optimization: true # 是否禁用策略优化系统（重构期间推荐设为 true，跳过 WFA 遗传算法优化回测，实现引擎秒启动）

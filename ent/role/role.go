@@ -26,8 +26,12 @@ const (
 	FieldIsDisabled = "is_disabled"
 	// FieldIsDefault holds the string denoting the is_default field in the database.
 	FieldIsDefault = "is_default"
-	// EdgeAccount holds the string denoting the account edge name in mutations.
-	EdgeAccount = "account"
+	// FieldTrustPolicy holds the string denoting the trust_policy field in the database.
+	FieldTrustPolicy = "trust_policy"
+	// FieldEffectiveDate holds the string denoting the effective_date field in the database.
+	FieldEffectiveDate = "effective_date"
+	// FieldExpiryDate holds the string denoting the expiry_date field in the database.
+	FieldExpiryDate = "expiry_date"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
 	// EdgeAccessPolicies holds the string denoting the access_policies edge name in mutations.
@@ -36,22 +40,15 @@ const (
 	EdgeParentRole = "parent_role"
 	// EdgeChildRoles holds the string denoting the child_roles edge name in mutations.
 	EdgeChildRoles = "child_roles"
+	// EdgePermissionsBoundary holds the string denoting the permissions_boundary edge name in mutations.
+	EdgePermissionsBoundary = "permissions_boundary"
 	// Table holds the table name of the role in the database.
 	Table = "roles"
-	// AccountTable is the table that holds the account relation/edge.
-	AccountTable = "roles"
-	// AccountInverseTable is the table name for the Account entity.
-	// It exists in this package in order to avoid circular dependency with the "account" package.
-	AccountInverseTable = "accounts"
-	// AccountColumn is the table column denoting the account relation/edge.
-	AccountColumn = "account_roles"
-	// UsersTable is the table that holds the users relation/edge.
-	UsersTable = "users"
+	// UsersTable is the table that holds the users relation/edge. The primary key declared below.
+	UsersTable = "user_roles"
 	// UsersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UsersInverseTable = "users"
-	// UsersColumn is the table column denoting the users relation/edge.
-	UsersColumn = "user_role"
 	// AccessPoliciesTable is the table that holds the access_policies relation/edge. The primary key declared below.
 	AccessPoliciesTable = "role_access_policies"
 	// AccessPoliciesInverseTable is the table name for the AccessPolicy entity.
@@ -61,6 +58,13 @@ const (
 	ParentRoleTable = "role_child_roles"
 	// ChildRolesTable is the table that holds the child_roles relation/edge. The primary key declared below.
 	ChildRolesTable = "role_child_roles"
+	// PermissionsBoundaryTable is the table that holds the permissions_boundary relation/edge.
+	PermissionsBoundaryTable = "roles"
+	// PermissionsBoundaryInverseTable is the table name for the AccessPolicy entity.
+	// It exists in this package in order to avoid circular dependency with the "accesspolicy" package.
+	PermissionsBoundaryInverseTable = "access_policies"
+	// PermissionsBoundaryColumn is the table column denoting the permissions_boundary relation/edge.
+	PermissionsBoundaryColumn = "role_permissions_boundary"
 )
 
 // Columns holds all SQL columns for role fields.
@@ -72,15 +76,21 @@ var Columns = []string{
 	FieldDescription,
 	FieldIsDisabled,
 	FieldIsDefault,
+	FieldTrustPolicy,
+	FieldEffectiveDate,
+	FieldExpiryDate,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "roles"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"account_roles",
+	"role_permissions_boundary",
 }
 
 var (
+	// UsersPrimaryKey and UsersColumn2 are the table columns denoting the
+	// primary key for the users relation (M2M).
+	UsersPrimaryKey = []string{"user_id", "role_id"}
 	// AccessPoliciesPrimaryKey and AccessPoliciesColumn2 are the table columns denoting the
 	// primary key for the access_policies relation (M2M).
 	AccessPoliciesPrimaryKey = []string{"role_id", "access_policy_id"}
@@ -162,11 +172,14 @@ func ByIsDefault(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsDefault, opts...).ToFunc()
 }
 
-// ByAccountField orders the results by account field.
-func ByAccountField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccountStep(), sql.OrderByField(field, opts...))
-	}
+// ByEffectiveDate orders the results by the effective_date field.
+func ByEffectiveDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEffectiveDate, opts...).ToFunc()
+}
+
+// ByExpiryDate orders the results by the expiry_date field.
+func ByExpiryDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpiryDate, opts...).ToFunc()
 }
 
 // ByUsersCount orders the results by users count.
@@ -224,18 +237,18 @@ func ByChildRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newChildRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newAccountStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AccountInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
-	)
+
+// ByPermissionsBoundaryField orders the results by permissions_boundary field.
+func ByPermissionsBoundaryField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPermissionsBoundaryStep(), sql.OrderByField(field, opts...))
+	}
 }
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, true, UsersTable, UsersColumn),
+		sqlgraph.Edge(sqlgraph.M2M, true, UsersTable, UsersPrimaryKey...),
 	)
 }
 func newAccessPoliciesStep() *sqlgraph.Step {
@@ -257,5 +270,12 @@ func newChildRolesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(Table, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, ChildRolesTable, ChildRolesPrimaryKey...),
+	)
+}
+func newPermissionsBoundaryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PermissionsBoundaryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, PermissionsBoundaryTable, PermissionsBoundaryColumn),
 	)
 }

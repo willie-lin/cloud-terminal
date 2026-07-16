@@ -13,9 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/platform"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
@@ -83,9 +83,9 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			accesspolicy.Table: accesspolicy.ValidColumn,
-			account.Table:      account.ValidColumn,
 			auditlog.Table:     auditlog.ValidColumn,
 			environment.Table:  environment.ValidColumn,
+			group.Table:        group.ValidColumn,
 			platform.Table:     platform.ValidColumn,
 			resource.Table:     resource.ValidColumn,
 			role.Table:         role.ValidColumn,

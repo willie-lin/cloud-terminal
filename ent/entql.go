@@ -4,9 +4,9 @@ package ent
 
 import (
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/platform"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
@@ -35,34 +35,19 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "AccessPolicy",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			accesspolicy.FieldCreatedAt:   {Type: field.TypeTime, Column: accesspolicy.FieldCreatedAt},
-			accesspolicy.FieldUpdatedAt:   {Type: field.TypeTime, Column: accesspolicy.FieldUpdatedAt},
-			accesspolicy.FieldName:        {Type: field.TypeString, Column: accesspolicy.FieldName},
-			accesspolicy.FieldDescription: {Type: field.TypeString, Column: accesspolicy.FieldDescription},
-			accesspolicy.FieldStatements:  {Type: field.TypeJSON, Column: accesspolicy.FieldStatements},
-			accesspolicy.FieldImmutable:   {Type: field.TypeBool, Column: accesspolicy.FieldImmutable},
-			accesspolicy.FieldPriority:    {Type: field.TypeInt, Column: accesspolicy.FieldPriority},
+			accesspolicy.FieldCreatedAt:     {Type: field.TypeTime, Column: accesspolicy.FieldCreatedAt},
+			accesspolicy.FieldUpdatedAt:     {Type: field.TypeTime, Column: accesspolicy.FieldUpdatedAt},
+			accesspolicy.FieldName:          {Type: field.TypeString, Column: accesspolicy.FieldName},
+			accesspolicy.FieldDescription:   {Type: field.TypeString, Column: accesspolicy.FieldDescription},
+			accesspolicy.FieldVersion:       {Type: field.TypeString, Column: accesspolicy.FieldVersion},
+			accesspolicy.FieldStatements:    {Type: field.TypeJSON, Column: accesspolicy.FieldStatements},
+			accesspolicy.FieldImmutable:     {Type: field.TypeBool, Column: accesspolicy.FieldImmutable},
+			accesspolicy.FieldPriority:      {Type: field.TypeInt, Column: accesspolicy.FieldPriority},
+			accesspolicy.FieldEffectiveDate: {Type: field.TypeTime, Column: accesspolicy.FieldEffectiveDate},
+			accesspolicy.FieldExpiryDate:    {Type: field.TypeTime, Column: accesspolicy.FieldExpiryDate},
 		},
 	}
 	graph.Nodes[1] = &sqlgraph.Node{
-		NodeSpec: sqlgraph.NodeSpec{
-			Table:   account.Table,
-			Columns: account.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeString,
-				Column: account.FieldID,
-			},
-		},
-		Type: "Account",
-		Fields: map[string]*sqlgraph.FieldSpec{
-			account.FieldCreatedAt:   {Type: field.TypeTime, Column: account.FieldCreatedAt},
-			account.FieldUpdatedAt:   {Type: field.TypeTime, Column: account.FieldUpdatedAt},
-			account.FieldName:        {Type: field.TypeString, Column: account.FieldName},
-			account.FieldDescription: {Type: field.TypeString, Column: account.FieldDescription},
-			account.FieldStatus:      {Type: field.TypeEnum, Column: account.FieldStatus},
-		},
-	}
-	graph.Nodes[2] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   auditlog.Table,
 			Columns: auditlog.Columns,
@@ -73,19 +58,20 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "AuditLog",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			auditlog.FieldCreatedAt: {Type: field.TypeTime, Column: auditlog.FieldCreatedAt},
-			auditlog.FieldUpdatedAt: {Type: field.TypeTime, Column: auditlog.FieldUpdatedAt},
-			auditlog.FieldSessionID: {Type: field.TypeString, Column: auditlog.FieldSessionID},
-			auditlog.FieldUsername:  {Type: field.TypeString, Column: auditlog.FieldUsername},
-			auditlog.FieldAction:    {Type: field.TypeString, Column: auditlog.FieldAction},
-			auditlog.FieldResult:    {Type: field.TypeString, Column: auditlog.FieldResult},
-			auditlog.FieldStartedAt: {Type: field.TypeTime, Column: auditlog.FieldStartedAt},
-			auditlog.FieldEndedAt:   {Type: field.TypeTime, Column: auditlog.FieldEndedAt},
-			auditlog.FieldDetail:    {Type: field.TypeJSON, Column: auditlog.FieldDetail},
-			auditlog.FieldS3Path:    {Type: field.TypeString, Column: auditlog.FieldS3Path},
+			auditlog.FieldCreatedAt:           {Type: field.TypeTime, Column: auditlog.FieldCreatedAt},
+			auditlog.FieldUpdatedAt:           {Type: field.TypeTime, Column: auditlog.FieldUpdatedAt},
+			auditlog.FieldSessionID:           {Type: field.TypeString, Column: auditlog.FieldSessionID},
+			auditlog.FieldUsername:            {Type: field.TypeString, Column: auditlog.FieldUsername},
+			auditlog.FieldAction:              {Type: field.TypeString, Column: auditlog.FieldAction},
+			auditlog.FieldResult:              {Type: field.TypeString, Column: auditlog.FieldResult},
+			auditlog.FieldStartedAt:           {Type: field.TypeTime, Column: auditlog.FieldStartedAt},
+			auditlog.FieldEndedAt:             {Type: field.TypeTime, Column: auditlog.FieldEndedAt},
+			auditlog.FieldResourceUrnSnapshot: {Type: field.TypeString, Column: auditlog.FieldResourceUrnSnapshot},
+			auditlog.FieldDetail:              {Type: field.TypeJSON, Column: auditlog.FieldDetail},
+			auditlog.FieldS3Path:              {Type: field.TypeString, Column: auditlog.FieldS3Path},
 		},
 	}
-	graph.Nodes[3] = &sqlgraph.Node{
+	graph.Nodes[2] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   environment.Table,
 			Columns: environment.Columns,
@@ -106,6 +92,25 @@ var schemaGraph = func() *sqlgraph.Schema {
 			environment.FieldEnvVars:       {Type: field.TypeJSON, Column: environment.FieldEnvVars},
 			environment.FieldVolumes:       {Type: field.TypeJSON, Column: environment.FieldVolumes},
 			environment.FieldStatus:        {Type: field.TypeEnum, Column: environment.FieldStatus},
+		},
+	}
+	graph.Nodes[3] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   group.Table,
+			Columns: group.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeString,
+				Column: group.FieldID,
+			},
+		},
+		Type: "Group",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			group.FieldCreatedAt:   {Type: field.TypeTime, Column: group.FieldCreatedAt},
+			group.FieldUpdatedAt:   {Type: field.TypeTime, Column: group.FieldUpdatedAt},
+			group.FieldName:        {Type: field.TypeString, Column: group.FieldName},
+			group.FieldDescription: {Type: field.TypeString, Column: group.FieldDescription},
+			group.FieldStatus:      {Type: field.TypeEnum, Column: group.FieldStatus},
+			group.FieldAttributes:  {Type: field.TypeJSON, Column: group.FieldAttributes},
 		},
 	}
 	graph.Nodes[4] = &sqlgraph.Node{
@@ -142,13 +147,17 @@ var schemaGraph = func() *sqlgraph.Schema {
 		Fields: map[string]*sqlgraph.FieldSpec{
 			resource.FieldCreatedAt:   {Type: field.TypeTime, Column: resource.FieldCreatedAt},
 			resource.FieldUpdatedAt:   {Type: field.TypeTime, Column: resource.FieldUpdatedAt},
+			resource.FieldUrn:         {Type: field.TypeString, Column: resource.FieldUrn},
 			resource.FieldName:        {Type: field.TypeString, Column: resource.FieldName},
-			resource.FieldHost:        {Type: field.TypeString, Column: resource.FieldHost},
-			resource.FieldPort:        {Type: field.TypeInt, Column: resource.FieldPort},
 			resource.FieldType:        {Type: field.TypeEnum, Column: resource.FieldType},
+			resource.FieldIP:          {Type: field.TypeString, Column: resource.FieldIP},
+			resource.FieldPort:        {Type: field.TypeInt, Column: resource.FieldPort},
+			resource.FieldEnv:         {Type: field.TypeEnum, Column: resource.FieldEnv},
+			resource.FieldRegion:      {Type: field.TypeString, Column: resource.FieldRegion},
 			resource.FieldDescription: {Type: field.TypeString, Column: resource.FieldDescription},
 			resource.FieldStatus:      {Type: field.TypeEnum, Column: resource.FieldStatus},
-			resource.FieldMetadata:    {Type: field.TypeJSON, Column: resource.FieldMetadata},
+			resource.FieldDetails:     {Type: field.TypeJSON, Column: resource.FieldDetails},
+			resource.FieldAuthData:    {Type: field.TypeJSON, Column: resource.FieldAuthData},
 		},
 	}
 	graph.Nodes[6] = &sqlgraph.Node{
@@ -162,12 +171,15 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Role",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			role.FieldCreatedAt:   {Type: field.TypeTime, Column: role.FieldCreatedAt},
-			role.FieldUpdatedAt:   {Type: field.TypeTime, Column: role.FieldUpdatedAt},
-			role.FieldName:        {Type: field.TypeString, Column: role.FieldName},
-			role.FieldDescription: {Type: field.TypeString, Column: role.FieldDescription},
-			role.FieldIsDisabled:  {Type: field.TypeBool, Column: role.FieldIsDisabled},
-			role.FieldIsDefault:   {Type: field.TypeBool, Column: role.FieldIsDefault},
+			role.FieldCreatedAt:     {Type: field.TypeTime, Column: role.FieldCreatedAt},
+			role.FieldUpdatedAt:     {Type: field.TypeTime, Column: role.FieldUpdatedAt},
+			role.FieldName:          {Type: field.TypeString, Column: role.FieldName},
+			role.FieldDescription:   {Type: field.TypeString, Column: role.FieldDescription},
+			role.FieldIsDisabled:    {Type: field.TypeBool, Column: role.FieldIsDisabled},
+			role.FieldIsDefault:     {Type: field.TypeBool, Column: role.FieldIsDefault},
+			role.FieldTrustPolicy:   {Type: field.TypeJSON, Column: role.FieldTrustPolicy},
+			role.FieldEffectiveDate: {Type: field.TypeTime, Column: role.FieldEffectiveDate},
+			role.FieldExpiryDate:    {Type: field.TypeTime, Column: role.FieldExpiryDate},
 		},
 	}
 	graph.Nodes[7] = &sqlgraph.Node{
@@ -187,7 +199,6 @@ var schemaGraph = func() *sqlgraph.Schema {
 			session.FieldPrincipalUrn:   {Type: field.TypeString, Column: session.FieldPrincipalUrn},
 			session.FieldResourceUrn:    {Type: field.TypeString, Column: session.FieldResourceUrn},
 			session.FieldEnvironmentUrn: {Type: field.TypeString, Column: session.FieldEnvironmentUrn},
-			session.FieldAccountUrn:     {Type: field.TypeString, Column: session.FieldAccountUrn},
 			session.FieldMode:           {Type: field.TypeEnum, Column: session.FieldMode},
 			session.FieldStatus:         {Type: field.TypeEnum, Column: session.FieldStatus},
 			session.FieldStartedAt:      {Type: field.TypeTime, Column: session.FieldStartedAt},
@@ -244,19 +255,44 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldSocialLogins:        {Type: field.TypeJSON, Column: user.FieldSocialLogins},
 			user.FieldIsDefault:           {Type: field.TypeBool, Column: user.FieldIsDefault},
 			user.FieldSSHPublicKey:        {Type: field.TypeString, Column: user.FieldSSHPublicKey},
+			user.FieldAttributes:          {Type: field.TypeJSON, Column: user.FieldAttributes},
 		},
 	}
 	graph.MustAddE(
-		"account",
+		"groups",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   accesspolicy.AccountTable,
-			Columns: accesspolicy.AccountPrimaryKey,
+			Table:   accesspolicy.GroupsTable,
+			Columns: accesspolicy.GroupsPrimaryKey,
 			Bidi:    false,
 		},
 		"AccessPolicy",
-		"Account",
+		"Group",
+	)
+	graph.MustAddE(
+		"users",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.UsersTable,
+			Columns: accesspolicy.UsersPrimaryKey,
+			Bidi:    false,
+		},
+		"AccessPolicy",
+		"User",
+	)
+	graph.MustAddE(
+		"resources",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.ResourcesTable,
+			Columns: accesspolicy.ResourcesPrimaryKey,
+			Bidi:    false,
+		},
+		"AccessPolicy",
+		"Resource",
 	)
 	graph.MustAddE(
 		"roles",
@@ -271,78 +307,6 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Role",
 	)
 	graph.MustAddE(
-		"tenant",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   accesspolicy.TenantTable,
-			Columns: []string{accesspolicy.TenantColumn},
-			Bidi:    false,
-		},
-		"AccessPolicy",
-		"Tenant",
-	)
-	graph.MustAddE(
-		"environment",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   accesspolicy.EnvironmentTable,
-			Columns: []string{accesspolicy.EnvironmentColumn},
-			Bidi:    false,
-		},
-		"AccessPolicy",
-		"Environment",
-	)
-	graph.MustAddE(
-		"users",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.UsersTable,
-			Columns: []string{account.UsersColumn},
-			Bidi:    false,
-		},
-		"Account",
-		"User",
-	)
-	graph.MustAddE(
-		"roles",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   account.RolesTable,
-			Columns: []string{account.RolesColumn},
-			Bidi:    false,
-		},
-		"Account",
-		"Role",
-	)
-	graph.MustAddE(
-		"access_policies",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   account.AccessPoliciesTable,
-			Columns: account.AccessPoliciesPrimaryKey,
-			Bidi:    false,
-		},
-		"Account",
-		"AccessPolicy",
-	)
-	graph.MustAddE(
-		"resource",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   account.ResourceTable,
-			Columns: []string{account.ResourceColumn},
-			Bidi:    false,
-		},
-		"Account",
-		"Resource",
-	)
-	graph.MustAddE(
 		"user",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -353,6 +317,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"AuditLog",
 		"User",
+	)
+	graph.MustAddE(
+		"resource",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   auditlog.ResourceTable,
+			Columns: []string{auditlog.ResourceColumn},
+			Bidi:    false,
+		},
+		"AuditLog",
+		"Resource",
 	)
 	graph.MustAddE(
 		"tenant",
@@ -367,15 +343,27 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Tenant",
 	)
 	graph.MustAddE(
-		"access_policies",
+		"users",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   environment.AccessPoliciesTable,
-			Columns: []string{environment.AccessPoliciesColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.UsersTable,
+			Columns: []string{group.UsersColumn},
 			Bidi:    false,
 		},
-		"Environment",
+		"Group",
+		"User",
+	)
+	graph.MustAddE(
+		"access_policies",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   group.AccessPoliciesTable,
+			Columns: group.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+		},
+		"Group",
 		"AccessPolicy",
 	)
 	graph.MustAddE(
@@ -391,36 +379,36 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Tenant",
 	)
 	graph.MustAddE(
-		"accounts",
+		"audit_logs",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   resource.AccountsTable,
-			Columns: []string{resource.AccountsColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.AuditLogsTable,
+			Columns: []string{resource.AuditLogsColumn},
 			Bidi:    false,
 		},
 		"Resource",
-		"Account",
+		"AuditLog",
 	)
 	graph.MustAddE(
-		"account",
+		"policies",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   role.AccountTable,
-			Columns: []string{role.AccountColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   resource.PoliciesTable,
+			Columns: resource.PoliciesPrimaryKey,
 			Bidi:    false,
 		},
-		"Role",
-		"Account",
+		"Resource",
+		"AccessPolicy",
 	)
 	graph.MustAddE(
 		"users",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
+			Columns: role.UsersPrimaryKey,
 			Bidi:    false,
 		},
 		"Role",
@@ -463,6 +451,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Role",
 	)
 	graph.MustAddE(
+		"permissions_boundary",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   role.PermissionsBoundaryTable,
+			Columns: []string{role.PermissionsBoundaryColumn},
+			Bidi:    false,
+		},
+		"Role",
+		"AccessPolicy",
+	)
+	graph.MustAddE(
 		"environments",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -499,24 +499,24 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"AccessPolicy",
 	)
 	graph.MustAddE(
-		"account",
+		"group",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   user.AccountTable,
-			Columns: []string{user.AccountColumn},
+			Table:   user.GroupTable,
+			Columns: []string{user.GroupColumn},
 			Bidi:    false,
 		},
 		"User",
-		"Account",
+		"Group",
 	)
 	graph.MustAddE(
-		"role",
+		"roles",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.RoleTable,
-			Columns: []string{user.RoleColumn},
+			Table:   user.RolesTable,
+			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 		},
 		"User",
@@ -533,6 +533,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"User",
 		"AuditLog",
+	)
+	graph.MustAddE(
+		"access_policies",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+		},
+		"User",
+		"AccessPolicy",
 	)
 	return graph
 }()
@@ -603,6 +615,11 @@ func (f *AccessPolicyFilter) WhereDescription(p entql.StringP) {
 	f.Where(p.Field(accesspolicy.FieldDescription))
 }
 
+// WhereVersion applies the entql string predicate on the version field.
+func (f *AccessPolicyFilter) WhereVersion(p entql.StringP) {
+	f.Where(p.Field(accesspolicy.FieldVersion))
+}
+
 // WhereStatements applies the entql json.RawMessage predicate on the statements field.
 func (f *AccessPolicyFilter) WhereStatements(p entql.BytesP) {
 	f.Where(p.Field(accesspolicy.FieldStatements))
@@ -618,14 +635,52 @@ func (f *AccessPolicyFilter) WherePriority(p entql.IntP) {
 	f.Where(p.Field(accesspolicy.FieldPriority))
 }
 
-// WhereHasAccount applies a predicate to check if query has an edge account.
-func (f *AccessPolicyFilter) WhereHasAccount() {
-	f.Where(entql.HasEdge("account"))
+// WhereEffectiveDate applies the entql time.Time predicate on the effective_date field.
+func (f *AccessPolicyFilter) WhereEffectiveDate(p entql.TimeP) {
+	f.Where(p.Field(accesspolicy.FieldEffectiveDate))
 }
 
-// WhereHasAccountWith applies a predicate to check if query has an edge account with a given conditions (other predicates).
-func (f *AccessPolicyFilter) WhereHasAccountWith(preds ...predicate.Account) {
-	f.Where(entql.HasEdgeWith("account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+// WhereExpiryDate applies the entql time.Time predicate on the expiry_date field.
+func (f *AccessPolicyFilter) WhereExpiryDate(p entql.TimeP) {
+	f.Where(p.Field(accesspolicy.FieldExpiryDate))
+}
+
+// WhereHasGroups applies a predicate to check if query has an edge groups.
+func (f *AccessPolicyFilter) WhereHasGroups() {
+	f.Where(entql.HasEdge("groups"))
+}
+
+// WhereHasGroupsWith applies a predicate to check if query has an edge groups with a given conditions (other predicates).
+func (f *AccessPolicyFilter) WhereHasGroupsWith(preds ...predicate.Group) {
+	f.Where(entql.HasEdgeWith("groups", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUsers applies a predicate to check if query has an edge users.
+func (f *AccessPolicyFilter) WhereHasUsers() {
+	f.Where(entql.HasEdge("users"))
+}
+
+// WhereHasUsersWith applies a predicate to check if query has an edge users with a given conditions (other predicates).
+func (f *AccessPolicyFilter) WhereHasUsersWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("users", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasResources applies a predicate to check if query has an edge resources.
+func (f *AccessPolicyFilter) WhereHasResources() {
+	f.Where(entql.HasEdge("resources"))
+}
+
+// WhereHasResourcesWith applies a predicate to check if query has an edge resources with a given conditions (other predicates).
+func (f *AccessPolicyFilter) WhereHasResourcesWith(preds ...predicate.Resource) {
+	f.Where(entql.HasEdgeWith("resources", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -640,155 +695,6 @@ func (f *AccessPolicyFilter) WhereHasRoles() {
 // WhereHasRolesWith applies a predicate to check if query has an edge roles with a given conditions (other predicates).
 func (f *AccessPolicyFilter) WhereHasRolesWith(preds ...predicate.Role) {
 	f.Where(entql.HasEdgeWith("roles", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// WhereHasTenant applies a predicate to check if query has an edge tenant.
-func (f *AccessPolicyFilter) WhereHasTenant() {
-	f.Where(entql.HasEdge("tenant"))
-}
-
-// WhereHasTenantWith applies a predicate to check if query has an edge tenant with a given conditions (other predicates).
-func (f *AccessPolicyFilter) WhereHasTenantWith(preds ...predicate.Tenant) {
-	f.Where(entql.HasEdgeWith("tenant", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// WhereHasEnvironment applies a predicate to check if query has an edge environment.
-func (f *AccessPolicyFilter) WhereHasEnvironment() {
-	f.Where(entql.HasEdge("environment"))
-}
-
-// WhereHasEnvironmentWith applies a predicate to check if query has an edge environment with a given conditions (other predicates).
-func (f *AccessPolicyFilter) WhereHasEnvironmentWith(preds ...predicate.Environment) {
-	f.Where(entql.HasEdgeWith("environment", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// addPredicate implements the predicateAdder interface.
-func (_q *AccountQuery) addPredicate(pred func(s *sql.Selector)) {
-	_q.predicates = append(_q.predicates, pred)
-}
-
-// Filter returns a Filter implementation to apply filters on the AccountQuery builder.
-func (_q *AccountQuery) Filter() *AccountFilter {
-	return &AccountFilter{config: _q.config, predicateAdder: _q}
-}
-
-// addPredicate implements the predicateAdder interface.
-func (m *AccountMutation) addPredicate(pred func(s *sql.Selector)) {
-	m.predicates = append(m.predicates, pred)
-}
-
-// Filter returns an entql.Where implementation to apply filters on the AccountMutation builder.
-func (m *AccountMutation) Filter() *AccountFilter {
-	return &AccountFilter{config: m.config, predicateAdder: m}
-}
-
-// AccountFilter provides a generic filtering capability at runtime for AccountQuery.
-type AccountFilter struct {
-	predicateAdder
-	config
-}
-
-// Where applies the entql predicate on the query filter.
-func (f *AccountFilter) Where(p entql.P) {
-	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[1].Type, p, s); err != nil {
-			s.AddError(err)
-		}
-	})
-}
-
-// WhereID applies the entql string predicate on the id field.
-func (f *AccountFilter) WhereID(p entql.StringP) {
-	f.Where(p.Field(account.FieldID))
-}
-
-// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
-func (f *AccountFilter) WhereCreatedAt(p entql.TimeP) {
-	f.Where(p.Field(account.FieldCreatedAt))
-}
-
-// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
-func (f *AccountFilter) WhereUpdatedAt(p entql.TimeP) {
-	f.Where(p.Field(account.FieldUpdatedAt))
-}
-
-// WhereName applies the entql string predicate on the name field.
-func (f *AccountFilter) WhereName(p entql.StringP) {
-	f.Where(p.Field(account.FieldName))
-}
-
-// WhereDescription applies the entql string predicate on the description field.
-func (f *AccountFilter) WhereDescription(p entql.StringP) {
-	f.Where(p.Field(account.FieldDescription))
-}
-
-// WhereStatus applies the entql string predicate on the status field.
-func (f *AccountFilter) WhereStatus(p entql.StringP) {
-	f.Where(p.Field(account.FieldStatus))
-}
-
-// WhereHasUsers applies a predicate to check if query has an edge users.
-func (f *AccountFilter) WhereHasUsers() {
-	f.Where(entql.HasEdge("users"))
-}
-
-// WhereHasUsersWith applies a predicate to check if query has an edge users with a given conditions (other predicates).
-func (f *AccountFilter) WhereHasUsersWith(preds ...predicate.User) {
-	f.Where(entql.HasEdgeWith("users", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// WhereHasRoles applies a predicate to check if query has an edge roles.
-func (f *AccountFilter) WhereHasRoles() {
-	f.Where(entql.HasEdge("roles"))
-}
-
-// WhereHasRolesWith applies a predicate to check if query has an edge roles with a given conditions (other predicates).
-func (f *AccountFilter) WhereHasRolesWith(preds ...predicate.Role) {
-	f.Where(entql.HasEdgeWith("roles", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// WhereHasAccessPolicies applies a predicate to check if query has an edge access_policies.
-func (f *AccountFilter) WhereHasAccessPolicies() {
-	f.Where(entql.HasEdge("access_policies"))
-}
-
-// WhereHasAccessPoliciesWith applies a predicate to check if query has an edge access_policies with a given conditions (other predicates).
-func (f *AccountFilter) WhereHasAccessPoliciesWith(preds ...predicate.AccessPolicy) {
-	f.Where(entql.HasEdgeWith("access_policies", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// WhereHasResource applies a predicate to check if query has an edge resource.
-func (f *AccountFilter) WhereHasResource() {
-	f.Where(entql.HasEdge("resource"))
-}
-
-// WhereHasResourceWith applies a predicate to check if query has an edge resource with a given conditions (other predicates).
-func (f *AccountFilter) WhereHasResourceWith(preds ...predicate.Resource) {
-	f.Where(entql.HasEdgeWith("resource", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -824,7 +730,7 @@ type AuditLogFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *AuditLogFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[1].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -875,6 +781,11 @@ func (f *AuditLogFilter) WhereEndedAt(p entql.TimeP) {
 	f.Where(p.Field(auditlog.FieldEndedAt))
 }
 
+// WhereResourceUrnSnapshot applies the entql string predicate on the resource_urn_snapshot field.
+func (f *AuditLogFilter) WhereResourceUrnSnapshot(p entql.StringP) {
+	f.Where(p.Field(auditlog.FieldResourceUrnSnapshot))
+}
+
 // WhereDetail applies the entql json.RawMessage predicate on the detail field.
 func (f *AuditLogFilter) WhereDetail(p entql.BytesP) {
 	f.Where(p.Field(auditlog.FieldDetail))
@@ -893,6 +804,20 @@ func (f *AuditLogFilter) WhereHasUser() {
 // WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
 func (f *AuditLogFilter) WhereHasUserWith(preds ...predicate.User) {
 	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasResource applies a predicate to check if query has an edge resource.
+func (f *AuditLogFilter) WhereHasResource() {
+	f.Where(entql.HasEdge("resource"))
+}
+
+// WhereHasResourceWith applies a predicate to check if query has an edge resource with a given conditions (other predicates).
+func (f *AuditLogFilter) WhereHasResourceWith(preds ...predicate.Resource) {
+	f.Where(entql.HasEdgeWith("resource", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -928,7 +853,7 @@ type EnvironmentFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *EnvironmentFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -1003,13 +928,97 @@ func (f *EnvironmentFilter) WhereHasTenantWith(preds ...predicate.Tenant) {
 	})))
 }
 
+// addPredicate implements the predicateAdder interface.
+func (_q *GroupQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the GroupQuery builder.
+func (_q *GroupQuery) Filter() *GroupFilter {
+	return &GroupFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *GroupMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the GroupMutation builder.
+func (m *GroupMutation) Filter() *GroupFilter {
+	return &GroupFilter{config: m.config, predicateAdder: m}
+}
+
+// GroupFilter provides a generic filtering capability at runtime for GroupQuery.
+type GroupFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *GroupFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql string predicate on the id field.
+func (f *GroupFilter) WhereID(p entql.StringP) {
+	f.Where(p.Field(group.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *GroupFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(group.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *GroupFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(group.FieldUpdatedAt))
+}
+
+// WhereName applies the entql string predicate on the name field.
+func (f *GroupFilter) WhereName(p entql.StringP) {
+	f.Where(p.Field(group.FieldName))
+}
+
+// WhereDescription applies the entql string predicate on the description field.
+func (f *GroupFilter) WhereDescription(p entql.StringP) {
+	f.Where(p.Field(group.FieldDescription))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *GroupFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(group.FieldStatus))
+}
+
+// WhereAttributes applies the entql json.RawMessage predicate on the attributes field.
+func (f *GroupFilter) WhereAttributes(p entql.BytesP) {
+	f.Where(p.Field(group.FieldAttributes))
+}
+
+// WhereHasUsers applies a predicate to check if query has an edge users.
+func (f *GroupFilter) WhereHasUsers() {
+	f.Where(entql.HasEdge("users"))
+}
+
+// WhereHasUsersWith applies a predicate to check if query has an edge users with a given conditions (other predicates).
+func (f *GroupFilter) WhereHasUsersWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("users", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasAccessPolicies applies a predicate to check if query has an edge access_policies.
-func (f *EnvironmentFilter) WhereHasAccessPolicies() {
+func (f *GroupFilter) WhereHasAccessPolicies() {
 	f.Where(entql.HasEdge("access_policies"))
 }
 
 // WhereHasAccessPoliciesWith applies a predicate to check if query has an edge access_policies with a given conditions (other predicates).
-func (f *EnvironmentFilter) WhereHasAccessPoliciesWith(preds ...predicate.AccessPolicy) {
+func (f *GroupFilter) WhereHasAccessPoliciesWith(preds ...predicate.AccessPolicy) {
 	f.Where(entql.HasEdgeWith("access_policies", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
@@ -1147,14 +1156,24 @@ func (f *ResourceFilter) WhereUpdatedAt(p entql.TimeP) {
 	f.Where(p.Field(resource.FieldUpdatedAt))
 }
 
+// WhereUrn applies the entql string predicate on the urn field.
+func (f *ResourceFilter) WhereUrn(p entql.StringP) {
+	f.Where(p.Field(resource.FieldUrn))
+}
+
 // WhereName applies the entql string predicate on the name field.
 func (f *ResourceFilter) WhereName(p entql.StringP) {
 	f.Where(p.Field(resource.FieldName))
 }
 
-// WhereHost applies the entql string predicate on the host field.
-func (f *ResourceFilter) WhereHost(p entql.StringP) {
-	f.Where(p.Field(resource.FieldHost))
+// WhereType applies the entql string predicate on the type field.
+func (f *ResourceFilter) WhereType(p entql.StringP) {
+	f.Where(p.Field(resource.FieldType))
+}
+
+// WhereIP applies the entql string predicate on the ip field.
+func (f *ResourceFilter) WhereIP(p entql.StringP) {
+	f.Where(p.Field(resource.FieldIP))
 }
 
 // WherePort applies the entql int predicate on the port field.
@@ -1162,9 +1181,14 @@ func (f *ResourceFilter) WherePort(p entql.IntP) {
 	f.Where(p.Field(resource.FieldPort))
 }
 
-// WhereType applies the entql string predicate on the type field.
-func (f *ResourceFilter) WhereType(p entql.StringP) {
-	f.Where(p.Field(resource.FieldType))
+// WhereEnv applies the entql string predicate on the env field.
+func (f *ResourceFilter) WhereEnv(p entql.StringP) {
+	f.Where(p.Field(resource.FieldEnv))
+}
+
+// WhereRegion applies the entql string predicate on the region field.
+func (f *ResourceFilter) WhereRegion(p entql.StringP) {
+	f.Where(p.Field(resource.FieldRegion))
 }
 
 // WhereDescription applies the entql string predicate on the description field.
@@ -1177,9 +1201,14 @@ func (f *ResourceFilter) WhereStatus(p entql.StringP) {
 	f.Where(p.Field(resource.FieldStatus))
 }
 
-// WhereMetadata applies the entql json.RawMessage predicate on the metadata field.
-func (f *ResourceFilter) WhereMetadata(p entql.BytesP) {
-	f.Where(p.Field(resource.FieldMetadata))
+// WhereDetails applies the entql json.RawMessage predicate on the details field.
+func (f *ResourceFilter) WhereDetails(p entql.BytesP) {
+	f.Where(p.Field(resource.FieldDetails))
+}
+
+// WhereAuthData applies the entql json.RawMessage predicate on the auth_data field.
+func (f *ResourceFilter) WhereAuthData(p entql.BytesP) {
+	f.Where(p.Field(resource.FieldAuthData))
 }
 
 // WhereHasTenant applies a predicate to check if query has an edge tenant.
@@ -1196,14 +1225,28 @@ func (f *ResourceFilter) WhereHasTenantWith(preds ...predicate.Tenant) {
 	})))
 }
 
-// WhereHasAccounts applies a predicate to check if query has an edge accounts.
-func (f *ResourceFilter) WhereHasAccounts() {
-	f.Where(entql.HasEdge("accounts"))
+// WhereHasAuditLogs applies a predicate to check if query has an edge audit_logs.
+func (f *ResourceFilter) WhereHasAuditLogs() {
+	f.Where(entql.HasEdge("audit_logs"))
 }
 
-// WhereHasAccountsWith applies a predicate to check if query has an edge accounts with a given conditions (other predicates).
-func (f *ResourceFilter) WhereHasAccountsWith(preds ...predicate.Account) {
-	f.Where(entql.HasEdgeWith("accounts", sqlgraph.WrapFunc(func(s *sql.Selector) {
+// WhereHasAuditLogsWith applies a predicate to check if query has an edge audit_logs with a given conditions (other predicates).
+func (f *ResourceFilter) WhereHasAuditLogsWith(preds ...predicate.AuditLog) {
+	f.Where(entql.HasEdgeWith("audit_logs", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPolicies applies a predicate to check if query has an edge policies.
+func (f *ResourceFilter) WhereHasPolicies() {
+	f.Where(entql.HasEdge("policies"))
+}
+
+// WhereHasPoliciesWith applies a predicate to check if query has an edge policies with a given conditions (other predicates).
+func (f *ResourceFilter) WhereHasPoliciesWith(preds ...predicate.AccessPolicy) {
+	f.Where(entql.HasEdgeWith("policies", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -1280,18 +1323,19 @@ func (f *RoleFilter) WhereIsDefault(p entql.BoolP) {
 	f.Where(p.Field(role.FieldIsDefault))
 }
 
-// WhereHasAccount applies a predicate to check if query has an edge account.
-func (f *RoleFilter) WhereHasAccount() {
-	f.Where(entql.HasEdge("account"))
+// WhereTrustPolicy applies the entql json.RawMessage predicate on the trust_policy field.
+func (f *RoleFilter) WhereTrustPolicy(p entql.BytesP) {
+	f.Where(p.Field(role.FieldTrustPolicy))
 }
 
-// WhereHasAccountWith applies a predicate to check if query has an edge account with a given conditions (other predicates).
-func (f *RoleFilter) WhereHasAccountWith(preds ...predicate.Account) {
-	f.Where(entql.HasEdgeWith("account", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
+// WhereEffectiveDate applies the entql time.Time predicate on the effective_date field.
+func (f *RoleFilter) WhereEffectiveDate(p entql.TimeP) {
+	f.Where(p.Field(role.FieldEffectiveDate))
+}
+
+// WhereExpiryDate applies the entql time.Time predicate on the expiry_date field.
+func (f *RoleFilter) WhereExpiryDate(p entql.TimeP) {
+	f.Where(p.Field(role.FieldExpiryDate))
 }
 
 // WhereHasUsers applies a predicate to check if query has an edge users.
@@ -1344,6 +1388,20 @@ func (f *RoleFilter) WhereHasChildRoles() {
 // WhereHasChildRolesWith applies a predicate to check if query has an edge child_roles with a given conditions (other predicates).
 func (f *RoleFilter) WhereHasChildRolesWith(preds ...predicate.Role) {
 	f.Where(entql.HasEdgeWith("child_roles", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPermissionsBoundary applies a predicate to check if query has an edge permissions_boundary.
+func (f *RoleFilter) WhereHasPermissionsBoundary() {
+	f.Where(entql.HasEdge("permissions_boundary"))
+}
+
+// WhereHasPermissionsBoundaryWith applies a predicate to check if query has an edge permissions_boundary with a given conditions (other predicates).
+func (f *RoleFilter) WhereHasPermissionsBoundaryWith(preds ...predicate.AccessPolicy) {
+	f.Where(entql.HasEdgeWith("permissions_boundary", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -1418,11 +1476,6 @@ func (f *SessionFilter) WhereResourceUrn(p entql.StringP) {
 // WhereEnvironmentUrn applies the entql string predicate on the environment_urn field.
 func (f *SessionFilter) WhereEnvironmentUrn(p entql.StringP) {
 	f.Where(p.Field(session.FieldEnvironmentUrn))
-}
-
-// WhereAccountUrn applies the entql string predicate on the account_urn field.
-func (f *SessionFilter) WhereAccountUrn(p entql.StringP) {
-	f.Where(p.Field(session.FieldAccountUrn))
 }
 
 // WhereMode applies the entql string predicate on the mode field.
@@ -1697,28 +1750,33 @@ func (f *UserFilter) WhereSSHPublicKey(p entql.StringP) {
 	f.Where(p.Field(user.FieldSSHPublicKey))
 }
 
-// WhereHasAccount applies a predicate to check if query has an edge account.
-func (f *UserFilter) WhereHasAccount() {
-	f.Where(entql.HasEdge("account"))
+// WhereAttributes applies the entql json.RawMessage predicate on the attributes field.
+func (f *UserFilter) WhereAttributes(p entql.BytesP) {
+	f.Where(p.Field(user.FieldAttributes))
 }
 
-// WhereHasAccountWith applies a predicate to check if query has an edge account with a given conditions (other predicates).
-func (f *UserFilter) WhereHasAccountWith(preds ...predicate.Account) {
-	f.Where(entql.HasEdgeWith("account", sqlgraph.WrapFunc(func(s *sql.Selector) {
+// WhereHasGroup applies a predicate to check if query has an edge group.
+func (f *UserFilter) WhereHasGroup() {
+	f.Where(entql.HasEdge("group"))
+}
+
+// WhereHasGroupWith applies a predicate to check if query has an edge group with a given conditions (other predicates).
+func (f *UserFilter) WhereHasGroupWith(preds ...predicate.Group) {
+	f.Where(entql.HasEdgeWith("group", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
 	})))
 }
 
-// WhereHasRole applies a predicate to check if query has an edge role.
-func (f *UserFilter) WhereHasRole() {
-	f.Where(entql.HasEdge("role"))
+// WhereHasRoles applies a predicate to check if query has an edge roles.
+func (f *UserFilter) WhereHasRoles() {
+	f.Where(entql.HasEdge("roles"))
 }
 
-// WhereHasRoleWith applies a predicate to check if query has an edge role with a given conditions (other predicates).
-func (f *UserFilter) WhereHasRoleWith(preds ...predicate.Role) {
-	f.Where(entql.HasEdgeWith("role", sqlgraph.WrapFunc(func(s *sql.Selector) {
+// WhereHasRolesWith applies a predicate to check if query has an edge roles with a given conditions (other predicates).
+func (f *UserFilter) WhereHasRolesWith(preds ...predicate.Role) {
+	f.Where(entql.HasEdgeWith("roles", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -1733,6 +1791,20 @@ func (f *UserFilter) WhereHasAuditLogs() {
 // WhereHasAuditLogsWith applies a predicate to check if query has an edge audit_logs with a given conditions (other predicates).
 func (f *UserFilter) WhereHasAuditLogsWith(preds ...predicate.AuditLog) {
 	f.Where(entql.HasEdgeWith("audit_logs", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasAccessPolicies applies a predicate to check if query has an edge access_policies.
+func (f *UserFilter) WhereHasAccessPolicies() {
+	f.Where(entql.HasEdge("access_policies"))
+}
+
+// WhereHasAccessPoliciesWith applies a predicate to check if query has an edge access_policies with a given conditions (other predicates).
+func (f *UserFilter) WhereHasAccessPoliciesWith(preds ...predicate.AccessPolicy) {
+	f.Where(entql.HasEdgeWith("access_policies", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

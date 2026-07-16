@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/viewer"
 	"net/http"
 	"strings"
@@ -50,10 +49,9 @@ func GetAllAccessPolicyByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "No viewer found in context"})
 		}
 		tenantID := v.TenantID
-		accountID := v.AccountID
 		userID := v.UserID
 		roleName := v.RoleName
-		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
+		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", userID, tenantID, roleName)
 
 		isSuperAdmin := roleName == "super_admin"
 		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin") // Or use a more precise matching logic
@@ -62,7 +60,7 @@ func GetAllAccessPolicyByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 		var err error
 
 		if isSuperAdmin || isTenantAdmin {
-			accessPolicies, err = client.AccessPolicy.Query().Where(accesspolicy.HasAccountWith(account.ID(accountID.String()))).All(c.Request().Context())
+			accessPolicies, err = client.AccessPolicy.Query().All(c.Request().Context())
 		} else {
 			accessPolicies, err = client.AccessPolicy.Query().All(c.Request().Context())
 		}
@@ -88,10 +86,9 @@ func GetAllAccessPolicyByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 //			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 //		}
 //		tenantID := v.TenantID
-//		accountID := v.AccountID
-//		userID := v.UserID
+////		userID := v.UserID
 //		roleName := v.RoleName
-//		log.Printf("Viewer info: UserID=%s, AccountID=%s,TenantID=%s, RoleName=%s", userID, accountID, tenantID, roleName)
+//		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", userID, tenantID, roleName)
 //
 //		isSuperAdmin := roleName == "super_admin"
 //		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin") // Or use a more precise matching logic
@@ -113,7 +110,7 @@ func GetAllAccessPolicyByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 //			r, err := client.Role.Create().
 //				SetName(dto.Name).
 //				SetDescription(dto.Description).
-//				SetAccountID(accountID).
+//				
 //				Save(c.Request().Context())
 //			if err != nil {
 //				log.Printf("Error creating role: %v", err)

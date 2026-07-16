@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/role"
@@ -101,23 +100,56 @@ func (_u *RoleUpdate) SetNillableIsDefault(v *bool) *RoleUpdate {
 	return _u
 }
 
-// SetAccountID sets the "account" edge to the Account entity by ID.
-func (_u *RoleUpdate) SetAccountID(id string) *RoleUpdate {
-	_u.mutation.SetAccountID(id)
+// SetTrustPolicy sets the "trust_policy" field.
+func (_u *RoleUpdate) SetTrustPolicy(v map[string]interface{}) *RoleUpdate {
+	_u.mutation.SetTrustPolicy(v)
 	return _u
 }
 
-// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
-func (_u *RoleUpdate) SetNillableAccountID(id *string) *RoleUpdate {
-	if id != nil {
-		_u = _u.SetAccountID(*id)
+// ClearTrustPolicy clears the value of the "trust_policy" field.
+func (_u *RoleUpdate) ClearTrustPolicy() *RoleUpdate {
+	_u.mutation.ClearTrustPolicy()
+	return _u
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (_u *RoleUpdate) SetEffectiveDate(v time.Time) *RoleUpdate {
+	_u.mutation.SetEffectiveDate(v)
+	return _u
+}
+
+// SetNillableEffectiveDate sets the "effective_date" field if the given value is not nil.
+func (_u *RoleUpdate) SetNillableEffectiveDate(v *time.Time) *RoleUpdate {
+	if v != nil {
+		_u.SetEffectiveDate(*v)
 	}
 	return _u
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_u *RoleUpdate) SetAccount(v *Account) *RoleUpdate {
-	return _u.SetAccountID(v.ID)
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (_u *RoleUpdate) ClearEffectiveDate() *RoleUpdate {
+	_u.mutation.ClearEffectiveDate()
+	return _u
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (_u *RoleUpdate) SetExpiryDate(v time.Time) *RoleUpdate {
+	_u.mutation.SetExpiryDate(v)
+	return _u
+}
+
+// SetNillableExpiryDate sets the "expiry_date" field if the given value is not nil.
+func (_u *RoleUpdate) SetNillableExpiryDate(v *time.Time) *RoleUpdate {
+	if v != nil {
+		_u.SetExpiryDate(*v)
+	}
+	return _u
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (_u *RoleUpdate) ClearExpiryDate() *RoleUpdate {
+	_u.mutation.ClearExpiryDate()
+	return _u
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -180,15 +212,28 @@ func (_u *RoleUpdate) AddChildRoles(v ...*Role) *RoleUpdate {
 	return _u.AddChildRoleIDs(ids...)
 }
 
+// SetPermissionsBoundaryID sets the "permissions_boundary" edge to the AccessPolicy entity by ID.
+func (_u *RoleUpdate) SetPermissionsBoundaryID(id string) *RoleUpdate {
+	_u.mutation.SetPermissionsBoundaryID(id)
+	return _u
+}
+
+// SetNillablePermissionsBoundaryID sets the "permissions_boundary" edge to the AccessPolicy entity by ID if the given value is not nil.
+func (_u *RoleUpdate) SetNillablePermissionsBoundaryID(id *string) *RoleUpdate {
+	if id != nil {
+		_u = _u.SetPermissionsBoundaryID(*id)
+	}
+	return _u
+}
+
+// SetPermissionsBoundary sets the "permissions_boundary" edge to the AccessPolicy entity.
+func (_u *RoleUpdate) SetPermissionsBoundary(v *AccessPolicy) *RoleUpdate {
+	return _u.SetPermissionsBoundaryID(v.ID)
+}
+
 // Mutation returns the RoleMutation object of the builder.
 func (_u *RoleUpdate) Mutation() *RoleMutation {
 	return _u.mutation
-}
-
-// ClearAccount clears the "account" edge to the Account entity.
-func (_u *RoleUpdate) ClearAccount() *RoleUpdate {
-	_u.mutation.ClearAccount()
-	return _u
 }
 
 // ClearUsers clears all "users" edges to the User entity.
@@ -275,6 +320,12 @@ func (_u *RoleUpdate) RemoveChildRoles(v ...*Role) *RoleUpdate {
 	return _u.RemoveChildRoleIDs(ids...)
 }
 
+// ClearPermissionsBoundary clears the "permissions_boundary" edge to the AccessPolicy entity.
+func (_u *RoleUpdate) ClearPermissionsBoundary() *RoleUpdate {
+	_u.mutation.ClearPermissionsBoundary()
+	return _u
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *RoleUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
@@ -357,63 +408,50 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.IsDefault(); ok {
 		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
 	}
-	if _u.mutation.AccountCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   role.AccountTable,
-			Columns: []string{role.AccountColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Role
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := _u.mutation.TrustPolicy(); ok {
+		_spec.SetField(role.FieldTrustPolicy, field.TypeJSON, value)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   role.AccountTable,
-			Columns: []string{role.AccountColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Role
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if _u.mutation.TrustPolicyCleared() {
+		_spec.ClearField(role.FieldTrustPolicy, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.EffectiveDate(); ok {
+		_spec.SetField(role.FieldEffectiveDate, field.TypeTime, value)
+	}
+	if _u.mutation.EffectiveDateCleared() {
+		_spec.ClearField(role.FieldEffectiveDate, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ExpiryDate(); ok {
+		_spec.SetField(role.FieldExpiryDate, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiryDateCleared() {
+		_spec.ClearField(role.FieldExpiryDate, field.TypeTime)
 	}
 	if _u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
+			Columns: role.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
+		edge.Schema = _u.schemaConfig.UserRoles
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
+			Columns: role.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
+		edge.Schema = _u.schemaConfig.UserRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -421,16 +459,16 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if nodes := _u.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
+			Columns: role.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
+		edge.Schema = _u.schemaConfig.UserRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -580,6 +618,37 @@ func (_u *RoleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.PermissionsBoundaryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   role.PermissionsBoundaryTable,
+			Columns: []string{role.PermissionsBoundaryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Role
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PermissionsBoundaryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   role.PermissionsBoundaryTable,
+			Columns: []string{role.PermissionsBoundaryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Role
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.Node.Schema = _u.schemaConfig.Role
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
 	_spec.AddModifiers(_u.modifiers...)
@@ -672,23 +741,56 @@ func (_u *RoleUpdateOne) SetNillableIsDefault(v *bool) *RoleUpdateOne {
 	return _u
 }
 
-// SetAccountID sets the "account" edge to the Account entity by ID.
-func (_u *RoleUpdateOne) SetAccountID(id string) *RoleUpdateOne {
-	_u.mutation.SetAccountID(id)
+// SetTrustPolicy sets the "trust_policy" field.
+func (_u *RoleUpdateOne) SetTrustPolicy(v map[string]interface{}) *RoleUpdateOne {
+	_u.mutation.SetTrustPolicy(v)
 	return _u
 }
 
-// SetNillableAccountID sets the "account" edge to the Account entity by ID if the given value is not nil.
-func (_u *RoleUpdateOne) SetNillableAccountID(id *string) *RoleUpdateOne {
-	if id != nil {
-		_u = _u.SetAccountID(*id)
+// ClearTrustPolicy clears the value of the "trust_policy" field.
+func (_u *RoleUpdateOne) ClearTrustPolicy() *RoleUpdateOne {
+	_u.mutation.ClearTrustPolicy()
+	return _u
+}
+
+// SetEffectiveDate sets the "effective_date" field.
+func (_u *RoleUpdateOne) SetEffectiveDate(v time.Time) *RoleUpdateOne {
+	_u.mutation.SetEffectiveDate(v)
+	return _u
+}
+
+// SetNillableEffectiveDate sets the "effective_date" field if the given value is not nil.
+func (_u *RoleUpdateOne) SetNillableEffectiveDate(v *time.Time) *RoleUpdateOne {
+	if v != nil {
+		_u.SetEffectiveDate(*v)
 	}
 	return _u
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_u *RoleUpdateOne) SetAccount(v *Account) *RoleUpdateOne {
-	return _u.SetAccountID(v.ID)
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (_u *RoleUpdateOne) ClearEffectiveDate() *RoleUpdateOne {
+	_u.mutation.ClearEffectiveDate()
+	return _u
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (_u *RoleUpdateOne) SetExpiryDate(v time.Time) *RoleUpdateOne {
+	_u.mutation.SetExpiryDate(v)
+	return _u
+}
+
+// SetNillableExpiryDate sets the "expiry_date" field if the given value is not nil.
+func (_u *RoleUpdateOne) SetNillableExpiryDate(v *time.Time) *RoleUpdateOne {
+	if v != nil {
+		_u.SetExpiryDate(*v)
+	}
+	return _u
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (_u *RoleUpdateOne) ClearExpiryDate() *RoleUpdateOne {
+	_u.mutation.ClearExpiryDate()
+	return _u
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -751,15 +853,28 @@ func (_u *RoleUpdateOne) AddChildRoles(v ...*Role) *RoleUpdateOne {
 	return _u.AddChildRoleIDs(ids...)
 }
 
+// SetPermissionsBoundaryID sets the "permissions_boundary" edge to the AccessPolicy entity by ID.
+func (_u *RoleUpdateOne) SetPermissionsBoundaryID(id string) *RoleUpdateOne {
+	_u.mutation.SetPermissionsBoundaryID(id)
+	return _u
+}
+
+// SetNillablePermissionsBoundaryID sets the "permissions_boundary" edge to the AccessPolicy entity by ID if the given value is not nil.
+func (_u *RoleUpdateOne) SetNillablePermissionsBoundaryID(id *string) *RoleUpdateOne {
+	if id != nil {
+		_u = _u.SetPermissionsBoundaryID(*id)
+	}
+	return _u
+}
+
+// SetPermissionsBoundary sets the "permissions_boundary" edge to the AccessPolicy entity.
+func (_u *RoleUpdateOne) SetPermissionsBoundary(v *AccessPolicy) *RoleUpdateOne {
+	return _u.SetPermissionsBoundaryID(v.ID)
+}
+
 // Mutation returns the RoleMutation object of the builder.
 func (_u *RoleUpdateOne) Mutation() *RoleMutation {
 	return _u.mutation
-}
-
-// ClearAccount clears the "account" edge to the Account entity.
-func (_u *RoleUpdateOne) ClearAccount() *RoleUpdateOne {
-	_u.mutation.ClearAccount()
-	return _u
 }
 
 // ClearUsers clears all "users" edges to the User entity.
@@ -844,6 +959,12 @@ func (_u *RoleUpdateOne) RemoveChildRoles(v ...*Role) *RoleUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChildRoleIDs(ids...)
+}
+
+// ClearPermissionsBoundary clears the "permissions_boundary" edge to the AccessPolicy entity.
+func (_u *RoleUpdateOne) ClearPermissionsBoundary() *RoleUpdateOne {
+	_u.mutation.ClearPermissionsBoundary()
+	return _u
 }
 
 // Where appends a list predicates to the RoleUpdate builder.
@@ -958,63 +1079,50 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 	if value, ok := _u.mutation.IsDefault(); ok {
 		_spec.SetField(role.FieldIsDefault, field.TypeBool, value)
 	}
-	if _u.mutation.AccountCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   role.AccountTable,
-			Columns: []string{role.AccountColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Role
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := _u.mutation.TrustPolicy(); ok {
+		_spec.SetField(role.FieldTrustPolicy, field.TypeJSON, value)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   role.AccountTable,
-			Columns: []string{role.AccountColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Role
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if _u.mutation.TrustPolicyCleared() {
+		_spec.ClearField(role.FieldTrustPolicy, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.EffectiveDate(); ok {
+		_spec.SetField(role.FieldEffectiveDate, field.TypeTime, value)
+	}
+	if _u.mutation.EffectiveDateCleared() {
+		_spec.ClearField(role.FieldEffectiveDate, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ExpiryDate(); ok {
+		_spec.SetField(role.FieldExpiryDate, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiryDateCleared() {
+		_spec.ClearField(role.FieldExpiryDate, field.TypeTime)
 	}
 	if _u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
+			Columns: role.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
+		edge.Schema = _u.schemaConfig.UserRoles
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
+			Columns: role.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
+		edge.Schema = _u.schemaConfig.UserRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1022,16 +1130,16 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 	}
 	if nodes := _u.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   role.UsersTable,
-			Columns: []string{role.UsersColumn},
+			Columns: role.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.User
+		edge.Schema = _u.schemaConfig.UserRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -1176,6 +1284,37 @@ func (_u *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) {
 			},
 		}
 		edge.Schema = _u.schemaConfig.RoleChildRoles
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PermissionsBoundaryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   role.PermissionsBoundaryTable,
+			Columns: []string{role.PermissionsBoundaryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Role
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PermissionsBoundaryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   role.PermissionsBoundaryTable,
+			Columns: []string{role.PermissionsBoundaryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Role
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}

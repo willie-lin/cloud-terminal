@@ -91,20 +91,6 @@ func (_c *SessionCreate) SetNillableEnvironmentUrn(v *string) *SessionCreate {
 	return _c
 }
 
-// SetAccountUrn sets the "account_urn" field.
-func (_c *SessionCreate) SetAccountUrn(v string) *SessionCreate {
-	_c.mutation.SetAccountUrn(v)
-	return _c
-}
-
-// SetNillableAccountUrn sets the "account_urn" field if the given value is not nil.
-func (_c *SessionCreate) SetNillableAccountUrn(v *string) *SessionCreate {
-	if v != nil {
-		_c.SetAccountUrn(*v)
-	}
-	return _c
-}
-
 // SetMode sets the "mode" field.
 func (_c *SessionCreate) SetMode(v session.Mode) *SessionCreate {
 	_c.mutation.SetMode(v)
@@ -332,10 +318,6 @@ func (_c *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 		_spec.SetField(session.FieldEnvironmentUrn, field.TypeString, value)
 		_node.EnvironmentUrn = value
 	}
-	if value, ok := _c.mutation.AccountUrn(); ok {
-		_spec.SetField(session.FieldAccountUrn, field.TypeString, value)
-		_node.AccountUrn = value
-	}
 	if value, ok := _c.mutation.Mode(); ok {
 		_spec.SetField(session.FieldMode, field.TypeEnum, value)
 		_node.Mode = value
@@ -465,24 +447,6 @@ func (u *SessionUpsert) UpdateEnvironmentUrn() *SessionUpsert {
 // ClearEnvironmentUrn clears the value of the "environment_urn" field.
 func (u *SessionUpsert) ClearEnvironmentUrn() *SessionUpsert {
 	u.SetNull(session.FieldEnvironmentUrn)
-	return u
-}
-
-// SetAccountUrn sets the "account_urn" field.
-func (u *SessionUpsert) SetAccountUrn(v string) *SessionUpsert {
-	u.Set(session.FieldAccountUrn, v)
-	return u
-}
-
-// UpdateAccountUrn sets the "account_urn" field to the value that was provided on create.
-func (u *SessionUpsert) UpdateAccountUrn() *SessionUpsert {
-	u.SetExcluded(session.FieldAccountUrn)
-	return u
-}
-
-// ClearAccountUrn clears the value of the "account_urn" field.
-func (u *SessionUpsert) ClearAccountUrn() *SessionUpsert {
-	u.SetNull(session.FieldAccountUrn)
 	return u
 }
 
@@ -679,27 +643,6 @@ func (u *SessionUpsertOne) UpdateEnvironmentUrn() *SessionUpsertOne {
 func (u *SessionUpsertOne) ClearEnvironmentUrn() *SessionUpsertOne {
 	return u.Update(func(s *SessionUpsert) {
 		s.ClearEnvironmentUrn()
-	})
-}
-
-// SetAccountUrn sets the "account_urn" field.
-func (u *SessionUpsertOne) SetAccountUrn(v string) *SessionUpsertOne {
-	return u.Update(func(s *SessionUpsert) {
-		s.SetAccountUrn(v)
-	})
-}
-
-// UpdateAccountUrn sets the "account_urn" field to the value that was provided on create.
-func (u *SessionUpsertOne) UpdateAccountUrn() *SessionUpsertOne {
-	return u.Update(func(s *SessionUpsert) {
-		s.UpdateAccountUrn()
-	})
-}
-
-// ClearAccountUrn clears the value of the "account_urn" field.
-func (u *SessionUpsertOne) ClearAccountUrn() *SessionUpsertOne {
-	return u.Update(func(s *SessionUpsert) {
-		s.ClearAccountUrn()
 	})
 }
 
@@ -1075,27 +1018,6 @@ func (u *SessionUpsertBulk) UpdateEnvironmentUrn() *SessionUpsertBulk {
 func (u *SessionUpsertBulk) ClearEnvironmentUrn() *SessionUpsertBulk {
 	return u.Update(func(s *SessionUpsert) {
 		s.ClearEnvironmentUrn()
-	})
-}
-
-// SetAccountUrn sets the "account_urn" field.
-func (u *SessionUpsertBulk) SetAccountUrn(v string) *SessionUpsertBulk {
-	return u.Update(func(s *SessionUpsert) {
-		s.SetAccountUrn(v)
-	})
-}
-
-// UpdateAccountUrn sets the "account_urn" field to the value that was provided on create.
-func (u *SessionUpsertBulk) UpdateAccountUrn() *SessionUpsertBulk {
-	return u.Update(func(s *SessionUpsert) {
-		s.UpdateAccountUrn()
-	})
-}
-
-// ClearAccountUrn clears the value of the "account_urn" field.
-func (u *SessionUpsertBulk) ClearAccountUrn() *SessionUpsertBulk {
-	return u.Update(func(s *SessionUpsert) {
-		s.ClearAccountUrn()
 	})
 }
 

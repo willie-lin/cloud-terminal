@@ -11,7 +11,7 @@ import (
 	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
@@ -158,7 +158,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 					}, // 超级管理员拥有所有操作权限
 					Resources: []string{
 						utils.ResourceUserAll, // 匹配所有租户和账户的用户
-						utils.ResourceAccountAll,
+						
 						utils.ResourceRoleAll,
 						utils.ResourcePolicyAll,
 						utils.ResourceProjectAll,
@@ -191,7 +191,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		if !exists {
-			_, err = tenantRole.Update().AddAccessPolicies(tenantPolicy).Save(ctx)
+			_, err = tenantRole.Update().Save(ctx)
 			if err != nil {
 				return fmt.Errorf("关联 tenant_admin 角色和 tenant_admin 策略失败: %w", err)
 			}
@@ -201,23 +201,23 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 创建账户
-		accountName := strings.ToLower(dto.TenantName) + "Account"
-		act, err := client.Account.Query().Where(account.NameEQ(accountName)).Only(ctx)
+		groupName := strings.ToLower(dto.TenantName) + "Group"
+		act, err := client.Group.Query().Where(group.NameEQ(groupName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return err
 		}
 		if ent.IsNotFound(err) {
-			act, err = client.Account.Create().
-				SetName(accountName).
-				AddRoles(tenantRole).
-				AddAccessPolicies(tenantPolicy).
+			act, err = client.Group.Create().
+				SetName(groupName).
+				
+				
 				Save(ctx)
 			if err != nil {
 				return err
 			}
-			log.Printf("Created Account Service for %s platform", platformName)
+			log.Printf("Created Group for %s platform", platformName)
 		} else {
-			log.Printf("MAccount Service already exists for %s platform.", platformName)
+			log.Printf("Group already exists for %s platform.", platformName)
 		}
 
 		// 6. 创建租户管理员用户并关联到账户
@@ -226,8 +226,8 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			SetEmail(dto.Email).
 			SetPassword(string(hashedPassword)).
 			SetIsDefault(true).
-			SetAccount(act).
-			SetRole(tenantRole).
+			SetGroup(act).
+			AddRoles(tenantRole).
 			Save(ctx)
 		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID})
 		//return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
@@ -302,15 +302,15 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error updating last login time: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
-		// 查询账户信息，通过边查询获取用户关联的账户
-		sa, err := us.QueryAccount().Only(ctx)
+		// 查询 Group 信息
+		g, err := us.QueryGroup().Only(ctx)
 		if ent.IsNotFound(err) {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "Account not found"})
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Group not found"})
 		} else if err != nil {
-			log.Printf("Error finding Account: %v", err)
+			log.Printf("Error finding Group: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
 		}
-		fmt.Println(sa.ID)
+		fmt.Println(g.ID)
 
 		// 查询租户信息，通过边查询获取用户关联的租户
 		tenant, err := client.Tenant.Query().Where(tenant.Name(utils.ManagementTenant)).Only(ctx)
@@ -324,8 +324,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 获取用户的第一个角色ID
 		//role, err := us.QueryRoles().First(context.Background())
-		r, err := us.QueryRole().Only(ctx)
-		//r, err := sa.QueryRoles().Only(ctx)
+		r, err := us.QueryRoles().First(ctx)
+
 		//role, err := us.QueryRoles().All(ctx)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)
@@ -340,13 +340,13 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		fmt.Println(r.Description)
 
 		// 生成包含租户信息的accessToken
-		accessToken, err := utils.CreateAccessToken(uuid.MustParse(us.ID), uuid.MustParse(tenant.ID), uuid.MustParse(sa.ID), us.Email, us.Username, r.Name)
+		accessToken, err := utils.CreateAccessToken(uuid.MustParse(us.ID), uuid.MustParse(tenant.ID), uuid.MustParse(g.ID), us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
 		// 生成包含租户信息的RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(uuid.MustParse(us.ID), uuid.MustParse(tenant.ID), uuid.MustParse(sa.ID), us.Email, us.Username, r.Name)
+		refreshToken, err := utils.CreateRefreshToken(uuid.MustParse(us.ID), uuid.MustParse(tenant.ID), uuid.MustParse(g.ID), us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})
@@ -408,7 +408,7 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 				"user": map[string]interface{}{
 					"id":            us.ID,
 					"tenantId":      tenant.ID,
-					"accountId":     sa.ID,
+					"groupId":     g.ID,
 					"email":         us.Email,
 					"username":      us.Username,
 					"roleName":      r.Name,

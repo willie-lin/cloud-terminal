@@ -13,13 +13,13 @@ import (
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
-	"github.com/willie-lin/cloud-terminal/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
 // AccessPolicyUpdate is the builder for updating AccessPolicy entities.
@@ -76,6 +76,20 @@ func (_u *AccessPolicyUpdate) ClearDescription() *AccessPolicyUpdate {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *AccessPolicyUpdate) SetVersion(v string) *AccessPolicyUpdate {
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *AccessPolicyUpdate) SetNillableVersion(v *string) *AccessPolicyUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
 // SetStatements sets the "statements" field.
 func (_u *AccessPolicyUpdate) SetStatements(v []schema.PolicyStatement) *AccessPolicyUpdate {
 	_u.mutation.SetStatements(v)
@@ -123,19 +137,89 @@ func (_u *AccessPolicyUpdate) AddPriority(v int) *AccessPolicyUpdate {
 	return _u
 }
 
-// AddAccountIDs adds the "account" edge to the Account entity by IDs.
-func (_u *AccessPolicyUpdate) AddAccountIDs(ids ...string) *AccessPolicyUpdate {
-	_u.mutation.AddAccountIDs(ids...)
+// SetEffectiveDate sets the "effective_date" field.
+func (_u *AccessPolicyUpdate) SetEffectiveDate(v time.Time) *AccessPolicyUpdate {
+	_u.mutation.SetEffectiveDate(v)
 	return _u
 }
 
-// AddAccount adds the "account" edges to the Account entity.
-func (_u *AccessPolicyUpdate) AddAccount(v ...*Account) *AccessPolicyUpdate {
+// SetNillableEffectiveDate sets the "effective_date" field if the given value is not nil.
+func (_u *AccessPolicyUpdate) SetNillableEffectiveDate(v *time.Time) *AccessPolicyUpdate {
+	if v != nil {
+		_u.SetEffectiveDate(*v)
+	}
+	return _u
+}
+
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (_u *AccessPolicyUpdate) ClearEffectiveDate() *AccessPolicyUpdate {
+	_u.mutation.ClearEffectiveDate()
+	return _u
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (_u *AccessPolicyUpdate) SetExpiryDate(v time.Time) *AccessPolicyUpdate {
+	_u.mutation.SetExpiryDate(v)
+	return _u
+}
+
+// SetNillableExpiryDate sets the "expiry_date" field if the given value is not nil.
+func (_u *AccessPolicyUpdate) SetNillableExpiryDate(v *time.Time) *AccessPolicyUpdate {
+	if v != nil {
+		_u.SetExpiryDate(*v)
+	}
+	return _u
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (_u *AccessPolicyUpdate) ClearExpiryDate() *AccessPolicyUpdate {
+	_u.mutation.ClearExpiryDate()
+	return _u
+}
+
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (_u *AccessPolicyUpdate) AddGroupIDs(ids ...string) *AccessPolicyUpdate {
+	_u.mutation.AddGroupIDs(ids...)
+	return _u
+}
+
+// AddGroups adds the "groups" edges to the Group entity.
+func (_u *AccessPolicyUpdate) AddGroups(v ...*Group) *AccessPolicyUpdate {
 	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.AddAccountIDs(ids...)
+	return _u.AddGroupIDs(ids...)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (_u *AccessPolicyUpdate) AddUserIDs(ids ...string) *AccessPolicyUpdate {
+	_u.mutation.AddUserIDs(ids...)
+	return _u
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (_u *AccessPolicyUpdate) AddUsers(v ...*User) *AccessPolicyUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUserIDs(ids...)
+}
+
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (_u *AccessPolicyUpdate) AddResourceIDs(ids ...string) *AccessPolicyUpdate {
+	_u.mutation.AddResourceIDs(ids...)
+	return _u
+}
+
+// AddResources adds the "resources" edges to the Resource entity.
+func (_u *AccessPolicyUpdate) AddResources(v ...*Resource) *AccessPolicyUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddResourceIDs(ids...)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -153,68 +237,72 @@ func (_u *AccessPolicyUpdate) AddRoles(v ...*Role) *AccessPolicyUpdate {
 	return _u.AddRoleIDs(ids...)
 }
 
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (_u *AccessPolicyUpdate) SetTenantID(id string) *AccessPolicyUpdate {
-	_u.mutation.SetTenantID(id)
-	return _u
-}
-
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (_u *AccessPolicyUpdate) SetNillableTenantID(id *string) *AccessPolicyUpdate {
-	if id != nil {
-		_u = _u.SetTenantID(*id)
-	}
-	return _u
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (_u *AccessPolicyUpdate) SetTenant(v *Tenant) *AccessPolicyUpdate {
-	return _u.SetTenantID(v.ID)
-}
-
-// SetEnvironmentID sets the "environment" edge to the Environment entity by ID.
-func (_u *AccessPolicyUpdate) SetEnvironmentID(id string) *AccessPolicyUpdate {
-	_u.mutation.SetEnvironmentID(id)
-	return _u
-}
-
-// SetNillableEnvironmentID sets the "environment" edge to the Environment entity by ID if the given value is not nil.
-func (_u *AccessPolicyUpdate) SetNillableEnvironmentID(id *string) *AccessPolicyUpdate {
-	if id != nil {
-		_u = _u.SetEnvironmentID(*id)
-	}
-	return _u
-}
-
-// SetEnvironment sets the "environment" edge to the Environment entity.
-func (_u *AccessPolicyUpdate) SetEnvironment(v *Environment) *AccessPolicyUpdate {
-	return _u.SetEnvironmentID(v.ID)
-}
-
 // Mutation returns the AccessPolicyMutation object of the builder.
 func (_u *AccessPolicyUpdate) Mutation() *AccessPolicyMutation {
 	return _u.mutation
 }
 
-// ClearAccount clears all "account" edges to the Account entity.
-func (_u *AccessPolicyUpdate) ClearAccount() *AccessPolicyUpdate {
-	_u.mutation.ClearAccount()
+// ClearGroups clears all "groups" edges to the Group entity.
+func (_u *AccessPolicyUpdate) ClearGroups() *AccessPolicyUpdate {
+	_u.mutation.ClearGroups()
 	return _u
 }
 
-// RemoveAccountIDs removes the "account" edge to Account entities by IDs.
-func (_u *AccessPolicyUpdate) RemoveAccountIDs(ids ...string) *AccessPolicyUpdate {
-	_u.mutation.RemoveAccountIDs(ids...)
+// RemoveGroupIDs removes the "groups" edge to Group entities by IDs.
+func (_u *AccessPolicyUpdate) RemoveGroupIDs(ids ...string) *AccessPolicyUpdate {
+	_u.mutation.RemoveGroupIDs(ids...)
 	return _u
 }
 
-// RemoveAccount removes "account" edges to Account entities.
-func (_u *AccessPolicyUpdate) RemoveAccount(v ...*Account) *AccessPolicyUpdate {
+// RemoveGroups removes "groups" edges to Group entities.
+func (_u *AccessPolicyUpdate) RemoveGroups(v ...*Group) *AccessPolicyUpdate {
 	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.RemoveAccountIDs(ids...)
+	return _u.RemoveGroupIDs(ids...)
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (_u *AccessPolicyUpdate) ClearUsers() *AccessPolicyUpdate {
+	_u.mutation.ClearUsers()
+	return _u
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (_u *AccessPolicyUpdate) RemoveUserIDs(ids ...string) *AccessPolicyUpdate {
+	_u.mutation.RemoveUserIDs(ids...)
+	return _u
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (_u *AccessPolicyUpdate) RemoveUsers(v ...*User) *AccessPolicyUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUserIDs(ids...)
+}
+
+// ClearResources clears all "resources" edges to the Resource entity.
+func (_u *AccessPolicyUpdate) ClearResources() *AccessPolicyUpdate {
+	_u.mutation.ClearResources()
+	return _u
+}
+
+// RemoveResourceIDs removes the "resources" edge to Resource entities by IDs.
+func (_u *AccessPolicyUpdate) RemoveResourceIDs(ids ...string) *AccessPolicyUpdate {
+	_u.mutation.RemoveResourceIDs(ids...)
+	return _u
+}
+
+// RemoveResources removes "resources" edges to Resource entities.
+func (_u *AccessPolicyUpdate) RemoveResources(v ...*Resource) *AccessPolicyUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveResourceIDs(ids...)
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -236,18 +324,6 @@ func (_u *AccessPolicyUpdate) RemoveRoles(v ...*Role) *AccessPolicyUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRoleIDs(ids...)
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (_u *AccessPolicyUpdate) ClearTenant() *AccessPolicyUpdate {
-	_u.mutation.ClearTenant()
-	return _u
-}
-
-// ClearEnvironment clears the "environment" edge to the Environment entity.
-func (_u *AccessPolicyUpdate) ClearEnvironment() *AccessPolicyUpdate {
-	_u.mutation.ClearEnvironment()
-	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -326,6 +402,9 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(accesspolicy.FieldDescription, field.TypeString)
 	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(accesspolicy.FieldVersion, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Statements(); ok {
 		_spec.SetField(accesspolicy.FieldStatements, field.TypeJSON, value)
 	}
@@ -343,49 +422,157 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if value, ok := _u.mutation.AddedPriority(); ok {
 		_spec.AddField(accesspolicy.FieldPriority, field.TypeInt, value)
 	}
-	if _u.mutation.AccountCleared() {
+	if value, ok := _u.mutation.EffectiveDate(); ok {
+		_spec.SetField(accesspolicy.FieldEffectiveDate, field.TypeTime, value)
+	}
+	if _u.mutation.EffectiveDateCleared() {
+		_spec.ClearField(accesspolicy.FieldEffectiveDate, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ExpiryDate(); ok {
+		_spec.SetField(accesspolicy.FieldExpiryDate, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiryDateCleared() {
+		_spec.ClearField(accesspolicy.FieldExpiryDate, field.TypeTime)
+	}
+	if _u.mutation.GroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   accesspolicy.AccountTable,
-			Columns: accesspolicy.AccountPrimaryKey,
+			Table:   accesspolicy.GroupsTable,
+			Columns: accesspolicy.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
+		edge.Schema = _u.schemaConfig.GroupAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RemovedAccountIDs(); len(nodes) > 0 && !_u.mutation.AccountCleared() {
+	if nodes := _u.mutation.RemovedGroupsIDs(); len(nodes) > 0 && !_u.mutation.GroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   accesspolicy.AccountTable,
-			Columns: accesspolicy.AccountPrimaryKey,
+			Table:   accesspolicy.GroupsTable,
+			Columns: accesspolicy.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
+		edge.Schema = _u.schemaConfig.GroupAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.GroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   accesspolicy.AccountTable,
-			Columns: accesspolicy.AccountPrimaryKey,
+			Table:   accesspolicy.GroupsTable,
+			Columns: accesspolicy.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
+		edge.Schema = _u.schemaConfig.GroupAccessPolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.UsersTable,
+			Columns: accesspolicy.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.UserAccessPolicies
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.UsersTable,
+			Columns: accesspolicy.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.UserAccessPolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.UsersTable,
+			Columns: accesspolicy.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.UserAccessPolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ResourcesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.ResourcesTable,
+			Columns: accesspolicy.ResourcesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !_u.mutation.ResourcesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.ResourcesTable,
+			Columns: accesspolicy.ResourcesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ResourcesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.ResourcesTable,
+			Columns: accesspolicy.ResourcesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -434,68 +621,6 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 			},
 		}
 		edge.Schema = _u.schemaConfig.RoleAccessPolicies
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   accesspolicy.TenantTable,
-			Columns: []string{accesspolicy.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   accesspolicy.TenantTable,
-			Columns: []string{accesspolicy.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.EnvironmentCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   accesspolicy.EnvironmentTable,
-			Columns: []string{accesspolicy.EnvironmentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Environment
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.EnvironmentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   accesspolicy.EnvironmentTable,
-			Columns: []string{accesspolicy.EnvironmentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -565,6 +690,20 @@ func (_u *AccessPolicyUpdateOne) ClearDescription() *AccessPolicyUpdateOne {
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *AccessPolicyUpdateOne) SetVersion(v string) *AccessPolicyUpdateOne {
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *AccessPolicyUpdateOne) SetNillableVersion(v *string) *AccessPolicyUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
 // SetStatements sets the "statements" field.
 func (_u *AccessPolicyUpdateOne) SetStatements(v []schema.PolicyStatement) *AccessPolicyUpdateOne {
 	_u.mutation.SetStatements(v)
@@ -612,19 +751,89 @@ func (_u *AccessPolicyUpdateOne) AddPriority(v int) *AccessPolicyUpdateOne {
 	return _u
 }
 
-// AddAccountIDs adds the "account" edge to the Account entity by IDs.
-func (_u *AccessPolicyUpdateOne) AddAccountIDs(ids ...string) *AccessPolicyUpdateOne {
-	_u.mutation.AddAccountIDs(ids...)
+// SetEffectiveDate sets the "effective_date" field.
+func (_u *AccessPolicyUpdateOne) SetEffectiveDate(v time.Time) *AccessPolicyUpdateOne {
+	_u.mutation.SetEffectiveDate(v)
 	return _u
 }
 
-// AddAccount adds the "account" edges to the Account entity.
-func (_u *AccessPolicyUpdateOne) AddAccount(v ...*Account) *AccessPolicyUpdateOne {
+// SetNillableEffectiveDate sets the "effective_date" field if the given value is not nil.
+func (_u *AccessPolicyUpdateOne) SetNillableEffectiveDate(v *time.Time) *AccessPolicyUpdateOne {
+	if v != nil {
+		_u.SetEffectiveDate(*v)
+	}
+	return _u
+}
+
+// ClearEffectiveDate clears the value of the "effective_date" field.
+func (_u *AccessPolicyUpdateOne) ClearEffectiveDate() *AccessPolicyUpdateOne {
+	_u.mutation.ClearEffectiveDate()
+	return _u
+}
+
+// SetExpiryDate sets the "expiry_date" field.
+func (_u *AccessPolicyUpdateOne) SetExpiryDate(v time.Time) *AccessPolicyUpdateOne {
+	_u.mutation.SetExpiryDate(v)
+	return _u
+}
+
+// SetNillableExpiryDate sets the "expiry_date" field if the given value is not nil.
+func (_u *AccessPolicyUpdateOne) SetNillableExpiryDate(v *time.Time) *AccessPolicyUpdateOne {
+	if v != nil {
+		_u.SetExpiryDate(*v)
+	}
+	return _u
+}
+
+// ClearExpiryDate clears the value of the "expiry_date" field.
+func (_u *AccessPolicyUpdateOne) ClearExpiryDate() *AccessPolicyUpdateOne {
+	_u.mutation.ClearExpiryDate()
+	return _u
+}
+
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (_u *AccessPolicyUpdateOne) AddGroupIDs(ids ...string) *AccessPolicyUpdateOne {
+	_u.mutation.AddGroupIDs(ids...)
+	return _u
+}
+
+// AddGroups adds the "groups" edges to the Group entity.
+func (_u *AccessPolicyUpdateOne) AddGroups(v ...*Group) *AccessPolicyUpdateOne {
 	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.AddAccountIDs(ids...)
+	return _u.AddGroupIDs(ids...)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (_u *AccessPolicyUpdateOne) AddUserIDs(ids ...string) *AccessPolicyUpdateOne {
+	_u.mutation.AddUserIDs(ids...)
+	return _u
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (_u *AccessPolicyUpdateOne) AddUsers(v ...*User) *AccessPolicyUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUserIDs(ids...)
+}
+
+// AddResourceIDs adds the "resources" edge to the Resource entity by IDs.
+func (_u *AccessPolicyUpdateOne) AddResourceIDs(ids ...string) *AccessPolicyUpdateOne {
+	_u.mutation.AddResourceIDs(ids...)
+	return _u
+}
+
+// AddResources adds the "resources" edges to the Resource entity.
+func (_u *AccessPolicyUpdateOne) AddResources(v ...*Resource) *AccessPolicyUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddResourceIDs(ids...)
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
@@ -642,68 +851,72 @@ func (_u *AccessPolicyUpdateOne) AddRoles(v ...*Role) *AccessPolicyUpdateOne {
 	return _u.AddRoleIDs(ids...)
 }
 
-// SetTenantID sets the "tenant" edge to the Tenant entity by ID.
-func (_u *AccessPolicyUpdateOne) SetTenantID(id string) *AccessPolicyUpdateOne {
-	_u.mutation.SetTenantID(id)
-	return _u
-}
-
-// SetNillableTenantID sets the "tenant" edge to the Tenant entity by ID if the given value is not nil.
-func (_u *AccessPolicyUpdateOne) SetNillableTenantID(id *string) *AccessPolicyUpdateOne {
-	if id != nil {
-		_u = _u.SetTenantID(*id)
-	}
-	return _u
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (_u *AccessPolicyUpdateOne) SetTenant(v *Tenant) *AccessPolicyUpdateOne {
-	return _u.SetTenantID(v.ID)
-}
-
-// SetEnvironmentID sets the "environment" edge to the Environment entity by ID.
-func (_u *AccessPolicyUpdateOne) SetEnvironmentID(id string) *AccessPolicyUpdateOne {
-	_u.mutation.SetEnvironmentID(id)
-	return _u
-}
-
-// SetNillableEnvironmentID sets the "environment" edge to the Environment entity by ID if the given value is not nil.
-func (_u *AccessPolicyUpdateOne) SetNillableEnvironmentID(id *string) *AccessPolicyUpdateOne {
-	if id != nil {
-		_u = _u.SetEnvironmentID(*id)
-	}
-	return _u
-}
-
-// SetEnvironment sets the "environment" edge to the Environment entity.
-func (_u *AccessPolicyUpdateOne) SetEnvironment(v *Environment) *AccessPolicyUpdateOne {
-	return _u.SetEnvironmentID(v.ID)
-}
-
 // Mutation returns the AccessPolicyMutation object of the builder.
 func (_u *AccessPolicyUpdateOne) Mutation() *AccessPolicyMutation {
 	return _u.mutation
 }
 
-// ClearAccount clears all "account" edges to the Account entity.
-func (_u *AccessPolicyUpdateOne) ClearAccount() *AccessPolicyUpdateOne {
-	_u.mutation.ClearAccount()
+// ClearGroups clears all "groups" edges to the Group entity.
+func (_u *AccessPolicyUpdateOne) ClearGroups() *AccessPolicyUpdateOne {
+	_u.mutation.ClearGroups()
 	return _u
 }
 
-// RemoveAccountIDs removes the "account" edge to Account entities by IDs.
-func (_u *AccessPolicyUpdateOne) RemoveAccountIDs(ids ...string) *AccessPolicyUpdateOne {
-	_u.mutation.RemoveAccountIDs(ids...)
+// RemoveGroupIDs removes the "groups" edge to Group entities by IDs.
+func (_u *AccessPolicyUpdateOne) RemoveGroupIDs(ids ...string) *AccessPolicyUpdateOne {
+	_u.mutation.RemoveGroupIDs(ids...)
 	return _u
 }
 
-// RemoveAccount removes "account" edges to Account entities.
-func (_u *AccessPolicyUpdateOne) RemoveAccount(v ...*Account) *AccessPolicyUpdateOne {
+// RemoveGroups removes "groups" edges to Group entities.
+func (_u *AccessPolicyUpdateOne) RemoveGroups(v ...*Group) *AccessPolicyUpdateOne {
 	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.RemoveAccountIDs(ids...)
+	return _u.RemoveGroupIDs(ids...)
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (_u *AccessPolicyUpdateOne) ClearUsers() *AccessPolicyUpdateOne {
+	_u.mutation.ClearUsers()
+	return _u
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (_u *AccessPolicyUpdateOne) RemoveUserIDs(ids ...string) *AccessPolicyUpdateOne {
+	_u.mutation.RemoveUserIDs(ids...)
+	return _u
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (_u *AccessPolicyUpdateOne) RemoveUsers(v ...*User) *AccessPolicyUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUserIDs(ids...)
+}
+
+// ClearResources clears all "resources" edges to the Resource entity.
+func (_u *AccessPolicyUpdateOne) ClearResources() *AccessPolicyUpdateOne {
+	_u.mutation.ClearResources()
+	return _u
+}
+
+// RemoveResourceIDs removes the "resources" edge to Resource entities by IDs.
+func (_u *AccessPolicyUpdateOne) RemoveResourceIDs(ids ...string) *AccessPolicyUpdateOne {
+	_u.mutation.RemoveResourceIDs(ids...)
+	return _u
+}
+
+// RemoveResources removes "resources" edges to Resource entities.
+func (_u *AccessPolicyUpdateOne) RemoveResources(v ...*Resource) *AccessPolicyUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveResourceIDs(ids...)
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
@@ -725,18 +938,6 @@ func (_u *AccessPolicyUpdateOne) RemoveRoles(v ...*Role) *AccessPolicyUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRoleIDs(ids...)
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (_u *AccessPolicyUpdateOne) ClearTenant() *AccessPolicyUpdateOne {
-	_u.mutation.ClearTenant()
-	return _u
-}
-
-// ClearEnvironment clears the "environment" edge to the Environment entity.
-func (_u *AccessPolicyUpdateOne) ClearEnvironment() *AccessPolicyUpdateOne {
-	_u.mutation.ClearEnvironment()
-	return _u
 }
 
 // Where appends a list predicates to the AccessPolicyUpdate builder.
@@ -845,6 +1046,9 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(accesspolicy.FieldDescription, field.TypeString)
 	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(accesspolicy.FieldVersion, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Statements(); ok {
 		_spec.SetField(accesspolicy.FieldStatements, field.TypeJSON, value)
 	}
@@ -862,49 +1066,157 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 	if value, ok := _u.mutation.AddedPriority(); ok {
 		_spec.AddField(accesspolicy.FieldPriority, field.TypeInt, value)
 	}
-	if _u.mutation.AccountCleared() {
+	if value, ok := _u.mutation.EffectiveDate(); ok {
+		_spec.SetField(accesspolicy.FieldEffectiveDate, field.TypeTime, value)
+	}
+	if _u.mutation.EffectiveDateCleared() {
+		_spec.ClearField(accesspolicy.FieldEffectiveDate, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ExpiryDate(); ok {
+		_spec.SetField(accesspolicy.FieldExpiryDate, field.TypeTime, value)
+	}
+	if _u.mutation.ExpiryDateCleared() {
+		_spec.ClearField(accesspolicy.FieldExpiryDate, field.TypeTime)
+	}
+	if _u.mutation.GroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   accesspolicy.AccountTable,
-			Columns: accesspolicy.AccountPrimaryKey,
+			Table:   accesspolicy.GroupsTable,
+			Columns: accesspolicy.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
+		edge.Schema = _u.schemaConfig.GroupAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RemovedAccountIDs(); len(nodes) > 0 && !_u.mutation.AccountCleared() {
+	if nodes := _u.mutation.RemovedGroupsIDs(); len(nodes) > 0 && !_u.mutation.GroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   accesspolicy.AccountTable,
-			Columns: accesspolicy.AccountPrimaryKey,
+			Table:   accesspolicy.GroupsTable,
+			Columns: accesspolicy.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
+		edge.Schema = _u.schemaConfig.GroupAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.GroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   accesspolicy.AccountTable,
-			Columns: accesspolicy.AccountPrimaryKey,
+			Table:   accesspolicy.GroupsTable,
+			Columns: accesspolicy.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _u.schemaConfig.AccountAccessPolicies
+		edge.Schema = _u.schemaConfig.GroupAccessPolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.UsersTable,
+			Columns: accesspolicy.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.UserAccessPolicies
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.UsersTable,
+			Columns: accesspolicy.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.UserAccessPolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.UsersTable,
+			Columns: accesspolicy.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.UserAccessPolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ResourcesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.ResourcesTable,
+			Columns: accesspolicy.ResourcesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !_u.mutation.ResourcesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.ResourcesTable,
+			Columns: accesspolicy.ResourcesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ResourcesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   accesspolicy.ResourcesTable,
+			Columns: accesspolicy.ResourcesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.ResourcePolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -953,68 +1265,6 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 			},
 		}
 		edge.Schema = _u.schemaConfig.RoleAccessPolicies
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   accesspolicy.TenantTable,
-			Columns: []string{accesspolicy.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   accesspolicy.TenantTable,
-			Columns: []string{accesspolicy.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.AccessPolicy
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.EnvironmentCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   accesspolicy.EnvironmentTable,
-			Columns: []string{accesspolicy.EnvironmentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Environment
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.EnvironmentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   accesspolicy.EnvironmentTable,
-			Columns: []string{accesspolicy.EnvironmentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
-			},
-		}
-		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}

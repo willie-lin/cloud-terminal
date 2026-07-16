@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/platform"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
@@ -43,47 +43,26 @@ func init() {
 	accesspolicyDescName := accesspolicyFields[0].Descriptor()
 	// accesspolicy.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	accesspolicy.NameValidator = accesspolicyDescName.Validators[0].(func(string) error)
+	// accesspolicyDescVersion is the schema descriptor for version field.
+	accesspolicyDescVersion := accesspolicyFields[2].Descriptor()
+	// accesspolicy.DefaultVersion holds the default value on creation for the version field.
+	accesspolicy.DefaultVersion = accesspolicyDescVersion.Default.(string)
 	// accesspolicyDescStatements is the schema descriptor for statements field.
-	accesspolicyDescStatements := accesspolicyFields[2].Descriptor()
+	accesspolicyDescStatements := accesspolicyFields[3].Descriptor()
 	// accesspolicy.DefaultStatements holds the default value on creation for the statements field.
 	accesspolicy.DefaultStatements = accesspolicyDescStatements.Default.([]schema.PolicyStatement)
 	// accesspolicyDescImmutable is the schema descriptor for immutable field.
-	accesspolicyDescImmutable := accesspolicyFields[3].Descriptor()
+	accesspolicyDescImmutable := accesspolicyFields[4].Descriptor()
 	// accesspolicy.DefaultImmutable holds the default value on creation for the immutable field.
 	accesspolicy.DefaultImmutable = accesspolicyDescImmutable.Default.(bool)
 	// accesspolicyDescPriority is the schema descriptor for priority field.
-	accesspolicyDescPriority := accesspolicyFields[4].Descriptor()
+	accesspolicyDescPriority := accesspolicyFields[5].Descriptor()
 	// accesspolicy.DefaultPriority holds the default value on creation for the priority field.
 	accesspolicy.DefaultPriority = accesspolicyDescPriority.Default.(int)
 	// accesspolicyDescID is the schema descriptor for id field.
 	accesspolicyDescID := accesspolicyMixinFields0[0].Descriptor()
 	// accesspolicy.DefaultID holds the default value on creation for the id field.
 	accesspolicy.DefaultID = accesspolicyDescID.Default.(func() string)
-	accountMixin := schema.Account{}.Mixin()
-	accountMixinFields0 := accountMixin[0].Fields()
-	_ = accountMixinFields0
-	accountMixinFields1 := accountMixin[1].Fields()
-	_ = accountMixinFields1
-	accountFields := schema.Account{}.Fields()
-	_ = accountFields
-	// accountDescCreatedAt is the schema descriptor for created_at field.
-	accountDescCreatedAt := accountMixinFields1[0].Descriptor()
-	// account.DefaultCreatedAt holds the default value on creation for the created_at field.
-	account.DefaultCreatedAt = accountDescCreatedAt.Default.(func() time.Time)
-	// accountDescUpdatedAt is the schema descriptor for updated_at field.
-	accountDescUpdatedAt := accountMixinFields1[1].Descriptor()
-	// account.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	account.DefaultUpdatedAt = accountDescUpdatedAt.Default.(func() time.Time)
-	// account.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	account.UpdateDefaultUpdatedAt = accountDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// accountDescName is the schema descriptor for name field.
-	accountDescName := accountFields[0].Descriptor()
-	// account.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	account.NameValidator = accountDescName.Validators[0].(func(string) error)
-	// accountDescID is the schema descriptor for id field.
-	accountDescID := accountMixinFields0[0].Descriptor()
-	// account.DefaultID holds the default value on creation for the id field.
-	account.DefaultID = accountDescID.Default.(func() string)
 	auditlogMixin := schema.AuditLog{}.Mixin()
 	auditlogMixinFields0 := auditlogMixin[0].Fields()
 	_ = auditlogMixinFields0
@@ -138,6 +117,31 @@ func init() {
 	environmentDescID := environmentMixinFields0[0].Descriptor()
 	// environment.DefaultID holds the default value on creation for the id field.
 	environment.DefaultID = environmentDescID.Default.(func() string)
+	groupMixin := schema.Group{}.Mixin()
+	groupMixinFields0 := groupMixin[0].Fields()
+	_ = groupMixinFields0
+	groupMixinFields1 := groupMixin[1].Fields()
+	_ = groupMixinFields1
+	groupFields := schema.Group{}.Fields()
+	_ = groupFields
+	// groupDescCreatedAt is the schema descriptor for created_at field.
+	groupDescCreatedAt := groupMixinFields1[0].Descriptor()
+	// group.DefaultCreatedAt holds the default value on creation for the created_at field.
+	group.DefaultCreatedAt = groupDescCreatedAt.Default.(func() time.Time)
+	// groupDescUpdatedAt is the schema descriptor for updated_at field.
+	groupDescUpdatedAt := groupMixinFields1[1].Descriptor()
+	// group.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	group.DefaultUpdatedAt = groupDescUpdatedAt.Default.(func() time.Time)
+	// group.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	group.UpdateDefaultUpdatedAt = groupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// groupDescName is the schema descriptor for name field.
+	groupDescName := groupFields[0].Descriptor()
+	// group.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	group.NameValidator = groupDescName.Validators[0].(func(string) error)
+	// groupDescID is the schema descriptor for id field.
+	groupDescID := groupMixinFields0[0].Descriptor()
+	// group.DefaultID holds the default value on creation for the id field.
+	group.DefaultID = groupDescID.Default.(func() string)
 	platformMixin := schema.Platform{}.Mixin()
 	platformMixinFields0 := platformMixin[0].Fields()
 	_ = platformMixinFields0
@@ -146,11 +150,11 @@ func init() {
 	platformFields := schema.Platform{}.Fields()
 	_ = platformFields
 	// platformDescCreatedAt is the schema descriptor for created_at field.
-	platformDescCreatedAt := platformMixinFields0[0].Descriptor()
+	platformDescCreatedAt := platformMixinFields1[0].Descriptor()
 	// platform.DefaultCreatedAt holds the default value on creation for the created_at field.
 	platform.DefaultCreatedAt = platformDescCreatedAt.Default.(func() time.Time)
 	// platformDescUpdatedAt is the schema descriptor for updated_at field.
-	platformDescUpdatedAt := platformMixinFields0[1].Descriptor()
+	platformDescUpdatedAt := platformMixinFields1[1].Descriptor()
 	// platform.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	platform.DefaultUpdatedAt = platformDescUpdatedAt.Default.(func() time.Time)
 	// platform.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -160,7 +164,7 @@ func init() {
 	// platform.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	platform.NameValidator = platformDescName.Validators[0].(func(string) error)
 	// platformDescID is the schema descriptor for id field.
-	platformDescID := platformMixinFields1[0].Descriptor()
+	platformDescID := platformMixinFields0[0].Descriptor()
 	// platform.DefaultID holds the default value on creation for the id field.
 	platform.DefaultID = platformDescID.Default.(func() string)
 	resourceMixin := schema.Resource{}.Mixin()
@@ -180,18 +184,26 @@ func init() {
 	resource.DefaultUpdatedAt = resourceDescUpdatedAt.Default.(func() time.Time)
 	// resource.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	resource.UpdateDefaultUpdatedAt = resourceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resourceDescUrn is the schema descriptor for urn field.
+	resourceDescUrn := resourceFields[0].Descriptor()
+	// resource.UrnValidator is a validator for the "urn" field. It is called by the builders before save.
+	resource.UrnValidator = resourceDescUrn.Validators[0].(func(string) error)
 	// resourceDescName is the schema descriptor for name field.
-	resourceDescName := resourceFields[0].Descriptor()
+	resourceDescName := resourceFields[1].Descriptor()
 	// resource.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	resource.NameValidator = resourceDescName.Validators[0].(func(string) error)
-	// resourceDescHost is the schema descriptor for host field.
-	resourceDescHost := resourceFields[1].Descriptor()
-	// resource.HostValidator is a validator for the "host" field. It is called by the builders before save.
-	resource.HostValidator = resourceDescHost.Validators[0].(func(string) error)
+	// resourceDescIP is the schema descriptor for ip field.
+	resourceDescIP := resourceFields[3].Descriptor()
+	// resource.IPValidator is a validator for the "ip" field. It is called by the builders before save.
+	resource.IPValidator = resourceDescIP.Validators[0].(func(string) error)
 	// resourceDescPort is the schema descriptor for port field.
-	resourceDescPort := resourceFields[2].Descriptor()
+	resourceDescPort := resourceFields[4].Descriptor()
 	// resource.DefaultPort holds the default value on creation for the port field.
 	resource.DefaultPort = resourceDescPort.Default.(int)
+	// resourceDescRegion is the schema descriptor for region field.
+	resourceDescRegion := resourceFields[6].Descriptor()
+	// resource.DefaultRegion holds the default value on creation for the region field.
+	resource.DefaultRegion = resourceDescRegion.Default.(string)
 	// resourceDescID is the schema descriptor for id field.
 	resourceDescID := resourceMixinFields0[0].Descriptor()
 	// resource.DefaultID holds the default value on creation for the id field.

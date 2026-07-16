@@ -14,29 +14,31 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
-	"github.com/willie-lin/cloud-terminal/ent/account"
-	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
-	"github.com/willie-lin/cloud-terminal/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
 // AccessPolicyQuery is the builder for querying AccessPolicy entities.
 type AccessPolicyQuery struct {
 	config
-	ctx              *QueryContext
-	order            []accesspolicy.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.AccessPolicy
-	withAccount      *AccountQuery
-	withRoles        *RoleQuery
-	withTenant       *TenantQuery
-	withEnvironment  *EnvironmentQuery
-	withFKs          bool
-	modifiers        []func(*sql.Selector)
-	withNamedAccount map[string]*AccountQuery
-	withNamedRoles   map[string]*RoleQuery
+	ctx                *QueryContext
+	order              []accesspolicy.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.AccessPolicy
+	withGroups         *GroupQuery
+	withUsers          *UserQuery
+	withResources      *ResourceQuery
+	withRoles          *RoleQuery
+	withFKs            bool
+	modifiers          []func(*sql.Selector)
+	withNamedGroups    map[string]*GroupQuery
+	withNamedUsers     map[string]*UserQuery
+	withNamedResources map[string]*ResourceQuery
+	withNamedRoles     map[string]*RoleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -73,9 +75,9 @@ func (_q *AccessPolicyQuery) Order(o ...accesspolicy.OrderOption) *AccessPolicyQ
 	return _q
 }
 
-// QueryAccount chains the current query on the "account" edge.
-func (_q *AccessPolicyQuery) QueryAccount() *AccountQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+// QueryGroups chains the current query on the "groups" edge.
+func (_q *AccessPolicyQuery) QueryGroups() *GroupQuery {
+	query := (&GroupClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -86,12 +88,62 @@ func (_q *AccessPolicyQuery) QueryAccount() *AccountQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
-			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.AccountTable, accesspolicy.AccountPrimaryKey...),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.GroupsTable, accesspolicy.GroupsPrimaryKey...),
 		)
 		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.AccountAccessPolicies
+		step.To.Schema = schemaConfig.Group
+		step.Edge.Schema = schemaConfig.GroupAccessPolicies
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUsers chains the current query on the "users" edge.
+func (_q *AccessPolicyQuery) QueryUsers() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.UsersTable, accesspolicy.UsersPrimaryKey...),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.UserAccessPolicies
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryResources chains the current query on the "resources" edge.
+func (_q *AccessPolicyQuery) QueryResources() *ResourceQuery {
+	query := (&ResourceClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
+			sqlgraph.To(resource.Table, resource.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.ResourcesTable, accesspolicy.ResourcesPrimaryKey...),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.ResourcePolicies
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -117,56 +169,6 @@ func (_q *AccessPolicyQuery) QueryRoles() *RoleQuery {
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.Role
 		step.Edge.Schema = schemaConfig.RoleAccessPolicies
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryTenant chains the current query on the "tenant" edge.
-func (_q *AccessPolicyQuery) QueryTenant() *TenantQuery {
-	query := (&TenantClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, accesspolicy.TenantTable, accesspolicy.TenantColumn),
-		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.AccessPolicy
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryEnvironment chains the current query on the "environment" edge.
-func (_q *AccessPolicyQuery) QueryEnvironment() *EnvironmentQuery {
-	query := (&EnvironmentClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(accesspolicy.Table, accesspolicy.FieldID, selector),
-			sqlgraph.To(environment.Table, environment.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, accesspolicy.EnvironmentTable, accesspolicy.EnvironmentColumn),
-		)
-		schemaConfig := _q.schemaConfig
-		step.To.Schema = schemaConfig.Environment
-		step.Edge.Schema = schemaConfig.Environment
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -360,15 +362,15 @@ func (_q *AccessPolicyQuery) Clone() *AccessPolicyQuery {
 		return nil
 	}
 	return &AccessPolicyQuery{
-		config:          _q.config,
-		ctx:             _q.ctx.Clone(),
-		order:           append([]accesspolicy.OrderOption{}, _q.order...),
-		inters:          append([]Interceptor{}, _q.inters...),
-		predicates:      append([]predicate.AccessPolicy{}, _q.predicates...),
-		withAccount:     _q.withAccount.Clone(),
-		withRoles:       _q.withRoles.Clone(),
-		withTenant:      _q.withTenant.Clone(),
-		withEnvironment: _q.withEnvironment.Clone(),
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]accesspolicy.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.AccessPolicy{}, _q.predicates...),
+		withGroups:    _q.withGroups.Clone(),
+		withUsers:     _q.withUsers.Clone(),
+		withResources: _q.withResources.Clone(),
+		withRoles:     _q.withRoles.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -376,14 +378,36 @@ func (_q *AccessPolicyQuery) Clone() *AccessPolicyQuery {
 	}
 }
 
-// WithAccount tells the query-builder to eager-load the nodes that are connected to
-// the "account" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *AccessPolicyQuery) WithAccount(opts ...func(*AccountQuery)) *AccessPolicyQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+// WithGroups tells the query-builder to eager-load the nodes that are connected to
+// the "groups" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccessPolicyQuery) WithGroups(opts ...func(*GroupQuery)) *AccessPolicyQuery {
+	query := (&GroupClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withAccount = query
+	_q.withGroups = query
+	return _q
+}
+
+// WithUsers tells the query-builder to eager-load the nodes that are connected to
+// the "users" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccessPolicyQuery) WithUsers(opts ...func(*UserQuery)) *AccessPolicyQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUsers = query
+	return _q
+}
+
+// WithResources tells the query-builder to eager-load the nodes that are connected to
+// the "resources" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccessPolicyQuery) WithResources(opts ...func(*ResourceQuery)) *AccessPolicyQuery {
+	query := (&ResourceClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withResources = query
 	return _q
 }
 
@@ -395,28 +419,6 @@ func (_q *AccessPolicyQuery) WithRoles(opts ...func(*RoleQuery)) *AccessPolicyQu
 		opt(query)
 	}
 	_q.withRoles = query
-	return _q
-}
-
-// WithTenant tells the query-builder to eager-load the nodes that are connected to
-// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *AccessPolicyQuery) WithTenant(opts ...func(*TenantQuery)) *AccessPolicyQuery {
-	query := (&TenantClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withTenant = query
-	return _q
-}
-
-// WithEnvironment tells the query-builder to eager-load the nodes that are connected to
-// the "environment" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *AccessPolicyQuery) WithEnvironment(opts ...func(*EnvironmentQuery)) *AccessPolicyQuery {
-	query := (&EnvironmentClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withEnvironment = query
 	return _q
 }
 
@@ -500,15 +502,12 @@ func (_q *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [4]bool{
-			_q.withAccount != nil,
+			_q.withGroups != nil,
+			_q.withUsers != nil,
+			_q.withResources != nil,
 			_q.withRoles != nil,
-			_q.withTenant != nil,
-			_q.withEnvironment != nil,
 		}
 	)
-	if _q.withTenant != nil {
-		withFKs = true
-	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, accesspolicy.ForeignKeys...)
 	}
@@ -535,10 +534,24 @@ func (_q *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withAccount; query != nil {
-		if err := _q.loadAccount(ctx, query, nodes,
-			func(n *AccessPolicy) { n.Edges.Account = []*Account{} },
-			func(n *AccessPolicy, e *Account) { n.Edges.Account = append(n.Edges.Account, e) }); err != nil {
+	if query := _q.withGroups; query != nil {
+		if err := _q.loadGroups(ctx, query, nodes,
+			func(n *AccessPolicy) { n.Edges.Groups = []*Group{} },
+			func(n *AccessPolicy, e *Group) { n.Edges.Groups = append(n.Edges.Groups, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUsers; query != nil {
+		if err := _q.loadUsers(ctx, query, nodes,
+			func(n *AccessPolicy) { n.Edges.Users = []*User{} },
+			func(n *AccessPolicy, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withResources; query != nil {
+		if err := _q.loadResources(ctx, query, nodes,
+			func(n *AccessPolicy) { n.Edges.Resources = []*Resource{} },
+			func(n *AccessPolicy, e *Resource) { n.Edges.Resources = append(n.Edges.Resources, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -549,27 +562,24 @@ func (_q *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			return nil, err
 		}
 	}
-	if query := _q.withTenant; query != nil {
-		if err := _q.loadTenant(ctx, query, nodes, nil,
-			func(n *AccessPolicy, e *Tenant) { n.Edges.Tenant = e }); err != nil {
+	for name, query := range _q.withNamedGroups {
+		if err := _q.loadGroups(ctx, query, nodes,
+			func(n *AccessPolicy) { n.appendNamedGroups(name) },
+			func(n *AccessPolicy, e *Group) { n.appendNamedGroups(name, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := _q.withEnvironment; query != nil {
-		if err := _q.loadEnvironment(ctx, query, nodes, nil,
-			func(n *AccessPolicy, e *Environment) {
-				n.Edges.Environment = e
-				if !e.Edges.loadedTypes[1] {
-					e.Edges.AccessPolicies = n
-				}
-			}); err != nil {
+	for name, query := range _q.withNamedUsers {
+		if err := _q.loadUsers(ctx, query, nodes,
+			func(n *AccessPolicy) { n.appendNamedUsers(name) },
+			func(n *AccessPolicy, e *User) { n.appendNamedUsers(name, e) }); err != nil {
 			return nil, err
 		}
 	}
-	for name, query := range _q.withNamedAccount {
-		if err := _q.loadAccount(ctx, query, nodes,
-			func(n *AccessPolicy) { n.appendNamedAccount(name) },
-			func(n *AccessPolicy, e *Account) { n.appendNamedAccount(name, e) }); err != nil {
+	for name, query := range _q.withNamedResources {
+		if err := _q.loadResources(ctx, query, nodes,
+			func(n *AccessPolicy) { n.appendNamedResources(name) },
+			func(n *AccessPolicy, e *Resource) { n.appendNamedResources(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -583,7 +593,7 @@ func (_q *AccessPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	return nodes, nil
 }
 
-func (_q *AccessPolicyQuery) loadAccount(ctx context.Context, query *AccountQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Account)) error {
+func (_q *AccessPolicyQuery) loadGroups(ctx context.Context, query *GroupQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Group)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[string]*AccessPolicy)
 	nids := make(map[string]map[*AccessPolicy]struct{})
@@ -595,12 +605,12 @@ func (_q *AccessPolicyQuery) loadAccount(ctx context.Context, query *AccountQuer
 		}
 	}
 	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(accesspolicy.AccountTable)
-		joinT.Schema(_q.schemaConfig.AccountAccessPolicies)
-		s.Join(joinT).On(s.C(account.FieldID), joinT.C(accesspolicy.AccountPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(accesspolicy.AccountPrimaryKey[1]), edgeIDs...))
+		joinT := sql.Table(accesspolicy.GroupsTable)
+		joinT.Schema(_q.schemaConfig.GroupAccessPolicies)
+		s.Join(joinT).On(s.C(group.FieldID), joinT.C(accesspolicy.GroupsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(accesspolicy.GroupsPrimaryKey[1]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(accesspolicy.AccountPrimaryKey[1]))
+		s.Select(joinT.C(accesspolicy.GroupsPrimaryKey[1]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})
@@ -630,14 +640,138 @@ func (_q *AccessPolicyQuery) loadAccount(ctx context.Context, query *AccountQuer
 			}
 		})
 	})
-	neighbors, err := withInterceptors[[]*Account](ctx, query, qr, query.inters)
+	neighbors, err := withInterceptors[[]*Group](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
 		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "account" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected "groups" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (_q *AccessPolicyQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *User)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*AccessPolicy)
+	nids := make(map[string]map[*AccessPolicy]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(accesspolicy.UsersTable)
+		joinT.Schema(_q.schemaConfig.UserAccessPolicies)
+		s.Join(joinT).On(s.C(user.FieldID), joinT.C(accesspolicy.UsersPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(accesspolicy.UsersPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(accesspolicy.UsersPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*AccessPolicy]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*User](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "users" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (_q *AccessPolicyQuery) loadResources(ctx context.Context, query *ResourceQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Resource)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*AccessPolicy)
+	nids := make(map[string]map[*AccessPolicy]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(accesspolicy.ResourcesTable)
+		joinT.Schema(_q.schemaConfig.ResourcePolicies)
+		s.Join(joinT).On(s.C(resource.FieldID), joinT.C(accesspolicy.ResourcesPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(accesspolicy.ResourcesPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(accesspolicy.ResourcesPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*AccessPolicy]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Resource](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "resources" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)
@@ -704,66 +838,6 @@ func (_q *AccessPolicyQuery) loadRoles(ctx context.Context, query *RoleQuery, no
 		for kn := range nodes {
 			assign(kn, n)
 		}
-	}
-	return nil
-}
-func (_q *AccessPolicyQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Tenant)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*AccessPolicy)
-	for i := range nodes {
-		if nodes[i].tenant_access_policies == nil {
-			continue
-		}
-		fk := *nodes[i].tenant_access_policies
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(tenant.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "tenant_access_policies" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *AccessPolicyQuery) loadEnvironment(ctx context.Context, query *EnvironmentQuery, nodes []*AccessPolicy, init func(*AccessPolicy), assign func(*AccessPolicy, *Environment)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*AccessPolicy)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-	}
-	query.withFKs = true
-	query.Where(predicate.Environment(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(accesspolicy.EnvironmentColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.access_policy_environment
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "access_policy_environment" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "access_policy_environment" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
 	}
 	return nil
 }
@@ -892,17 +966,45 @@ func (_q *AccessPolicyQuery) Modify(modifiers ...func(s *sql.Selector)) *AccessP
 	return _q.Select()
 }
 
-// WithNamedAccount tells the query-builder to eager-load the nodes that are connected to the "account"
+// WithNamedGroups tells the query-builder to eager-load the nodes that are connected to the "groups"
 // edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (_q *AccessPolicyQuery) WithNamedAccount(name string, opts ...func(*AccountQuery)) *AccessPolicyQuery {
-	query := (&AccountClient{config: _q.config}).Query()
+func (_q *AccessPolicyQuery) WithNamedGroups(name string, opts ...func(*GroupQuery)) *AccessPolicyQuery {
+	query := (&GroupClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	if _q.withNamedAccount == nil {
-		_q.withNamedAccount = make(map[string]*AccountQuery)
+	if _q.withNamedGroups == nil {
+		_q.withNamedGroups = make(map[string]*GroupQuery)
 	}
-	_q.withNamedAccount[name] = query
+	_q.withNamedGroups[name] = query
+	return _q
+}
+
+// WithNamedUsers tells the query-builder to eager-load the nodes that are connected to the "users"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccessPolicyQuery) WithNamedUsers(name string, opts ...func(*UserQuery)) *AccessPolicyQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUsers == nil {
+		_q.withNamedUsers = make(map[string]*UserQuery)
+	}
+	_q.withNamedUsers[name] = query
+	return _q
+}
+
+// WithNamedResources tells the query-builder to eager-load the nodes that are connected to the "resources"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccessPolicyQuery) WithNamedResources(name string, opts ...func(*ResourceQuery)) *AccessPolicyQuery {
+	query := (&ResourceClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedResources == nil {
+		_q.withNamedResources = make(map[string]*ResourceQuery)
+	}
+	_q.withNamedResources[name] = query
 	return _q
 }
 

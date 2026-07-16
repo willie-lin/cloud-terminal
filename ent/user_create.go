@@ -12,8 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
+	"github.com/willie-lin/cloud-terminal/ent/group"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
@@ -274,6 +275,12 @@ func (_c *UserCreate) SetNillableSSHPublicKey(v *string) *UserCreate {
 	return _c
 }
 
+// SetAttributes sets the "attributes" field.
+func (_c *UserCreate) SetAttributes(v map[string]interface{}) *UserCreate {
+	_c.mutation.SetAttributes(v)
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *UserCreate) SetID(v string) *UserCreate {
 	_c.mutation.SetID(v)
@@ -288,26 +295,38 @@ func (_c *UserCreate) SetNillableID(v *string) *UserCreate {
 	return _c
 }
 
-// SetAccountID sets the "account" edge to the Account entity by ID.
-func (_c *UserCreate) SetAccountID(id string) *UserCreate {
-	_c.mutation.SetAccountID(id)
+// SetGroupID sets the "group" edge to the Group entity by ID.
+func (_c *UserCreate) SetGroupID(id string) *UserCreate {
+	_c.mutation.SetGroupID(id)
 	return _c
 }
 
-// SetAccount sets the "account" edge to the Account entity.
-func (_c *UserCreate) SetAccount(v *Account) *UserCreate {
-	return _c.SetAccountID(v.ID)
-}
-
-// SetRoleID sets the "role" edge to the Role entity by ID.
-func (_c *UserCreate) SetRoleID(id string) *UserCreate {
-	_c.mutation.SetRoleID(id)
+// SetNillableGroupID sets the "group" edge to the Group entity by ID if the given value is not nil.
+func (_c *UserCreate) SetNillableGroupID(id *string) *UserCreate {
+	if id != nil {
+		_c = _c.SetGroupID(*id)
+	}
 	return _c
 }
 
-// SetRole sets the "role" edge to the Role entity.
-func (_c *UserCreate) SetRole(v *Role) *UserCreate {
-	return _c.SetRoleID(v.ID)
+// SetGroup sets the "group" edge to the Group entity.
+func (_c *UserCreate) SetGroup(v *Group) *UserCreate {
+	return _c.SetGroupID(v.ID)
+}
+
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
+func (_c *UserCreate) AddRoleIDs(ids ...string) *UserCreate {
+	_c.mutation.AddRoleIDs(ids...)
+	return _c
+}
+
+// AddRoles adds the "roles" edges to the Role entity.
+func (_c *UserCreate) AddRoles(v ...*Role) *UserCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRoleIDs(ids...)
 }
 
 // AddAuditLogIDs adds the "audit_logs" edge to the AuditLog entity by IDs.
@@ -323,6 +342,21 @@ func (_c *UserCreate) AddAuditLogs(v ...*AuditLog) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddAuditLogIDs(ids...)
+}
+
+// AddAccessPolicyIDs adds the "access_policies" edge to the AccessPolicy entity by IDs.
+func (_c *UserCreate) AddAccessPolicyIDs(ids ...string) *UserCreate {
+	_c.mutation.AddAccessPolicyIDs(ids...)
+	return _c
+}
+
+// AddAccessPolicies adds the "access_policies" edges to the AccessPolicy entity.
+func (_c *UserCreate) AddAccessPolicies(v ...*AccessPolicy) *UserCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAccessPolicyIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -469,12 +503,6 @@ func (_c *UserCreate) check() error {
 	if _, ok := _c.mutation.IsDefault(); !ok {
 		return &ValidationError{Name: "is_default", err: errors.New(`ent: missing required field "User.is_default"`)}
 	}
-	if len(_c.mutation.AccountIDs()) == 0 {
-		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "User.account"`)}
-	}
-	if len(_c.mutation.RoleIDs()) == 0 {
-		return &ValidationError{Name: "role", err: errors.New(`ent: missing required edge "User.role"`)}
-	}
 	return nil
 }
 
@@ -592,40 +620,43 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldSSHPublicKey, field.TypeString, value)
 		_node.SSHPublicKey = value
 	}
-	if nodes := _c.mutation.AccountIDs(); len(nodes) > 0 {
+	if value, ok := _c.mutation.Attributes(); ok {
+		_spec.SetField(user.FieldAttributes, field.TypeJSON, value)
+		_node.Attributes = value
+	}
+	if nodes := _c.mutation.GroupIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   user.AccountTable,
-			Columns: []string{user.AccountColumn},
+			Table:   user.GroupTable,
+			Columns: []string{user.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
 			},
 		}
 		edge.Schema = _c.schemaConfig.User
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.account_users = &nodes[0]
+		_node.group_users = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := _c.mutation.RoleIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.RoleTable,
-			Columns: []string{user.RoleColumn},
+			Table:   user.RolesTable,
+			Columns: user.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
-		edge.Schema = _c.schemaConfig.User
+		edge.Schema = _c.schemaConfig.UserRoles
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_role = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.AuditLogsIDs(); len(nodes) > 0 {
@@ -640,6 +671,23 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			},
 		}
 		edge.Schema = _c.schemaConfig.AuditLog
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.AccessPoliciesTable,
+			Columns: user.AccessPoliciesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _c.schemaConfig.UserAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -976,6 +1024,24 @@ func (u *UserUpsert) UpdateSSHPublicKey() *UserUpsert {
 // ClearSSHPublicKey clears the value of the "ssh_public_key" field.
 func (u *UserUpsert) ClearSSHPublicKey() *UserUpsert {
 	u.SetNull(user.FieldSSHPublicKey)
+	return u
+}
+
+// SetAttributes sets the "attributes" field.
+func (u *UserUpsert) SetAttributes(v map[string]interface{}) *UserUpsert {
+	u.Set(user.FieldAttributes, v)
+	return u
+}
+
+// UpdateAttributes sets the "attributes" field to the value that was provided on create.
+func (u *UserUpsert) UpdateAttributes() *UserUpsert {
+	u.SetExcluded(user.FieldAttributes)
+	return u
+}
+
+// ClearAttributes clears the value of the "attributes" field.
+func (u *UserUpsert) ClearAttributes() *UserUpsert {
+	u.SetNull(user.FieldAttributes)
 	return u
 }
 
@@ -1356,6 +1422,27 @@ func (u *UserUpsertOne) UpdateSSHPublicKey() *UserUpsertOne {
 func (u *UserUpsertOne) ClearSSHPublicKey() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearSSHPublicKey()
+	})
+}
+
+// SetAttributes sets the "attributes" field.
+func (u *UserUpsertOne) SetAttributes(v map[string]interface{}) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAttributes(v)
+	})
+}
+
+// UpdateAttributes sets the "attributes" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateAttributes() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAttributes()
+	})
+}
+
+// ClearAttributes clears the value of the "attributes" field.
+func (u *UserUpsertOne) ClearAttributes() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAttributes()
 	})
 }
 
@@ -1903,6 +1990,27 @@ func (u *UserUpsertBulk) UpdateSSHPublicKey() *UserUpsertBulk {
 func (u *UserUpsertBulk) ClearSSHPublicKey() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearSSHPublicKey()
+	})
+}
+
+// SetAttributes sets the "attributes" field.
+func (u *UserUpsertBulk) SetAttributes(v map[string]interface{}) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAttributes(v)
+	})
+}
+
+// UpdateAttributes sets the "attributes" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateAttributes() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAttributes()
+	})
+}
+
+// ClearAttributes clears the value of the "attributes" field.
+func (u *UserUpsertBulk) ClearAttributes() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAttributes()
 	})
 }
 

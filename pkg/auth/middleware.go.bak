@@ -1,0 +1,124 @@
+package auth
+
+import (
+	"context"
+	"strings"
+
+	"entgo.io/ent/privacy"
+	"github.com/labstack/echo/v5"
+	"github.com/willie-lin/lrpc/ent"
+	"github.com/willie-lin/lrpc/ent/apikey"
+	lrpcErr "github.com/willie-lin/lrpc/pkg/errors"
+)
+
+const (
+	ContextUserID   = "user_id"
+	ContextAPIKeyID = "api_key_id"
+	ContextUserRole = "user_role"
+	ContextRPMLimit = "rpm_limit"
+	ContextTPMLimit = "tpm_limit"
+	ContextUserName = "user_name"
+)
+
+// APIMiddleware authenticates via API Key (for LLM gateway endpoints)
+func APIMiddleware(dbClient *ent.Client) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			token := extractToken(c)
+			if token == "" {
+				return lrpcErr.ErrUnauthorized
+			}
+
+			// 解决鉴权时的隐私策略“鸡生蛋”问题：鉴权尚未完成时 viewerID 为空，会被 UserOrAdminPolicy 拒绝。
+			// 这里使用 privacy.DecisionContext 显式授权此次内部查询。
+			authCtx := privacy.DecisionContext(c.Request().Context(), privacy.Allow)
+			keyRec, err := dbClient.APIKey.Query().
+				Where(apikey.KeyEQ(token)).
+				WithUser().
+				Only(authCtx)
+
+			if err != nil {
+				if ent.IsNotFound(err) {
+					return lrpcErr.ErrUnauthorized
+				}
+				return lrpcErr.ErrInternal
+			}
+
+			if keyRec.Status != "active" {
+				return lrpcErr.ErrUnauthorized
+			}
+
+			user := keyRec.Edges.User
+			if user == nil {
+				return lrpcErr.ErrUnauthorized
+			}
+
+			// Propagate to both Echo context and request context (for Ent Privacy)
+			c.Set(ContextUserID, user.ID)
+			c.Set(ContextAPIKeyID, keyRec.ID)
+			c.Set(ContextUserName, user.Name)
+			ctx := context.WithValue(c.Request().Context(), ContextUserID, user.ID)
+			ctx = context.WithValue(ctx, ContextUserRole, "user")
+			c.SetRequest(c.Request().WithContext(ctx))
+
+			return next(c)
+		}
+	}
+}
+
+// JWTMiddleware authenticates via JWT Bearer token (for admin/user API)
+func JWTMiddleware() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			authHeader := c.Request().Header.Get("Authorization")
+			if !strings.HasPrefix(authHeader, "Bearer ") {
+				return c.JSON(401, map[string]any{"code": 401, "msg": "missing token"})
+			}
+
+			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+			claims, err := ParseJWT(tokenStr)
+			if err != nil {
+				return c.JSON(401, map[string]any{"code": 401, "msg": "invalid token"})
+			}
+
+			// Set on Echo context
+			c.Set(ContextUserID, claims.UserID)
+			c.Set(ContextUserRole, claims.Role)
+			c.Set(ContextUserName, claims.Email)
+
+			// Propagate to request context for Ent Privacy
+			ctx := context.WithValue(c.Request().Context(), ContextUserID, claims.UserID)
+			ctx = context.WithValue(ctx, ContextUserRole, claims.Role)
+			c.SetRequest(c.Request().WithContext(ctx))
+
+			return next(c)
+		}
+	}
+}
+
+// AdminMiddleware checks the JWT role is admin
+func AdminMiddleware() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			role, ok := c.Get(ContextUserRole).(string)
+			if !ok || role != "admin" {
+				return c.JSON(403, map[string]any{"code": 403, "msg": "admin required"})
+			}
+			return next(c)
+		}
+	}
+}
+
+func extractToken(c *echo.Context) string {
+	authHeader := c.Request().Header.Get("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		return strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	apiKey := c.Request().Header.Get("X-API-Key")
+	if apiKey != "" {
+		return apiKey
+	}
+
+	return ""
+}

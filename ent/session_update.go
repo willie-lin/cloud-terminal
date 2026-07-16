@@ -90,26 +90,6 @@ func (_u *SessionUpdate) ClearEnvironmentUrn() *SessionUpdate {
 	return _u
 }
 
-// SetAccountUrn sets the "account_urn" field.
-func (_u *SessionUpdate) SetAccountUrn(v string) *SessionUpdate {
-	_u.mutation.SetAccountUrn(v)
-	return _u
-}
-
-// SetNillableAccountUrn sets the "account_urn" field if the given value is not nil.
-func (_u *SessionUpdate) SetNillableAccountUrn(v *string) *SessionUpdate {
-	if v != nil {
-		_u.SetAccountUrn(*v)
-	}
-	return _u
-}
-
-// ClearAccountUrn clears the value of the "account_urn" field.
-func (_u *SessionUpdate) ClearAccountUrn() *SessionUpdate {
-	_u.mutation.ClearAccountUrn()
-	return _u
-}
-
 // SetMode sets the "mode" field.
 func (_u *SessionUpdate) SetMode(v session.Mode) *SessionUpdate {
 	_u.mutation.SetMode(v)
@@ -284,12 +264,6 @@ func (_u *SessionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.EnvironmentUrnCleared() {
 		_spec.ClearField(session.FieldEnvironmentUrn, field.TypeString)
 	}
-	if value, ok := _u.mutation.AccountUrn(); ok {
-		_spec.SetField(session.FieldAccountUrn, field.TypeString, value)
-	}
-	if _u.mutation.AccountUrnCleared() {
-		_spec.ClearField(session.FieldAccountUrn, field.TypeString)
-	}
 	if value, ok := _u.mutation.Mode(); ok {
 		_spec.SetField(session.FieldMode, field.TypeEnum, value)
 	}
@@ -392,26 +366,6 @@ func (_u *SessionUpdateOne) SetNillableEnvironmentUrn(v *string) *SessionUpdateO
 // ClearEnvironmentUrn clears the value of the "environment_urn" field.
 func (_u *SessionUpdateOne) ClearEnvironmentUrn() *SessionUpdateOne {
 	_u.mutation.ClearEnvironmentUrn()
-	return _u
-}
-
-// SetAccountUrn sets the "account_urn" field.
-func (_u *SessionUpdateOne) SetAccountUrn(v string) *SessionUpdateOne {
-	_u.mutation.SetAccountUrn(v)
-	return _u
-}
-
-// SetNillableAccountUrn sets the "account_urn" field if the given value is not nil.
-func (_u *SessionUpdateOne) SetNillableAccountUrn(v *string) *SessionUpdateOne {
-	if v != nil {
-		_u.SetAccountUrn(*v)
-	}
-	return _u
-}
-
-// ClearAccountUrn clears the value of the "account_urn" field.
-func (_u *SessionUpdateOne) ClearAccountUrn() *SessionUpdateOne {
-	_u.mutation.ClearAccountUrn()
 	return _u
 }
 
@@ -618,12 +572,6 @@ func (_u *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err er
 	}
 	if _u.mutation.EnvironmentUrnCleared() {
 		_spec.ClearField(session.FieldEnvironmentUrn, field.TypeString)
-	}
-	if value, ok := _u.mutation.AccountUrn(); ok {
-		_spec.SetField(session.FieldAccountUrn, field.TypeString, value)
-	}
-	if _u.mutation.AccountUrnCleared() {
-		_spec.ClearField(session.FieldAccountUrn, field.TypeString)
 	}
 	if value, ok := _u.mutation.Mode(); ok {
 		_spec.SetField(session.FieldMode, field.TypeEnum, value)

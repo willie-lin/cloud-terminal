@@ -15,19 +15,21 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
+	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
 // AuditLogQuery is the builder for querying AuditLog entities.
 type AuditLogQuery struct {
 	config
-	ctx        *QueryContext
-	order      []auditlog.OrderOption
-	inters     []Interceptor
-	predicates []predicate.AuditLog
-	withUser   *UserQuery
-	withFKs    bool
-	modifiers  []func(*sql.Selector)
+	ctx          *QueryContext
+	order        []auditlog.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.AuditLog
+	withUser     *UserQuery
+	withResource *ResourceQuery
+	withFKs      bool
+	modifiers    []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -82,6 +84,31 @@ func (_q *AuditLogQuery) QueryUser() *UserQuery {
 		)
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.AuditLog
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryResource chains the current query on the "resource" edge.
+func (_q *AuditLogQuery) QueryResource() *ResourceQuery {
+	query := (&ResourceClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(auditlog.Table, auditlog.FieldID, selector),
+			sqlgraph.To(resource.Table, resource.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, auditlog.ResourceTable, auditlog.ResourceColumn),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Resource
 		step.Edge.Schema = schemaConfig.AuditLog
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -276,12 +303,13 @@ func (_q *AuditLogQuery) Clone() *AuditLogQuery {
 		return nil
 	}
 	return &AuditLogQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]auditlog.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.AuditLog{}, _q.predicates...),
-		withUser:   _q.withUser.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]auditlog.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.AuditLog{}, _q.predicates...),
+		withUser:     _q.withUser.Clone(),
+		withResource: _q.withResource.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -297,6 +325,17 @@ func (_q *AuditLogQuery) WithUser(opts ...func(*UserQuery)) *AuditLogQuery {
 		opt(query)
 	}
 	_q.withUser = query
+	return _q
+}
+
+// WithResource tells the query-builder to eager-load the nodes that are connected to
+// the "resource" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AuditLogQuery) WithResource(opts ...func(*ResourceQuery)) *AuditLogQuery {
+	query := (&ResourceClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withResource = query
 	return _q
 }
 
@@ -379,11 +418,12 @@ func (_q *AuditLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Aud
 		nodes       = []*AuditLog{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withUser != nil,
+			_q.withResource != nil,
 		}
 	)
-	if _q.withUser != nil {
+	if _q.withUser != nil || _q.withResource != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -418,6 +458,12 @@ func (_q *AuditLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Aud
 			return nil, err
 		}
 	}
+	if query := _q.withResource; query != nil {
+		if err := _q.loadResource(ctx, query, nodes, nil,
+			func(n *AuditLog, e *Resource) { n.Edges.Resource = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -446,6 +492,38 @@ func (_q *AuditLogQuery) loadUser(ctx context.Context, query *UserQuery, nodes [
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "user_audit_logs" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *AuditLogQuery) loadResource(ctx context.Context, query *ResourceQuery, nodes []*AuditLog, init func(*AuditLog), assign func(*AuditLog, *Resource)) error {
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*AuditLog)
+	for i := range nodes {
+		if nodes[i].resource_audit_logs == nil {
+			continue
+		}
+		fk := *nodes[i].resource_audit_logs
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(resource.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "resource_audit_logs" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

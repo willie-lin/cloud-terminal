@@ -86,6 +86,11 @@ func Description(v string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldDescription, v))
 }
 
+// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
+func Version(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEQ(FieldVersion, v))
+}
+
 // Immutable applies equality check predicate on the "immutable" field. It's identical to ImmutableEQ.
 func Immutable(v bool) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldImmutable, v))
@@ -94,6 +99,16 @@ func Immutable(v bool) predicate.AccessPolicy {
 // Priority applies equality check predicate on the "priority" field. It's identical to PriorityEQ.
 func Priority(v int) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldPriority, v))
+}
+
+// EffectiveDate applies equality check predicate on the "effective_date" field. It's identical to EffectiveDateEQ.
+func EffectiveDate(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEQ(FieldEffectiveDate, v))
+}
+
+// ExpiryDate applies equality check predicate on the "expiry_date" field. It's identical to ExpiryDateEQ.
+func ExpiryDate(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEQ(FieldExpiryDate, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -316,6 +331,71 @@ func DescriptionContainsFold(v string) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldContainsFold(FieldDescription, v))
 }
 
+// VersionEQ applies the EQ predicate on the "version" field.
+func VersionEQ(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEQ(FieldVersion, v))
+}
+
+// VersionNEQ applies the NEQ predicate on the "version" field.
+func VersionNEQ(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNEQ(FieldVersion, v))
+}
+
+// VersionIn applies the In predicate on the "version" field.
+func VersionIn(vs ...string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldIn(FieldVersion, vs...))
+}
+
+// VersionNotIn applies the NotIn predicate on the "version" field.
+func VersionNotIn(vs ...string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNotIn(FieldVersion, vs...))
+}
+
+// VersionGT applies the GT predicate on the "version" field.
+func VersionGT(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldGT(FieldVersion, v))
+}
+
+// VersionGTE applies the GTE predicate on the "version" field.
+func VersionGTE(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldGTE(FieldVersion, v))
+}
+
+// VersionLT applies the LT predicate on the "version" field.
+func VersionLT(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldLT(FieldVersion, v))
+}
+
+// VersionLTE applies the LTE predicate on the "version" field.
+func VersionLTE(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldLTE(FieldVersion, v))
+}
+
+// VersionContains applies the Contains predicate on the "version" field.
+func VersionContains(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldContains(FieldVersion, v))
+}
+
+// VersionHasPrefix applies the HasPrefix predicate on the "version" field.
+func VersionHasPrefix(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldHasPrefix(FieldVersion, v))
+}
+
+// VersionHasSuffix applies the HasSuffix predicate on the "version" field.
+func VersionHasSuffix(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldHasSuffix(FieldVersion, v))
+}
+
+// VersionEqualFold applies the EqualFold predicate on the "version" field.
+func VersionEqualFold(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEqualFold(FieldVersion, v))
+}
+
+// VersionContainsFold applies the ContainsFold predicate on the "version" field.
+func VersionContainsFold(v string) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldContainsFold(FieldVersion, v))
+}
+
 // ImmutableEQ applies the EQ predicate on the "immutable" field.
 func ImmutableEQ(v bool) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldEQ(FieldImmutable, v))
@@ -366,27 +446,185 @@ func PriorityLTE(v int) predicate.AccessPolicy {
 	return predicate.AccessPolicy(sql.FieldLTE(FieldPriority, v))
 }
 
-// HasAccount applies the HasEdge predicate on the "account" edge.
-func HasAccount() predicate.AccessPolicy {
+// EffectiveDateEQ applies the EQ predicate on the "effective_date" field.
+func EffectiveDateEQ(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEQ(FieldEffectiveDate, v))
+}
+
+// EffectiveDateNEQ applies the NEQ predicate on the "effective_date" field.
+func EffectiveDateNEQ(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNEQ(FieldEffectiveDate, v))
+}
+
+// EffectiveDateIn applies the In predicate on the "effective_date" field.
+func EffectiveDateIn(vs ...time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldIn(FieldEffectiveDate, vs...))
+}
+
+// EffectiveDateNotIn applies the NotIn predicate on the "effective_date" field.
+func EffectiveDateNotIn(vs ...time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNotIn(FieldEffectiveDate, vs...))
+}
+
+// EffectiveDateGT applies the GT predicate on the "effective_date" field.
+func EffectiveDateGT(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldGT(FieldEffectiveDate, v))
+}
+
+// EffectiveDateGTE applies the GTE predicate on the "effective_date" field.
+func EffectiveDateGTE(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldGTE(FieldEffectiveDate, v))
+}
+
+// EffectiveDateLT applies the LT predicate on the "effective_date" field.
+func EffectiveDateLT(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldLT(FieldEffectiveDate, v))
+}
+
+// EffectiveDateLTE applies the LTE predicate on the "effective_date" field.
+func EffectiveDateLTE(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldLTE(FieldEffectiveDate, v))
+}
+
+// EffectiveDateIsNil applies the IsNil predicate on the "effective_date" field.
+func EffectiveDateIsNil() predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldIsNull(FieldEffectiveDate))
+}
+
+// EffectiveDateNotNil applies the NotNil predicate on the "effective_date" field.
+func EffectiveDateNotNil() predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNotNull(FieldEffectiveDate))
+}
+
+// ExpiryDateEQ applies the EQ predicate on the "expiry_date" field.
+func ExpiryDateEQ(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldEQ(FieldExpiryDate, v))
+}
+
+// ExpiryDateNEQ applies the NEQ predicate on the "expiry_date" field.
+func ExpiryDateNEQ(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNEQ(FieldExpiryDate, v))
+}
+
+// ExpiryDateIn applies the In predicate on the "expiry_date" field.
+func ExpiryDateIn(vs ...time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldIn(FieldExpiryDate, vs...))
+}
+
+// ExpiryDateNotIn applies the NotIn predicate on the "expiry_date" field.
+func ExpiryDateNotIn(vs ...time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNotIn(FieldExpiryDate, vs...))
+}
+
+// ExpiryDateGT applies the GT predicate on the "expiry_date" field.
+func ExpiryDateGT(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldGT(FieldExpiryDate, v))
+}
+
+// ExpiryDateGTE applies the GTE predicate on the "expiry_date" field.
+func ExpiryDateGTE(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldGTE(FieldExpiryDate, v))
+}
+
+// ExpiryDateLT applies the LT predicate on the "expiry_date" field.
+func ExpiryDateLT(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldLT(FieldExpiryDate, v))
+}
+
+// ExpiryDateLTE applies the LTE predicate on the "expiry_date" field.
+func ExpiryDateLTE(v time.Time) predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldLTE(FieldExpiryDate, v))
+}
+
+// ExpiryDateIsNil applies the IsNil predicate on the "expiry_date" field.
+func ExpiryDateIsNil() predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldIsNull(FieldExpiryDate))
+}
+
+// ExpiryDateNotNil applies the NotNil predicate on the "expiry_date" field.
+func ExpiryDateNotNil() predicate.AccessPolicy {
+	return predicate.AccessPolicy(sql.FieldNotNull(FieldExpiryDate))
+}
+
+// HasGroups applies the HasEdge predicate on the "groups" edge.
+func HasGroups() predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, AccountTable, AccountPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, GroupsTable, GroupsPrimaryKey...),
 		)
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.AccountAccessPolicies
+		step.To.Schema = schemaConfig.Group
+		step.Edge.Schema = schemaConfig.GroupAccessPolicies
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasAccountWith applies the HasEdge predicate on the "account" edge with a given conditions (other predicates).
-func HasAccountWith(preds ...predicate.Account) predicate.AccessPolicy {
+// HasGroupsWith applies the HasEdge predicate on the "groups" edge with a given conditions (other predicates).
+func HasGroupsWith(preds ...predicate.Group) predicate.AccessPolicy {
 	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newAccountStep()
+		step := newGroupsStep()
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Account
-		step.Edge.Schema = schemaConfig.AccountAccessPolicies
+		step.To.Schema = schemaConfig.Group
+		step.Edge.Schema = schemaConfig.GroupAccessPolicies
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUsers applies the HasEdge predicate on the "users" edge.
+func HasUsers() predicate.AccessPolicy {
+	return predicate.AccessPolicy(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, UsersTable, UsersPrimaryKey...),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.UserAccessPolicies
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUsersWith applies the HasEdge predicate on the "users" edge with a given conditions (other predicates).
+func HasUsersWith(preds ...predicate.User) predicate.AccessPolicy {
+	return predicate.AccessPolicy(func(s *sql.Selector) {
+		step := newUsersStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.UserAccessPolicies
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasResources applies the HasEdge predicate on the "resources" edge.
+func HasResources() predicate.AccessPolicy {
+	return predicate.AccessPolicy(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ResourcesTable, ResourcesPrimaryKey...),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.ResourcePolicies
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasResourcesWith applies the HasEdge predicate on the "resources" edge with a given conditions (other predicates).
+func HasResourcesWith(preds ...predicate.Resource) predicate.AccessPolicy {
+	return predicate.AccessPolicy(func(s *sql.Selector) {
+		step := newResourcesStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.ResourcePolicies
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -416,64 +654,6 @@ func HasRolesWith(preds ...predicate.Role) predicate.AccessPolicy {
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.Role
 		step.Edge.Schema = schemaConfig.RoleAccessPolicies
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.AccessPolicy
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newTenantStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Tenant
-		step.Edge.Schema = schemaConfig.AccessPolicy
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasEnvironment applies the HasEdge predicate on the "environment" edge.
-func HasEnvironment() predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, EnvironmentTable, EnvironmentColumn),
-		)
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Environment
-		step.Edge.Schema = schemaConfig.Environment
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasEnvironmentWith applies the HasEdge predicate on the "environment" edge with a given conditions (other predicates).
-func HasEnvironmentWith(preds ...predicate.Environment) predicate.AccessPolicy {
-	return predicate.AccessPolicy(func(s *sql.Selector) {
-		step := newEnvironmentStep()
-		schemaConfig := internal.SchemaConfigFromContext(s.Context())
-		step.To.Schema = schemaConfig.Environment
-		step.Edge.Schema = schemaConfig.Environment
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

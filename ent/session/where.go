@@ -94,11 +94,6 @@ func EnvironmentUrn(v string) predicate.Session {
 	return predicate.Session(sql.FieldEQ(FieldEnvironmentUrn, v))
 }
 
-// AccountUrn applies equality check predicate on the "account_urn" field. It's identical to AccountUrnEQ.
-func AccountUrn(v string) predicate.Session {
-	return predicate.Session(sql.FieldEQ(FieldAccountUrn, v))
-}
-
 // StartedAt applies equality check predicate on the "started_at" field. It's identical to StartedAtEQ.
 func StartedAt(v time.Time) predicate.Session {
 	return predicate.Session(sql.FieldEQ(FieldStartedAt, v))
@@ -472,81 +467,6 @@ func EnvironmentUrnEqualFold(v string) predicate.Session {
 // EnvironmentUrnContainsFold applies the ContainsFold predicate on the "environment_urn" field.
 func EnvironmentUrnContainsFold(v string) predicate.Session {
 	return predicate.Session(sql.FieldContainsFold(FieldEnvironmentUrn, v))
-}
-
-// AccountUrnEQ applies the EQ predicate on the "account_urn" field.
-func AccountUrnEQ(v string) predicate.Session {
-	return predicate.Session(sql.FieldEQ(FieldAccountUrn, v))
-}
-
-// AccountUrnNEQ applies the NEQ predicate on the "account_urn" field.
-func AccountUrnNEQ(v string) predicate.Session {
-	return predicate.Session(sql.FieldNEQ(FieldAccountUrn, v))
-}
-
-// AccountUrnIn applies the In predicate on the "account_urn" field.
-func AccountUrnIn(vs ...string) predicate.Session {
-	return predicate.Session(sql.FieldIn(FieldAccountUrn, vs...))
-}
-
-// AccountUrnNotIn applies the NotIn predicate on the "account_urn" field.
-func AccountUrnNotIn(vs ...string) predicate.Session {
-	return predicate.Session(sql.FieldNotIn(FieldAccountUrn, vs...))
-}
-
-// AccountUrnGT applies the GT predicate on the "account_urn" field.
-func AccountUrnGT(v string) predicate.Session {
-	return predicate.Session(sql.FieldGT(FieldAccountUrn, v))
-}
-
-// AccountUrnGTE applies the GTE predicate on the "account_urn" field.
-func AccountUrnGTE(v string) predicate.Session {
-	return predicate.Session(sql.FieldGTE(FieldAccountUrn, v))
-}
-
-// AccountUrnLT applies the LT predicate on the "account_urn" field.
-func AccountUrnLT(v string) predicate.Session {
-	return predicate.Session(sql.FieldLT(FieldAccountUrn, v))
-}
-
-// AccountUrnLTE applies the LTE predicate on the "account_urn" field.
-func AccountUrnLTE(v string) predicate.Session {
-	return predicate.Session(sql.FieldLTE(FieldAccountUrn, v))
-}
-
-// AccountUrnContains applies the Contains predicate on the "account_urn" field.
-func AccountUrnContains(v string) predicate.Session {
-	return predicate.Session(sql.FieldContains(FieldAccountUrn, v))
-}
-
-// AccountUrnHasPrefix applies the HasPrefix predicate on the "account_urn" field.
-func AccountUrnHasPrefix(v string) predicate.Session {
-	return predicate.Session(sql.FieldHasPrefix(FieldAccountUrn, v))
-}
-
-// AccountUrnHasSuffix applies the HasSuffix predicate on the "account_urn" field.
-func AccountUrnHasSuffix(v string) predicate.Session {
-	return predicate.Session(sql.FieldHasSuffix(FieldAccountUrn, v))
-}
-
-// AccountUrnIsNil applies the IsNil predicate on the "account_urn" field.
-func AccountUrnIsNil() predicate.Session {
-	return predicate.Session(sql.FieldIsNull(FieldAccountUrn))
-}
-
-// AccountUrnNotNil applies the NotNil predicate on the "account_urn" field.
-func AccountUrnNotNil() predicate.Session {
-	return predicate.Session(sql.FieldNotNull(FieldAccountUrn))
-}
-
-// AccountUrnEqualFold applies the EqualFold predicate on the "account_urn" field.
-func AccountUrnEqualFold(v string) predicate.Session {
-	return predicate.Session(sql.FieldEqualFold(FieldAccountUrn, v))
-}
-
-// AccountUrnContainsFold applies the ContainsFold predicate on the "account_urn" field.
-func AccountUrnContainsFold(v string) predicate.Session {
-	return predicate.Session(sql.FieldContainsFold(FieldAccountUrn, v))
 }
 
 // ModeEQ applies the EQ predicate on the "mode" field.
