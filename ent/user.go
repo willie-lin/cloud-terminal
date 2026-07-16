@@ -79,7 +79,8 @@ type UserEdges struct {
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes    [3]bool
+	namedAuditLogs map[string][]*AuditLog
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -400,6 +401,30 @@ func (_m *User) String() string {
 	builder.WriteString(_m.SSHPublicKey)
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedAuditLogs returns the AuditLogs named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedAuditLogs(name string) ([]*AuditLog, error) {
+	if _m.Edges.namedAuditLogs == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAuditLogs[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedAuditLogs(name string, edges ...*AuditLog) {
+	if _m.Edges.namedAuditLogs == nil {
+		_m.Edges.namedAuditLogs = make(map[string][]*AuditLog)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAuditLogs[name] = []*AuditLog{}
+	} else {
+		_m.Edges.namedAuditLogs[name] = append(_m.Edges.namedAuditLogs[name], edges...)
+	}
 }
 
 // Users is a parsable slice of User.

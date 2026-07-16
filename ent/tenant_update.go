@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
@@ -21,8 +22,9 @@ import (
 // TenantUpdate is the builder for updating Tenant entities.
 type TenantUpdate struct {
 	config
-	hooks    []Hook
-	mutation *TenantMutation
+	hooks     []Hook
+	mutation  *TenantMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the TenantUpdate builder.
@@ -249,6 +251,12 @@ func (_u *TenantUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *TenantUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *TenantUpdate {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -287,6 +295,7 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedEnvironmentsIDs(); len(nodes) > 0 && !_u.mutation.EnvironmentsCleared() {
@@ -300,6 +309,7 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -316,6 +326,7 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -332,6 +343,7 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Resource
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !_u.mutation.ResourcesCleared() {
@@ -345,6 +357,7 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -361,6 +374,7 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -377,6 +391,7 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !_u.mutation.AccessPoliciesCleared() {
@@ -390,6 +405,7 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -406,11 +422,15 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.Node.Schema = _u.schemaConfig.Tenant
+	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
+	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tenant.Label}
@@ -426,9 +446,10 @@ func (_u *TenantUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // TenantUpdateOne is the builder for updating a single Tenant entity.
 type TenantUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *TenantMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *TenantMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -662,6 +683,12 @@ func (_u *TenantUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *TenantUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *TenantUpdateOne {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -717,6 +744,7 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedEnvironmentsIDs(); len(nodes) > 0 && !_u.mutation.EnvironmentsCleared() {
@@ -730,6 +758,7 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -746,6 +775,7 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -762,6 +792,7 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Resource
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedResourcesIDs(); len(nodes) > 0 && !_u.mutation.ResourcesCleared() {
@@ -775,6 +806,7 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -791,6 +823,7 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(resource.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Resource
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -807,6 +840,7 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccessPoliciesIDs(); len(nodes) > 0 && !_u.mutation.AccessPoliciesCleared() {
@@ -820,6 +854,7 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -836,11 +871,15 @@ func (_u *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err erro
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.Node.Schema = _u.schemaConfig.Tenant
+	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
+	_spec.AddModifiers(_u.modifiers...)
 	_node = &Tenant{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

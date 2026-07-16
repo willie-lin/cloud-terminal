@@ -55,7 +55,9 @@ type AccessPolicyEdges struct {
 	Environment *Environment `json:"environment,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes  [4]bool
+	namedAccount map[string][]*Account
+	namedRoles   map[string][]*Role
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -265,6 +267,54 @@ func (_m *AccessPolicy) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.Priority))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedAccount returns the Account named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *AccessPolicy) NamedAccount(name string) ([]*Account, error) {
+	if _m.Edges.namedAccount == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAccount[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *AccessPolicy) appendNamedAccount(name string, edges ...*Account) {
+	if _m.Edges.namedAccount == nil {
+		_m.Edges.namedAccount = make(map[string][]*Account)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAccount[name] = []*Account{}
+	} else {
+		_m.Edges.namedAccount[name] = append(_m.Edges.namedAccount[name], edges...)
+	}
+}
+
+// NamedRoles returns the Roles named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *AccessPolicy) NamedRoles(name string) ([]*Role, error) {
+	if _m.Edges.namedRoles == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedRoles[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *AccessPolicy) appendNamedRoles(name string, edges ...*Role) {
+	if _m.Edges.namedRoles == nil {
+		_m.Edges.namedRoles = make(map[string][]*Role)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedRoles[name] = []*Role{}
+	} else {
+		_m.Edges.namedRoles[name] = append(_m.Edges.namedRoles[name], edges...)
+	}
 }
 
 // AccessPolicies is a parsable slice of AccessPolicy.

@@ -47,7 +47,10 @@ type AccountEdges struct {
 	Resource *Resource `json:"resource,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes         [4]bool
+	namedUsers          map[string][]*User
+	namedRoles          map[string][]*Role
+	namedAccessPolicies map[string][]*AccessPolicy
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -220,6 +223,78 @@ func (_m *Account) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedUsers returns the Users named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Account) NamedUsers(name string) ([]*User, error) {
+	if _m.Edges.namedUsers == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsers[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Account) appendNamedUsers(name string, edges ...*User) {
+	if _m.Edges.namedUsers == nil {
+		_m.Edges.namedUsers = make(map[string][]*User)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsers[name] = []*User{}
+	} else {
+		_m.Edges.namedUsers[name] = append(_m.Edges.namedUsers[name], edges...)
+	}
+}
+
+// NamedRoles returns the Roles named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Account) NamedRoles(name string) ([]*Role, error) {
+	if _m.Edges.namedRoles == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedRoles[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Account) appendNamedRoles(name string, edges ...*Role) {
+	if _m.Edges.namedRoles == nil {
+		_m.Edges.namedRoles = make(map[string][]*Role)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedRoles[name] = []*Role{}
+	} else {
+		_m.Edges.namedRoles[name] = append(_m.Edges.namedRoles[name], edges...)
+	}
+}
+
+// NamedAccessPolicies returns the AccessPolicies named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Account) NamedAccessPolicies(name string) ([]*AccessPolicy, error) {
+	if _m.Edges.namedAccessPolicies == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAccessPolicies[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Account) appendNamedAccessPolicies(name string, edges ...*AccessPolicy) {
+	if _m.Edges.namedAccessPolicies == nil {
+		_m.Edges.namedAccessPolicies = make(map[string][]*AccessPolicy)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAccessPolicies[name] = []*AccessPolicy{}
+	} else {
+		_m.Edges.namedAccessPolicies[name] = append(_m.Edges.namedAccessPolicies[name], edges...)
+	}
 }
 
 // Accounts is a parsable slice of Account.

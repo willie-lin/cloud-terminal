@@ -52,7 +52,11 @@ type RoleEdges struct {
 	ChildRoles []*Role `json:"child_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes         [5]bool
+	namedUsers          map[string][]*User
+	namedAccessPolicies map[string][]*AccessPolicy
+	namedParentRole     map[string][]*Role
+	namedChildRoles     map[string][]*Role
 }
 
 // AccountOrErr returns the Account value or an error if the edge
@@ -259,6 +263,102 @@ func (_m *Role) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.IsDefault))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedUsers returns the Users named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Role) NamedUsers(name string) ([]*User, error) {
+	if _m.Edges.namedUsers == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsers[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Role) appendNamedUsers(name string, edges ...*User) {
+	if _m.Edges.namedUsers == nil {
+		_m.Edges.namedUsers = make(map[string][]*User)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsers[name] = []*User{}
+	} else {
+		_m.Edges.namedUsers[name] = append(_m.Edges.namedUsers[name], edges...)
+	}
+}
+
+// NamedAccessPolicies returns the AccessPolicies named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Role) NamedAccessPolicies(name string) ([]*AccessPolicy, error) {
+	if _m.Edges.namedAccessPolicies == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedAccessPolicies[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Role) appendNamedAccessPolicies(name string, edges ...*AccessPolicy) {
+	if _m.Edges.namedAccessPolicies == nil {
+		_m.Edges.namedAccessPolicies = make(map[string][]*AccessPolicy)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedAccessPolicies[name] = []*AccessPolicy{}
+	} else {
+		_m.Edges.namedAccessPolicies[name] = append(_m.Edges.namedAccessPolicies[name], edges...)
+	}
+}
+
+// NamedParentRole returns the ParentRole named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Role) NamedParentRole(name string) ([]*Role, error) {
+	if _m.Edges.namedParentRole == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedParentRole[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Role) appendNamedParentRole(name string, edges ...*Role) {
+	if _m.Edges.namedParentRole == nil {
+		_m.Edges.namedParentRole = make(map[string][]*Role)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedParentRole[name] = []*Role{}
+	} else {
+		_m.Edges.namedParentRole[name] = append(_m.Edges.namedParentRole[name], edges...)
+	}
+}
+
+// NamedChildRoles returns the ChildRoles named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Role) NamedChildRoles(name string) ([]*Role, error) {
+	if _m.Edges.namedChildRoles == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedChildRoles[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Role) appendNamedChildRoles(name string, edges ...*Role) {
+	if _m.Edges.namedChildRoles == nil {
+		_m.Edges.namedChildRoles = make(map[string][]*Role)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedChildRoles[name] = []*Role{}
+	} else {
+		_m.Edges.namedChildRoles[name] = append(_m.Edges.namedChildRoles[name], edges...)
+	}
 }
 
 // Roles is a parsable slice of Role.

@@ -9,11 +9,13 @@ import (
 	"math"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/account"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
@@ -23,14 +25,18 @@ import (
 // AccountQuery is the builder for querying Account entities.
 type AccountQuery struct {
 	config
-	ctx                *QueryContext
-	order              []account.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.Account
-	withUsers          *UserQuery
-	withRoles          *RoleQuery
-	withAccessPolicies *AccessPolicyQuery
-	withResource       *ResourceQuery
+	ctx                     *QueryContext
+	order                   []account.OrderOption
+	inters                  []Interceptor
+	predicates              []predicate.Account
+	withUsers               *UserQuery
+	withRoles               *RoleQuery
+	withAccessPolicies      *AccessPolicyQuery
+	withResource            *ResourceQuery
+	modifiers               []func(*sql.Selector)
+	withNamedUsers          map[string]*UserQuery
+	withNamedRoles          map[string]*RoleQuery
+	withNamedAccessPolicies map[string]*AccessPolicyQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -83,6 +89,9 @@ func (_q *AccountQuery) QueryUsers() *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, account.UsersTable, account.UsersColumn),
 		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.User
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -105,6 +114,9 @@ func (_q *AccountQuery) QueryRoles() *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, account.RolesTable, account.RolesColumn),
 		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.Role
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -127,6 +139,9 @@ func (_q *AccountQuery) QueryAccessPolicies() *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, account.AccessPoliciesTable, account.AccessPoliciesPrimaryKey...),
 		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.AccountAccessPolicies
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -149,6 +164,9 @@ func (_q *AccountQuery) QueryResource() *ResourceQuery {
 			sqlgraph.To(resource.Table, resource.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, account.ResourceTable, account.ResourceColumn),
 		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.Resource
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -352,8 +370,9 @@ func (_q *AccountQuery) Clone() *AccountQuery {
 		withAccessPolicies: _q.withAccessPolicies.Clone(),
 		withResource:       _q.withResource.Clone(),
 		// clone intermediate query.
-		sql:  _q.sql.Clone(),
-		path: _q.path,
+		sql:       _q.sql.Clone(),
+		path:      _q.path,
+		modifiers: append([]func(*sql.Selector){}, _q.modifiers...),
 	}
 }
 
@@ -495,6 +514,11 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	_spec.Node.Schema = _q.schemaConfig.Account
+	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
+	if len(_q.modifiers) > 0 {
+		_spec.Modifiers = _q.modifiers
+	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -507,14 +531,24 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 	if query := _q.withUsers; query != nil {
 		if err := _q.loadUsers(ctx, query, nodes,
 			func(n *Account) { n.Edges.Users = []*User{} },
-			func(n *Account, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
+			func(n *Account, e *User) {
+				n.Edges.Users = append(n.Edges.Users, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Account = n
+				}
+			}); err != nil {
 			return nil, err
 		}
 	}
 	if query := _q.withRoles; query != nil {
 		if err := _q.loadRoles(ctx, query, nodes,
 			func(n *Account) { n.Edges.Roles = []*Role{} },
-			func(n *Account, e *Role) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
+			func(n *Account, e *Role) {
+				n.Edges.Roles = append(n.Edges.Roles, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Account = n
+				}
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -527,7 +561,43 @@ func (_q *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 	}
 	if query := _q.withResource; query != nil {
 		if err := _q.loadResource(ctx, query, nodes, nil,
-			func(n *Account, e *Resource) { n.Edges.Resource = e }); err != nil {
+			func(n *Account, e *Resource) {
+				n.Edges.Resource = e
+				if !e.Edges.loadedTypes[1] {
+					e.Edges.Accounts = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedUsers {
+		if err := _q.loadUsers(ctx, query, nodes,
+			func(n *Account) { n.appendNamedUsers(name) },
+			func(n *Account, e *User) {
+				n.appendNamedUsers(name, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Account = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedRoles {
+		if err := _q.loadRoles(ctx, query, nodes,
+			func(n *Account) { n.appendNamedRoles(name) },
+			func(n *Account, e *Role) {
+				n.appendNamedRoles(name, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Account = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAccessPolicies {
+		if err := _q.loadAccessPolicies(ctx, query, nodes,
+			func(n *Account) { n.appendNamedAccessPolicies(name) },
+			func(n *Account, e *AccessPolicy) { n.appendNamedAccessPolicies(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -609,6 +679,7 @@ func (_q *AccountQuery) loadAccessPolicies(ctx context.Context, query *AccessPol
 	}
 	query.Where(func(s *sql.Selector) {
 		joinT := sql.Table(account.AccessPoliciesTable)
+		joinT.Schema(_q.schemaConfig.AccountAccessPolicies)
 		s.Join(joinT).On(s.C(accesspolicy.FieldID), joinT.C(account.AccessPoliciesPrimaryKey[1]))
 		s.Where(sql.InValues(joinT.C(account.AccessPoliciesPrimaryKey[0]), edgeIDs...))
 		columns := s.SelectedColumns()
@@ -688,6 +759,11 @@ func (_q *AccountQuery) loadResource(ctx context.Context, query *ResourceQuery, 
 
 func (_q *AccountQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
+	_spec.Node.Schema = _q.schemaConfig.Account
+	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
+	if len(_q.modifiers) > 0 {
+		_spec.Modifiers = _q.modifiers
+	}
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
 		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
@@ -750,6 +826,12 @@ func (_q *AccountQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
+	t1.Schema(_q.schemaConfig.Account)
+	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
+	selector.WithContext(ctx)
+	for _, m := range _q.modifiers {
+		m(selector)
+	}
 	for _, p := range _q.predicates {
 		p(selector)
 	}
@@ -765,6 +847,80 @@ func (_q *AccountQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
+// updated, deleted or "selected ... for update" by other sessions, until the transaction is
+// either committed or rolled-back.
+func (_q *AccountQuery) ForUpdate(opts ...sql.LockOption) *AccountQuery {
+	if _q.driver.Dialect() == dialect.Postgres {
+		_q.Unique(false)
+	}
+	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
+		s.ForUpdate(opts...)
+	})
+	return _q
+}
+
+// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
+// on any rows that are read. Other sessions can read the rows, but cannot modify them
+// until your transaction commits.
+func (_q *AccountQuery) ForShare(opts ...sql.LockOption) *AccountQuery {
+	if _q.driver.Dialect() == dialect.Postgres {
+		_q.Unique(false)
+	}
+	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
+		s.ForShare(opts...)
+	})
+	return _q
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (_q *AccountQuery) Modify(modifiers ...func(s *sql.Selector)) *AccountSelect {
+	_q.modifiers = append(_q.modifiers, modifiers...)
+	return _q.Select()
+}
+
+// WithNamedUsers tells the query-builder to eager-load the nodes that are connected to the "users"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithNamedUsers(name string, opts ...func(*UserQuery)) *AccountQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUsers == nil {
+		_q.withNamedUsers = make(map[string]*UserQuery)
+	}
+	_q.withNamedUsers[name] = query
+	return _q
+}
+
+// WithNamedRoles tells the query-builder to eager-load the nodes that are connected to the "roles"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithNamedRoles(name string, opts ...func(*RoleQuery)) *AccountQuery {
+	query := (&RoleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedRoles == nil {
+		_q.withNamedRoles = make(map[string]*RoleQuery)
+	}
+	_q.withNamedRoles[name] = query
+	return _q
+}
+
+// WithNamedAccessPolicies tells the query-builder to eager-load the nodes that are connected to the "access_policies"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *AccountQuery) WithNamedAccessPolicies(name string, opts ...func(*AccessPolicyQuery)) *AccountQuery {
+	query := (&AccessPolicyClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAccessPolicies == nil {
+		_q.withNamedAccessPolicies = make(map[string]*AccessPolicyQuery)
+	}
+	_q.withNamedAccessPolicies[name] = query
+	return _q
 }
 
 // AccountGroupBy is the group-by builder for Account entities.
@@ -855,4 +1011,10 @@ func (_s *AccountSelect) sqlScan(ctx context.Context, root *AccountQuery, v any)
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (_s *AccountSelect) Modify(modifiers ...func(s *sql.Selector)) *AccountSelect {
+	_s.modifiers = append(_s.modifiers, modifiers...)
+	return _s
 }

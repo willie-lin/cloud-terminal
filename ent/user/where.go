@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
 
@@ -1082,6 +1083,9 @@ func HasAccount() predicate.User {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.User
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -1090,6 +1094,9 @@ func HasAccount() predicate.User {
 func HasAccountWith(preds ...predicate.Account) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newAccountStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.User
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -1105,6 +1112,9 @@ func HasRole() predicate.User {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, RoleTable, RoleColumn),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.User
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -1113,6 +1123,9 @@ func HasRole() predicate.User {
 func HasRoleWith(preds ...predicate.Role) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newRoleStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.User
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -1128,6 +1141,9 @@ func HasAuditLogs() predicate.User {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, AuditLogsTable, AuditLogsColumn),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.AuditLog
+		step.Edge.Schema = schemaConfig.AuditLog
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -1136,6 +1152,9 @@ func HasAuditLogs() predicate.User {
 func HasAuditLogsWith(preds ...predicate.AuditLog) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newAuditLogsStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.AuditLog
+		step.Edge.Schema = schemaConfig.AuditLog
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

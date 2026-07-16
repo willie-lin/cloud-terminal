@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/migrate"
 	"go.uber.org/zap"
@@ -71,29 +73,30 @@ func NewClient() (*ent.Client, error) {
 		cfg = loadConfigFromEnv()
 	}
 
-	// 确保 cfg 变量被使用
-	var client *ent.Client
+	var drv *sql.Driver
 	var dataSourceName string
 
 	switch cfg.Type {
-	case "sqlite3":
-		dataSourceName = fmt.Sprintf("file:%s?_busy_timeout=100000&_fk=1", cfg.DbName)
+	case "sqlite3", "sqlite":
+		dataSourceName = fmt.Sprintf("file:%s?_pragma=busy_timeout(100000)&_pragma=foreign_keys(1)", cfg.DbName)
+		drv, err = sql.Open(dialect.SQLite, dataSourceName)
 	case "mysql":
 		dataSourceName = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=true",
 			cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DbName)
+		drv, err = sql.Open(dialect.MySQL, dataSourceName)
 	case "postgres", "postgresql":
 		dataSourceName = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s",
 			cfg.Host, cfg.Port, cfg.User, cfg.DbName, cfg.Password)
+		drv, err = sql.Open(dialect.Postgres, dataSourceName)
 	default:
-		return client, fmt.Errorf("unknown database type")
+		return nil, fmt.Errorf("unknown database type: %s", cfg.Type)
 	}
 
-	client, err = ent.Open(cfg.Type, dataSourceName)
 	if err != nil {
-		return client, fmt.Errorf("failed opening connection to %s: %v", cfg.Type, err)
+		return nil, fmt.Errorf("failed opening connection to %s: %v", cfg.Type, err)
 	}
 
-	return client, err
+	return ent.NewClient(ent.Driver(drv)), nil
 }
 
 func AutoMigration(client *ent.Client, ctx context.Context) {

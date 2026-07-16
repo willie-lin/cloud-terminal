@@ -25,6 +25,10 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/session"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/ent/user"
+
+	stdsql "database/sql"
+
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 )
 
 // Client is the client that holds all ent builders.
@@ -88,6 +92,8 @@ type (
 		hooks *hooks
 		// interceptors to execute on queries.
 		inters *inters
+		// schemaConfig contains alternative names for all tables.
+		schemaConfig SchemaConfig
 	}
 	// Option function to configure the client.
 	Option func(*config)
@@ -397,6 +403,9 @@ func (c *AccessPolicyClient) QueryAccount(_m *AccessPolicy) *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.AccountTable, accesspolicy.AccountPrimaryKey...),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.AccountAccessPolicies
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -413,6 +422,9 @@ func (c *AccessPolicyClient) QueryRoles(_m *AccessPolicy) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, accesspolicy.RolesTable, accesspolicy.RolesPrimaryKey...),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -429,6 +441,9 @@ func (c *AccessPolicyClient) QueryTenant(_m *AccessPolicy) *TenantQuery {
 			sqlgraph.To(tenant.Table, tenant.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, accesspolicy.TenantTable, accesspolicy.TenantColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Tenant
+		step.Edge.Schema = schemaConfig.AccessPolicy
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -445,6 +460,9 @@ func (c *AccessPolicyClient) QueryEnvironment(_m *AccessPolicy) *EnvironmentQuer
 			sqlgraph.To(environment.Table, environment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, accesspolicy.EnvironmentTable, accesspolicy.EnvironmentColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Environment
+		step.Edge.Schema = schemaConfig.Environment
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -594,6 +612,9 @@ func (c *AccountClient) QueryUsers(_m *Account) *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, account.UsersTable, account.UsersColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.User
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -610,6 +631,9 @@ func (c *AccountClient) QueryRoles(_m *Account) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, account.RolesTable, account.RolesColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.Role
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -626,6 +650,9 @@ func (c *AccountClient) QueryAccessPolicies(_m *Account) *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, account.AccessPoliciesTable, account.AccessPoliciesPrimaryKey...),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.AccountAccessPolicies
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -642,6 +669,9 @@ func (c *AccountClient) QueryResource(_m *Account) *ResourceQuery {
 			sqlgraph.To(resource.Table, resource.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, account.ResourceTable, account.ResourceColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.Resource
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -791,6 +821,9 @@ func (c *AuditLogClient) QueryUser(_m *AuditLog) *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, auditlog.UserTable, auditlog.UserColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.AuditLog
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -940,6 +973,9 @@ func (c *EnvironmentClient) QueryTenant(_m *Environment) *TenantQuery {
 			sqlgraph.To(tenant.Table, tenant.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, environment.TenantTable, environment.TenantColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Tenant
+		step.Edge.Schema = schemaConfig.Environment
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -956,6 +992,9 @@ func (c *EnvironmentClient) QueryAccessPolicies(_m *Environment) *AccessPolicyQu
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, environment.AccessPoliciesTable, environment.AccessPoliciesColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.Environment
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1238,6 +1277,9 @@ func (c *ResourceClient) QueryTenant(_m *Resource) *TenantQuery {
 			sqlgraph.To(tenant.Table, tenant.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, resource.TenantTable, resource.TenantColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Tenant
+		step.Edge.Schema = schemaConfig.Resource
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1254,6 +1296,9 @@ func (c *ResourceClient) QueryAccounts(_m *Resource) *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, resource.AccountsTable, resource.AccountsColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.Resource
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1403,6 +1448,9 @@ func (c *RoleClient) QueryAccount(_m *Role) *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, role.AccountTable, role.AccountColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.Role
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1419,6 +1467,9 @@ func (c *RoleClient) QueryUsers(_m *Role) *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, role.UsersTable, role.UsersColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.User
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1435,6 +1486,9 @@ func (c *RoleClient) QueryAccessPolicies(_m *Role) *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.AccessPoliciesTable, role.AccessPoliciesPrimaryKey...),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1451,6 +1505,9 @@ func (c *RoleClient) QueryParentRole(_m *Role) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, role.ParentRoleTable, role.ParentRolePrimaryKey...),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.RoleChildRoles
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1467,6 +1524,9 @@ func (c *RoleClient) QueryChildRoles(_m *Role) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, role.ChildRolesTable, role.ChildRolesPrimaryKey...),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.RoleChildRoles
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1749,6 +1809,9 @@ func (c *TenantClient) QueryEnvironments(_m *Tenant) *EnvironmentQuery {
 			sqlgraph.To(environment.Table, environment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.EnvironmentsTable, tenant.EnvironmentsColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Environment
+		step.Edge.Schema = schemaConfig.Environment
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1765,6 +1828,9 @@ func (c *TenantClient) QueryResources(_m *Tenant) *ResourceQuery {
 			sqlgraph.To(resource.Table, resource.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ResourcesTable, tenant.ResourcesColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.Resource
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1781,6 +1847,9 @@ func (c *TenantClient) QueryAccessPolicies(_m *Tenant) *AccessPolicyQuery {
 			sqlgraph.To(accesspolicy.Table, accesspolicy.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.AccessPoliciesTable, tenant.AccessPoliciesColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.AccessPolicy
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1930,6 +1999,9 @@ func (c *UserClient) QueryAccount(_m *User) *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.AccountTable, user.AccountColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.User
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1946,6 +2018,9 @@ func (c *UserClient) QueryRole(_m *User) *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, user.RoleTable, user.RoleColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.User
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -1962,6 +2037,9 @@ func (c *UserClient) QueryAuditLogs(_m *User) *AuditLogQuery {
 			sqlgraph.To(auditlog.Table, auditlog.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AuditLogsTable, user.AuditLogsColumn),
 		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.AuditLog
+		step.Edge.Schema = schemaConfig.AuditLog
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -2004,3 +2082,39 @@ type (
 		Tenant, User []ent.Interceptor
 	}
 )
+
+// SchemaConfig represents alternative schema names for all tables
+// that can be passed at runtime.
+type SchemaConfig = internal.SchemaConfig
+
+// AlternateSchemas allows alternate schema names to be
+// passed into ent operations.
+func AlternateSchema(schemaConfig SchemaConfig) Option {
+	return func(c *config) {
+		c.schemaConfig = schemaConfig
+	}
+}
+
+// ExecContext allows calling the underlying ExecContext method of the driver if it is supported by it.
+// See, database/sql#DB.ExecContext for more information.
+func (c *config) ExecContext(ctx context.Context, query string, args ...any) (stdsql.Result, error) {
+	ex, ok := c.driver.(interface {
+		ExecContext(context.Context, string, ...any) (stdsql.Result, error)
+	})
+	if !ok {
+		return nil, fmt.Errorf("Driver.ExecContext is not supported")
+	}
+	return ex.ExecContext(ctx, query, args...)
+}
+
+// QueryContext allows calling the underlying QueryContext method of the driver if it is supported by it.
+// See, database/sql#DB.QueryContext for more information.
+func (c *config) QueryContext(ctx context.Context, query string, args ...any) (*stdsql.Rows, error) {
+	q, ok := c.driver.(interface {
+		QueryContext(context.Context, string, ...any) (*stdsql.Rows, error)
+	})
+	if !ok {
+		return nil, fmt.Errorf("Driver.QueryContext is not supported")
+	}
+	return q.QueryContext(ctx, query, args...)
+}

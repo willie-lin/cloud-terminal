@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
 
@@ -342,6 +343,9 @@ func HasAccount() predicate.Role {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.Role
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -350,6 +354,9 @@ func HasAccount() predicate.Role {
 func HasAccountWith(preds ...predicate.Account) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		step := newAccountStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.Role
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -365,6 +372,9 @@ func HasUsers() predicate.Role {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, UsersTable, UsersColumn),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.User
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -373,6 +383,9 @@ func HasUsers() predicate.Role {
 func HasUsersWith(preds ...predicate.User) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		step := newUsersStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.User
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -388,6 +401,9 @@ func HasAccessPolicies() predicate.Role {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, AccessPoliciesTable, AccessPoliciesPrimaryKey...),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -396,6 +412,9 @@ func HasAccessPolicies() predicate.Role {
 func HasAccessPoliciesWith(preds ...predicate.AccessPolicy) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		step := newAccessPoliciesStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.AccessPolicy
+		step.Edge.Schema = schemaConfig.RoleAccessPolicies
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -411,6 +430,9 @@ func HasParentRole() predicate.Role {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, ParentRoleTable, ParentRolePrimaryKey...),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.RoleChildRoles
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -419,6 +441,9 @@ func HasParentRole() predicate.Role {
 func HasParentRoleWith(preds ...predicate.Role) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		step := newParentRoleStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.RoleChildRoles
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -434,6 +459,9 @@ func HasChildRoles() predicate.Role {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, ChildRolesTable, ChildRolesPrimaryKey...),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.RoleChildRoles
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -442,6 +470,9 @@ func HasChildRoles() predicate.Role {
 func HasChildRolesWith(preds ...predicate.Role) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		step := newChildRolesStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.RoleChildRoles
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

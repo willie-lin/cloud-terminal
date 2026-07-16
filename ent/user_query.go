@@ -9,11 +9,13 @@ import (
 	"math"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/user"
@@ -22,14 +24,16 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx           *QueryContext
-	order         []user.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.User
-	withAccount   *AccountQuery
-	withRole      *RoleQuery
-	withAuditLogs *AuditLogQuery
-	withFKs       bool
+	ctx                *QueryContext
+	order              []user.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.User
+	withAccount        *AccountQuery
+	withRole           *RoleQuery
+	withAuditLogs      *AuditLogQuery
+	withFKs            bool
+	modifiers          []func(*sql.Selector)
+	withNamedAuditLogs map[string]*AuditLogQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -82,6 +86,9 @@ func (_q *UserQuery) QueryAccount() *AccountQuery {
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.AccountTable, user.AccountColumn),
 		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.User
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -104,6 +111,9 @@ func (_q *UserQuery) QueryRole() *RoleQuery {
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, user.RoleTable, user.RoleColumn),
 		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Role
+		step.Edge.Schema = schemaConfig.User
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -126,6 +136,9 @@ func (_q *UserQuery) QueryAuditLogs() *AuditLogQuery {
 			sqlgraph.To(auditlog.Table, auditlog.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AuditLogsTable, user.AuditLogsColumn),
 		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.AuditLog
+		step.Edge.Schema = schemaConfig.AuditLog
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -328,8 +341,9 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withRole:      _q.withRole.Clone(),
 		withAuditLogs: _q.withAuditLogs.Clone(),
 		// clone intermediate query.
-		sql:  _q.sql.Clone(),
-		path: _q.path,
+		sql:       _q.sql.Clone(),
+		path:      _q.path,
+		modifiers: append([]func(*sql.Selector){}, _q.modifiers...),
 	}
 }
 
@@ -466,6 +480,11 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	_spec.Node.Schema = _q.schemaConfig.User
+	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
+	if len(_q.modifiers) > 0 {
+		_spec.Modifiers = _q.modifiers
+	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -490,7 +509,24 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if query := _q.withAuditLogs; query != nil {
 		if err := _q.loadAuditLogs(ctx, query, nodes,
 			func(n *User) { n.Edges.AuditLogs = []*AuditLog{} },
-			func(n *User, e *AuditLog) { n.Edges.AuditLogs = append(n.Edges.AuditLogs, e) }); err != nil {
+			func(n *User, e *AuditLog) {
+				n.Edges.AuditLogs = append(n.Edges.AuditLogs, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.User = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedAuditLogs {
+		if err := _q.loadAuditLogs(ctx, query, nodes,
+			func(n *User) { n.appendNamedAuditLogs(name) },
+			func(n *User, e *AuditLog) {
+				n.appendNamedAuditLogs(name, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.User = n
+				}
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -595,6 +631,11 @@ func (_q *UserQuery) loadAuditLogs(ctx context.Context, query *AuditLogQuery, no
 
 func (_q *UserQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
+	_spec.Node.Schema = _q.schemaConfig.User
+	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
+	if len(_q.modifiers) > 0 {
+		_spec.Modifiers = _q.modifiers
+	}
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
 		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
@@ -657,6 +698,12 @@ func (_q *UserQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
+	t1.Schema(_q.schemaConfig.User)
+	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
+	selector.WithContext(ctx)
+	for _, m := range _q.modifiers {
+		m(selector)
+	}
 	for _, p := range _q.predicates {
 		p(selector)
 	}
@@ -672,6 +719,52 @@ func (_q *UserQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
+// updated, deleted or "selected ... for update" by other sessions, until the transaction is
+// either committed or rolled-back.
+func (_q *UserQuery) ForUpdate(opts ...sql.LockOption) *UserQuery {
+	if _q.driver.Dialect() == dialect.Postgres {
+		_q.Unique(false)
+	}
+	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
+		s.ForUpdate(opts...)
+	})
+	return _q
+}
+
+// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
+// on any rows that are read. Other sessions can read the rows, but cannot modify them
+// until your transaction commits.
+func (_q *UserQuery) ForShare(opts ...sql.LockOption) *UserQuery {
+	if _q.driver.Dialect() == dialect.Postgres {
+		_q.Unique(false)
+	}
+	_q.modifiers = append(_q.modifiers, func(s *sql.Selector) {
+		s.ForShare(opts...)
+	})
+	return _q
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (_q *UserQuery) Modify(modifiers ...func(s *sql.Selector)) *UserSelect {
+	_q.modifiers = append(_q.modifiers, modifiers...)
+	return _q.Select()
+}
+
+// WithNamedAuditLogs tells the query-builder to eager-load the nodes that are connected to the "audit_logs"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedAuditLogs(name string, opts ...func(*AuditLogQuery)) *UserQuery {
+	query := (&AuditLogClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedAuditLogs == nil {
+		_q.withNamedAuditLogs = make(map[string]*AuditLogQuery)
+	}
+	_q.withNamedAuditLogs[name] = query
+	return _q
 }
 
 // UserGroupBy is the group-by builder for User entities.
@@ -762,4 +855,10 @@ func (_s *UserSelect) sqlScan(ctx context.Context, root *UserQuery, v any) error
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (_s *UserSelect) Modify(modifiers ...func(s *sql.Selector)) *UserSelect {
+	_s.modifiers = append(_s.modifiers, modifiers...)
+	return _s
 }

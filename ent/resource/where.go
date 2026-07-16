@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
 
@@ -477,6 +478,9 @@ func HasTenant() predicate.Resource {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Tenant
+		step.Edge.Schema = schemaConfig.Resource
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -485,6 +489,9 @@ func HasTenant() predicate.Resource {
 func HasTenantWith(preds ...predicate.Tenant) predicate.Resource {
 	return predicate.Resource(func(s *sql.Selector) {
 		step := newTenantStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Tenant
+		step.Edge.Schema = schemaConfig.Resource
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -500,6 +507,9 @@ func HasAccounts() predicate.Resource {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, AccountsTable, AccountsColumn),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.Resource
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -508,6 +518,9 @@ func HasAccounts() predicate.Resource {
 func HasAccountsWith(preds ...predicate.Account) predicate.Resource {
 	return predicate.Resource(func(s *sql.Selector) {
 		step := newAccountsStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Account
+		step.Edge.Schema = schemaConfig.Resource
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

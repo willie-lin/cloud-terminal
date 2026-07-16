@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
@@ -21,8 +22,9 @@ import (
 // EnvironmentUpdate is the builder for updating Environment entities.
 type EnvironmentUpdate struct {
 	config
-	hooks    []Hook
-	mutation *EnvironmentMutation
+	hooks     []Hook
+	mutation  *EnvironmentMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the EnvironmentUpdate builder.
@@ -273,6 +275,12 @@ func (_u *EnvironmentUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *EnvironmentUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *EnvironmentUpdate {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *EnvironmentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -343,6 +351,7 @@ func (_u *EnvironmentUpdate) sqlSave(ctx context.Context) (_node int, err error)
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.TenantIDs(); len(nodes) > 0 {
@@ -356,6 +365,7 @@ func (_u *EnvironmentUpdate) sqlSave(ctx context.Context) (_node int, err error)
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -372,6 +382,7 @@ func (_u *EnvironmentUpdate) sqlSave(ctx context.Context) (_node int, err error)
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
@@ -385,11 +396,15 @@ func (_u *EnvironmentUpdate) sqlSave(ctx context.Context) (_node int, err error)
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.Node.Schema = _u.schemaConfig.Environment
+	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
+	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{environment.Label}
@@ -405,9 +420,10 @@ func (_u *EnvironmentUpdate) sqlSave(ctx context.Context) (_node int, err error)
 // EnvironmentUpdateOne is the builder for updating a single Environment entity.
 type EnvironmentUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *EnvironmentMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *EnvironmentMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -665,6 +681,12 @@ func (_u *EnvironmentUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *EnvironmentUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *EnvironmentUpdateOne {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *EnvironmentUpdateOne) sqlSave(ctx context.Context) (_node *Environment, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -752,6 +774,7 @@ func (_u *EnvironmentUpdateOne) sqlSave(ctx context.Context) (_node *Environment
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.TenantIDs(); len(nodes) > 0 {
@@ -765,6 +788,7 @@ func (_u *EnvironmentUpdateOne) sqlSave(ctx context.Context) (_node *Environment
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -781,6 +805,7 @@ func (_u *EnvironmentUpdateOne) sqlSave(ctx context.Context) (_node *Environment
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.AccessPoliciesIDs(); len(nodes) > 0 {
@@ -794,11 +819,15 @@ func (_u *EnvironmentUpdateOne) sqlSave(ctx context.Context) (_node *Environment
 				IDSpec: sqlgraph.NewFieldSpec(accesspolicy.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.Node.Schema = _u.schemaConfig.Environment
+	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
+	_spec.AddModifiers(_u.modifiers...)
 	_node = &Environment{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

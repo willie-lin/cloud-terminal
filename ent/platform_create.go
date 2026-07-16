@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/platform"
@@ -18,6 +20,7 @@ type PlatformCreate struct {
 	config
 	mutation *PlatformMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -235,6 +238,8 @@ func (_c *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		_node = &Platform{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(platform.Table, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeString))
 	)
+	_spec.Schema = _c.schemaConfig.Platform
+	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -274,11 +279,397 @@ func (_c *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Platform.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PlatformUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *PlatformCreate) OnConflict(opts ...sql.ConflictOption) *PlatformUpsertOne {
+	_c.conflict = opts
+	return &PlatformUpsertOne{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Platform.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *PlatformCreate) OnConflictColumns(columns ...string) *PlatformUpsertOne {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &PlatformUpsertOne{
+		create: _c,
+	}
+}
+
+type (
+	// PlatformUpsertOne is the builder for "upsert"-ing
+	//  one Platform node.
+	PlatformUpsertOne struct {
+		create *PlatformCreate
+	}
+
+	// PlatformUpsert is the "OnConflict" setter.
+	PlatformUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlatformUpsert) SetUpdatedAt(v time.Time) *PlatformUpsert {
+	u.Set(platform.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateUpdatedAt() *PlatformUpsert {
+	u.SetExcluded(platform.FieldUpdatedAt)
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *PlatformUpsert) SetName(v string) *PlatformUpsert {
+	u.Set(platform.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateName() *PlatformUpsert {
+	u.SetExcluded(platform.FieldName)
+	return u
+}
+
+// SetDescription sets the "description" field.
+func (u *PlatformUpsert) SetDescription(v string) *PlatformUpsert {
+	u.Set(platform.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateDescription() *PlatformUpsert {
+	u.SetExcluded(platform.FieldDescription)
+	return u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *PlatformUpsert) ClearDescription() *PlatformUpsert {
+	u.SetNull(platform.FieldDescription)
+	return u
+}
+
+// SetRegion sets the "region" field.
+func (u *PlatformUpsert) SetRegion(v string) *PlatformUpsert {
+	u.Set(platform.FieldRegion, v)
+	return u
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateRegion() *PlatformUpsert {
+	u.SetExcluded(platform.FieldRegion)
+	return u
+}
+
+// ClearRegion clears the value of the "region" field.
+func (u *PlatformUpsert) ClearRegion() *PlatformUpsert {
+	u.SetNull(platform.FieldRegion)
+	return u
+}
+
+// SetVersion sets the "version" field.
+func (u *PlatformUpsert) SetVersion(v string) *PlatformUpsert {
+	u.Set(platform.FieldVersion, v)
+	return u
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateVersion() *PlatformUpsert {
+	u.SetExcluded(platform.FieldVersion)
+	return u
+}
+
+// ClearVersion clears the value of the "version" field.
+func (u *PlatformUpsert) ClearVersion() *PlatformUpsert {
+	u.SetNull(platform.FieldVersion)
+	return u
+}
+
+// SetStatus sets the "status" field.
+func (u *PlatformUpsert) SetStatus(v platform.Status) *PlatformUpsert {
+	u.Set(platform.FieldStatus, v)
+	return u
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateStatus() *PlatformUpsert {
+	u.SetExcluded(platform.FieldStatus)
+	return u
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *PlatformUpsert) ClearStatus() *PlatformUpsert {
+	u.SetNull(platform.FieldStatus)
+	return u
+}
+
+// SetConfig sets the "config" field.
+func (u *PlatformUpsert) SetConfig(v map[string]interface{}) *PlatformUpsert {
+	u.Set(platform.FieldConfig, v)
+	return u
+}
+
+// UpdateConfig sets the "config" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateConfig() *PlatformUpsert {
+	u.SetExcluded(platform.FieldConfig)
+	return u
+}
+
+// ClearConfig clears the value of the "config" field.
+func (u *PlatformUpsert) ClearConfig() *PlatformUpsert {
+	u.SetNull(platform.FieldConfig)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Platform.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(platform.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *PlatformUpsertOne) UpdateNewValues() *PlatformUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(platform.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(platform.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Platform.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *PlatformUpsertOne) Ignore() *PlatformUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PlatformUpsertOne) DoNothing() *PlatformUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PlatformCreate.OnConflict
+// documentation for more info.
+func (u *PlatformUpsertOne) Update(set func(*PlatformUpsert)) *PlatformUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PlatformUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlatformUpsertOne) SetUpdatedAt(v time.Time) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateUpdatedAt() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *PlatformUpsertOne) SetName(v string) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateName() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *PlatformUpsertOne) SetDescription(v string) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateDescription() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *PlatformUpsertOne) ClearDescription() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetRegion sets the "region" field.
+func (u *PlatformUpsertOne) SetRegion(v string) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetRegion(v)
+	})
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateRegion() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateRegion()
+	})
+}
+
+// ClearRegion clears the value of the "region" field.
+func (u *PlatformUpsertOne) ClearRegion() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearRegion()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *PlatformUpsertOne) SetVersion(v string) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateVersion() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// ClearVersion clears the value of the "version" field.
+func (u *PlatformUpsertOne) ClearVersion() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearVersion()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *PlatformUpsertOne) SetStatus(v platform.Status) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateStatus() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateStatus()
+	})
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *PlatformUpsertOne) ClearStatus() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearStatus()
+	})
+}
+
+// SetConfig sets the "config" field.
+func (u *PlatformUpsertOne) SetConfig(v map[string]interface{}) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfig(v)
+	})
+}
+
+// UpdateConfig sets the "config" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateConfig() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfig()
+	})
+}
+
+// ClearConfig clears the value of the "config" field.
+func (u *PlatformUpsertOne) ClearConfig() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfig()
+	})
+}
+
+// Exec executes the query.
+func (u *PlatformUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PlatformCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PlatformUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *PlatformUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: PlatformUpsertOne.ID is not supported by MySQL driver. Use PlatformUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *PlatformUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // PlatformCreateBulk is the builder for creating many Platform entities in bulk.
 type PlatformCreateBulk struct {
 	config
 	err      error
 	builders []*PlatformCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Platform entities in the database.
@@ -308,6 +699,7 @@ func (_c *PlatformCreateBulk) Save(ctx context.Context) ([]*Platform, error) {
 					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = _c.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -354,6 +746,256 @@ func (_c *PlatformCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (_c *PlatformCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Platform.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PlatformUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (_c *PlatformCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlatformUpsertBulk {
+	_c.conflict = opts
+	return &PlatformUpsertBulk{
+		create: _c,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Platform.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (_c *PlatformCreateBulk) OnConflictColumns(columns ...string) *PlatformUpsertBulk {
+	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
+	return &PlatformUpsertBulk{
+		create: _c,
+	}
+}
+
+// PlatformUpsertBulk is the builder for "upsert"-ing
+// a bulk of Platform nodes.
+type PlatformUpsertBulk struct {
+	create *PlatformCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Platform.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(platform.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *PlatformUpsertBulk) UpdateNewValues() *PlatformUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(platform.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(platform.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Platform.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *PlatformUpsertBulk) Ignore() *PlatformUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PlatformUpsertBulk) DoNothing() *PlatformUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PlatformCreateBulk.OnConflict
+// documentation for more info.
+func (u *PlatformUpsertBulk) Update(set func(*PlatformUpsert)) *PlatformUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PlatformUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *PlatformUpsertBulk) SetUpdatedAt(v time.Time) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateUpdatedAt() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *PlatformUpsertBulk) SetName(v string) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateName() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *PlatformUpsertBulk) SetDescription(v string) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateDescription() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *PlatformUpsertBulk) ClearDescription() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearDescription()
+	})
+}
+
+// SetRegion sets the "region" field.
+func (u *PlatformUpsertBulk) SetRegion(v string) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetRegion(v)
+	})
+}
+
+// UpdateRegion sets the "region" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateRegion() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateRegion()
+	})
+}
+
+// ClearRegion clears the value of the "region" field.
+func (u *PlatformUpsertBulk) ClearRegion() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearRegion()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *PlatformUpsertBulk) SetVersion(v string) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateVersion() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// ClearVersion clears the value of the "version" field.
+func (u *PlatformUpsertBulk) ClearVersion() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearVersion()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *PlatformUpsertBulk) SetStatus(v platform.Status) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateStatus() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateStatus()
+	})
+}
+
+// ClearStatus clears the value of the "status" field.
+func (u *PlatformUpsertBulk) ClearStatus() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearStatus()
+	})
+}
+
+// SetConfig sets the "config" field.
+func (u *PlatformUpsertBulk) SetConfig(v map[string]interface{}) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfig(v)
+	})
+}
+
+// UpdateConfig sets the "config" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateConfig() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfig()
+	})
+}
+
+// ClearConfig clears the value of the "config" field.
+func (u *PlatformUpsertBulk) ClearConfig() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfig()
+	})
+}
+
+// Exec executes the query.
+func (u *PlatformUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the PlatformCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PlatformCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PlatformUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

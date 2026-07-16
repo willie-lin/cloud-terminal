@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 )
 
@@ -632,6 +633,9 @@ func HasUser() predicate.AuditLog {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.AuditLog
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
@@ -640,6 +644,9 @@ func HasUser() predicate.AuditLog {
 func HasUserWith(preds ...predicate.User) predicate.AuditLog {
 	return predicate.AuditLog(func(s *sql.Selector) {
 		step := newUserStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.AuditLog
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

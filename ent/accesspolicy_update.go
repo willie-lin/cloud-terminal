@@ -15,6 +15,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/account"
 	"github.com/willie-lin/cloud-terminal/ent/environment"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
@@ -24,8 +25,9 @@ import (
 // AccessPolicyUpdate is the builder for updating AccessPolicy entities.
 type AccessPolicyUpdate struct {
 	config
-	hooks    []Hook
-	mutation *AccessPolicyMutation
+	hooks     []Hook
+	mutation  *AccessPolicyMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the AccessPolicyUpdate builder.
@@ -294,6 +296,12 @@ func (_u *AccessPolicyUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *AccessPolicyUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *AccessPolicyUpdate {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -346,6 +354,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccountIDs(); len(nodes) > 0 && !_u.mutation.AccountCleared() {
@@ -359,6 +368,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -375,6 +385,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -391,6 +402,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
@@ -404,6 +416,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -420,6 +433,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -436,6 +450,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.TenantIDs(); len(nodes) > 0 {
@@ -449,6 +464,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -465,6 +481,7 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.EnvironmentIDs(); len(nodes) > 0 {
@@ -478,11 +495,15 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.Node.Schema = _u.schemaConfig.AccessPolicy
+	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
+	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{accesspolicy.Label}
@@ -498,9 +519,10 @@ func (_u *AccessPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error
 // AccessPolicyUpdateOne is the builder for updating a single AccessPolicy entity.
 type AccessPolicyUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *AccessPolicyMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *AccessPolicyMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -776,6 +798,12 @@ func (_u *AccessPolicyUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *AccessPolicyUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *AccessPolicyUpdateOne {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPolicy, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
@@ -845,6 +873,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedAccountIDs(); len(nodes) > 0 && !_u.mutation.AccountCleared() {
@@ -858,6 +887,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -874,6 +904,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccountAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -890,6 +921,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
@@ -903,6 +935,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -919,6 +952,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.RoleAccessPolicies
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -935,6 +969,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.TenantIDs(); len(nodes) > 0 {
@@ -948,6 +983,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AccessPolicy
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -964,6 +1000,7 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.EnvironmentIDs(); len(nodes) > 0 {
@@ -977,11 +1014,15 @@ func (_u *AccessPolicyUpdateOne) sqlSave(ctx context.Context) (_node *AccessPoli
 				IDSpec: sqlgraph.NewFieldSpec(environment.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.Environment
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.Node.Schema = _u.schemaConfig.AccessPolicy
+	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
+	_spec.AddModifiers(_u.modifiers...)
 	_node = &AccessPolicy{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

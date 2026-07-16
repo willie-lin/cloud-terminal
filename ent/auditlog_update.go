@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
+	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
@@ -19,8 +20,9 @@ import (
 // AuditLogUpdate is the builder for updating AuditLog entities.
 type AuditLogUpdate struct {
 	config
-	hooks    []Hook
-	mutation *AuditLogMutation
+	hooks     []Hook
+	mutation  *AuditLogMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the AuditLogUpdate builder.
@@ -223,6 +225,12 @@ func (_u *AuditLogUpdate) defaults() {
 	}
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *AuditLogUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *AuditLogUpdate {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
@@ -279,6 +287,7 @@ func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AuditLog
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
@@ -292,11 +301,15 @@ func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.Node.Schema = _u.schemaConfig.AuditLog
+	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
+	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{auditlog.Label}
@@ -312,9 +325,10 @@ func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 // AuditLogUpdateOne is the builder for updating a single AuditLog entity.
 type AuditLogUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *AuditLogMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *AuditLogMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetUpdatedAt sets the "updated_at" field.
@@ -524,6 +538,12 @@ func (_u *AuditLogUpdateOne) defaults() {
 	}
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (_u *AuditLogUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *AuditLogUpdateOne {
+	_u.modifiers = append(_u.modifiers, modifiers...)
+	return _u
+}
+
 func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err error) {
 	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
@@ -597,6 +617,7 @@ func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err 
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AuditLog
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
@@ -610,11 +631,15 @@ func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err 
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
+		edge.Schema = _u.schemaConfig.AuditLog
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	_spec.Node.Schema = _u.schemaConfig.AuditLog
+	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
+	_spec.AddModifiers(_u.modifiers...)
 	_node = &AuditLog{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
