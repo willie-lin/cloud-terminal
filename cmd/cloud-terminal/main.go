@@ -21,7 +21,6 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -203,15 +202,44 @@ func main() {
 	r.POST("/add-role", handler.CreateRole(client))
 	r.POST("/delete-role", handler.DeleteRoleByName(client))
 	r.POST("/check-role-name", handler.CheckRoleName(client))
+	r.GET("/roles/:id", handler.GetRole(client))
+	r.PUT("/roles/:id", handler.UpdateRole(client))
 	r.GET("/access-policies", handler.GetAllAccessPolicyByAccountByTenant(client))
+	r.GET("/access-policies/:id", handler.GetAccessPolicy(client))
+	r.POST("/access-policies", handler.CreateAccessPolicy(client))
+	r.PUT("/access-policies/:id", handler.UpdateAccessPolicy(client))
+	r.DELETE("/access-policies/:id", handler.DeleteAccessPolicy(client))
 	r.POST("/tenants", handler.CreateTenant(client))
-	r.GET("/audit-logs", func(c *echo.Context) error {
-		page, _ := strconv.Atoi(c.QueryParam("page"))
-		pageSize, _ := strconv.Atoi(c.QueryParam("page_size"))
-		result := auditor.ListPaginated(page, pageSize)
-		return c.JSON(http.StatusOK, result)
-	})
+	r.GET("/audit-logs", handler.ListAuditLogs(client))
+	r.GET("/audit-logs/:id", handler.GetAuditLog(client))
 	r.GET("/tenants/:id", handler.GetTenantByName(client))
+
+	// Resource routes
+	r.GET("/resources", handler.ListResources(client))
+	r.GET("/resources/:id", handler.GetResource(client))
+	r.POST("/resources", handler.CreateResource(client))
+	r.PUT("/resources/:id", handler.UpdateResource(client))
+	r.DELETE("/resources/:id", handler.DeleteResource(client))
+
+	// Group routes
+	r.GET("/groups", handler.ListGroups(client))
+	r.GET("/groups/:id", handler.GetGroup(client))
+	r.POST("/groups", handler.CreateGroup(client))
+	r.PUT("/groups/:id", handler.UpdateGroup(client))
+	r.DELETE("/groups/:id", handler.DeleteGroup(client))
+
+	// Environment routes
+	r.GET("/environments", handler.ListEnvironments(client))
+	r.GET("/environments/:id", handler.GetEnvironment(client))
+	r.POST("/environments", handler.CreateEnvironment(client))
+	r.PUT("/environments/:id", handler.UpdateEnvironment(client))
+	r.DELETE("/environments/:id", handler.DeleteEnvironment(client))
+
+	// Session routes
+	r.GET("/sessions", handler.ListSessions(client))
+	r.GET("/sessions/:id", handler.GetSession(client))
+	r.PUT("/sessions/:id", handler.UpdateSession(client))
+	r.DELETE("/sessions/:id", handler.DeleteSession(client))
 
 	// 8. 启动服务
 	go func() {

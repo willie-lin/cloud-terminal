@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/ent"
@@ -8,6 +9,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/viewer"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type RoleDTO struct {
@@ -188,5 +190,94 @@ func DeleteRoleByName(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error deleting role"})
 		}
 		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+// ==================== Role CRUD additions ====================
+
+type RoleUpdateDTO struct {
+	Name          *string                `json:"name"`
+	Description   *string                `json:"description"`
+	IsDisabled    *bool                  `json:"is_disabled"`
+	TrustPolicy   *map[string]interface{} `json:"trust_policy"`
+	EffectiveDate *time.Time             `json:"effective_date"`
+	ExpiryDate    *time.Time             `json:"expiry_date"`
+}
+
+// GetRole gets a single role by ID
+func GetRole(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid role ID"})
+		}
+
+		r, err := client.Role.Query().
+			Where(role.IDEQ(id)).
+			Only(c.Request().Context())
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Role not found"})
+		}
+		if err != nil {
+			log.Printf("Error querying role: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role"})
+		}
+
+		return c.JSON(http.StatusOK, r)
+	}
+}
+
+// UpdateRole updates a role by ID
+func UpdateRole(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+
+		isSuperAdmin := v.RoleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(v.RoleName), "tenant_admin")
+		if !isSuperAdmin && !isTenantAdmin {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only admins can update roles"})
+		}
+
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid role ID"})
+		}
+
+		dto := new(RoleUpdateDTO)
+		if err := c.Bind(dto); err != nil {
+			log.Printf("Error binding role update: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
+		updater := client.Role.UpdateOneID(id)
+		if dto.Name != nil {
+			updater.SetName(*dto.Name)
+		}
+		if dto.Description != nil {
+			updater.SetDescription(*dto.Description)
+		}
+		if dto.IsDisabled != nil {
+			updater.SetIsDisabled(*dto.IsDisabled)
+		}
+		if dto.TrustPolicy != nil {
+			updater.SetTrustPolicy(*dto.TrustPolicy)
+		}
+		if dto.EffectiveDate != nil {
+			updater.SetEffectiveDate(*dto.EffectiveDate)
+		}
+		if dto.ExpiryDate != nil {
+			updater.SetExpiryDate(*dto.ExpiryDate)
+		}
+
+		r, err := updater.Save(c.Request().Context())
+		if err != nil {
+			log.Printf("Error updating role: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update role"})
+		}
+
+		return c.JSON(http.StatusOK, r)
 	}
 }

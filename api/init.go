@@ -255,19 +255,16 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 			log.Printf("Role: %s (ID: %v) already exists.", r.Name, r.ID)
 		}
 	}
-	// 5. 创建超级管理员策略
-	superAdminRoleName := "super_admin"
-	superAdminRole, err := client.Role.Query().Where(role.NameEQ(superAdminRoleName)).Only(ctx)
-	if err != nil {
-		return fmt.Errorf("query super admin role failed: %w", err)
-	}
-
+	// 5. 创建/更新超级管理员策略
 	superAdminPolicyName := "super_admin_policy"
+	superAdminRole, err := client.Role.Query().Where(role.NameEQ("super_admin")).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("query super_admin role failed: %w", err)
+	}
 	superAdminPolicy, err := client.AccessPolicy.Query().Where(accesspolicy.NameEQ(superAdminPolicyName)).Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return fmt.Errorf("query super admin policy failed: %w", err)
 	}
-
 	if ent.IsNotFound(err) {
 		statements := []schema.PolicyStatement{
 			{
@@ -276,18 +273,15 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 				Resources: []string{"*"},
 			},
 		}
-
 		superAdminPolicy, err = client.AccessPolicy.Create().
 			SetName(superAdminPolicyName).
 			SetStatements(statements).
-			//AddRoles(superAdminRole).
-			//AddAccount(sa).
 			Save(ctx)
 		if err != nil {
 			return fmt.Errorf("创建 super admin policy 失败: %w", err)
 		}
 		log.Printf("Created super admin policy: %s (ID: %v)", superAdminPolicy.Name, superAdminPolicy.ID)
-	} else if err == nil {
+	} else {
 		// 用通配策略覆盖已有策略
 		_, err = superAdminPolicy.Update().SetStatements([]schema.PolicyStatement{
 			{
@@ -300,8 +294,6 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 			return fmt.Errorf("update super admin policy failed: %w", err)
 		}
 		log.Printf("Updated super admin policy: %s (ID: %v)", superAdminPolicy.Name, superAdminPolicy.ID)
-	} else {
-		return fmt.Errorf("unexpected error when querying super admin policy: %w", err)
 	}
 
 	// 关联账户和策略

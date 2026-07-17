@@ -1,13 +1,16 @@
 package handler
 
 import (
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
+	"github.com/willie-lin/cloud-terminal/ent/schema"
 	"github.com/willie-lin/cloud-terminal/viewer"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type AccessPolicyDTO struct {
@@ -180,3 +183,196 @@ func GetAllAccessPolicyByAccountByTenant(client *ent.Client) echo.HandlerFunc {
 //		return c.NoContent(http.StatusNoContent)
 //	}
 //}
+
+// ==================== AccessPolicy CRUD ====================
+
+type AccessPolicyCreateDTO struct {
+	Name          string                     `json:"name"`
+	Description   string                     `json:"description"`
+	Version       string                     `json:"version"`
+	Statements    []schema.PolicyStatement   `json:"statements"`
+	Immutable     bool                       `json:"immutable"`
+	Priority      int                        `json:"priority"`
+	EffectiveDate *time.Time                 `json:"effective_date"`
+	ExpiryDate    *time.Time                 `json:"expiry_date"`
+}
+
+type AccessPolicyUpdateDTO struct {
+	Description   *string                    `json:"description"`
+	Version       *string                    `json:"version"`
+	Statements    *[]schema.PolicyStatement  `json:"statements"`
+	Immutable     *bool                      `json:"immutable"`
+	Priority      *int                       `json:"priority"`
+	EffectiveDate *time.Time                 `json:"effective_date"`
+	ExpiryDate    *time.Time                 `json:"expiry_date"`
+}
+
+// CreateAccessPolicy creates a new access policy
+func CreateAccessPolicy(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+
+		isSuperAdmin := v.RoleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(v.RoleName), "tenant_admin")
+		if !isSuperAdmin && !isTenantAdmin {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only admins can create access policies"})
+		}
+
+		dto := new(AccessPolicyCreateDTO)
+		if err := c.Bind(dto); err != nil {
+			log.Printf("Error binding access policy: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
+		if dto.Version == "" {
+			dto.Version = "v1"
+		}
+		if dto.Statements == nil {
+			dto.Statements = []schema.PolicyStatement{}
+		}
+
+		creator := client.AccessPolicy.Create().
+			SetName(dto.Name).
+			SetDescription(dto.Description).
+			SetVersion(dto.Version).
+			SetStatements(dto.Statements).
+			SetImmutable(dto.Immutable).
+			SetPriority(dto.Priority)
+
+		if dto.EffectiveDate != nil {
+			creator.SetEffectiveDate(*dto.EffectiveDate)
+		}
+		if dto.ExpiryDate != nil {
+			creator.SetExpiryDate(*dto.ExpiryDate)
+		}
+
+		p, err := creator.Save(c.Request().Context())
+		if err != nil {
+			log.Printf("Error creating access policy: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create access policy"})
+		}
+
+		return c.JSON(http.StatusCreated, p)
+	}
+}
+
+// GetAccessPolicy gets a single access policy by ID
+func GetAccessPolicy(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid access policy ID"})
+		}
+
+		p, err := client.AccessPolicy.Query().
+			Where(accesspolicy.IDEQ(id)).
+			Only(c.Request().Context())
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Access policy not found"})
+		}
+		if err != nil {
+			log.Printf("Error querying access policy: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying access policy"})
+		}
+
+		return c.JSON(http.StatusOK, p)
+	}
+}
+
+// UpdateAccessPolicy updates an access policy by ID
+func UpdateAccessPolicy(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+
+		isSuperAdmin := v.RoleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(v.RoleName), "tenant_admin")
+		if !isSuperAdmin && !isTenantAdmin {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only admins can update access policies"})
+		}
+
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid access policy ID"})
+		}
+
+		dto := new(AccessPolicyUpdateDTO)
+		if err := c.Bind(dto); err != nil {
+			log.Printf("Error binding access policy update: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
+		updater := client.AccessPolicy.UpdateOneID(id)
+		if dto.Description != nil {
+			updater.SetDescription(*dto.Description)
+		}
+		if dto.Version != nil {
+			updater.SetVersion(*dto.Version)
+		}
+		if dto.Statements != nil {
+			updater.SetStatements(*dto.Statements)
+		}
+		if dto.Immutable != nil {
+			updater.SetImmutable(*dto.Immutable)
+		}
+		if dto.Priority != nil {
+			updater.SetPriority(*dto.Priority)
+		}
+		if dto.EffectiveDate != nil {
+			updater.SetEffectiveDate(*dto.EffectiveDate)
+		}
+		if dto.ExpiryDate != nil {
+			updater.SetExpiryDate(*dto.ExpiryDate)
+		}
+
+		p, err := updater.Save(c.Request().Context())
+		if err != nil {
+			log.Printf("Error updating access policy: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update access policy"})
+		}
+
+		return c.JSON(http.StatusOK, p)
+	}
+}
+
+// DeleteAccessPolicy deletes an access policy by ID
+func DeleteAccessPolicy(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+
+		isSuperAdmin := v.RoleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(v.RoleName), "tenant_admin")
+		if !isSuperAdmin && !isTenantAdmin {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only admins can delete access policies"})
+		}
+
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid access policy ID"})
+		}
+
+		err := client.AccessPolicy.DeleteOneID(id).Exec(c.Request().Context())
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Access policy not found"})
+		}
+		if err != nil {
+			log.Printf("Error deleting access policy: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete access policy"})
+		}
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}
