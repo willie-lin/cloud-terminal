@@ -271,47 +271,9 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	if ent.IsNotFound(err) {
 		statements := []schema.PolicyStatement{
 			{
-				Effect: "Allow",
-				Actions: []string{
-					utils.ActionConfigRead,
-					utils.ActionConfigUpdateDatabase,
-					utils.ActionConfigUpdateNetwork,
-					// ActionTenantCreate Tenant Actions
-					utils.ActionTenantCreate,
-					utils.ActionTenantRead,
-					utils.ActionTenantUpdate,
-					utils.ActionTenantDelete,
-					// ActionUserCreate User Actions
-					utils.ActionUserCreate,
-					utils.ActionUserRead,
-					utils.ActionUserUpdate,
-					utils.ActionUserDelete,
-
-					// ActionRoleCreate ActionUserCreate User Actions
-					utils.ActionRoleCreate,
-					utils.ActionRoleRead,
-					utils.ActionRoleUpdate,
-					utils.ActionRoleDelete,
-
-					// ActionProjectCreate Project Actions
-					utils.ActionProjectCreate,
-					utils.ActionProjectRead,
-					utils.ActionProjectUpdate,
-					utils.ActionProjectDelete,
-
-					// ActionAuditLogRead Audit Log Actions
-					utils.ActionAuditLogRead,
-					utils.ActionAuditLogExport,
-				}, // 超级管理员拥有所有操作权限
-				Resources: []string{
-					utils.ResourceUserAll, // 匹配所有租户和账户的用户
-					utils.ResourceConfigAll,
-					utils.ResourceTenantAll,
-										utils.ResourceRoleAll,
-					utils.ResourcePolicyAll,
-					utils.ResourceProjectAll,
-					utils.ResourceAuditLogAll,
-				}, // 超级管理员拥有所有资源权限
+				Effect:    "Allow",
+				Actions:   []string{"*"},
+				Resources: []string{"*"},
 			},
 		}
 
@@ -326,7 +288,18 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 		}
 		log.Printf("Created super admin policy: %s (ID: %v)", superAdminPolicy.Name, superAdminPolicy.ID)
 	} else if err == nil {
-		log.Printf("Super admin policy: %s (ID: %v) already exists.", superAdminPolicy.Name, superAdminPolicy.ID)
+		// 用通配策略覆盖已有策略
+		_, err = superAdminPolicy.Update().SetStatements([]schema.PolicyStatement{
+			{
+				Effect:    "Allow",
+				Actions:   []string{"*"},
+				Resources: []string{"*"},
+			},
+		}).Save(ctx)
+		if err != nil {
+			return fmt.Errorf("update super admin policy failed: %w", err)
+		}
+		log.Printf("Updated super admin policy: %s (ID: %v)", superAdminPolicy.Name, superAdminPolicy.ID)
 	} else {
 		return fmt.Errorf("unexpected error when querying super admin policy: %w", err)
 	}
