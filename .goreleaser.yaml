@@ -10,7 +10,7 @@ before:
 builds:
   - id: "cloud-terminal"
     dir: "."
-    main: "./main.go"
+    main: "./cmd/cloud-terminal/main.go"
     ldflags:
       - "-s -w"
       - "-X main.version={{.Version}}"
