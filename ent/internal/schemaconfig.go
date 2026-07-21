@@ -19,6 +19,7 @@ type SchemaConfig struct {
 	RoleAccessPolicies  string // Role-access_policies->AccessPolicy table.
 	RoleChildRoles      string // Role-child_roles->Role table.
 	Session             string // Session table.
+	Task                string // Task table.
 	Tenant              string // Tenant table.
 	User                string // User table.
 	UserRoles           string // User-roles->Role table.

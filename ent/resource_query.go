@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"math"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
+	"github.com/willie-lin/cloud-terminal/ent/task"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
 
@@ -31,10 +33,12 @@ type ResourceQuery struct {
 	withTenant         *TenantQuery
 	withAuditLogs      *AuditLogQuery
 	withPolicies       *AccessPolicyQuery
+	withTasks          *TaskQuery
 	withFKs            bool
 	modifiers          []func(*sql.Selector)
 	withNamedAuditLogs map[string]*AuditLogQuery
 	withNamedPolicies  map[string]*AccessPolicyQuery
+	withNamedTasks     map[string]*TaskQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -140,6 +144,31 @@ func (_q *ResourceQuery) QueryPolicies() *AccessPolicyQuery {
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.AccessPolicy
 		step.Edge.Schema = schemaConfig.ResourcePolicies
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTasks chains the current query on the "tasks" edge.
+func (_q *ResourceQuery) QueryTasks() *TaskQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resource.Table, resource.FieldID, selector),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resource.TasksTable, resource.TasksColumn),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Task
+		step.Edge.Schema = schemaConfig.Task
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -341,6 +370,7 @@ func (_q *ResourceQuery) Clone() *ResourceQuery {
 		withTenant:    _q.withTenant.Clone(),
 		withAuditLogs: _q.withAuditLogs.Clone(),
 		withPolicies:  _q.withPolicies.Clone(),
+		withTasks:     _q.withTasks.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -378,6 +408,17 @@ func (_q *ResourceQuery) WithPolicies(opts ...func(*AccessPolicyQuery)) *Resourc
 		opt(query)
 	}
 	_q.withPolicies = query
+	return _q
+}
+
+// WithTasks tells the query-builder to eager-load the nodes that are connected to
+// the "tasks" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ResourceQuery) WithTasks(opts ...func(*TaskQuery)) *ResourceQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withTasks = query
 	return _q
 }
 
@@ -452,6 +493,12 @@ func (_q *ResourceQuery) prepareQuery(ctx context.Context) error {
 		}
 		_q.sql = prev
 	}
+	if resource.Policy == nil {
+		return errors.New("ent: uninitialized resource.Policy (forgotten import ent/runtime?)")
+	}
+	if err := resource.Policy.EvalQuery(ctx, _q); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -460,10 +507,11 @@ func (_q *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 		nodes       = []*Resource{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withTenant != nil,
 			_q.withAuditLogs != nil,
 			_q.withPolicies != nil,
+			_q.withTasks != nil,
 		}
 	)
 	if _q.withTenant != nil {
@@ -520,6 +568,18 @@ func (_q *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 			return nil, err
 		}
 	}
+	if query := _q.withTasks; query != nil {
+		if err := _q.loadTasks(ctx, query, nodes,
+			func(n *Resource) { n.Edges.Tasks = []*Task{} },
+			func(n *Resource, e *Task) {
+				n.Edges.Tasks = append(n.Edges.Tasks, e)
+				if !e.Edges.loadedTypes[1] {
+					e.Edges.Resource = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedAuditLogs {
 		if err := _q.loadAuditLogs(ctx, query, nodes,
 			func(n *Resource) { n.appendNamedAuditLogs(name) },
@@ -536,6 +596,18 @@ func (_q *ResourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Res
 		if err := _q.loadPolicies(ctx, query, nodes,
 			func(n *Resource) { n.appendNamedPolicies(name) },
 			func(n *Resource, e *AccessPolicy) { n.appendNamedPolicies(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedTasks {
+		if err := _q.loadTasks(ctx, query, nodes,
+			func(n *Resource) { n.appendNamedTasks(name) },
+			func(n *Resource, e *Task) {
+				n.appendNamedTasks(name, e)
+				if !e.Edges.loadedTypes[1] {
+					e.Edges.Resource = n
+				}
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -664,6 +736,37 @@ func (_q *ResourceQuery) loadPolicies(ctx context.Context, query *AccessPolicyQu
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (_q *ResourceQuery) loadTasks(ctx context.Context, query *TaskQuery, nodes []*Resource, init func(*Resource), assign func(*Resource, *Task)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*Resource)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Task(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(resource.TasksColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.resource_tasks
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "resource_tasks" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "resource_tasks" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -817,6 +920,20 @@ func (_q *ResourceQuery) WithNamedPolicies(name string, opts ...func(*AccessPoli
 		_q.withNamedPolicies = make(map[string]*AccessPolicyQuery)
 	}
 	_q.withNamedPolicies[name] = query
+	return _q
+}
+
+// WithNamedTasks tells the query-builder to eager-load the nodes that are connected to the "tasks"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *ResourceQuery) WithNamedTasks(name string, opts ...func(*TaskQuery)) *ResourceQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedTasks == nil {
+		_q.withNamedTasks = make(map[string]*TaskQuery)
+	}
+	_q.withNamedTasks[name] = query
 	return _q
 }
 

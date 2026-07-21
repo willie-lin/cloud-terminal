@@ -2,10 +2,7 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/labstack/echo/v5"
@@ -15,6 +12,8 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/user"
+	"github.com/willie-lin/cloud-terminal/pkg/connector"
+	"github.com/willie-lin/cloud-terminal/pkg/crypto"
 	"github.com/willie-lin/cloud-terminal/pkg/iam"
 	pkglogger "github.com/willie-lin/cloud-terminal/pkg/logger"
 	"github.com/willie-lin/cloud-terminal/pkg/sts"
@@ -117,7 +116,7 @@ func (h *ContainerSSHHandler) ConfigWebhookV2() echo.HandlerFunc {
 
 		// 1. IAM 鉴权
 		if req.URN != "" && req.SessionID != "" {
-			chain, err := h.evaluator.Evaluate(ctx, &iam.Request{
+			result, err := h.evaluator.Evaluate(ctx, &iam.Request{
 				PrincipalID: req.SessionID,
 				Action:      "resource:connect",
 				ResourceURN: req.URN,
@@ -126,11 +125,11 @@ func (h *ContainerSSHHandler) ConfigWebhookV2() echo.HandlerFunc {
 				pkglogger.Warn("ConfigWebhookV2: IAM evaluate error", zap.Error(err))
 				return c.JSON(http.StatusForbidden, map[string]string{"error": "access denied"})
 			}
-			if chain.Decision != iam.DecisionAllow {
+			if result.Decision != iam.DecisionAllow {
 				pkglogger.Warn("ConfigWebhookV2: IAM denied",
 					zap.String("user", req.Username),
 					zap.String("urn", req.URN),
-					zap.String("reason", chain.Reason),
+					zap.String("reason", result.Reason),
 				)
 				return c.JSON(http.StatusForbidden, map[string]string{"error": "access denied"})
 			}
@@ -146,26 +145,17 @@ func (h *ContainerSSHHandler) ConfigWebhookV2() echo.HandlerFunc {
 		}
 
 		// 3. 生成容器配置
-		config := h.buildContainerConfig(c.Request().Context(), resourceURN)
+		config := h.buildContainerConfig(c.Request().Context(), resourceURN, req.SessionID)
 		return c.JSON(http.StatusOK, config)
 	}
 }
 
-// buildContainerConfig 根据资源和认证信息构建容器配置
-func (h *ContainerSSHHandler) buildContainerConfig(ctx context.Context, urn string) *ContainerConfig {
-	cfg := &ContainerConfig{
-		Docker: &DockerConfig{
-			Image:       "cloud-terminal/connector:latest",
-			NetworkMode: "host",
-			Resources: &ResourceLimit{
-				CPU:    "1",
-				Memory: "512M",
-			},
-			Env: make(map[string]string),
-		},
-	}
+// buildContainerConfig 根据资源和认证信息调用 ContainerConnector 构建容器运行沙箱参数
+func (h *ContainerSSHHandler) buildContainerConfig(ctx context.Context, urn string, sessionID string) *connector.ContainerSSHConfig {
+	connMgr := connector.NewContainerConnector("cloud-terminal/connector:latest")
 
 	if urn == "" {
+		cfg, _ := connMgr.ContainerSSHConfig(ctx, &connector.ConnectRequest{SessionID: sessionID})
 		return cfg
 	}
 
@@ -174,73 +164,33 @@ func (h *ContainerSSHHandler) buildContainerConfig(ctx context.Context, urn stri
 		Only(ctx)
 	if err != nil {
 		log.Printf("ConfigWebhookV2: resource not found for URN %s: %v", urn, err)
+		cfg, _ := connMgr.ContainerSSHConfig(ctx, &connector.ConnectRequest{SessionID: sessionID, ResourceURN: urn})
 		return cfg
 	}
 
-	// 根据资源类型选择镜像
-	switch r.Type {
-	case "mysql":
-		cfg.Docker.Image = "cloud-terminal/mysql-client:latest"
-		if r.AuthData != nil {
-			if u, ok := r.AuthData["username"].(string); ok {
-				cfg.Docker.Env["DB_USER"] = u
-			}
-			if p, ok := r.AuthData["password"].(string); ok {
-				cfg.Docker.Env["DB_PASS"] = p
-			}
-		}
-		cfg.Docker.Cmd = []string{"mysql", "-h", r.IP, "-P", strconv.Itoa(r.Port)}
-	case "redis":
-		cfg.Docker.Image = "cloud-terminal/redis-client:latest"
-		cfg.Docker.Cmd = []string{"redis-cli", "-h", r.IP, "-p", strconv.Itoa(r.Port)}
-	case "k8s-service":
-		cfg.Docker.Image = "cloud-terminal/kubectl:latest"
-		if r.Details != nil {
-			if ns, ok := r.Details["namespace"].(string); ok {
-				cfg.Docker.Env["KUBE_NAMESPACE"] = ns
-			}
-			if sa, ok := r.Details["service_account"].(string); ok {
-				cfg.Docker.Env["KUBE_SERVICE_ACCOUNT"] = sa
-			}
-		}
-	case "ssh":
-		cfg.Docker.Image = "cloud-terminal/connector:latest"
-		if r.AuthData != nil {
-			if key, ok := r.AuthData["ssh_key"].(string); ok {
-				cfg.Docker.Env["SSH_KEY"] = key
-			}
-			if u, ok := r.AuthData["username"].(string); ok {
-				cfg.Docker.Env["SSH_USER"] = u
-			}
-		}
-		cfg.Docker.Cmd = []string{"ssh", fmt.Sprintf("%s@%s", r.IP, strconv.Itoa(r.Port))}
-	default:
-		cfg.Docker.Image = "cloud-terminal/connector:latest"
+	decAuth, err := crypto.DecryptAuthData(r.AuthData)
+	if err != nil {
+		log.Printf("ConfigWebhookV2: decrypt auth_data error: %v", err)
 	}
 
-	// 注入目标地址
-	cfg.Docker.Env["TARGET_HOST"] = r.IP
-	cfg.Docker.Env["TARGET_PORT"] = strconv.Itoa(r.Port)
-	cfg.Docker.Env["TARGET_URN"] = r.Urn
-
-	// 从 details 注入额外环境变量
-	if r.Details != nil {
-		for k, v := range r.Details {
-			key := "RESOURCE_" + strings.ToUpper(strings.ReplaceAll(k, ".", "_"))
-			switch val := v.(type) {
-			case string:
-				cfg.Docker.Env[key] = val
-			case float64:
-				cfg.Docker.Env[key] = strconv.FormatFloat(val, 'f', -1, 64)
-			case bool:
-				cfg.Docker.Env[key] = strconv.FormatBool(val)
-			default:
-				if data, err := json.Marshal(v); err == nil {
-					cfg.Docker.Env[key] = string(data)
-				}
-			}
-		}
+	req := &connector.ConnectRequest{
+		SessionID:   sessionID,
+		ResourceURN: urn,
+		Protocol:    string(r.Type),
+		Target: connector.TargetInfo{
+			Host:    r.IP,
+			Port:    r.Port,
+			HostKey: r.HostKey,
+		},
+		AuthData:        decAuth,
+		ResourceDetails: r.Details,
 	}
 
+	cfg, err := connMgr.ContainerSSHConfig(ctx, req)
+	if err != nil {
+		log.Printf("ConfigWebhookV2: build container config error: %v", err)
+		// 遇到错误时回退默认配置
+		cfg, _ = connMgr.ContainerSSHConfig(ctx, &connector.ConnectRequest{SessionID: sessionID, ResourceURN: urn})
+	}
 	return cfg
 }

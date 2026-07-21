@@ -165,6 +165,7 @@ var (
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive"}, Default: "active"},
 		{Name: "details", Type: field.TypeJSON, Nullable: true},
 		{Name: "auth_data", Type: field.TypeJSON, Nullable: true},
+		{Name: "host_key", Type: field.TypeString, Nullable: true},
 		{Name: "tenant_resources", Type: field.TypeString, Nullable: true},
 	}
 	// ResourcesTable holds the schema information for the "resources" table.
@@ -175,7 +176,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "resources_tenants_resources",
-				Columns:    []*schema.Column{ResourcesColumns[14]},
+				Columns:    []*schema.Column{ResourcesColumns[15]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -248,6 +249,48 @@ var (
 		Name:       "sessions",
 		Columns:    SessionsColumns,
 		PrimaryKey: []*schema.Column{SessionsColumns[0]},
+	}
+	// TasksColumns holds the columns for the "tasks" table.
+	TasksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "reason", Type: field.TypeString},
+		{Name: "duration_minutes", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "approved", "rejected", "expired"}, Default: "pending"},
+		{Name: "reviewed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "reviewer_comment", Type: field.TypeString, Nullable: true},
+		{Name: "issued_token", Type: field.TypeString, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resource_tasks", Type: field.TypeString},
+		{Name: "user_tasks", Type: field.TypeString},
+		{Name: "user_reviewed_tasks", Type: field.TypeString, Nullable: true},
+	}
+	// TasksTable holds the schema information for the "tasks" table.
+	TasksTable = &schema.Table{
+		Name:       "tasks",
+		Columns:    TasksColumns,
+		PrimaryKey: []*schema.Column{TasksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tasks_resources_tasks",
+				Columns:    []*schema.Column{TasksColumns[10]},
+				RefColumns: []*schema.Column{ResourcesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "tasks_users_tasks",
+				Columns:    []*schema.Column{TasksColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "tasks_users_reviewed_tasks",
+				Columns:    []*schema.Column{TasksColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// TenantsColumns holds the columns for the "tenants" table.
 	TenantsColumns = []*schema.Column{
@@ -476,6 +519,7 @@ var (
 		ResourcesTable,
 		RolesTable,
 		SessionsTable,
+		TasksTable,
 		TenantsTable,
 		UsersTable,
 		GroupAccessPoliciesTable,
@@ -494,6 +538,9 @@ func init() {
 	EnvironmentsTable.ForeignKeys[0].RefTable = TenantsTable
 	ResourcesTable.ForeignKeys[0].RefTable = TenantsTable
 	RolesTable.ForeignKeys[0].RefTable = AccessPoliciesTable
+	TasksTable.ForeignKeys[0].RefTable = ResourcesTable
+	TasksTable.ForeignKeys[1].RefTable = UsersTable
+	TasksTable.ForeignKeys[2].RefTable = UsersTable
 	UsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupAccessPoliciesTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupAccessPoliciesTable.ForeignKeys[1].RefTable = AccessPoliciesTable

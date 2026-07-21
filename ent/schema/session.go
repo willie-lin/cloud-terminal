@@ -3,6 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/privacy"
 )
 
 type Session struct{ ent.Schema }
@@ -20,5 +21,16 @@ func (Session) Fields() []ent.Field {
 		field.Time("started_at"),
 		field.Time("ended_at").Optional().Nillable(),
 		field.String("remote_address").Optional(),
+	}
+}
+
+func (Session) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			privacy.AlwaysAllowRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			DenyMutationUnlessAdmin(),
+		},
 	}
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/session"
+	"github.com/willie-lin/cloud-terminal/ent/task"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
@@ -90,6 +91,7 @@ func checkColumn(t, c string) error {
 			resource.Table:     resource.ValidColumn,
 			role.Table:         role.ValidColumn,
 			session.Table:      session.ValidColumn,
+			task.Table:         task.ValidColumn,
 			tenant.Table:       tenant.ValidColumn,
 			user.Table:         user.ValidColumn,
 		})

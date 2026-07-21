@@ -190,7 +190,9 @@ func (_c *AuditLogCreate) Mutation() *AuditLogMutation {
 
 // Save creates the AuditLog in the database.
 func (_c *AuditLogCreate) Save(ctx context.Context) (*AuditLog, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -217,19 +219,29 @@ func (_c *AuditLogCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *AuditLogCreate) defaults() {
+func (_c *AuditLogCreate) defaults() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
+		if auditlog.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized auditlog.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := auditlog.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		if auditlog.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized auditlog.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := auditlog.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
+		if auditlog.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized auditlog.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := auditlog.DefaultID()
 		_c.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

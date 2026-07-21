@@ -373,7 +373,7 @@ func (Environment) Edges() []ent.Edge {
 
 ### 7.1 ContainerSSH 是什么
 
-**ContainerSSH** 是一个 CNCF Sandbox 项目（https://containerssh.io/），它本质是一个 **SSH 服务器 + 容器编排引擎**。它不是传统的 SSH 跳板机，而是一个"SSH 驱动的容器管理器"。
+**ContainerSSH** 是一个 CNCF Sandbox 项目（https://containerssh.io/），它本质是一个 **SSH 服务器 + 容器编排引擎**。它不是传统的跳板机或 CMDB 堡垒机，而是一个作为 Runtime 的“SSH 驱动临时容器管理器”。
 
 ### 7.2 和我们的项目是什么关系
 

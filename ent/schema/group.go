@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"entgo.io/ent/privacy"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -25,3 +26,15 @@ func (Group) Edges() []ent.Edge {
 		edge.To("access_policies", AccessPolicy.Type).Comment("授予组的策略"),
 	}
 }
+
+func (Group) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			privacy.AlwaysAllowRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			DenyMutationUnlessAdmin(),
+		},
+	}
+}
+

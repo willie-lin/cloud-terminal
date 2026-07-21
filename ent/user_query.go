@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"math"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/role"
+	"github.com/willie-lin/cloud-terminal/ent/task"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 )
 
@@ -33,11 +35,15 @@ type UserQuery struct {
 	withRoles               *RoleQuery
 	withAuditLogs           *AuditLogQuery
 	withAccessPolicies      *AccessPolicyQuery
+	withTasks               *TaskQuery
+	withReviewedTasks       *TaskQuery
 	withFKs                 bool
 	modifiers               []func(*sql.Selector)
 	withNamedRoles          map[string]*RoleQuery
 	withNamedAuditLogs      map[string]*AuditLogQuery
 	withNamedAccessPolicies map[string]*AccessPolicyQuery
+	withNamedTasks          map[string]*TaskQuery
+	withNamedReviewedTasks  map[string]*TaskQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -168,6 +174,56 @@ func (_q *UserQuery) QueryAccessPolicies() *AccessPolicyQuery {
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.AccessPolicy
 		step.Edge.Schema = schemaConfig.UserAccessPolicies
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTasks chains the current query on the "tasks" edge.
+func (_q *UserQuery) QueryTasks() *TaskQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TasksTable, user.TasksColumn),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Task
+		step.Edge.Schema = schemaConfig.Task
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReviewedTasks chains the current query on the "reviewed_tasks" edge.
+func (_q *UserQuery) QueryReviewedTasks() *TaskQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReviewedTasksTable, user.ReviewedTasksColumn),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Task
+		step.Edge.Schema = schemaConfig.Task
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -370,6 +426,8 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withRoles:          _q.withRoles.Clone(),
 		withAuditLogs:      _q.withAuditLogs.Clone(),
 		withAccessPolicies: _q.withAccessPolicies.Clone(),
+		withTasks:          _q.withTasks.Clone(),
+		withReviewedTasks:  _q.withReviewedTasks.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -418,6 +476,28 @@ func (_q *UserQuery) WithAccessPolicies(opts ...func(*AccessPolicyQuery)) *UserQ
 		opt(query)
 	}
 	_q.withAccessPolicies = query
+	return _q
+}
+
+// WithTasks tells the query-builder to eager-load the nodes that are connected to
+// the "tasks" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithTasks(opts ...func(*TaskQuery)) *UserQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withTasks = query
+	return _q
+}
+
+// WithReviewedTasks tells the query-builder to eager-load the nodes that are connected to
+// the "reviewed_tasks" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithReviewedTasks(opts ...func(*TaskQuery)) *UserQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withReviewedTasks = query
 	return _q
 }
 
@@ -492,6 +572,12 @@ func (_q *UserQuery) prepareQuery(ctx context.Context) error {
 		}
 		_q.sql = prev
 	}
+	if user.Policy == nil {
+		return errors.New("ent: uninitialized user.Policy (forgotten import ent/runtime?)")
+	}
+	if err := user.Policy.EvalQuery(ctx, _q); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -500,11 +586,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [6]bool{
 			_q.withGroup != nil,
 			_q.withRoles != nil,
 			_q.withAuditLogs != nil,
 			_q.withAccessPolicies != nil,
+			_q.withTasks != nil,
+			_q.withReviewedTasks != nil,
 		}
 	)
 	if _q.withGroup != nil {
@@ -568,6 +656,30 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withTasks; query != nil {
+		if err := _q.loadTasks(ctx, query, nodes,
+			func(n *User) { n.Edges.Tasks = []*Task{} },
+			func(n *User, e *Task) {
+				n.Edges.Tasks = append(n.Edges.Tasks, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Requester = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withReviewedTasks; query != nil {
+		if err := _q.loadReviewedTasks(ctx, query, nodes,
+			func(n *User) { n.Edges.ReviewedTasks = []*Task{} },
+			func(n *User, e *Task) {
+				n.Edges.ReviewedTasks = append(n.Edges.ReviewedTasks, e)
+				if !e.Edges.loadedTypes[2] {
+					e.Edges.Reviewer = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedRoles {
 		if err := _q.loadRoles(ctx, query, nodes,
 			func(n *User) { n.appendNamedRoles(name) },
@@ -591,6 +703,30 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadAccessPolicies(ctx, query, nodes,
 			func(n *User) { n.appendNamedAccessPolicies(name) },
 			func(n *User, e *AccessPolicy) { n.appendNamedAccessPolicies(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedTasks {
+		if err := _q.loadTasks(ctx, query, nodes,
+			func(n *User) { n.appendNamedTasks(name) },
+			func(n *User, e *Task) {
+				n.appendNamedTasks(name, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Requester = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedReviewedTasks {
+		if err := _q.loadReviewedTasks(ctx, query, nodes,
+			func(n *User) { n.appendNamedReviewedTasks(name) },
+			func(n *User, e *Task) {
+				n.appendNamedReviewedTasks(name, e)
+				if !e.Edges.loadedTypes[2] {
+					e.Edges.Reviewer = n
+				}
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -784,6 +920,68 @@ func (_q *UserQuery) loadAccessPolicies(ctx context.Context, query *AccessPolicy
 	}
 	return nil
 }
+func (_q *UserQuery) loadTasks(ctx context.Context, query *TaskQuery, nodes []*User, init func(*User), assign func(*User, *Task)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Task(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.TasksColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_tasks
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_tasks" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_tasks" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadReviewedTasks(ctx context.Context, query *TaskQuery, nodes []*User, init func(*User), assign func(*User, *Task)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Task(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ReviewedTasksColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_reviewed_tasks
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_reviewed_tasks" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_reviewed_tasks" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *UserQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -948,6 +1146,34 @@ func (_q *UserQuery) WithNamedAccessPolicies(name string, opts ...func(*AccessPo
 		_q.withNamedAccessPolicies = make(map[string]*AccessPolicyQuery)
 	}
 	_q.withNamedAccessPolicies[name] = query
+	return _q
+}
+
+// WithNamedTasks tells the query-builder to eager-load the nodes that are connected to the "tasks"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedTasks(name string, opts ...func(*TaskQuery)) *UserQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedTasks == nil {
+		_q.withNamedTasks = make(map[string]*TaskQuery)
+	}
+	_q.withNamedTasks[name] = query
+	return _q
+}
+
+// WithNamedReviewedTasks tells the query-builder to eager-load the nodes that are connected to the "reviewed_tasks"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedReviewedTasks(name string, opts ...func(*TaskQuery)) *UserQuery {
+	query := (&TaskClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedReviewedTasks == nil {
+		_q.withNamedReviewedTasks = make(map[string]*TaskQuery)
+	}
+	_q.withNamedReviewedTasks[name] = query
 	return _q
 }
 

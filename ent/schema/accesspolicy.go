@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/privacy"
 )
 
 type AccessPolicy struct{ ent.Schema }
@@ -36,5 +37,16 @@ func (AccessPolicy) Edges() []ent.Edge {
 		edge.From("users", User.Type).Ref("access_policies"),
 		edge.From("resources", Resource.Type).Ref("policies"),
 		edge.From("roles", Role.Type).Ref("access_policies"),
+	}
+}
+
+func (AccessPolicy) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			privacy.AlwaysAllowRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			DenyMutationUnlessAdmin(),
+		},
 	}
 }

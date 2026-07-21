@@ -106,6 +106,11 @@ func Description(v string) predicate.Resource {
 	return predicate.Resource(sql.FieldEQ(FieldDescription, v))
 }
 
+// HostKey applies equality check predicate on the "host_key" field. It's identical to HostKeyEQ.
+func HostKey(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldEQ(FieldHostKey, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Resource {
 	return predicate.Resource(sql.FieldEQ(FieldCreatedAt, v))
@@ -641,6 +646,81 @@ func AuthDataNotNil() predicate.Resource {
 	return predicate.Resource(sql.FieldNotNull(FieldAuthData))
 }
 
+// HostKeyEQ applies the EQ predicate on the "host_key" field.
+func HostKeyEQ(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldEQ(FieldHostKey, v))
+}
+
+// HostKeyNEQ applies the NEQ predicate on the "host_key" field.
+func HostKeyNEQ(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldNEQ(FieldHostKey, v))
+}
+
+// HostKeyIn applies the In predicate on the "host_key" field.
+func HostKeyIn(vs ...string) predicate.Resource {
+	return predicate.Resource(sql.FieldIn(FieldHostKey, vs...))
+}
+
+// HostKeyNotIn applies the NotIn predicate on the "host_key" field.
+func HostKeyNotIn(vs ...string) predicate.Resource {
+	return predicate.Resource(sql.FieldNotIn(FieldHostKey, vs...))
+}
+
+// HostKeyGT applies the GT predicate on the "host_key" field.
+func HostKeyGT(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldGT(FieldHostKey, v))
+}
+
+// HostKeyGTE applies the GTE predicate on the "host_key" field.
+func HostKeyGTE(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldGTE(FieldHostKey, v))
+}
+
+// HostKeyLT applies the LT predicate on the "host_key" field.
+func HostKeyLT(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldLT(FieldHostKey, v))
+}
+
+// HostKeyLTE applies the LTE predicate on the "host_key" field.
+func HostKeyLTE(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldLTE(FieldHostKey, v))
+}
+
+// HostKeyContains applies the Contains predicate on the "host_key" field.
+func HostKeyContains(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldContains(FieldHostKey, v))
+}
+
+// HostKeyHasPrefix applies the HasPrefix predicate on the "host_key" field.
+func HostKeyHasPrefix(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldHasPrefix(FieldHostKey, v))
+}
+
+// HostKeyHasSuffix applies the HasSuffix predicate on the "host_key" field.
+func HostKeyHasSuffix(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldHasSuffix(FieldHostKey, v))
+}
+
+// HostKeyIsNil applies the IsNil predicate on the "host_key" field.
+func HostKeyIsNil() predicate.Resource {
+	return predicate.Resource(sql.FieldIsNull(FieldHostKey))
+}
+
+// HostKeyNotNil applies the NotNil predicate on the "host_key" field.
+func HostKeyNotNil() predicate.Resource {
+	return predicate.Resource(sql.FieldNotNull(FieldHostKey))
+}
+
+// HostKeyEqualFold applies the EqualFold predicate on the "host_key" field.
+func HostKeyEqualFold(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldEqualFold(FieldHostKey, v))
+}
+
+// HostKeyContainsFold applies the ContainsFold predicate on the "host_key" field.
+func HostKeyContainsFold(v string) predicate.Resource {
+	return predicate.Resource(sql.FieldContainsFold(FieldHostKey, v))
+}
+
 // HasTenant applies the HasEdge predicate on the "tenant" edge.
 func HasTenant() predicate.Resource {
 	return predicate.Resource(func(s *sql.Selector) {
@@ -720,6 +800,35 @@ func HasPoliciesWith(preds ...predicate.AccessPolicy) predicate.Resource {
 		schemaConfig := internal.SchemaConfigFromContext(s.Context())
 		step.To.Schema = schemaConfig.AccessPolicy
 		step.Edge.Schema = schemaConfig.ResourcePolicies
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTasks applies the HasEdge predicate on the "tasks" edge.
+func HasTasks() predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TasksTable, TasksColumn),
+		)
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Task
+		step.Edge.Schema = schemaConfig.Task
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTasksWith applies the HasEdge predicate on the "tasks" edge with a given conditions (other predicates).
+func HasTasksWith(preds ...predicate.Task) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		step := newTasksStep()
+		schemaConfig := internal.SchemaConfigFromContext(s.Context())
+		step.To.Schema = schemaConfig.Task
+		step.Edge.Schema = schemaConfig.Task
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

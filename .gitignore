@@ -1,2 +1,8 @@
 
 dist/
+
+.DS_Store
+cloud-terminal
+*.db
+*.db-shm
+*.db-wal

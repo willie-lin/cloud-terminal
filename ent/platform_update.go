@@ -143,7 +143,9 @@ func (_u *PlatformUpdate) Mutation() *PlatformMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *PlatformUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -170,11 +172,15 @@ func (_u *PlatformUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *PlatformUpdate) defaults() {
+func (_u *PlatformUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if platform.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized platform.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := platform.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -393,7 +399,9 @@ func (_u *PlatformUpdateOne) Select(field string, fields ...string) *PlatformUpd
 
 // Save executes the query and returns the updated Platform entity.
 func (_u *PlatformUpdateOne) Save(ctx context.Context) (*Platform, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -420,11 +428,15 @@ func (_u *PlatformUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *PlatformUpdateOne) defaults() {
+func (_u *PlatformUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if platform.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized platform.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := platform.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

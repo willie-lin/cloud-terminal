@@ -16,6 +16,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/internal"
 	"github.com/willie-lin/cloud-terminal/ent/predicate"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
+	"github.com/willie-lin/cloud-terminal/ent/task"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
 
@@ -202,6 +203,26 @@ func (_u *ResourceUpdate) ClearAuthData() *ResourceUpdate {
 	return _u
 }
 
+// SetHostKey sets the "host_key" field.
+func (_u *ResourceUpdate) SetHostKey(v string) *ResourceUpdate {
+	_u.mutation.SetHostKey(v)
+	return _u
+}
+
+// SetNillableHostKey sets the "host_key" field if the given value is not nil.
+func (_u *ResourceUpdate) SetNillableHostKey(v *string) *ResourceUpdate {
+	if v != nil {
+		_u.SetHostKey(*v)
+	}
+	return _u
+}
+
+// ClearHostKey clears the value of the "host_key" field.
+func (_u *ResourceUpdate) ClearHostKey() *ResourceUpdate {
+	_u.mutation.ClearHostKey()
+	return _u
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
 func (_u *ResourceUpdate) SetTenantID(id string) *ResourceUpdate {
 	_u.mutation.SetTenantID(id)
@@ -249,6 +270,21 @@ func (_u *ResourceUpdate) AddPolicies(v ...*AccessPolicy) *ResourceUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddPolicyIDs(ids...)
+}
+
+// AddTaskIDs adds the "tasks" edge to the Task entity by IDs.
+func (_u *ResourceUpdate) AddTaskIDs(ids ...string) *ResourceUpdate {
+	_u.mutation.AddTaskIDs(ids...)
+	return _u
+}
+
+// AddTasks adds the "tasks" edges to the Task entity.
+func (_u *ResourceUpdate) AddTasks(v ...*Task) *ResourceUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTaskIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -304,9 +340,32 @@ func (_u *ResourceUpdate) RemovePolicies(v ...*AccessPolicy) *ResourceUpdate {
 	return _u.RemovePolicyIDs(ids...)
 }
 
+// ClearTasks clears all "tasks" edges to the Task entity.
+func (_u *ResourceUpdate) ClearTasks() *ResourceUpdate {
+	_u.mutation.ClearTasks()
+	return _u
+}
+
+// RemoveTaskIDs removes the "tasks" edge to Task entities by IDs.
+func (_u *ResourceUpdate) RemoveTaskIDs(ids ...string) *ResourceUpdate {
+	_u.mutation.RemoveTaskIDs(ids...)
+	return _u
+}
+
+// RemoveTasks removes "tasks" edges to Task entities.
+func (_u *ResourceUpdate) RemoveTasks(v ...*Task) *ResourceUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTaskIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *ResourceUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -333,11 +392,15 @@ func (_u *ResourceUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *ResourceUpdate) defaults() {
+func (_u *ResourceUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if resource.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized resource.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := resource.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -440,6 +503,12 @@ func (_u *ResourceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.AuthDataCleared() {
 		_spec.ClearField(resource.FieldAuthData, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.HostKey(); ok {
+		_spec.SetField(resource.FieldHostKey, field.TypeString, value)
+	}
+	if _u.mutation.HostKeyCleared() {
+		_spec.ClearField(resource.FieldHostKey, field.TypeString)
 	}
 	if _u.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -563,6 +632,54 @@ func (_u *ResourceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			},
 		}
 		edge.Schema = _u.schemaConfig.ResourcePolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.TasksTable,
+			Columns: []string{resource.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Task
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTasksIDs(); len(nodes) > 0 && !_u.mutation.TasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.TasksTable,
+			Columns: []string{resource.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Task
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.TasksTable,
+			Columns: []string{resource.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Task
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -761,6 +878,26 @@ func (_u *ResourceUpdateOne) ClearAuthData() *ResourceUpdateOne {
 	return _u
 }
 
+// SetHostKey sets the "host_key" field.
+func (_u *ResourceUpdateOne) SetHostKey(v string) *ResourceUpdateOne {
+	_u.mutation.SetHostKey(v)
+	return _u
+}
+
+// SetNillableHostKey sets the "host_key" field if the given value is not nil.
+func (_u *ResourceUpdateOne) SetNillableHostKey(v *string) *ResourceUpdateOne {
+	if v != nil {
+		_u.SetHostKey(*v)
+	}
+	return _u
+}
+
+// ClearHostKey clears the value of the "host_key" field.
+func (_u *ResourceUpdateOne) ClearHostKey() *ResourceUpdateOne {
+	_u.mutation.ClearHostKey()
+	return _u
+}
+
 // SetTenantID sets the "tenant" edge to the Tenant entity by ID.
 func (_u *ResourceUpdateOne) SetTenantID(id string) *ResourceUpdateOne {
 	_u.mutation.SetTenantID(id)
@@ -808,6 +945,21 @@ func (_u *ResourceUpdateOne) AddPolicies(v ...*AccessPolicy) *ResourceUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.AddPolicyIDs(ids...)
+}
+
+// AddTaskIDs adds the "tasks" edge to the Task entity by IDs.
+func (_u *ResourceUpdateOne) AddTaskIDs(ids ...string) *ResourceUpdateOne {
+	_u.mutation.AddTaskIDs(ids...)
+	return _u
+}
+
+// AddTasks adds the "tasks" edges to the Task entity.
+func (_u *ResourceUpdateOne) AddTasks(v ...*Task) *ResourceUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTaskIDs(ids...)
 }
 
 // Mutation returns the ResourceMutation object of the builder.
@@ -863,6 +1015,27 @@ func (_u *ResourceUpdateOne) RemovePolicies(v ...*AccessPolicy) *ResourceUpdateO
 	return _u.RemovePolicyIDs(ids...)
 }
 
+// ClearTasks clears all "tasks" edges to the Task entity.
+func (_u *ResourceUpdateOne) ClearTasks() *ResourceUpdateOne {
+	_u.mutation.ClearTasks()
+	return _u
+}
+
+// RemoveTaskIDs removes the "tasks" edge to Task entities by IDs.
+func (_u *ResourceUpdateOne) RemoveTaskIDs(ids ...string) *ResourceUpdateOne {
+	_u.mutation.RemoveTaskIDs(ids...)
+	return _u
+}
+
+// RemoveTasks removes "tasks" edges to Task entities.
+func (_u *ResourceUpdateOne) RemoveTasks(v ...*Task) *ResourceUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTaskIDs(ids...)
+}
+
 // Where appends a list predicates to the ResourceUpdate builder.
 func (_u *ResourceUpdateOne) Where(ps ...predicate.Resource) *ResourceUpdateOne {
 	_u.mutation.Where(ps...)
@@ -878,7 +1051,9 @@ func (_u *ResourceUpdateOne) Select(field string, fields ...string) *ResourceUpd
 
 // Save executes the query and returns the updated Resource entity.
 func (_u *ResourceUpdateOne) Save(ctx context.Context) (*Resource, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -905,11 +1080,15 @@ func (_u *ResourceUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *ResourceUpdateOne) defaults() {
+func (_u *ResourceUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if resource.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized resource.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := resource.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -1029,6 +1208,12 @@ func (_u *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err 
 	}
 	if _u.mutation.AuthDataCleared() {
 		_spec.ClearField(resource.FieldAuthData, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.HostKey(); ok {
+		_spec.SetField(resource.FieldHostKey, field.TypeString, value)
+	}
+	if _u.mutation.HostKeyCleared() {
+		_spec.ClearField(resource.FieldHostKey, field.TypeString)
 	}
 	if _u.mutation.TenantCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1152,6 +1337,54 @@ func (_u *ResourceUpdateOne) sqlSave(ctx context.Context) (_node *Resource, err 
 			},
 		}
 		edge.Schema = _u.schemaConfig.ResourcePolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.TasksTable,
+			Columns: []string{resource.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Task
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTasksIDs(); len(nodes) > 0 && !_u.mutation.TasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.TasksTable,
+			Columns: []string{resource.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Task
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.TasksTable,
+			Columns: []string{resource.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _u.schemaConfig.Task
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}

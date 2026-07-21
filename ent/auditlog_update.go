@@ -237,7 +237,9 @@ func (_u *AuditLogUpdate) ClearResource() *AuditLogUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *AuditLogUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -264,11 +266,15 @@ func (_u *AuditLogUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *AuditLogUpdate) defaults() {
+func (_u *AuditLogUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if auditlog.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized auditlog.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := auditlog.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
@@ -632,7 +638,9 @@ func (_u *AuditLogUpdateOne) Select(field string, fields ...string) *AuditLogUpd
 
 // Save executes the query and returns the updated AuditLog entity.
 func (_u *AuditLogUpdateOne) Save(ctx context.Context) (*AuditLog, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -659,11 +667,15 @@ func (_u *AuditLogUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *AuditLogUpdateOne) defaults() {
+func (_u *AuditLogUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if auditlog.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized auditlog.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := auditlog.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // Modify adds a statement modifier for attaching custom logic to the UPDATE statement.

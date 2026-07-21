@@ -5,7 +5,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
+	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -27,13 +29,25 @@ var (
 
 func init() {
 	var err error
-	AccessTokenSecret, err = GenerateRandomKey(32)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to generate access token secret: %v", err))
+	AccessTokenSecret = os.Getenv("JWT_ACCESS_SECRET")
+	if AccessTokenSecret == "" {
+		AccessTokenSecret = os.Getenv("JWT_SECRET")
 	}
-	RefreshTokenSecret, err = GenerateRandomKey(32)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to generate refresh token secret: %v", err))
+	if AccessTokenSecret == "" {
+		log.Println("WARNING: JWT_ACCESS_SECRET / JWT_SECRET not set, generating random key.")
+		AccessTokenSecret, err = GenerateRandomKey(32)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to generate access token secret: %v", err))
+		}
+	}
+
+	RefreshTokenSecret = os.Getenv("JWT_REFRESH_SECRET")
+	if RefreshTokenSecret == "" {
+		log.Println("WARNING: JWT_REFRESH_SECRET not set, generating random key.")
+		RefreshTokenSecret, err = GenerateRandomKey(32)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to generate refresh token secret: %v", err))
+		}
 	}
 }
 

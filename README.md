@@ -1,8 +1,11 @@
 # Cloud-Terminal
 
-> 面向私有云/混合云环境的多租户云原生堡垒机 + 运维安全审计平台。
+> **A cloud-native access control plane that manages secure, time-bound, and auditable access to infrastructure through abstract resources instead of exposing servers directly.**
+> **一个云原生基础设施访问控制平面，通过“资源”而不是服务器，为用户提供安全、临时、可审计的访问能力。**
 
-不是传统的 SSH 跳板机，而是一个 **JIT（Just-In-Time）服务访问代理系统**——用户通过 Cloud-Terminal 申请访问权限，系统动态地在目标 VPC/K8s 命名空间中创建临时容器，让用户使用容器内的客户端工具（mysql、kubectl、redis-cli 等）连接目标服务，用完即销毁。
+**Approved SSH Access** — Connect to target infrastructure securely without managing static SSH keys or IP permissions. Ephemeral tokens are issued on-demand and executed inside isolated Docker container sandboxes.
+
+我们不是传统跳板机或 CMDB，也不做 Teleport 或 JumpServer 的复刻。Cloud-Terminal 是一个面向云原生时代的 **SSH Access Control Plane（SSH 控制平面）**：让用户通过“资源 (Resource)”访问基础设施，而不暴露底层服务器 IP 与静态凭据。
 
 ---
 
@@ -187,18 +190,28 @@ graph TB
 
 ---
 
-## 与传统堡垒机的关键区别
+## 为什么不是 JumpServer / Teleport / 堡垒机？
 
-| 特性 | 传统堡垒机 | Cloud-Terminal |
+传统平台（如 JumpServer / 传统堡垒机）的思路是围绕 **Host（服务器）** 与 CMDB 展开的：
+```
+CMDB → Host (服务器/IP) → 授权 → 直连登录
+```
+用户最终还是在管理和暴露底层主机。
+
+**Cloud-Terminal 的定位不同，核心管理对象是抽象的 `Resource`（资源）与 `Task`（工单）：**
+```
+Task (工单) → Approval (审批) → Policy (动态授权) → Resource (目标服务) → ContainerSSH Runtime → 临时沙箱连接
+```
+用户管理的是“我要完成什么工作”（如：生产数据库、Redis 运维、线上日志），系统负责鉴权、下发临时凭据、并由 ContainerSSH 作为 Runtime 启动临时微隔离沙箱建立 SSH 桥接，用完即毁。
+
+| 维度 | 传统平台（JumpServer / 堡垒机 / Teleport） | Cloud-Terminal（SSH 控制平面 + Cloud Gateway） |
 |:---|:---|:---|
-| 访问方式 | SSH 代理到持久化服务器 | 动态创建临时容器，用完即毁 |
-| 可访问目标 | 仅 SSH 到 VM | MySQL、Redis、K8s Service、任意 TCP 服务 |
-| 网络策略 | 手动配置安全组 | 自动生成安全组 / NetworkPolicy |
-| 权限模型 | 绑定到服务器 IP | 绑定到服务 + 工具 + 时间窗口 |
-| 工具链 | 用户自行安装 | 预装客户端工具 (mysql/kubectl/redis-cli) |
-| 集成方式 | 手动操作 | Webhook 驱动，可编程集成 |
-| 资源标识 | IP 或主机名 | URN 统一标识体系 |
-| 多租户 | 弱 | 原生多租户隔离 |
+| **核心对象** | **Host / IP**（物理机、虚拟机、CMDB 主机） | **Resource**（抽象业务资源：MySQL、Redis、K8s Pod 等） |
+| **凭据与授权** | 静态长效 SSH 密码 / 密钥授权 | **按需动态签发（STS 临时 Token）**，零静态凭据暴露 |
+| **执行 Runtime** | SSH 代理直连目标持久化主机 | **ContainerSSH 驱动隔离沙箱**，会话结束自动销毁 (`rm -f`) |
+| **网络边界** | 依赖静态安全组 / Host 打通 | **微隔离网络** + JIT 单次临时连接 |
+| **用户认知** | “我要登录 10.10.10.23 主机” | **“我要维护生产 MySQL-主库”** |
+| **多租户体系** | 弱（通常为多部门或资产授权分组） | **原生多租户隔离体系 (Tenant-Level Isolation)** |
 
 ---
 

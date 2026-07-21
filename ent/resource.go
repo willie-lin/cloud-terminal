@@ -46,6 +46,8 @@ type Resource struct {
 	Details map[string]interface{} `json:"details,omitempty"`
 	// AuthData holds the value of the "auth_data" field.
 	AuthData map[string]interface{} `json:"-"`
+	// SSH主机公钥，留空则首次连接时自动学习（TOFU）
+	HostKey string `json:"host_key,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ResourceQuery when eager-loading is set.
 	Edges            ResourceEdges `json:"edges"`
@@ -61,11 +63,14 @@ type ResourceEdges struct {
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// 附加到资源的策略，实现 ResourcePolicy
 	Policies []*AccessPolicy `json:"policies,omitempty"`
+	// 针对此资源的访问申请
+	Tasks []*Task `json:"tasks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes    [3]bool
+	loadedTypes    [4]bool
 	namedAuditLogs map[string][]*AuditLog
 	namedPolicies  map[string][]*AccessPolicy
+	namedTasks     map[string][]*Task
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -97,6 +102,15 @@ func (e ResourceEdges) PoliciesOrErr() ([]*AccessPolicy, error) {
 	return nil, &NotLoadedError{edge: "policies"}
 }
 
+// TasksOrErr returns the Tasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResourceEdges) TasksOrErr() ([]*Task, error) {
+	if e.loadedTypes[3] {
+		return e.Tasks, nil
+	}
+	return nil, &NotLoadedError{edge: "tasks"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Resource) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -106,7 +120,7 @@ func (*Resource) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case resource.FieldPort:
 			values[i] = new(sql.NullInt64)
-		case resource.FieldID, resource.FieldUrn, resource.FieldName, resource.FieldType, resource.FieldIP, resource.FieldEnv, resource.FieldRegion, resource.FieldDescription, resource.FieldStatus:
+		case resource.FieldID, resource.FieldUrn, resource.FieldName, resource.FieldType, resource.FieldIP, resource.FieldEnv, resource.FieldRegion, resource.FieldDescription, resource.FieldStatus, resource.FieldHostKey:
 			values[i] = new(sql.NullString)
 		case resource.FieldCreatedAt, resource.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -215,6 +229,12 @@ func (_m *Resource) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field auth_data: %w", err)
 				}
 			}
+		case resource.FieldHostKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field host_key", values[i])
+			} else if value.Valid {
+				_m.HostKey = value.String
+			}
 		case resource.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_resources", values[i])
@@ -248,6 +268,11 @@ func (_m *Resource) QueryAuditLogs() *AuditLogQuery {
 // QueryPolicies queries the "policies" edge of the Resource entity.
 func (_m *Resource) QueryPolicies() *AccessPolicyQuery {
 	return NewResourceClient(_m.config).QueryPolicies(_m)
+}
+
+// QueryTasks queries the "tasks" edge of the Resource entity.
+func (_m *Resource) QueryTasks() *TaskQuery {
+	return NewResourceClient(_m.config).QueryTasks(_m)
 }
 
 // Update returns a builder for updating this Resource.
@@ -310,6 +335,9 @@ func (_m *Resource) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.Details))
 	builder.WriteString(", ")
 	builder.WriteString("auth_data=<sensitive>")
+	builder.WriteString(", ")
+	builder.WriteString("host_key=")
+	builder.WriteString(_m.HostKey)
 	builder.WriteByte(')')
 	return builder.String()
 }
@@ -359,6 +387,30 @@ func (_m *Resource) appendNamedPolicies(name string, edges ...*AccessPolicy) {
 		_m.Edges.namedPolicies[name] = []*AccessPolicy{}
 	} else {
 		_m.Edges.namedPolicies[name] = append(_m.Edges.namedPolicies[name], edges...)
+	}
+}
+
+// NamedTasks returns the Tasks named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Resource) NamedTasks(name string) ([]*Task, error) {
+	if _m.Edges.namedTasks == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedTasks[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Resource) appendNamedTasks(name string, edges ...*Task) {
+	if _m.Edges.namedTasks == nil {
+		_m.Edges.namedTasks = make(map[string][]*Task)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedTasks[name] = []*Task{}
+	} else {
+		_m.Edges.namedTasks[name] = append(_m.Edges.namedTasks[name], edges...)
 	}
 }
 

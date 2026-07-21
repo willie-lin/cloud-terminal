@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"entgo.io/ent/privacy"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -29,6 +30,18 @@ func (Role) Edges() []ent.Edge {
 		edge.To("access_policies", AccessPolicy.Type).Comment("附加到此角色的权限策略"),
 		edge.To("child_roles", Role.Type).From("parent_role"),
 		edge.To("permissions_boundary", AccessPolicy.Type).Unique().Comment("权限边界"),
+	}
+}
+
+
+func (Role) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			privacy.AlwaysAllowRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			DenyMutationUnlessAdmin(),
+		},
 	}
 }
 

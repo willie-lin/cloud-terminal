@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode selector in Tailwind CSS V4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-main: #09090b;
+    --bg-card: #121318;
+    --bg-card-hover: #171820;
+    --border-subtle: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.12);
+    --text-primary: #ededef;
+    --text-secondary: #a1a1aa;
+  }
+
+  html.light {
+    --bg-main: #f8f9fa;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f3f5;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.15);
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
+
+/* Minimalist sleek scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 120, 120, 0.4);
+}
+
+/* Pure minimalist glass header */
+.glass-header {
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+html.light .glass-header {
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.mono-font {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* ─── Terminal Page: Left Info Panel ─── */
+.terminal-info-panel {
+  background: rgba(18, 19, 24, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.light .terminal-info-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* ─── Isolation Badge Glow ─── */
+.isolation-badge {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.isolation-badge::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.isolation-badge:hover::before {
+  opacity: 1;
+}
+
+html.light .isolation-badge::before {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(56, 189, 248, 0.06));
+}
+
+/* ─── Countdown Pulse ─── */
+@keyframes countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.countdown-expiring {
+  animation: countdown-pulse 1.5s ease-in-out infinite;
+  color: #f87171 !important;
+}
+
+/* ─── Terminal Page Outer Wrapper ─── */
+.terminal-page-wrapper {
+  background: #09090b;
+}
+
+html.light .terminal-page-wrapper {
+  background: #f3f4f6;
+}
+
+/* ─── Terminal Page Footer Bar ─── */
+.terminal-footer-bar {
+  background: rgba(14, 15, 20, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+html.light .terminal-footer-bar {
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+/* ─── Traffic Light Dot Hover ─── */
+.traffic-dot-close:hover { background-color: #ef4444 !important; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+.traffic-dot-minimize:hover { background-color: #f59e0b !important; box-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
+.traffic-dot-expand:hover { background-color: #10b981 !important; box-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
+
+/* ─── Copy Button Feedback ─── */
+@keyframes copy-flash {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.copy-success {
+  animation: copy-flash 0.3s ease;
+}

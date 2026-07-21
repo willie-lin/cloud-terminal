@@ -202,7 +202,9 @@ func (_u *TenantUpdate) RemoveAccessPolicies(v ...*AccessPolicy) *TenantUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *TenantUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -229,11 +231,15 @@ func (_u *TenantUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *TenantUpdate) defaults() {
+func (_u *TenantUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if tenant.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -634,7 +640,9 @@ func (_u *TenantUpdateOne) Select(field string, fields ...string) *TenantUpdateO
 
 // Save executes the query and returns the updated Tenant entity.
 func (_u *TenantUpdateOne) Save(ctx context.Context) (*Tenant, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -661,11 +669,15 @@ func (_u *TenantUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *TenantUpdateOne) defaults() {
+func (_u *TenantUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if tenant.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

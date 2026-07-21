@@ -179,7 +179,9 @@ func (_u *SessionUpdate) Mutation() *SessionMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *SessionUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -206,11 +208,15 @@ func (_u *SessionUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *SessionUpdate) defaults() {
+func (_u *SessionUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if session.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized session.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := session.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -471,7 +477,9 @@ func (_u *SessionUpdateOne) Select(field string, fields ...string) *SessionUpdat
 
 // Save executes the query and returns the updated Session entity.
 func (_u *SessionUpdateOne) Save(ctx context.Context) (*Session, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -498,11 +506,15 @@ func (_u *SessionUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *SessionUpdateOne) defaults() {
+func (_u *SessionUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if session.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized session.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := session.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

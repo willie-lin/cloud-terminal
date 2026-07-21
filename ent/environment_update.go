@@ -195,7 +195,9 @@ func (_u *EnvironmentUpdate) ClearTenant() *EnvironmentUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *EnvironmentUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -222,11 +224,15 @@ func (_u *EnvironmentUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *EnvironmentUpdate) defaults() {
+func (_u *EnvironmentUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if environment.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized environment.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := environment.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -545,7 +551,9 @@ func (_u *EnvironmentUpdateOne) Select(field string, fields ...string) *Environm
 
 // Save executes the query and returns the updated Environment entity.
 func (_u *EnvironmentUpdateOne) Save(ctx context.Context) (*Environment, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -572,11 +580,15 @@ func (_u *EnvironmentUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *EnvironmentUpdateOne) defaults() {
+func (_u *EnvironmentUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if environment.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized environment.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := environment.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

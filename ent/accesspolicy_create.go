@@ -233,7 +233,9 @@ func (_c *AccessPolicyCreate) Mutation() *AccessPolicyMutation {
 
 // Save creates the AccessPolicy in the database.
 func (_c *AccessPolicyCreate) Save(ctx context.Context) (*AccessPolicy, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -260,12 +262,18 @@ func (_c *AccessPolicyCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *AccessPolicyCreate) defaults() {
+func (_c *AccessPolicyCreate) defaults() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
+		if accesspolicy.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized accesspolicy.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := accesspolicy.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		if accesspolicy.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized accesspolicy.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := accesspolicy.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
@@ -286,9 +294,13 @@ func (_c *AccessPolicyCreate) defaults() {
 		_c.mutation.SetPriority(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
+		if accesspolicy.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized accesspolicy.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := accesspolicy.DefaultID()
 		_c.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

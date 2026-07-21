@@ -154,7 +154,9 @@ func (_c *TenantCreate) Mutation() *TenantMutation {
 
 // Save creates the Tenant in the database.
 func (_c *TenantCreate) Save(ctx context.Context) (*Tenant, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -181,12 +183,18 @@ func (_c *TenantCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *TenantCreate) defaults() {
+func (_c *TenantCreate) defaults() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
+		if tenant.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		if tenant.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
@@ -195,9 +203,13 @@ func (_c *TenantCreate) defaults() {
 		_c.mutation.SetStatus(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
+		if tenant.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultID()
 		_c.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

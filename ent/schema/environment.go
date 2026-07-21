@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/privacy"
 )
 
 type Environment struct{ ent.Schema }
@@ -25,4 +26,16 @@ func (Environment) Fields() []ent.Field {
 
 func (Environment) Edges() []ent.Edge {
 	return []ent.Edge{edge.From("tenant", Tenant.Type).Ref("environments").Unique()}
+}
+
+func (Environment) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			AllowIfAdmin(),
+			privacy.AlwaysAllowRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			DenyMutationUnlessAdmin(),
+		},
+	}
 }

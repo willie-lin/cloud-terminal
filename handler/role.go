@@ -281,3 +281,43 @@ func UpdateRole(client *ent.Client) echo.HandlerFunc {
 		return c.JSON(http.StatusOK, r)
 	}
 }
+
+// DeleteRoleByID deletes a role by ID (protects default roles)
+func DeleteRoleByID(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+		isSuperAdmin := v.RoleName == "super_admin"
+		if !isSuperAdmin {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only super admins can delete roles"})
+		}
+
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid role ID"})
+		}
+
+		r, err := client.Role.Query().Where(role.IDEQ(id)).Only(c.Request().Context())
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Role not found"})
+		}
+		if err != nil {
+			log.Printf("Error querying role: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role"})
+		}
+
+		if IsDefaultRole(r.Name) {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Cannot delete default role"})
+		}
+
+		err = client.Role.DeleteOne(r).Exec(c.Request().Context())
+		if err != nil {
+			log.Printf("Error deleting role: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete role"})
+		}
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}

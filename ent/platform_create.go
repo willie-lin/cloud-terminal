@@ -140,7 +140,9 @@ func (_c *PlatformCreate) Mutation() *PlatformMutation {
 
 // Save creates the Platform in the database.
 func (_c *PlatformCreate) Save(ctx context.Context) (*Platform, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -167,12 +169,18 @@ func (_c *PlatformCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *PlatformCreate) defaults() {
+func (_c *PlatformCreate) defaults() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
+		if platform.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized platform.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := platform.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		if platform.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized platform.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := platform.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
@@ -181,9 +189,13 @@ func (_c *PlatformCreate) defaults() {
 		_c.mutation.SetStatus(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
+		if platform.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized platform.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := platform.DefaultID()
 		_c.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

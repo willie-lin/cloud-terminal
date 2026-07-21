@@ -1,22 +1,20 @@
 package api
 
 import (
-	"github.com/google/uuid"
 	"context"
 	"fmt"
-	"github.com/gorilla/sessions"
-	"github.com/willie-lin/cloud-terminal/handler"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/gommon/log"
 	"github.com/pquerna/otp/totp"
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/group"
-	"github.com/willie-lin/cloud-terminal/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/ent/user"
+	"github.com/willie-lin/cloud-terminal/pkg/crypto"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"net/http"
 	"strings"
@@ -26,7 +24,6 @@ import (
 // CheckEmail 检查邮箱是否已经存在
 func CheckEmail(client *ent.Client) echo.HandlerFunc {
 	return func(c *echo.Context) error {
-		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 		type UserDTO struct {
 			Email string `json:"email"`
 		}
@@ -37,6 +34,7 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
+		ctx := context.Background()
 		exists, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Exist(ctx)
 		if err != nil {
 			log.Printf("Error checking email: %v", err)
@@ -46,17 +44,22 @@ func CheckEmail(client *ent.Client) echo.HandlerFunc {
 	}
 }
 
-// RegisterUser 用户注册
+// RegisterUser 用户注册（已禁用公开注册）
 func RegisterUser(client *ent.Client) echo.HandlerFunc {
 	return func(c *echo.Context) error {
-		// 使用 privacy.DecisionContext 跳过隐私检查
-		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
+		return c.JSON(http.StatusForbidden, map[string]string{"error": "Registration is disabled. Please contact your administrator."})
+	}
+}
+
+// _RegisterUserDeprecated 旧的注册逻辑（已废弃）
+func _RegisterUserDeprecated(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
 
 		username := utils.GenerateUsername()
 		type UserDTO struct {
 			Email      string `json:"email"`
 			Password   string `json:"password"`
-			TenantName string `json:"tenant_name"` // 新增租户名称字段
+			TenantName string `json:"tenant_name"`
 		}
 
 		dto := new(UserDTO)
@@ -73,6 +76,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 		// 查询平台
+		ctx := context.Background()
 		platformName, err := client.Platform.Query().Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
 			return err
@@ -85,20 +89,24 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			return err
 		}
 		if ent.IsNotFound(err) {
+			desc := "Cloud Terminal Tenant"
+			if platformName != nil {
+				desc = platformName.Name
+			}
 			_, err = client.Tenant.Create().
 				SetName(tenantName).
-				SetDescription(platformName.Name).
+				SetDescription(desc).
 				Save(ctx)
 			if err != nil {
 				return err
 			}
-			log.Printf("Created management tenant for %s platform", platformName)
+			log.Printf("Created management tenant for platform")
 		} else {
-			log.Printf("Management tenant already exists for %s platform.", platformName)
+			log.Printf("Management tenant already exists.")
 		}
 
 		// 查询角色
-		tenantRoleName := tenantName + "_admin" // Replace with your desired role name
+		tenantRoleName := "tenant_admin"
 
 		r, err := client.Role.Query().Where(role.NameEQ(tenantRoleName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
@@ -133,37 +141,23 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 				{
 					Effect: "Allow",
 					Actions: []string{
-						// ActionTenantCreate Tenant Actions
-						// ActionUserCreate User Actions
 						utils.ActionUserCreate,
 						utils.ActionUserRead,
 						utils.ActionUserUpdate,
 						utils.ActionUserDelete,
-
-						// ActionRoleCreate ActionUserCreate User Actions
 						utils.ActionRoleCreate,
 						utils.ActionRoleRead,
 						utils.ActionRoleUpdate,
 						utils.ActionRoleDelete,
-
-						// ActionProjectCreate Project Actions
-						utils.ActionProjectCreate,
-						utils.ActionProjectRead,
-						utils.ActionProjectUpdate,
-						utils.ActionProjectDelete,
-
-						// ActionAuditLogRead Audit Log Actions
 						utils.ActionAuditLogRead,
 						utils.ActionAuditLogExport,
-					}, // 超级管理员拥有所有操作权限
+					},
 					Resources: []string{
-						utils.ResourceUserAll, // 匹配所有租户和账户的用户
-						
+						utils.ResourceUserAll,
 						utils.ResourceRoleAll,
 						utils.ResourcePolicyAll,
-						utils.ResourceProjectAll,
 						utils.ResourceAuditLogAll,
-					}, // 超级管理员拥有所有资源权限
+					},
 				},
 			}
 
@@ -200,7 +194,7 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("tenant_admin 角色和 tenant_admin 策略已经关联")
 		}
 
-		// 创建账户
+		// 创建账户 Group
 		groupName := strings.ToLower(dto.TenantName) + "Group"
 		act, err := client.Group.Query().Where(group.NameEQ(groupName)).Only(ctx)
 		if err != nil && !ent.IsNotFound(err) {
@@ -209,15 +203,13 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 		if ent.IsNotFound(err) {
 			act, err = client.Group.Create().
 				SetName(groupName).
-				
-				
 				Save(ctx)
 			if err != nil {
 				return err
 			}
-			log.Printf("Created Group for %s platform", platformName)
+			log.Printf("Created Group for platform")
 		} else {
-			log.Printf("Group already exists for %s platform.", platformName)
+			log.Printf("Group already exists.")
 		}
 
 		// 6. 创建租户管理员用户并关联到账户
@@ -230,14 +222,8 @@ func RegisterUser(client *ent.Client) echo.HandlerFunc {
 			AddRoles(tenantRole).
 			Save(ctx)
 		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID})
-		//return c.JSON(http.StatusCreated, map[string]string{"message": "Tenant and admin created successfully"})
 	}
 }
-
-//type jwtCustomClaims struct {
-//	Email string `json:"email"`
-//	jwt.RegisteredClaims
-//}
 
 // LoginUser 用户登陆
 func LoginUser(client *ent.Client) echo.HandlerFunc {
@@ -254,10 +240,8 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
 
-		// 使用决策上下文进行查询，跳过隐私规则
-		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 
-		//fmt.Println(dto.OTP)
+		ctx := context.Background()
 		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(ctx)
 		if ent.IsNotFound(err) {
 			log.Printf("User not found: %v", err)
@@ -272,7 +256,6 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusForbidden, map[string]string{"error": "Password is empty"})
 		}
 
-		// 假设 us.Password 是数据库中存储的哈希值
 		err = utils.CompareHashAndPassword([]byte(us.Password), []byte(dto.Password))
 		if err != nil {
 			log.Printf("Error comparing password: %v", err)
@@ -281,13 +264,17 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 
 		// 检查用户是否已经绑定了二次验证（2FA）
 		if us.TotpSecret != "" {
-			// 用户已经启用了OTP，所以必须提供OTP
 			if dto.OTP == nil {
 				log.Printf("Error: OTP is required")
 				return c.JSON(http.StatusForbidden, map[string]string{"error": "OTP is required"})
 			}
-			// 验证用户提供的OTP
-			valid := totp.Validate(*dto.OTP, us.TotpSecret)
+			// 解密存储的 totp_secret（兼容历史明文存量数据）
+			plainSecret, err := crypto.DecryptString(us.TotpSecret)
+			if err != nil {
+				log.Printf("Error decrypting TOTP secret: %v", err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error verifying OTP"})
+			}
+			valid := totp.Validate(*dto.OTP, plainSecret)
 			if !valid {
 				log.Printf("Error: Invalid OTP")
 				return c.JSON(http.StatusForbidden, map[string]string{"error": "Invalid OTP"})
@@ -310,48 +297,41 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error finding Group: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
 		}
-		fmt.Println(g.ID)
 
-		// 查询租户信息，通过边查询获取用户关联的租户
-		tenant, err := client.Tenant.Query().Where(tenant.Name(utils.ManagementTenant)).Only(ctx)
+		// 查询租户信息
+		t, err := client.Tenant.Query().Where(tenant.NameEQ(utils.ManagementTenant)).Only(ctx)
 		if ent.IsNotFound(err) {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "Tenant not found"})
-		} else if err != nil {
-			log.Printf("Error finding tenant: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
+			t, err = client.Tenant.Query().First(ctx)
 		}
-		fmt.Println(tenant.ID)
+		if err != nil || t == nil {
+			log.Printf("Error finding tenant: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Tenant not found"})
+		}
 
 		// 获取用户的第一个角色ID
-		//role, err := us.QueryRoles().First(context.Background())
 		r, err := us.QueryRoles().First(ctx)
-
-		//role, err := us.QueryRoles().All(ctx)
 		if err != nil {
 			log.Printf("Error querying roles: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})
 		}
 
-		// 关键部分：判断是否为租户管理员
-		isTenantAdmin := strings.Contains(strings.ToLower(r.Name), "tenant_admin") // 或更精确的匹配逻辑
+		isTenantAdmin := strings.Contains(strings.ToLower(r.Name), "tenant_admin")
+		isSuperAdmin := strings.ToLower(r.Name) == "super_admin"
 
-		fmt.Println(r.ID)
-		fmt.Println(r.Name)
-		fmt.Println(r.Description)
-
-		// 生成包含租户信息的accessToken
-		accessToken, err := utils.CreateAccessToken(uuid.MustParse(us.ID), uuid.MustParse(tenant.ID), uuid.MustParse(g.ID), us.Email, us.Username, r.Name)
+		// 生成包含租户信息的 accessToken
+		accessToken, err := utils.CreateAccessToken(uuid.MustParse(us.ID), uuid.MustParse(t.ID), uuid.MustParse(g.ID), us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
-		// 生成包含租户信息的RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(uuid.MustParse(us.ID), uuid.MustParse(tenant.ID), uuid.MustParse(g.ID), us.Email, us.Username, r.Name)
+		// 生成包含租户信息的 RefreshToken
+		refreshToken, err := utils.CreateRefreshToken(uuid.MustParse(us.ID), uuid.MustParse(t.ID), uuid.MustParse(g.ID), us.Email, us.Username, r.Name)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})
 		}
-		// 将token保存在HTTP-only的cookie中，并设置相关的属性
+
+		// 将 token 保存在 HTTP-only 的 cookie 中
 		accessTokenCookie := new(http.Cookie)
 		accessTokenCookie.Name = "AccessToken"
 		accessTokenCookie.Value = accessToken
@@ -363,11 +343,10 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		accessTokenCookie.Path = "/"
 		c.SetCookie(accessTokenCookie)
 
-		// 创建另一个cookie来保存RefreshToken
 		refreshTokenCookie := new(http.Cookie)
 		refreshTokenCookie.Name = "RefreshToken"
 		refreshTokenCookie.Value = refreshToken
-		refreshTokenCookie.Expires = time.Now().Add(24 * time.Hour) // RefreshToken通常有更长的过期时间
+		refreshTokenCookie.Expires = time.Now().Add(24 * time.Hour)
 		refreshTokenCookie.SameSite = http.SameSiteNoneMode
 		refreshTokenCookie.Domain = c.Request().Host
 		refreshTokenCookie.HttpOnly = true
@@ -375,50 +354,25 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		refreshTokenCookie.Path = "/"
 		c.SetCookie(refreshTokenCookie)
 
-		// 登录成功后，保存用户的登录信息到session
-		sess, _ := handler.GetSessionStore().Get(c.Request(), "session")
-		if err != nil {
-			log.Printf("Error getting session: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error getting session"})
-		}
-		sess.Options = &sessions.Options{
-			Path:     "/",
-			MaxAge:   3600, // 设置session的过期时间
-			HttpOnly: true,
-		}
-		sess.Values["username"] = us.Username // 保存用户名到session
-		sess.Values["email"] = us.Email       // 保存用户名到session
-		err = sess.Save(c.Request(), c.Response())
-		if err != nil {
-			log.Printf("Error saving session: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error saving session"})
-		}
-
-		// 如果认证成功，设置用户和租户信息到上下文
-		//c.Set("user", us)
-		//c.Set("tenant", tenant)
-
-		//return c.JSON(http.StatusOK, map[string]string{"message": "Login successful"})
-		//return c.JSON(http.StatusOK, map[string]string{"message": "Login successful", "refreshToken": refreshToken})
-		// 返回包含用户信息的响应
 		return c.JSON(http.StatusOK,
 			map[string]interface{}{
 				"accessToken":  accessToken,
 				"refreshToken": refreshToken,
 				"user": map[string]interface{}{
 					"id":            us.ID,
-					"tenantId":      tenant.ID,
-					"groupId":     g.ID,
+					"tenantId":      t.ID,
+					"groupId":       g.ID,
 					"email":         us.Email,
 					"username":      us.Username,
 					"roleName":      r.Name,
-					"isTenantAdmin": isTenantAdmin, // 添加 isTenantAdmin 字段
+					"isTenantAdmin": isTenantAdmin,
+					"isSuperAdmin":  isSuperAdmin,
 				},
 			})
 	}
 }
 
-// ResetPassword  reset password
+// ResetPassword reset password
 func ResetPassword(client *ent.Client) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		type UserDTO struct {
@@ -441,7 +395,6 @@ func ResetPassword(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error querying user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user from database"})
 		}
-		// 使用你的方法来创建密码的哈希值
 		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
 		if err != nil {
 			log.Printf("Error hashing password: %v", err)
@@ -484,18 +437,6 @@ func LogoutUser() echo.HandlerFunc {
 		}
 		c.SetCookie(refreshTokenCookie)
 
-		// 删除Session Cookie
-		sessionCookie := &http.Cookie{
-			Name:     "session",
-			Value:    "",
-			Expires:  time.Now().Add(-1 * time.Hour),
-			SameSite: http.SameSiteNoneMode,
-			HttpOnly: true,
-			Secure:   true,
-			Path:     "/",
-		}
-		c.SetCookie(sessionCookie)
-
 		// 删除CSRF Cookie
 		csrfCookie := &http.Cookie{
 			Name:     "_csrf",
@@ -508,7 +449,6 @@ func LogoutUser() echo.HandlerFunc {
 		}
 		c.SetCookie(csrfCookie)
 
-		// 返回登出成功的响应
 		return c.JSON(http.StatusOK, map[string]string{"message": "Logout successful"})
 	}
 }

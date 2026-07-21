@@ -40,7 +40,7 @@ func Build(env, region, resourceType, name string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("urn: name must not be empty")
 	}
-	return fmt.Sprintf("%s:%s:%s:%s:%s:%s",
+	return fmt.Sprintf("%s:%s:%s:%s:%s",
 		Prefix, env, region, resourceType, name,
 	), nil
 }
@@ -137,5 +137,5 @@ func BuildResourcePattern(env, region, resourceType, name string) string {
 	if name == "" {
 		name = "*"
 	}
-	return fmt.Sprintf("%s:%s:%s:%s:%s:%s", Prefix, env, region, resourceType, name)
+	return fmt.Sprintf("%s:%s:%s:%s:%s", Prefix, env, region, resourceType, name)
 }

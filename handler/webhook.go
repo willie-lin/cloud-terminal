@@ -9,6 +9,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/user"
+	"github.com/willie-lin/cloud-terminal/pkg/crypto"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 )
 
@@ -143,9 +144,12 @@ func ConfigWebhook(client *ent.Client) echo.HandlerFunc {
 		case "ssh":
 			config.Docker.Image = "cloud-terminal/connector:latest"
 			if r.AuthData != nil {
-				if key, ok := r.AuthData["ssh_key"]; ok {
-					config.Docker.Env = map[string]string{
-						"SSH_KEY": key.(string),
+				decAuth, _ := crypto.DecryptAuthData(r.AuthData)
+				if decAuth != nil {
+					if key, ok := decAuth["ssh_key"]; ok {
+						config.Docker.Env = map[string]string{
+							"SSH_KEY": key.(string),
+						}
 					}
 				}
 			}

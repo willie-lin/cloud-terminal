@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"entgo.io/ent/privacy"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -34,4 +35,15 @@ func (AuditLog) Edges() []ent.Edge {
 
 func (AuditLog) Indexes() []ent.Index {
 	return []ent.Index{index.Fields("session_id").Unique(), index.Fields("started_at")}
+}
+
+func (AuditLog) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			privacy.AlwaysAllowRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			DenyMutationUnlessAdmin(),
+		},
+	}
 }

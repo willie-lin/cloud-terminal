@@ -174,7 +174,9 @@ func (_c *SessionCreate) Mutation() *SessionMutation {
 
 // Save creates the Session in the database.
 func (_c *SessionCreate) Save(ctx context.Context) (*Session, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -201,12 +203,18 @@ func (_c *SessionCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *SessionCreate) defaults() {
+func (_c *SessionCreate) defaults() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
+		if session.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized session.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := session.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		if session.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized session.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := session.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
@@ -219,9 +227,13 @@ func (_c *SessionCreate) defaults() {
 		_c.mutation.SetStatus(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
+		if session.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized session.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := session.DefaultID()
 		_c.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

@@ -79,12 +79,18 @@ type UserEdges struct {
 	AuditLogs []*AuditLog `json:"audit_logs,omitempty"`
 	// 直接分配给用户的策略
 	AccessPolicies []*AccessPolicy `json:"access_policies,omitempty"`
+	// 用户发起的访问申请
+	Tasks []*Task `json:"tasks,omitempty"`
+	// 用户审批的申请
+	ReviewedTasks []*Task `json:"reviewed_tasks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes         [4]bool
+	loadedTypes         [6]bool
 	namedRoles          map[string][]*Role
 	namedAuditLogs      map[string][]*AuditLog
 	namedAccessPolicies map[string][]*AccessPolicy
+	namedTasks          map[string][]*Task
+	namedReviewedTasks  map[string][]*Task
 }
 
 // GroupOrErr returns the Group value or an error if the edge
@@ -123,6 +129,24 @@ func (e UserEdges) AccessPoliciesOrErr() ([]*AccessPolicy, error) {
 		return e.AccessPolicies, nil
 	}
 	return nil, &NotLoadedError{edge: "access_policies"}
+}
+
+// TasksOrErr returns the Tasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TasksOrErr() ([]*Task, error) {
+	if e.loadedTypes[4] {
+		return e.Tasks, nil
+	}
+	return nil, &NotLoadedError{edge: "tasks"}
+}
+
+// ReviewedTasksOrErr returns the ReviewedTasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReviewedTasksOrErr() ([]*Task, error) {
+	if e.loadedTypes[5] {
+		return e.ReviewedTasks, nil
+	}
+	return nil, &NotLoadedError{edge: "reviewed_tasks"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -333,6 +357,16 @@ func (_m *User) QueryAccessPolicies() *AccessPolicyQuery {
 	return NewUserClient(_m.config).QueryAccessPolicies(_m)
 }
 
+// QueryTasks queries the "tasks" edge of the User entity.
+func (_m *User) QueryTasks() *TaskQuery {
+	return NewUserClient(_m.config).QueryTasks(_m)
+}
+
+// QueryReviewedTasks queries the "reviewed_tasks" edge of the User entity.
+func (_m *User) QueryReviewedTasks() *TaskQuery {
+	return NewUserClient(_m.config).QueryReviewedTasks(_m)
+}
+
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -490,6 +524,54 @@ func (_m *User) appendNamedAccessPolicies(name string, edges ...*AccessPolicy) {
 		_m.Edges.namedAccessPolicies[name] = []*AccessPolicy{}
 	} else {
 		_m.Edges.namedAccessPolicies[name] = append(_m.Edges.namedAccessPolicies[name], edges...)
+	}
+}
+
+// NamedTasks returns the Tasks named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedTasks(name string) ([]*Task, error) {
+	if _m.Edges.namedTasks == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedTasks[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedTasks(name string, edges ...*Task) {
+	if _m.Edges.namedTasks == nil {
+		_m.Edges.namedTasks = make(map[string][]*Task)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedTasks[name] = []*Task{}
+	} else {
+		_m.Edges.namedTasks[name] = append(_m.Edges.namedTasks[name], edges...)
+	}
+}
+
+// NamedReviewedTasks returns the ReviewedTasks named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedReviewedTasks(name string) ([]*Task, error) {
+	if _m.Edges.namedReviewedTasks == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedReviewedTasks[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedReviewedTasks(name string, edges ...*Task) {
+	if _m.Edges.namedReviewedTasks == nil {
+		_m.Edges.namedReviewedTasks = make(map[string][]*Task)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedReviewedTasks[name] = []*Task{}
+	} else {
+		_m.Edges.namedReviewedTasks[name] = append(_m.Edges.namedReviewedTasks[name], edges...)
 	}
 }
 

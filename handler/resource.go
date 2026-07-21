@@ -1,15 +1,17 @@
 package handler
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/pkg/crypto"
 	"github.com/willie-lin/cloud-terminal/viewer"
-	"net/http"
-	"strings"
 )
 
 type ResourceCreateDTO struct {
@@ -24,6 +26,7 @@ type ResourceCreateDTO struct {
 	Status      string                 `json:"status"`
 	Details     map[string]interface{} `json:"details"`
 	AuthData    map[string]interface{} `json:"auth_data"`
+	HostKey     string                 `json:"host_key"`
 }
 
 type ResourceUpdateDTO struct {
@@ -38,6 +41,7 @@ type ResourceUpdateDTO struct {
 	Status      *string                 `json:"status"`
 	Details     *map[string]interface{} `json:"details"`
 	AuthData    *map[string]interface{} `json:"auth_data"`
+	HostKey     *string                `json:"host_key"`
 }
 
 // CreateResource creates a new resource under the viewer's tenant
@@ -89,7 +93,15 @@ func CreateResource(client *ent.Client) echo.HandlerFunc {
 			creator.SetDetails(dto.Details)
 		}
 		if dto.AuthData != nil {
-			creator.SetAuthData(dto.AuthData)
+			encAuth, err := crypto.EncryptAuthData(dto.AuthData)
+			if err != nil {
+				log.Printf("Error encrypting auth_data: %v", err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to encrypt sensitive data"})
+			}
+			creator.SetAuthData(encAuth)
+		}
+		if dto.HostKey != "" {
+			creator.SetHostKey(dto.HostKey)
 		}
 
 		r, err := creator.Save(c.Request().Context())
@@ -216,7 +228,15 @@ func UpdateResource(client *ent.Client) echo.HandlerFunc {
 			updater.SetDetails(*dto.Details)
 		}
 		if dto.AuthData != nil {
-			updater.SetAuthData(*dto.AuthData)
+			encAuth, err := crypto.EncryptAuthData(*dto.AuthData)
+			if err != nil {
+				log.Printf("Error encrypting auth_data: %v", err)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to encrypt sensitive data"})
+			}
+			updater.SetAuthData(encAuth)
+		}
+		if dto.HostKey != nil {
+			updater.SetHostKey(*dto.HostKey)
 		}
 
 		r, err := updater.Save(c.Request().Context())

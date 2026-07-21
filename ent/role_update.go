@@ -328,7 +328,9 @@ func (_u *RoleUpdate) ClearPermissionsBoundary() *RoleUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *RoleUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -355,11 +357,15 @@ func (_u *RoleUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *RoleUpdate) defaults() {
+func (_u *RoleUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if role.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized role.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := role.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -982,7 +988,9 @@ func (_u *RoleUpdateOne) Select(field string, fields ...string) *RoleUpdateOne {
 
 // Save executes the query and returns the updated Role entity.
 func (_u *RoleUpdateOne) Save(ctx context.Context) (*Role, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -1009,11 +1017,15 @@ func (_u *RoleUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *RoleUpdateOne) defaults() {
+func (_u *RoleUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		if role.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized role.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := role.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

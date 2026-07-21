@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
@@ -10,6 +9,8 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent"
 	
 	"github.com/willie-lin/cloud-terminal/ent/user"
+	"github.com/willie-lin/cloud-terminal/ent/role"
+
 	"github.com/willie-lin/cloud-terminal/viewer"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"io"
@@ -29,23 +30,25 @@ const (
 	Blocked
 )
 
-// CreateUser 创建一个新用户
+// CreateUser 创建一个新用户（由管理员创建，自动关联到管理员所属租户）
 func CreateUser(client *ent.Client) echo.HandlerFunc {
 	return func(c *echo.Context) (err error) {
-		// 从请求上下文中获取租户ID,
 		v := viewer.FromContext(c.Request().Context())
 		if v == nil {
 			log.Printf("No viewer found in context or not authorized")
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
+		isSuperAdmin := v.RoleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(v.RoleName), "tenant_admin")
+		if !isSuperAdmin && !isTenantAdmin {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only admins can create users"})
+		}
 
 		type UserDTO struct {
-			Email    string    `json:"email"`
-			Password string    `json:"password"`
-			RoleID   uuid.UUID `json:"roleID"`
-			Online   bool      `json:"online"`
-			Status   bool      `json:"status"`
+			Email    string `json:"email"`
+			Password string `json:"password"`
+			Username string `json:"username"`
 		}
 
 		dto := new(UserDTO)
@@ -53,29 +56,102 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
+		if dto.Email == "" || dto.Password == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email and password are required"})
+		}
+		if dto.Username == "" {
+			dto.Username = utils.GenerateUsername()
+		}
 
-		// 使用你的方法来创建密码的哈希值
 		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
 		if err != nil {
 			log.Printf("Error hashing password: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		// 创建用户并分配默认角色
 		us, err := client.User.Create().
 			SetEmail(dto.Email).
-			SetUsername(utils.GenerateUsername()).
+			SetUsername(dto.Username).
 			SetPassword(string(hashedPassword)).
-			AddRoleIDs(dto.RoleID.String()).
-			
-			SetOnline(dto.Online).
-			SetStatus(dto.Status).
+			SetTenantID(v.TenantID.String()).
+			SetOnline(true).
+			SetStatus(true).
 			Save(c.Request().Context())
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
 		}
-		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID})
+		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID, "username": us.Username})
+	}
+}
+
+// CreateTenantAdmin 超管为指定租户创建管理员账号
+func CreateTenantAdmin(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+		if v.RoleName != "super_admin" {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only super admins can create tenant admin"})
+		}
+
+		tenantID := c.Param("id")
+		if _, err := uuid.Parse(tenantID); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid tenant ID"})
+		}
+
+		type AdminDTO struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+			Username string `json:"username"`
+		}
+		dto := new(AdminDTO)
+		if err := c.Bind(dto); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+		if dto.Email == "" || dto.Password == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email and password are required"})
+		}
+		if dto.Username == "" {
+			dto.Username = utils.GenerateUsername()
+		}
+
+		// 查找 tenant_admin 角色
+		tenantAdminRole, err := client.Role.Query().Where(role.NameEQ("tenant_admin")).Only(c.Request().Context())
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "tenant_admin role not found, run init first"})
+			}
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role"})
+		}
+
+		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
+		if err != nil {
+			log.Printf("Error hashing password: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
+		}
+
+		us, err := client.User.Create().
+			SetEmail(dto.Email).
+			SetUsername(dto.Username).
+			SetPassword(string(hashedPassword)).
+			SetTenantID(tenantID).
+			AddRoleIDs(tenantAdminRole.ID).
+			SetOnline(true).
+			SetStatus(true).
+			Save(c.Request().Context())
+		if err != nil {
+			log.Printf("Error creating tenant admin: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating tenant admin"})
+		}
+
+		return c.JSON(http.StatusCreated, map[string]interface{}{
+			"userID":   us.ID,
+			"username": us.Username,
+			"email":    us.Email,
+			"role":     "tenant_admin",
+		})
 	}
 }
 
@@ -401,31 +477,120 @@ func UpdateUserInfo(client *ent.Client) echo.HandlerFunc {
 
 func UpdateUserByUUID(client *ent.Client) echo.HandlerFunc {
 	return func(c *echo.Context) error {
-		u := new(ent.User)
-		if err := c.Bind(&u); err != nil {
-			log.Printf("Error binding user: %v", err)
-			return c.JSON(http.StatusBadRequest, err.Error())
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
-		idParam := c.Param("id")
-		id, err := uuid.Parse(idParam)
-		if err != nil {
-			log.Printf("Invalid UUID: %v", err)
-			return c.JSON(http.StatusBadRequest, "Invalid UUID")
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
 		}
 
-		ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
-		defer cancel()
+		type UserPatchDTO struct {
+			Nickname    *string                `json:"nickname"`
+			Bio         *string                `json:"bio"`
+			PhoneNumber *string                `json:"phone_number"`
+			Avatar      *string                `json:"avatar"`
+			Online      *bool                  `json:"online"`
+			Status      *bool                  `json:"status"`
+			SSHPublicKey *string               `json:"ssh_public_key"`
+			Attributes  *map[string]interface{} `json:"attributes"`
+		}
 
-		user, err := client.User.UpdateOneID(id.String()).SetEmail(u.Email).SetNickname(u.Nickname).Save(ctx)
+		dto := new(UserPatchDTO)
+		if err := c.Bind(dto); err != nil {
+			log.Printf("Error binding user update: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
+		}
+
+		updater := client.User.UpdateOneID(id)
+		if dto.Nickname != nil {
+			updater.SetNickname(*dto.Nickname)
+		}
+		if dto.Bio != nil {
+			updater.SetBio(*dto.Bio)
+		}
+		if dto.PhoneNumber != nil {
+			updater.SetPhoneNumber(*dto.PhoneNumber)
+		}
+		if dto.Avatar != nil {
+			updater.SetAvatar(*dto.Avatar)
+		}
+		if dto.Online != nil {
+			updater.SetOnline(*dto.Online)
+		}
+		if dto.Status != nil {
+			updater.SetStatus(*dto.Status)
+		}
+		if dto.SSHPublicKey != nil {
+			updater.SetSSHPublicKey(*dto.SSHPublicKey)
+		}
+		if dto.Attributes != nil {
+			updater.SetAttributes(*dto.Attributes)
+		}
+
+		user, err := updater.Save(c.Request().Context())
 		if ent.IsNotFound(err) {
-			log.Printf("User not found: %v", err)
-			return c.JSON(http.StatusNotFound, "User not found")
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
 			log.Printf("Error updating user: %v", err)
-			return c.JSON(http.StatusInternalServerError, "Error updating user")
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
 		}
 		return c.JSON(http.StatusOK, user)
+	}
+}
+
+// ==================== RESTful ID-based handlers ====================
+
+// GetUserByID gets a single user by ID
+func GetUserByID(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		}
+		u, err := client.User.Query().
+			Where(user.IDEQ(id)).
+			Only(c.Request().Context())
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		}
+		if err != nil {
+			log.Printf("Error querying user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying user"})
+		}
+		return c.JSON(http.StatusOK, u)
+	}
+}
+
+// DeleteUserByID deletes a user by ID
+func DeleteUserByID(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+		isSuperAdmin := v.RoleName == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(v.RoleName), "tenant_admin")
+		if !isSuperAdmin && !isTenantAdmin {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Only admins can delete users"})
+		}
+
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		}
+
+		err := client.User.DeleteOneID(id).Exec(c.Request().Context())
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		}
+		if err != nil {
+			log.Printf("Error deleting user: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete user"})
+		}
+		return c.NoContent(http.StatusNoContent)
 	}
 }

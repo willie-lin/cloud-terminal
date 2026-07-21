@@ -15,6 +15,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/auditlog"
 	"github.com/willie-lin/cloud-terminal/ent/resource"
+	"github.com/willie-lin/cloud-terminal/ent/task"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 )
 
@@ -168,6 +169,20 @@ func (_c *ResourceCreate) SetAuthData(v map[string]interface{}) *ResourceCreate 
 	return _c
 }
 
+// SetHostKey sets the "host_key" field.
+func (_c *ResourceCreate) SetHostKey(v string) *ResourceCreate {
+	_c.mutation.SetHostKey(v)
+	return _c
+}
+
+// SetNillableHostKey sets the "host_key" field if the given value is not nil.
+func (_c *ResourceCreate) SetNillableHostKey(v *string) *ResourceCreate {
+	if v != nil {
+		_c.SetHostKey(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ResourceCreate) SetID(v string) *ResourceCreate {
 	_c.mutation.SetID(v)
@@ -231,6 +246,21 @@ func (_c *ResourceCreate) AddPolicies(v ...*AccessPolicy) *ResourceCreate {
 	return _c.AddPolicyIDs(ids...)
 }
 
+// AddTaskIDs adds the "tasks" edge to the Task entity by IDs.
+func (_c *ResourceCreate) AddTaskIDs(ids ...string) *ResourceCreate {
+	_c.mutation.AddTaskIDs(ids...)
+	return _c
+}
+
+// AddTasks adds the "tasks" edges to the Task entity.
+func (_c *ResourceCreate) AddTasks(v ...*Task) *ResourceCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddTaskIDs(ids...)
+}
+
 // Mutation returns the ResourceMutation object of the builder.
 func (_c *ResourceCreate) Mutation() *ResourceMutation {
 	return _c.mutation
@@ -238,7 +268,9 @@ func (_c *ResourceCreate) Mutation() *ResourceMutation {
 
 // Save creates the Resource in the database.
 func (_c *ResourceCreate) Save(ctx context.Context) (*Resource, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -265,12 +297,18 @@ func (_c *ResourceCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *ResourceCreate) defaults() {
+func (_c *ResourceCreate) defaults() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
+		if resource.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized resource.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := resource.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		if resource.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized resource.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := resource.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
@@ -295,9 +333,13 @@ func (_c *ResourceCreate) defaults() {
 		_c.mutation.SetStatus(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
+		if resource.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized resource.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := resource.DefaultID()
 		_c.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -451,6 +493,10 @@ func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 		_spec.SetField(resource.FieldAuthData, field.TypeJSON, value)
 		_node.AuthData = value
 	}
+	if value, ok := _c.mutation.HostKey(); ok {
+		_spec.SetField(resource.FieldHostKey, field.TypeString, value)
+		_node.HostKey = value
+	}
 	if nodes := _c.mutation.TenantIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -498,6 +544,23 @@ func (_c *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 			},
 		}
 		edge.Schema = _c.schemaConfig.ResourcePolicies
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.TasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resource.TasksTable,
+			Columns: []string{resource.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeString),
+			},
+		}
+		edge.Schema = _c.schemaConfig.Task
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -720,6 +783,24 @@ func (u *ResourceUpsert) UpdateAuthData() *ResourceUpsert {
 // ClearAuthData clears the value of the "auth_data" field.
 func (u *ResourceUpsert) ClearAuthData() *ResourceUpsert {
 	u.SetNull(resource.FieldAuthData)
+	return u
+}
+
+// SetHostKey sets the "host_key" field.
+func (u *ResourceUpsert) SetHostKey(v string) *ResourceUpsert {
+	u.Set(resource.FieldHostKey, v)
+	return u
+}
+
+// UpdateHostKey sets the "host_key" field to the value that was provided on create.
+func (u *ResourceUpsert) UpdateHostKey() *ResourceUpsert {
+	u.SetExcluded(resource.FieldHostKey)
+	return u
+}
+
+// ClearHostKey clears the value of the "host_key" field.
+func (u *ResourceUpsert) ClearHostKey() *ResourceUpsert {
+	u.SetNull(resource.FieldHostKey)
 	return u
 }
 
@@ -967,6 +1048,27 @@ func (u *ResourceUpsertOne) UpdateAuthData() *ResourceUpsertOne {
 func (u *ResourceUpsertOne) ClearAuthData() *ResourceUpsertOne {
 	return u.Update(func(s *ResourceUpsert) {
 		s.ClearAuthData()
+	})
+}
+
+// SetHostKey sets the "host_key" field.
+func (u *ResourceUpsertOne) SetHostKey(v string) *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetHostKey(v)
+	})
+}
+
+// UpdateHostKey sets the "host_key" field to the value that was provided on create.
+func (u *ResourceUpsertOne) UpdateHostKey() *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateHostKey()
+	})
+}
+
+// ClearHostKey clears the value of the "host_key" field.
+func (u *ResourceUpsertOne) ClearHostKey() *ResourceUpsertOne {
+	return u.Update(func(s *ResourceUpsert) {
+		s.ClearHostKey()
 	})
 }
 
@@ -1381,6 +1483,27 @@ func (u *ResourceUpsertBulk) UpdateAuthData() *ResourceUpsertBulk {
 func (u *ResourceUpsertBulk) ClearAuthData() *ResourceUpsertBulk {
 	return u.Update(func(s *ResourceUpsert) {
 		s.ClearAuthData()
+	})
+}
+
+// SetHostKey sets the "host_key" field.
+func (u *ResourceUpsertBulk) SetHostKey(v string) *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.SetHostKey(v)
+	})
+}
+
+// UpdateHostKey sets the "host_key" field to the value that was provided on create.
+func (u *ResourceUpsertBulk) UpdateHostKey() *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.UpdateHostKey()
+	})
+}
+
+// ClearHostKey clears the value of the "host_key" field.
+func (u *ResourceUpsertBulk) ClearHostKey() *ResourceUpsertBulk {
+	return u.Update(func(s *ResourceUpsert) {
+		s.ClearHostKey()
 	})
 }
 

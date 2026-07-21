@@ -7,7 +7,6 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/group"
-	"github.com/willie-lin/cloud-terminal/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
@@ -169,12 +168,11 @@ import (
 //}
 
 func InitSuperAdminAndSuperRoles(client *ent.Client) error {
-	// 使用 privacy.DecisionContext 跳过隐私检查
-	ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 	var err error // 或者其他你想要的默认平台名称
 	platformName := utils.PlatformName
 
 	tenantName := utils.ManagementTenant
+	ctx := context.Background()
 	_, err = client.Tenant.Query().Where(tenant.NameEQ(tenantName)).Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return err
@@ -204,9 +202,9 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 		if err != nil {
 			return err
 		}
-		log.Print("Created default tenant for %s platform", platformName)
+		log.Printf("Created default tenant for %s platform", platformName)
 	} else {
-		log.Print("Default tenant already exists for %s platform.", platformName)
+		log.Printf("Default tenant already exists for %s platform.", platformName)
 	}
 
 	// 3. 检查或创建 "system" Group
@@ -248,7 +246,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 			}
 			// Group no longer directly holds roles
 			if err != nil {
-				return fmt.Errorf("关联 system 账户和 role %s 角色失败: %w", err)
+				return fmt.Errorf("关联 system 账户和 role %s 角色失败: %w", roleName, err)
 			}
 			log.Printf("Created role: %s (ID: %v)", r.Name, r.ID)
 		} else {

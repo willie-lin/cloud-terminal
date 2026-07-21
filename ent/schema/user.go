@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"entgo.io/ent/privacy"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -43,6 +44,20 @@ func (User) Edges() []ent.Edge {
 		edge.To("roles", Role.Type).Comment("用户可 Assume 的角色"),
 		edge.To("audit_logs", AuditLog.Type).Comment("用户的审计日志"),
 		edge.To("access_policies", AccessPolicy.Type).Comment("直接分配给用户的策略"),
+		edge.To("tasks", Task.Type).Comment("用户发起的访问申请"),
+		edge.To("reviewed_tasks", Task.Type).Comment("用户审批的申请"),
+	}
+}
+
+
+func (User) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			privacy.AlwaysAllowRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			DenyMutationUnlessAdmin(),
+		},
 	}
 }
 

@@ -13,7 +13,10 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"github.com/willie-lin/cloud-terminal/ent"
-	"github.com/willie-lin/cloud-terminal/ent/resource"
+	entresource "github.com/willie-lin/cloud-terminal/ent/resource"
+	entsession "github.com/willie-lin/cloud-terminal/ent/session"
+	"github.com/willie-lin/cloud-terminal/pkg/connector"
+	"github.com/willie-lin/cloud-terminal/pkg/crypto"
 	"github.com/willie-lin/cloud-terminal/pkg/sts"
 )
 
@@ -30,9 +33,11 @@ var upgrader = websocket.Upgrader{
 // ─── WebSocket 终端 Handler ─────────────────────────────────────
 
 // TerminalWebSocket 处理 WebSocket 终端连接
-// 流程：验证 JWT → 查询资源 → 建立 SSH 隧道 → 双向转发
+// 流程：验证 JWT → 检查资源 → 记录 Session+AuditLog → 建立 SSH 隧道 → 双向转发 → 关闭时更新记录
 func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.HandlerFunc {
 	return func(c *echo.Context) error {
+		ctx := c.Request().Context()
+
 		// 1. 获取 URN 参数
 		urn := c.QueryParam("urn")
 		if urn == "" {
@@ -42,7 +47,6 @@ func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.Handler
 		// 2. 验证 JWT
 		tokenStr := c.QueryParam("token")
 		if tokenStr == "" {
-			// 也尝试从 Authorization header 获取
 			tokenStr = c.Request().Header.Get("Authorization")
 			if len(tokenStr) > 7 && tokenStr[:7] == "Bearer " {
 				tokenStr = tokenStr[7:]
@@ -66,10 +70,10 @@ func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.Handler
 			return c.String(http.StatusForbidden, "token URN mismatch")
 		}
 
-		// 3. 查询资源
+		// 3. 查询资源并检查状态
 		r, err := client.Resource.Query().
-			Where(resource.Urn(urn)).
-			Only(c.Request().Context())
+			Where(entresource.Urn(urn)).
+			Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return c.String(http.StatusNotFound, "resource not found")
@@ -77,42 +81,132 @@ func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.Handler
 			log.Printf("Terminal: query resource error: %v", err)
 			return c.String(http.StatusInternalServerError, "query resource error")
 		}
+		if r.Status == entresource.StatusInactive {
+			log.Printf("Terminal: resource %s is inactive", urn)
+			return c.String(http.StatusForbidden, "resource is inactive")
+		}
 
-		// 4. 升级为 WebSocket
+		// 4. 记录 Session 开始
+		now := time.Now()
+		remoteAddr := c.Request().RemoteAddr
+
+		sessionRec, err := client.Session.Create().
+			SetSessionID(claims.SessionID).
+			SetPrincipalUrn("urn:ct::user:" + claims.UserID).
+			SetResourceUrn(urn).
+			SetMode(entsession.ModeProxy).
+			SetStatus(entsession.StatusActive).
+			SetStartedAt(now).
+			SetRemoteAddress(remoteAddr).
+			Save(ctx)
+		if err != nil {
+			log.Printf("Terminal: create session record error: %v", err)
+			// non-fatal: continue even if session logging fails
+		}
+
+		// 5. 记录审计日志开始
+		auditRec, err := client.AuditLog.Create().
+			SetSessionID(claims.SessionID).
+			SetUsername(claims.Subject).
+			SetAction("resource:connect").
+			SetResult("success").
+			SetStartedAt(now).
+			SetResourceUrnSnapshot(urn).
+			SetDetail(map[string]interface{}{
+				"resource_ip":   r.IP,
+				"resource_port": r.Port,
+				"resource_type": r.Type,
+				"remote_addr":   remoteAddr,
+			}).
+			Save(ctx)
+		if err != nil {
+			log.Printf("Terminal: create audit log error: %v", err)
+		}
+
+		// 6. 升级为 WebSocket
 		conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
 			log.Printf("Terminal: upgrade error: %v", err)
+			// 回滚 session 记录
+			if sessionRec != nil {
+				client.Session.UpdateOneID(sessionRec.ID).SetStatus(entsession.StatusError).Save(ctx)
+			}
 			return err
 		}
 
-		// 5. 建立 SSH 连接
-		sshClient, err := dialSSH(r.IP, r.Port, r.AuthData)
+		// 7. 解密敏感认证信息并建立连接
+		decAuth, err := crypto.DecryptAuthData(r.AuthData)
 		if err != nil {
-			log.Printf("Terminal: ssh dial error: %v", err)
-			conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("SSH connection failed: %v\n", err)))
+			log.Printf("Terminal: decrypt auth_data error: %v", err)
+			conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Credential decryption failed: %v\n", err)))
+			if sessionRec != nil {
+				client.Session.UpdateOneID(sessionRec.ID).SetStatus(entsession.StatusError).SetEndedAt(time.Now()).Save(ctx)
+			}
+			if auditRec != nil {
+				client.AuditLog.UpdateOneID(auditRec.ID).SetResult("failure").SetEndedAt(time.Now()).Save(ctx)
+			}
 			conn.Close()
 			return nil
 		}
-		defer sshClient.Close()
 
-		// 6. 打开 SSH session
+		directConn := connector.NewDirectConnector()
+		connHandle, err := directConn.Connect(ctx, &connector.ConnectRequest{
+			SessionID:       claims.SessionID,
+			ResourceURN:     urn,
+			Protocol:        string(r.Type),
+			Target: connector.TargetInfo{
+				Host:    r.IP,
+				Port:    r.Port,
+				HostKey: r.HostKey,
+			},
+			AuthData:        decAuth,
+			ResourceDetails: r.Details,
+		})
+		if err != nil {
+			log.Printf("Terminal: connector dial error: %v", err)
+			conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Connection failed: %v\n", err)))
+			if sessionRec != nil {
+				client.Session.UpdateOneID(sessionRec.ID).SetStatus(entsession.StatusError).SetEndedAt(time.Now()).Save(ctx)
+			}
+			if auditRec != nil {
+				client.AuditLog.UpdateOneID(auditRec.ID).SetResult("failure").SetEndedAt(time.Now()).Save(ctx)
+			}
+			conn.Close()
+			return nil
+		}
+		defer connHandle.Close()
+
+		sshClient := connHandle.SSHClient()
+		if sshClient == nil {
+			conn.WriteMessage(websocket.TextMessage, []byte("SSH client is nil\n"))
+			conn.Close()
+			return nil
+		}
+
+		// 8. 打开 SSH session
 		session, err := sshClient.NewSession()
 		if err != nil {
 			log.Printf("Terminal: ssh session error: %v", err)
 			conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("SSH session failed: %v\n", err)))
+			if sessionRec != nil {
+				client.Session.UpdateOneID(sessionRec.ID).SetStatus(entsession.StatusError).SetEndedAt(time.Now()).Save(ctx)
+			}
+			if auditRec != nil {
+				client.AuditLog.UpdateOneID(auditRec.ID).SetResult("failure").SetEndedAt(time.Now()).Save(ctx)
+			}
 			conn.Close()
 			return nil
 		}
 		defer session.Close()
 
-		// 7. 设置终端模式
+		// 9. 设置终端模式
 		session.RequestPty("xterm-256color", 40, 80, ssh.TerminalModes{
 			ssh.ECHO:          1,
 			ssh.TTY_OP_ISPEED: 14400,
 			ssh.TTY_OP_OSPEED: 14400,
 		})
 
-		// 8. 获取 SSH 管道
+		// 10. 获取 SSH 管道
 		stdin, err := session.StdinPipe()
 		if err != nil {
 			log.Printf("Terminal: stdin pipe error: %v", err)
@@ -129,15 +223,21 @@ func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.Handler
 			return nil
 		}
 
-		// 9. 启动 shell
+		// 11. 启动 shell
 		if err := session.Shell(); err != nil {
 			log.Printf("Terminal: shell error: %v", err)
 			conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Shell failed: %v\n", err)))
+			if sessionRec != nil {
+				client.Session.UpdateOneID(sessionRec.ID).SetStatus(entsession.StatusError).SetEndedAt(time.Now()).Save(ctx)
+			}
+			if auditRec != nil {
+				client.AuditLog.UpdateOneID(auditRec.ID).SetResult("failure").SetEndedAt(time.Now()).Save(ctx)
+			}
 			conn.Close()
 			return nil
 		}
 
-		// 10. 双向数据转发
+		// 12. 双向数据转发
 		errChan := make(chan error, 3)
 
 		// SSH → WebSocket
@@ -177,59 +277,22 @@ func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.Handler
 		// 等待任一方向出错或关闭
 		<-errChan
 
+		// 13. 更新 Session 和审计记录为已关闭
+		endTime := time.Now()
+		if sessionRec != nil {
+			client.Session.UpdateOneID(sessionRec.ID).
+				SetStatus(entsession.StatusClosed).
+				SetEndedAt(endTime).
+				Save(ctx)
+		}
+		if auditRec != nil {
+			client.AuditLog.UpdateOneID(auditRec.ID).
+				SetEndedAt(endTime).
+				Save(ctx)
+		}
+
 		return nil
 	}
-}
-
-// ─── SSH 拨号 ─────────────────────────────────────────────────
-
-// dialSSH 使用资源认证信息建立 SSH 连接
-func dialSSH(ip string, port int, authData map[string]interface{}) (*ssh.Client, error) {
-	addr := fmt.Sprintf("%s:%d", ip, port)
-
-	// 从 authData 提取认证信息
-	username := "root"
-	password := ""
-	privateKey := ""
-
-	if authData != nil {
-		if u, ok := authData["username"].(string); ok && u != "" {
-			username = u
-		}
-		if p, ok := authData["password"].(string); ok && p != "" {
-			password = p
-		}
-		if k, ok := authData["ssh_key"].(string); ok && k != "" {
-			privateKey = k
-		}
-	}
-
-	// 构建认证方法
-	var auths []ssh.AuthMethod
-
-	if privateKey != "" {
-		signer, err := ssh.ParsePrivateKey([]byte(privateKey))
-		if err == nil {
-			auths = append(auths, ssh.PublicKeys(signer))
-		}
-	}
-
-	if password != "" {
-		auths = append(auths, ssh.Password(password))
-	}
-
-	if len(auths) == 0 {
-		return nil, fmt.Errorf("no authentication method available for %s", addr)
-	}
-
-	config := &ssh.ClientConfig{
-		User:            username,
-		Auth:            auths,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // 开发环境跳过主机密钥检查
-		Timeout:         10 * time.Second,
-	}
-
-	return ssh.Dial("tcp", addr, config)
 }
 
 // ─── 消息类型 ─────────────────────────────────────────────────

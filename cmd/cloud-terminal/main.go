@@ -114,7 +114,6 @@ func main() {
 	}))
 
 	e.Static("/picture", "picture")
-	handler.InitSessionStore()
 	e.Use(utils.SetCSRFToken)
 
 	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
@@ -180,6 +179,9 @@ func main() {
 	e.GET("/api/terminal", handler.TerminalWebSocket(client, stsService))
 
 	// ContainerSSH v2 Webhook（集成 STS + IAM）
+
+	// Task handler
+	taskHandler := handler.NewTaskHandler(client, stsService)
 	csshHandler := handler.NewContainerSSHHandler(client, stsService, iamEvaluator)
 	e.POST("/webhook/v2/auth", csshHandler.AuthWebhookV2())
 	e.POST("/webhook/v2/config", csshHandler.ConfigWebhookV2())
@@ -191,55 +193,79 @@ func main() {
 
 	r.POST("/enable-2fa", handler.Enable2FA(client))
 	r.POST("/confirm-2FA", handler.Confirm2FA(client))
+	r.POST("/disable-2fa", handler.Disable2FA(client))
+	r.POST("/reset-2fa", handler.Reset2FA(client))
 	r.POST("/uploads", handler.UploadFile())
-	r.GET("/users", handler.GetAllUsersByTenant(client))
-	r.POST("/user/email", handler.GetUserByEmail(client))
 	r.POST("/edit-userinfo", handler.UpdateUserInfo(client))
-	r.POST("/add-user", handler.CreateUser(client))
-	r.POST("/update-user", handler.UpdateUser(client))
-	r.POST("/delete-user", handler.DeleteUserByUsername(client))
-	r.GET("/roles", handler.GetAllRolesByAccountByTenant(client))
-	r.POST("/add-role", handler.CreateRole(client))
-	r.POST("/delete-role", handler.DeleteRoleByName(client))
 	r.POST("/check-role-name", handler.CheckRoleName(client))
+
+	// === User ===
+	r.GET("/users", handler.GetAllUsersByTenant(client))
+	r.POST("/users", handler.CreateUser(client))
+	r.GET("/users/:id", handler.GetUserByID(client))
+	r.PUT("/users/:id", handler.UpdateUserByUUID(client))
+	r.DELETE("/users/:id", handler.DeleteUserByID(client))
+
+	// === Role ===
+	r.GET("/roles", handler.GetAllRolesByAccountByTenant(client))
+	r.POST("/roles", handler.CreateRole(client))
 	r.GET("/roles/:id", handler.GetRole(client))
 	r.PUT("/roles/:id", handler.UpdateRole(client))
+	r.DELETE("/roles/:id", handler.DeleteRoleByID(client))
+
+	// === AccessPolicy ===
 	r.GET("/access-policies", handler.GetAllAccessPolicyByAccountByTenant(client))
 	r.GET("/access-policies/:id", handler.GetAccessPolicy(client))
 	r.POST("/access-policies", handler.CreateAccessPolicy(client))
 	r.PUT("/access-policies/:id", handler.UpdateAccessPolicy(client))
 	r.DELETE("/access-policies/:id", handler.DeleteAccessPolicy(client))
-	r.POST("/tenants", handler.CreateTenant(client))
-	r.GET("/audit-logs", handler.ListAuditLogs(client))
-	r.GET("/audit-logs/:id", handler.GetAuditLog(client))
-	r.GET("/tenants/:id", handler.GetTenantByName(client))
 
-	// Resource routes
+	// === Tenant ===
+	r.GET("/tenants", handler.ListTenants(client))
+	r.POST("/tenants", handler.CreateTenant(client))
+	r.GET("/tenants/:id", handler.GetTenantByID(client))
+	r.PUT("/tenants/:id", handler.UpdateTenant(client))
+	r.DELETE("/tenants/:id", handler.DeleteTenantByID(client))
+	r.POST("/tenants/:id/admin-user", handler.CreateTenantAdmin(client))
+
+	// === Resource ===
 	r.GET("/resources", handler.ListResources(client))
-	r.GET("/resources/:id", handler.GetResource(client))
 	r.POST("/resources", handler.CreateResource(client))
+	r.GET("/resources/:id", handler.GetResource(client))
 	r.PUT("/resources/:id", handler.UpdateResource(client))
 	r.DELETE("/resources/:id", handler.DeleteResource(client))
 
-	// Group routes
+	// === Group ===
 	r.GET("/groups", handler.ListGroups(client))
-	r.GET("/groups/:id", handler.GetGroup(client))
 	r.POST("/groups", handler.CreateGroup(client))
+	r.GET("/groups/:id", handler.GetGroup(client))
 	r.PUT("/groups/:id", handler.UpdateGroup(client))
 	r.DELETE("/groups/:id", handler.DeleteGroup(client))
 
-	// Environment routes
+	// === Environment ===
 	r.GET("/environments", handler.ListEnvironments(client))
-	r.GET("/environments/:id", handler.GetEnvironment(client))
 	r.POST("/environments", handler.CreateEnvironment(client))
+	r.GET("/environments/:id", handler.GetEnvironment(client))
 	r.PUT("/environments/:id", handler.UpdateEnvironment(client))
 	r.DELETE("/environments/:id", handler.DeleteEnvironment(client))
 
-	// Session routes
+	// === Session ===
 	r.GET("/sessions", handler.ListSessions(client))
 	r.GET("/sessions/:id", handler.GetSession(client))
 	r.PUT("/sessions/:id", handler.UpdateSession(client))
 	r.DELETE("/sessions/:id", handler.DeleteSession(client))
+
+	// === AuditLog ===
+	r.GET("/audit-logs", handler.ListAuditLogs(client))
+	r.GET("/audit-logs/:id", handler.GetAuditLog(client))
+
+	// === Task ===
+	r.POST("/tasks", taskHandler.Create())
+	r.GET("/tasks", taskHandler.List())
+	r.GET("/tasks/:id", taskHandler.Get())
+	r.PUT("/tasks/:id/approve", taskHandler.Approve())
+	r.PUT("/tasks/:id/reject", taskHandler.Reject())
+	r.DELETE("/tasks/:id", taskHandler.Delete())
 
 	// 8. 启动服务
 	go func() {

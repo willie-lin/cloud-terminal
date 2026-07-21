@@ -23,6 +23,7 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent/resource"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/session"
+	"github.com/willie-lin/cloud-terminal/ent/task"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 
@@ -52,6 +53,8 @@ type Client struct {
 	Role *RoleClient
 	// Session is the client for interacting with the Session builders.
 	Session *SessionClient
+	// Task is the client for interacting with the Task builders.
+	Task *TaskClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
 	// User is the client for interacting with the User builders.
@@ -75,6 +78,7 @@ func (c *Client) init() {
 	c.Resource = NewResourceClient(c.config)
 	c.Role = NewRoleClient(c.config)
 	c.Session = NewSessionClient(c.config)
+	c.Task = NewTaskClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -179,6 +183,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Resource:     NewResourceClient(cfg),
 		Role:         NewRoleClient(cfg),
 		Session:      NewSessionClient(cfg),
+		Task:         NewTaskClient(cfg),
 		Tenant:       NewTenantClient(cfg),
 		User:         NewUserClient(cfg),
 	}, nil
@@ -208,6 +213,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Resource:     NewResourceClient(cfg),
 		Role:         NewRoleClient(cfg),
 		Session:      NewSessionClient(cfg),
+		Task:         NewTaskClient(cfg),
 		Tenant:       NewTenantClient(cfg),
 		User:         NewUserClient(cfg),
 	}, nil
@@ -240,7 +246,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AccessPolicy, c.AuditLog, c.Environment, c.Group, c.Platform, c.Resource,
-		c.Role, c.Session, c.Tenant, c.User,
+		c.Role, c.Session, c.Task, c.Tenant, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -251,7 +257,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AccessPolicy, c.AuditLog, c.Environment, c.Group, c.Platform, c.Resource,
-		c.Role, c.Session, c.Tenant, c.User,
+		c.Role, c.Session, c.Task, c.Tenant, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -276,6 +282,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Role.mutate(ctx, m)
 	case *SessionMutation:
 		return c.Session.mutate(ctx, m)
+	case *TaskMutation:
+		return c.Task.mutate(ctx, m)
 	case *TenantMutation:
 		return c.Tenant.mutate(ctx, m)
 	case *UserMutation:
@@ -471,7 +479,8 @@ func (c *AccessPolicyClient) QueryRoles(_m *AccessPolicy) *RoleQuery {
 
 // Hooks returns the client hooks.
 func (c *AccessPolicyClient) Hooks() []Hook {
-	return c.hooks.AccessPolicy
+	hooks := c.hooks.AccessPolicy
+	return append(hooks[:len(hooks):len(hooks)], accesspolicy.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -642,7 +651,8 @@ func (c *AuditLogClient) QueryResource(_m *AuditLog) *ResourceQuery {
 
 // Hooks returns the client hooks.
 func (c *AuditLogClient) Hooks() []Hook {
-	return c.hooks.AuditLog
+	hooks := c.hooks.AuditLog
+	return append(hooks[:len(hooks):len(hooks)], auditlog.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -794,7 +804,8 @@ func (c *EnvironmentClient) QueryTenant(_m *Environment) *TenantQuery {
 
 // Hooks returns the client hooks.
 func (c *EnvironmentClient) Hooks() []Hook {
-	return c.hooks.Environment
+	hooks := c.hooks.Environment
+	return append(hooks[:len(hooks):len(hooks)], environment.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -965,7 +976,8 @@ func (c *GroupClient) QueryAccessPolicies(_m *Group) *AccessPolicyQuery {
 
 // Hooks returns the client hooks.
 func (c *GroupClient) Hooks() []Hook {
-	return c.hooks.Group
+	hooks := c.hooks.Group
+	return append(hooks[:len(hooks):len(hooks)], group.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -1098,7 +1110,8 @@ func (c *PlatformClient) GetX(ctx context.Context, id string) *Platform {
 
 // Hooks returns the client hooks.
 func (c *PlatformClient) Hooks() []Hook {
-	return c.hooks.Platform
+	hooks := c.hooks.Platform
+	return append(hooks[:len(hooks):len(hooks)], platform.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -1286,9 +1299,29 @@ func (c *ResourceClient) QueryPolicies(_m *Resource) *AccessPolicyQuery {
 	return query
 }
 
+// QueryTasks queries the tasks edge of a Resource.
+func (c *ResourceClient) QueryTasks(_m *Resource) *TaskQuery {
+	query := (&TaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resource.Table, resource.FieldID, id),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resource.TasksTable, resource.TasksColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Task
+		step.Edge.Schema = schemaConfig.Task
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ResourceClient) Hooks() []Hook {
-	return c.hooks.Resource
+	hooks := c.hooks.Resource
+	return append(hooks[:len(hooks):len(hooks)], resource.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -1516,7 +1549,8 @@ func (c *RoleClient) QueryPermissionsBoundary(_m *Role) *AccessPolicyQuery {
 
 // Hooks returns the client hooks.
 func (c *RoleClient) Hooks() []Hook {
-	return c.hooks.Role
+	hooks := c.hooks.Role
+	return append(hooks[:len(hooks):len(hooks)], role.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -1649,7 +1683,8 @@ func (c *SessionClient) GetX(ctx context.Context, id string) *Session {
 
 // Hooks returns the client hooks.
 func (c *SessionClient) Hooks() []Hook {
-	return c.hooks.Session
+	hooks := c.hooks.Session
+	return append(hooks[:len(hooks):len(hooks)], session.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -1669,6 +1704,197 @@ func (c *SessionClient) mutate(ctx context.Context, m *SessionMutation) (Value, 
 		return (&SessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Session mutation op: %q", m.Op())
+	}
+}
+
+// TaskClient is a client for the Task schema.
+type TaskClient struct {
+	config
+}
+
+// NewTaskClient returns a client for the Task from the given config.
+func NewTaskClient(c config) *TaskClient {
+	return &TaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `task.Hooks(f(g(h())))`.
+func (c *TaskClient) Use(hooks ...Hook) {
+	c.hooks.Task = append(c.hooks.Task, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `task.Intercept(f(g(h())))`.
+func (c *TaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Task = append(c.inters.Task, interceptors...)
+}
+
+// Create returns a builder for creating a Task entity.
+func (c *TaskClient) Create() *TaskCreate {
+	mutation := newTaskMutation(c.config, OpCreate)
+	return &TaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Task entities.
+func (c *TaskClient) CreateBulk(builders ...*TaskCreate) *TaskCreateBulk {
+	return &TaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TaskClient) MapCreateBulk(slice any, setFunc func(*TaskCreate, int)) *TaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TaskCreateBulk{err: fmt.Errorf("calling to TaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Task.
+func (c *TaskClient) Update() *TaskUpdate {
+	mutation := newTaskMutation(c.config, OpUpdate)
+	return &TaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TaskClient) UpdateOne(_m *Task) *TaskUpdateOne {
+	mutation := newTaskMutation(c.config, OpUpdateOne, withTask(_m))
+	return &TaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TaskClient) UpdateOneID(id string) *TaskUpdateOne {
+	mutation := newTaskMutation(c.config, OpUpdateOne, withTaskID(id))
+	return &TaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Task.
+func (c *TaskClient) Delete() *TaskDelete {
+	mutation := newTaskMutation(c.config, OpDelete)
+	return &TaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TaskClient) DeleteOne(_m *Task) *TaskDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TaskClient) DeleteOneID(id string) *TaskDeleteOne {
+	builder := c.Delete().Where(task.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TaskDeleteOne{builder}
+}
+
+// Query returns a query builder for Task.
+func (c *TaskClient) Query() *TaskQuery {
+	return &TaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Task entity by its id.
+func (c *TaskClient) Get(ctx context.Context, id string) (*Task, error) {
+	return c.Query().Where(task.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TaskClient) GetX(ctx context.Context, id string) *Task {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRequester queries the requester edge of a Task.
+func (c *TaskClient) QueryRequester(_m *Task) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(task.Table, task.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, task.RequesterTable, task.RequesterColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.Task
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryResource queries the resource edge of a Task.
+func (c *TaskClient) QueryResource(_m *Task) *ResourceQuery {
+	query := (&ResourceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(task.Table, task.FieldID, id),
+			sqlgraph.To(resource.Table, resource.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, task.ResourceTable, task.ResourceColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Resource
+		step.Edge.Schema = schemaConfig.Task
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReviewer queries the reviewer edge of a Task.
+func (c *TaskClient) QueryReviewer(_m *Task) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(task.Table, task.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, task.ReviewerTable, task.ReviewerColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.Task
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TaskClient) Hooks() []Hook {
+	hooks := c.hooks.Task
+	return append(hooks[:len(hooks):len(hooks)], task.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TaskClient) Interceptors() []Interceptor {
+	return c.inters.Task
+}
+
+func (c *TaskClient) mutate(ctx context.Context, m *TaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Task mutation op: %q", m.Op())
 	}
 }
 
@@ -1839,7 +2065,8 @@ func (c *TenantClient) QueryAccessPolicies(_m *Tenant) *AccessPolicyQuery {
 
 // Hooks returns the client hooks.
 func (c *TenantClient) Hooks() []Hook {
-	return c.hooks.Tenant
+	hooks := c.hooks.Tenant
+	return append(hooks[:len(hooks):len(hooks)], tenant.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -2046,9 +2273,48 @@ func (c *UserClient) QueryAccessPolicies(_m *User) *AccessPolicyQuery {
 	return query
 }
 
+// QueryTasks queries the tasks edge of a User.
+func (c *UserClient) QueryTasks(_m *User) *TaskQuery {
+	query := (&TaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TasksTable, user.TasksColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Task
+		step.Edge.Schema = schemaConfig.Task
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReviewedTasks queries the reviewed_tasks edge of a User.
+func (c *UserClient) QueryReviewedTasks(_m *User) *TaskQuery {
+	query := (&TaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReviewedTasksTable, user.ReviewedTasksColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Task
+		step.Edge.Schema = schemaConfig.Task
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
-	return c.hooks.User
+	hooks := c.hooks.User
+	return append(hooks[:len(hooks):len(hooks)], user.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
@@ -2075,11 +2341,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 type (
 	hooks struct {
 		AccessPolicy, AuditLog, Environment, Group, Platform, Resource, Role, Session,
-		Tenant, User []ent.Hook
+		Task, Tenant, User []ent.Hook
 	}
 	inters struct {
 		AccessPolicy, AuditLog, Environment, Group, Platform, Resource, Role, Session,
-		Tenant, User []ent.Interceptor
+		Task, Tenant, User []ent.Interceptor
 	}
 )
 
