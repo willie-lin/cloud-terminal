@@ -206,6 +206,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			session.FieldStartedAt:      {Type: field.TypeTime, Column: session.FieldStartedAt},
 			session.FieldEndedAt:        {Type: field.TypeTime, Column: session.FieldEndedAt},
 			session.FieldRemoteAddress:  {Type: field.TypeString, Column: session.FieldRemoteAddress},
+			session.FieldRecordingPath:  {Type: field.TypeString, Column: session.FieldRecordingPath},
 		},
 	}
 	graph.Nodes[8] = &sqlgraph.Node{
@@ -1616,6 +1617,11 @@ func (f *SessionFilter) WhereEndedAt(p entql.TimeP) {
 // WhereRemoteAddress applies the entql string predicate on the remote_address field.
 func (f *SessionFilter) WhereRemoteAddress(p entql.StringP) {
 	f.Where(p.Field(session.FieldRemoteAddress))
+}
+
+// WhereRecordingPath applies the entql string predicate on the recording_path field.
+func (f *SessionFilter) WhereRecordingPath(p entql.StringP) {
+	f.Where(p.Field(session.FieldRecordingPath))
 }
 
 // addPredicate implements the predicateAdder interface.

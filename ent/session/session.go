@@ -37,6 +37,8 @@ const (
 	FieldEndedAt = "ended_at"
 	// FieldRemoteAddress holds the string denoting the remote_address field in the database.
 	FieldRemoteAddress = "remote_address"
+	// FieldRecordingPath holds the string denoting the recording_path field in the database.
+	FieldRecordingPath = "recording_path"
 	// Table holds the table name of the session in the database.
 	Table = "sessions"
 )
@@ -55,6 +57,7 @@ var Columns = []string{
 	FieldStartedAt,
 	FieldEndedAt,
 	FieldRemoteAddress,
+	FieldRecordingPath,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -201,4 +204,9 @@ func ByEndedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByRemoteAddress orders the results by the remote_address field.
 func ByRemoteAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRemoteAddress, opts...).ToFunc()
+}
+
+// ByRecordingPath orders the results by the recording_path field.
+func ByRecordingPath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRecordingPath, opts...).ToFunc()
 }

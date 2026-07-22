@@ -243,6 +243,7 @@ var (
 		{Name: "started_at", Type: field.TypeTime},
 		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
 		{Name: "remote_address", Type: field.TypeString, Nullable: true},
+		{Name: "recording_path", Type: field.TypeString, Nullable: true},
 	}
 	// SessionsTable holds the schema information for the "sessions" table.
 	SessionsTable = &schema.Table{

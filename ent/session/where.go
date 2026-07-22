@@ -109,6 +109,11 @@ func RemoteAddress(v string) predicate.Session {
 	return predicate.Session(sql.FieldEQ(FieldRemoteAddress, v))
 }
 
+// RecordingPath applies equality check predicate on the "recording_path" field. It's identical to RecordingPathEQ.
+func RecordingPath(v string) predicate.Session {
+	return predicate.Session(sql.FieldEQ(FieldRecordingPath, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Session {
 	return predicate.Session(sql.FieldEQ(FieldCreatedAt, v))
@@ -672,6 +677,81 @@ func RemoteAddressEqualFold(v string) predicate.Session {
 // RemoteAddressContainsFold applies the ContainsFold predicate on the "remote_address" field.
 func RemoteAddressContainsFold(v string) predicate.Session {
 	return predicate.Session(sql.FieldContainsFold(FieldRemoteAddress, v))
+}
+
+// RecordingPathEQ applies the EQ predicate on the "recording_path" field.
+func RecordingPathEQ(v string) predicate.Session {
+	return predicate.Session(sql.FieldEQ(FieldRecordingPath, v))
+}
+
+// RecordingPathNEQ applies the NEQ predicate on the "recording_path" field.
+func RecordingPathNEQ(v string) predicate.Session {
+	return predicate.Session(sql.FieldNEQ(FieldRecordingPath, v))
+}
+
+// RecordingPathIn applies the In predicate on the "recording_path" field.
+func RecordingPathIn(vs ...string) predicate.Session {
+	return predicate.Session(sql.FieldIn(FieldRecordingPath, vs...))
+}
+
+// RecordingPathNotIn applies the NotIn predicate on the "recording_path" field.
+func RecordingPathNotIn(vs ...string) predicate.Session {
+	return predicate.Session(sql.FieldNotIn(FieldRecordingPath, vs...))
+}
+
+// RecordingPathGT applies the GT predicate on the "recording_path" field.
+func RecordingPathGT(v string) predicate.Session {
+	return predicate.Session(sql.FieldGT(FieldRecordingPath, v))
+}
+
+// RecordingPathGTE applies the GTE predicate on the "recording_path" field.
+func RecordingPathGTE(v string) predicate.Session {
+	return predicate.Session(sql.FieldGTE(FieldRecordingPath, v))
+}
+
+// RecordingPathLT applies the LT predicate on the "recording_path" field.
+func RecordingPathLT(v string) predicate.Session {
+	return predicate.Session(sql.FieldLT(FieldRecordingPath, v))
+}
+
+// RecordingPathLTE applies the LTE predicate on the "recording_path" field.
+func RecordingPathLTE(v string) predicate.Session {
+	return predicate.Session(sql.FieldLTE(FieldRecordingPath, v))
+}
+
+// RecordingPathContains applies the Contains predicate on the "recording_path" field.
+func RecordingPathContains(v string) predicate.Session {
+	return predicate.Session(sql.FieldContains(FieldRecordingPath, v))
+}
+
+// RecordingPathHasPrefix applies the HasPrefix predicate on the "recording_path" field.
+func RecordingPathHasPrefix(v string) predicate.Session {
+	return predicate.Session(sql.FieldHasPrefix(FieldRecordingPath, v))
+}
+
+// RecordingPathHasSuffix applies the HasSuffix predicate on the "recording_path" field.
+func RecordingPathHasSuffix(v string) predicate.Session {
+	return predicate.Session(sql.FieldHasSuffix(FieldRecordingPath, v))
+}
+
+// RecordingPathIsNil applies the IsNil predicate on the "recording_path" field.
+func RecordingPathIsNil() predicate.Session {
+	return predicate.Session(sql.FieldIsNull(FieldRecordingPath))
+}
+
+// RecordingPathNotNil applies the NotNil predicate on the "recording_path" field.
+func RecordingPathNotNil() predicate.Session {
+	return predicate.Session(sql.FieldNotNull(FieldRecordingPath))
+}
+
+// RecordingPathEqualFold applies the EqualFold predicate on the "recording_path" field.
+func RecordingPathEqualFold(v string) predicate.Session {
+	return predicate.Session(sql.FieldEqualFold(FieldRecordingPath, v))
+}
+
+// RecordingPathContainsFold applies the ContainsFold predicate on the "recording_path" field.
+func RecordingPathContainsFold(v string) predicate.Session {
+	return predicate.Session(sql.FieldContainsFold(FieldRecordingPath, v))
 }
 
 // And groups predicates with the AND operator between them.

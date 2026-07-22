@@ -3,16 +3,18 @@ package api
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/labstack/gommon/log"
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/group"
+	"github.com/willie-lin/cloud-terminal/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
-	"os"
 )
 
 // {"tenant:create", "允许创建租户"},
@@ -172,7 +174,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	platformName := utils.PlatformName
 
 	tenantName := utils.ManagementTenant
-	ctx := context.Background()
+	ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
 	_, err = client.Tenant.Query().Where(tenant.NameEQ(tenantName)).Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return err
@@ -229,7 +231,7 @@ func InitSuperAdminAndSuperRoles(client *ent.Client) error {
 	}
 
 	// 4. 创建平台角色，租户角色，和超级管理员账户
-	rolesToCreate := []string{"super_admin", "platform_admin", "tenant_admin"}
+	rolesToCreate := []string{"super_admin", "platform_admin", "tenant_admin", "user"}
 
 	for _, roleName := range rolesToCreate {
 		r, err := client.Role.Query().Where(role.NameEQ(roleName)).Only(ctx)

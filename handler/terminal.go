@@ -17,6 +17,7 @@ import (
 	entsession "github.com/willie-lin/cloud-terminal/ent/session"
 	"github.com/willie-lin/cloud-terminal/pkg/connector"
 	"github.com/willie-lin/cloud-terminal/pkg/crypto"
+	"github.com/willie-lin/cloud-terminal/pkg/recording"
 	"github.com/willie-lin/cloud-terminal/pkg/sts"
 )
 
@@ -86,9 +87,14 @@ func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.Handler
 			return c.String(http.StatusForbidden, "resource is inactive")
 		}
 
-		// 4. 记录 Session 开始
+		// 4. 初始化录像与记录 Session 开始
 		now := time.Now()
 		remoteAddr := c.Request().RemoteAddr
+
+		rec, recPath, _ := recording.NewRecorder("logs/recordings", claims.SessionID, 80, 24)
+		if rec != nil {
+			defer rec.Close()
+		}
 
 		sessionRec, err := client.Session.Create().
 			SetSessionID(claims.SessionID).
@@ -98,6 +104,7 @@ func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.Handler
 			SetStatus(entsession.StatusActive).
 			SetStartedAt(now).
 			SetRemoteAddress(remoteAddr).
+			SetRecordingPath(recPath).
 			Save(ctx)
 		if err != nil {
 			log.Printf("Terminal: create session record error: %v", err)
@@ -251,6 +258,9 @@ func TerminalWebSocket(client *ent.Client, stsService *sts.Service) echo.Handler
 					return
 				}
 				if n > 0 {
+					if rec != nil {
+						rec.WriteOutput(buf[:n])
+					}
 					if err := conn.WriteMessage(websocket.BinaryMessage, buf[:n]); err != nil {
 						errChan <- err
 						return

@@ -21,6 +21,7 @@ func (Session) Fields() []ent.Field {
 		field.Time("started_at"),
 		field.Time("ended_at").Optional().Nillable(),
 		field.String("remote_address").Optional(),
+		field.String("recording_path").Optional().Comment("Asciinema 录像文件路径"),
 	}
 }
 

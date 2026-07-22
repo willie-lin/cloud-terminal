@@ -172,6 +172,26 @@ func (_u *SessionUpdate) ClearRemoteAddress() *SessionUpdate {
 	return _u
 }
 
+// SetRecordingPath sets the "recording_path" field.
+func (_u *SessionUpdate) SetRecordingPath(v string) *SessionUpdate {
+	_u.mutation.SetRecordingPath(v)
+	return _u
+}
+
+// SetNillableRecordingPath sets the "recording_path" field if the given value is not nil.
+func (_u *SessionUpdate) SetNillableRecordingPath(v *string) *SessionUpdate {
+	if v != nil {
+		_u.SetRecordingPath(*v)
+	}
+	return _u
+}
+
+// ClearRecordingPath clears the value of the "recording_path" field.
+func (_u *SessionUpdate) ClearRecordingPath() *SessionUpdate {
+	_u.mutation.ClearRecordingPath()
+	return _u
+}
+
 // Mutation returns the SessionMutation object of the builder.
 func (_u *SessionUpdate) Mutation() *SessionMutation {
 	return _u.mutation
@@ -290,6 +310,12 @@ func (_u *SessionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.RemoteAddressCleared() {
 		_spec.ClearField(session.FieldRemoteAddress, field.TypeString)
+	}
+	if value, ok := _u.mutation.RecordingPath(); ok {
+		_spec.SetField(session.FieldRecordingPath, field.TypeString, value)
+	}
+	if _u.mutation.RecordingPathCleared() {
+		_spec.ClearField(session.FieldRecordingPath, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Session
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -457,6 +483,26 @@ func (_u *SessionUpdateOne) ClearRemoteAddress() *SessionUpdateOne {
 	return _u
 }
 
+// SetRecordingPath sets the "recording_path" field.
+func (_u *SessionUpdateOne) SetRecordingPath(v string) *SessionUpdateOne {
+	_u.mutation.SetRecordingPath(v)
+	return _u
+}
+
+// SetNillableRecordingPath sets the "recording_path" field if the given value is not nil.
+func (_u *SessionUpdateOne) SetNillableRecordingPath(v *string) *SessionUpdateOne {
+	if v != nil {
+		_u.SetRecordingPath(*v)
+	}
+	return _u
+}
+
+// ClearRecordingPath clears the value of the "recording_path" field.
+func (_u *SessionUpdateOne) ClearRecordingPath() *SessionUpdateOne {
+	_u.mutation.ClearRecordingPath()
+	return _u
+}
+
 // Mutation returns the SessionMutation object of the builder.
 func (_u *SessionUpdateOne) Mutation() *SessionMutation {
 	return _u.mutation
@@ -605,6 +651,12 @@ func (_u *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err er
 	}
 	if _u.mutation.RemoteAddressCleared() {
 		_spec.ClearField(session.FieldRemoteAddress, field.TypeString)
+	}
+	if value, ok := _u.mutation.RecordingPath(); ok {
+		_spec.SetField(session.FieldRecordingPath, field.TypeString, value)
+	}
+	if _u.mutation.RecordingPathCleared() {
+		_spec.ClearField(session.FieldRecordingPath, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Session
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

@@ -96,10 +96,17 @@ func main() {
 	e.Use(middleware.Gzip())
 
 	var allowedOrigins []string
-	if os.Getenv("ENV") == "production" {
+	isProd := os.Getenv("ENV") == "production"
+	if isProd {
 		allowedOrigins = []string{"https://app.cloudsec.sbs", "https://cloudsec.sbs"}
 	} else {
-		allowedOrigins = []string{"https://localhost:3000"}
+		allowedOrigins = []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"http://127.0.0.1:5173",
+			"http://127.0.0.1:3000",
+			"https://localhost:3000",
+		}
 	}
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -116,14 +123,21 @@ func main() {
 	e.Static("/picture", "picture")
 	e.Use(utils.SetCSRFToken)
 
+	csrfCookieDomain := ""
+	csrfCookieSameSite := http.SameSiteLaxMode
+	if isProd {
+		csrfCookieDomain = "cloudsec.sbs"
+		csrfCookieSameSite = http.SameSiteNoneMode
+	}
+
 	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
 		TokenLookup:    "header:X-CSRF-Token,cookie:_csrf,form:_csrf,query:_csrf",
 		CookieName:     "_csrf",
 		CookiePath:     "/",
-		CookieDomain:   "localhost",
-		CookieSecure:   true,
-		CookieHTTPOnly: true,
-		CookieSameSite: http.SameSiteNoneMode,
+		CookieDomain:   csrfCookieDomain,
+		CookieSecure:   isProd,
+		CookieHTTPOnly: false, // 允许前端 JS/Cookie 读取
+		CookieSameSite: csrfCookieSameSite,
 		CookieMaxAge:   3600,
 	}))
 
@@ -162,7 +176,16 @@ func main() {
 
 	// Public routes
 	e.GET("/api/csrf-token", func(c *echo.Context) error {
-		return c.NoContent(http.StatusOK)
+		token := ""
+		if cookie, err := c.Cookie("_csrf"); err == nil && cookie != nil {
+			token = cookie.Value
+		}
+		if token == "" {
+			if t, ok := c.Get("csrf_token").(string); ok {
+				token = t
+			}
+		}
+		return c.JSON(http.StatusOK, map[string]string{"csrfToken": token})
 	})
 
 	e.GET("/", handler.Hello(client))
@@ -227,6 +250,10 @@ func main() {
 	r.PUT("/tenants/:id", handler.UpdateTenant(client))
 	r.DELETE("/tenants/:id", handler.DeleteTenantByID(client))
 	r.POST("/tenants/:id/admin-user", handler.CreateTenantAdmin(client))
+	// Tenant User CRUD
+	r.GET("/tenants/:id/users", handler.ListTenantUsers(client))
+	r.POST("/tenants/:id/users", handler.AddUserToTenant(client))
+	r.DELETE("/tenants/:id/users/:uid", handler.RemoveUserFromTenant(client))
 
 	// === Resource ===
 	r.GET("/resources", handler.ListResources(client))
@@ -252,6 +279,7 @@ func main() {
 	// === Session ===
 	r.GET("/sessions", handler.ListSessions(client))
 	r.GET("/sessions/:id", handler.GetSession(client))
+	r.GET("/sessions/:id/recording", handler.GetSessionRecording(client))
 	r.PUT("/sessions/:id", handler.UpdateSession(client))
 	r.DELETE("/sessions/:id", handler.DeleteSession(client))
 
@@ -268,19 +296,13 @@ func main() {
 	r.DELETE("/tasks/:id", taskHandler.Delete())
 
 	// 8. 启动服务
-	go func() {
-		pkglogger.Info("Starting HTTP server on :80")
-		if err := e.Start(":80"); err != nil {
-			pkglogger.Fatal("http server failed", zap.Error(err))
-		}
-	}()
-
-	port := fmt.Sprintf(":%d", cfg.Server.Port)
-	if cfg.Server.Port == 0 {
-		port = ":443"
+	listenAddr := ":8080"
+	if cfg.Server.Port != 0 {
+		listenAddr = fmt.Sprintf(":%d", cfg.Server.Port)
 	}
-	pkglogger.Info("Starting HTTPS server", zap.String("port", port))
-	if err := e.Start(port); err != nil {
-		pkglogger.Fatal("https server failed", zap.Error(err))
+
+	pkglogger.Info("Starting Cloud Terminal HTTP server", zap.String("addr", listenAddr))
+	if err := e.Start(listenAddr); err != nil {
+		pkglogger.Fatal("HTTP server start failed", zap.Error(err))
 	}
 }

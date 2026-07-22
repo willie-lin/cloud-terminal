@@ -137,3 +137,35 @@ func DeleteSession(client *ent.Client) echo.HandlerFunc {
 		return c.NoContent(http.StatusNoContent)
 	}
 }
+
+// GetSessionRecording returns the Asciinema cast v2 recording file for playback
+func GetSessionRecording(client *ent.Client) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		v := viewer.FromContext(c.Request().Context())
+		if v == nil {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		}
+
+		id := c.Param("id")
+		if _, err := uuid.Parse(id); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid session ID"})
+		}
+
+		s, err := client.Session.Query().
+			Where(session.IDEQ(id)).
+			Only(c.Request().Context())
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Session not found"})
+		}
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying session"})
+		}
+
+		recPath := s.RecordingPath
+		if recPath == "" {
+			recPath = "logs/recordings/" + id + ".cast"
+		}
+
+		return c.File(recPath)
+	}
+}

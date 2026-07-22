@@ -153,6 +153,20 @@ func (_c *SessionCreate) SetNillableRemoteAddress(v *string) *SessionCreate {
 	return _c
 }
 
+// SetRecordingPath sets the "recording_path" field.
+func (_c *SessionCreate) SetRecordingPath(v string) *SessionCreate {
+	_c.mutation.SetRecordingPath(v)
+	return _c
+}
+
+// SetNillableRecordingPath sets the "recording_path" field if the given value is not nil.
+func (_c *SessionCreate) SetNillableRecordingPath(v *string) *SessionCreate {
+	if v != nil {
+		_c.SetRecordingPath(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *SessionCreate) SetID(v string) *SessionCreate {
 	_c.mutation.SetID(v)
@@ -350,6 +364,10 @@ func (_c *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 		_spec.SetField(session.FieldRemoteAddress, field.TypeString, value)
 		_node.RemoteAddress = value
 	}
+	if value, ok := _c.mutation.RecordingPath(); ok {
+		_spec.SetField(session.FieldRecordingPath, field.TypeString, value)
+		_node.RecordingPath = value
+	}
 	return _node, _spec
 }
 
@@ -531,6 +549,24 @@ func (u *SessionUpsert) UpdateRemoteAddress() *SessionUpsert {
 // ClearRemoteAddress clears the value of the "remote_address" field.
 func (u *SessionUpsert) ClearRemoteAddress() *SessionUpsert {
 	u.SetNull(session.FieldRemoteAddress)
+	return u
+}
+
+// SetRecordingPath sets the "recording_path" field.
+func (u *SessionUpsert) SetRecordingPath(v string) *SessionUpsert {
+	u.Set(session.FieldRecordingPath, v)
+	return u
+}
+
+// UpdateRecordingPath sets the "recording_path" field to the value that was provided on create.
+func (u *SessionUpsert) UpdateRecordingPath() *SessionUpsert {
+	u.SetExcluded(session.FieldRecordingPath)
+	return u
+}
+
+// ClearRecordingPath clears the value of the "recording_path" field.
+func (u *SessionUpsert) ClearRecordingPath() *SessionUpsert {
+	u.SetNull(session.FieldRecordingPath)
 	return u
 }
 
@@ -739,6 +775,27 @@ func (u *SessionUpsertOne) UpdateRemoteAddress() *SessionUpsertOne {
 func (u *SessionUpsertOne) ClearRemoteAddress() *SessionUpsertOne {
 	return u.Update(func(s *SessionUpsert) {
 		s.ClearRemoteAddress()
+	})
+}
+
+// SetRecordingPath sets the "recording_path" field.
+func (u *SessionUpsertOne) SetRecordingPath(v string) *SessionUpsertOne {
+	return u.Update(func(s *SessionUpsert) {
+		s.SetRecordingPath(v)
+	})
+}
+
+// UpdateRecordingPath sets the "recording_path" field to the value that was provided on create.
+func (u *SessionUpsertOne) UpdateRecordingPath() *SessionUpsertOne {
+	return u.Update(func(s *SessionUpsert) {
+		s.UpdateRecordingPath()
+	})
+}
+
+// ClearRecordingPath clears the value of the "recording_path" field.
+func (u *SessionUpsertOne) ClearRecordingPath() *SessionUpsertOne {
+	return u.Update(func(s *SessionUpsert) {
+		s.ClearRecordingPath()
 	})
 }
 
@@ -1114,6 +1171,27 @@ func (u *SessionUpsertBulk) UpdateRemoteAddress() *SessionUpsertBulk {
 func (u *SessionUpsertBulk) ClearRemoteAddress() *SessionUpsertBulk {
 	return u.Update(func(s *SessionUpsert) {
 		s.ClearRemoteAddress()
+	})
+}
+
+// SetRecordingPath sets the "recording_path" field.
+func (u *SessionUpsertBulk) SetRecordingPath(v string) *SessionUpsertBulk {
+	return u.Update(func(s *SessionUpsert) {
+		s.SetRecordingPath(v)
+	})
+}
+
+// UpdateRecordingPath sets the "recording_path" field to the value that was provided on create.
+func (u *SessionUpsertBulk) UpdateRecordingPath() *SessionUpsertBulk {
+	return u.Update(func(s *SessionUpsert) {
+		s.UpdateRecordingPath()
+	})
+}
+
+// ClearRecordingPath clears the value of the "recording_path" field.
+func (u *SessionUpsertBulk) ClearRecordingPath() *SessionUpsertBulk {
+	return u.Update(func(s *SessionUpsert) {
+		s.ClearRecordingPath()
 	})
 }
 

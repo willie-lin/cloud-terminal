@@ -3,6 +3,11 @@ package api
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/gommon/log"
@@ -10,15 +15,13 @@ import (
 	"github.com/willie-lin/cloud-terminal/ent"
 	"github.com/willie-lin/cloud-terminal/ent/accesspolicy"
 	"github.com/willie-lin/cloud-terminal/ent/group"
+	"github.com/willie-lin/cloud-terminal/ent/privacy"
 	"github.com/willie-lin/cloud-terminal/ent/role"
 	"github.com/willie-lin/cloud-terminal/ent/schema"
 	"github.com/willie-lin/cloud-terminal/ent/tenant"
 	"github.com/willie-lin/cloud-terminal/ent/user"
 	"github.com/willie-lin/cloud-terminal/pkg/crypto"
 	"github.com/willie-lin/cloud-terminal/pkg/utils"
-	"net/http"
-	"strings"
-	"time"
 )
 
 // CheckEmail 检查邮箱是否已经存在
@@ -241,10 +244,24 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 		}
 
 
-		ctx := context.Background()
-		us, err := client.User.Query().Where(user.EmailEQ(dto.Email)).Only(ctx)
+		ctx := privacy.DecisionContext(context.Background(), privacy.Allow)
+		loginInput := strings.TrimSpace(dto.Email)
+		if loginInput == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email or username is required"})
+		}
+
+		// 同时支持通过邮箱(Email)或用户名(Username)登录
+		us, err := client.User.Query().
+			Where(
+				user.Or(
+					user.EmailEQ(loginInput),
+					user.UsernameEQ(loginInput),
+				),
+			).
+			Only(ctx)
+
 		if ent.IsNotFound(err) {
-			log.Printf("User not found: %v", err)
+			log.Printf("User not found for login input '%s': %v", loginInput, err)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		if err != nil {
@@ -289,70 +306,94 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error updating last login time: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error updating last login time"})
 		}
-		// 查询 Group 信息
-		g, err := us.QueryGroup().Only(ctx)
-		if ent.IsNotFound(err) {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "Group not found"})
-		} else if err != nil {
-			log.Printf("Error finding Group: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
+		// 1. 查询 Group 信息（增加容错保护，未绑定 Group 时不阻断登录）
+		var groupID uuid.UUID = uuid.Nil
+		g, gErr := us.QueryGroup().Only(ctx)
+		if gErr == nil && g != nil {
+			if parsedGID, err := uuid.Parse(g.ID); err == nil {
+				groupID = parsedGID
+			}
 		}
 
-		// 查询租户信息
-		t, err := client.Tenant.Query().Where(tenant.NameEQ(utils.ManagementTenant)).Only(ctx)
-		if ent.IsNotFound(err) {
-			t, err = client.Tenant.Query().First(ctx)
+		// 2. 查询租户信息（获取系统租户或默认首个租户）
+		var t *ent.Tenant
+		t, err = client.Tenant.Query().Where(tenant.NameEQ(utils.ManagementTenant)).Only(ctx)
+		if ent.IsNotFound(err) || t == nil {
+			t, _ = client.Tenant.Query().First(ctx)
 		}
-		if err != nil || t == nil {
-			log.Printf("Error finding tenant: %v", err)
+		if t == nil {
+			log.Printf("Error finding tenant for user: %s", us.ID)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Tenant not found"})
 		}
 
-		// 获取用户的第一个角色ID
-		r, err := us.QueryRoles().First(ctx)
-		if err != nil {
-			log.Printf("Error querying roles: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying roles"})
+		// 3. 获取用户的角色信息（增加容错，默认赋予 'user' 角色）
+		roleName := "user"
+		r, rErr := us.QueryRoles().First(ctx)
+		if rErr == nil && r != nil {
+			roleName = r.Name
+		} else {
+			log.Printf("User %s has no explicit role, falling back to 'user'", us.Username)
 		}
 
-		isTenantAdmin := strings.Contains(strings.ToLower(r.Name), "tenant_admin")
-		isSuperAdmin := strings.ToLower(r.Name) == "super_admin"
+		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin")
+		isSuperAdmin := strings.ToLower(roleName) == "super_admin"
 
-		// 生成包含租户信息的 accessToken
-		accessToken, err := utils.CreateAccessToken(uuid.MustParse(us.ID), uuid.MustParse(t.ID), uuid.MustParse(g.ID), us.Email, us.Username, r.Name)
+		// 生成包含租户信息的 accessToken & refreshToken
+		accessToken, err := utils.CreateAccessToken(uuid.MustParse(us.ID), uuid.MustParse(t.ID), groupID, us.Email, us.Username, roleName)
 		if err != nil {
 			log.Printf("Error signing token: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing token"})
 		}
-		// 生成包含租户信息的 RefreshToken
-		refreshToken, err := utils.CreateRefreshToken(uuid.MustParse(us.ID), uuid.MustParse(t.ID), uuid.MustParse(g.ID), us.Email, us.Username, r.Name)
+		refreshToken, err := utils.CreateRefreshToken(uuid.MustParse(us.ID), uuid.MustParse(t.ID), groupID, us.Email, us.Username, roleName)
 		if err != nil {
 			log.Printf("Error signing refreshToken: %v", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error signing refreshToken"})
 		}
 
-		// 将 token 保存在 HTTP-only 的 cookie 中
-		accessTokenCookie := new(http.Cookie)
-		accessTokenCookie.Name = "AccessToken"
-		accessTokenCookie.Value = accessToken
-		accessTokenCookie.Expires = time.Now().Add(24 * time.Hour)
-		accessTokenCookie.SameSite = http.SameSiteNoneMode
-		accessTokenCookie.Domain = c.Request().Host
-		accessTokenCookie.HttpOnly = true
-		accessTokenCookie.Secure = true
-		accessTokenCookie.Path = "/"
+		// 4. 将 token 保存在 Cookie 中（兼容 HTTP/HTTPS 开发与生产环境）
+		isSecure := c.Scheme() == "https" || c.Request().TLS != nil
+		sameSite := http.SameSiteLaxMode
+		if isSecure {
+			sameSite = http.SameSiteNoneMode
+		}
+
+		// 提取请求 Host 并去除端口号，防止 Cookie 因带端口被浏览器拒绝
+		cookieDomain := c.Request().Host
+		if h, _, err := net.SplitHostPort(cookieDomain); err == nil {
+			cookieDomain = h
+		}
+		if cookieDomain == "localhost" || cookieDomain == "127.0.0.1" {
+			cookieDomain = "" // 置空 Domain 适应本地开发
+		}
+
+		accessTokenCookie := &http.Cookie{
+			Name:     "AccessToken",
+			Value:    accessToken,
+			Expires:  time.Now().Add(24 * time.Hour),
+			SameSite: sameSite,
+			Domain:   cookieDomain,
+			HttpOnly: true,
+			Secure:   isSecure,
+			Path:     "/",
+		}
 		c.SetCookie(accessTokenCookie)
 
-		refreshTokenCookie := new(http.Cookie)
-		refreshTokenCookie.Name = "RefreshToken"
-		refreshTokenCookie.Value = refreshToken
-		refreshTokenCookie.Expires = time.Now().Add(24 * time.Hour)
-		refreshTokenCookie.SameSite = http.SameSiteNoneMode
-		refreshTokenCookie.Domain = c.Request().Host
-		refreshTokenCookie.HttpOnly = true
-		refreshTokenCookie.Secure = true
-		refreshTokenCookie.Path = "/"
+		refreshTokenCookie := &http.Cookie{
+			Name:     "RefreshToken",
+			Value:    refreshToken,
+			Expires:  time.Now().Add(24 * time.Hour),
+			SameSite: sameSite,
+			Domain:   cookieDomain,
+			HttpOnly: true,
+			Secure:   isSecure,
+			Path:     "/",
+		}
 		c.SetCookie(refreshTokenCookie)
+
+		gIDStr := ""
+		if groupID != uuid.Nil {
+			gIDStr = groupID.String()
+		}
 
 		return c.JSON(http.StatusOK,
 			map[string]interface{}{
@@ -361,10 +402,10 @@ func LoginUser(client *ent.Client) echo.HandlerFunc {
 				"user": map[string]interface{}{
 					"id":            us.ID,
 					"tenantId":      t.ID,
-					"groupId":       g.ID,
+					"groupId":       gIDStr,
 					"email":         us.Email,
 					"username":      us.Username,
-					"roleName":      r.Name,
+					"roleName":      roleName,
 					"isTenantAdmin": isTenantAdmin,
 					"isSuperAdmin":  isSuperAdmin,
 				},

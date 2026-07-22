@@ -2,23 +2,25 @@ package handler
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v5"
-	"github.com/labstack/gommon/log"
-	"github.com/pkg/errors"
-	"github.com/willie-lin/cloud-terminal/ent"
-	
-	"github.com/willie-lin/cloud-terminal/ent/user"
-	"github.com/willie-lin/cloud-terminal/ent/role"
-
-	"github.com/willie-lin/cloud-terminal/viewer"
-	"github.com/willie-lin/cloud-terminal/pkg/utils"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/gommon/log"
+	"github.com/pkg/errors"
+	"github.com/willie-lin/cloud-terminal/ent"
+	"github.com/willie-lin/cloud-terminal/ent/group"
+	"github.com/willie-lin/cloud-terminal/ent/privacy"
+	"github.com/willie-lin/cloud-terminal/ent/role"
+	"github.com/willie-lin/cloud-terminal/ent/tenant"
+	"github.com/willie-lin/cloud-terminal/ent/user"
+	"github.com/willie-lin/cloud-terminal/pkg/utils"
+	"github.com/willie-lin/cloud-terminal/viewer"
 )
 
 // Define the Status enum
@@ -49,6 +51,7 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			Email    string `json:"email"`
 			Password string `json:"password"`
 			Username string `json:"username"`
+			RoleName string `json:"role_name"`
 		}
 
 		dto := new(UserDTO)
@@ -56,11 +59,11 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			log.Printf("Error binding user: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		if dto.Email == "" || dto.Password == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email and password are required"})
+		if dto.Email == "" || dto.Password == "" || strings.TrimSpace(dto.Username) == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email, password, and username are required"})
 		}
-		if dto.Username == "" {
-			dto.Username = utils.GenerateUsername()
+		if len(strings.TrimSpace(dto.Username)) < 6 {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Username must be at least 6 characters long"})
 		}
 
 		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
@@ -69,17 +72,40 @@ func CreateUser(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error hashing password"})
 		}
 
-		us, err := client.User.Create().
-			SetEmail(dto.Email).
-			SetUsername(dto.Username).
+		ctx := privacy.DecisionContext(c.Request().Context(), privacy.Allow)
+
+		userBuilder := client.User.Create().
+			SetEmail(strings.TrimSpace(dto.Email)).
+			SetUsername(strings.TrimSpace(dto.Username)).
 			SetPassword(string(hashedPassword)).
-			SetTenantID(v.TenantID.String()).
 			SetOnline(true).
-			SetStatus(true).
-			Save(c.Request().Context())
+			SetStatus(true)
+
+		// 自动绑定到创建者（租户管理员）所属的 Group 空间，实现租户空间隔离
+		creator, cErr := client.User.Query().Where(user.IDEQ(v.UserID.String())).WithGroup().Only(ctx)
+		if cErr == nil && creator != nil && creator.Edges.Group != nil {
+			userBuilder.SetGroup(creator.Edges.Group)
+		}
+
+		// 绑定指定角色（默认为 'user'，可选 'tenant_admin'）
+		targetRoleName := strings.TrimSpace(dto.RoleName)
+		if targetRoleName == "" {
+			targetRoleName = "user"
+		}
+
+		userRole, rErr := client.Role.Query().Where(role.NameEQ(targetRoleName)).Only(ctx)
+		if rErr != nil || userRole == nil {
+			// 兜底退回
+			userRole, _ = client.Role.Query().Where(role.NameEQ("user")).Only(ctx)
+		}
+		if userRole != nil {
+			userBuilder.AddRoleIDs(userRole.ID)
+		}
+
+		us, err := userBuilder.Save(ctx)
 		if err != nil {
 			log.Printf("Error creating user: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating user in database"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Failed to create user: %v", err)})
 		}
 		return c.JSON(http.StatusCreated, map[string]string{"userID": us.ID, "username": us.Username})
 	}
@@ -110,20 +136,42 @@ func CreateTenantAdmin(client *ent.Client) echo.HandlerFunc {
 		if err := c.Bind(dto); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request data"})
 		}
-		if dto.Email == "" || dto.Password == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email and password are required"})
+		if dto.Email == "" || dto.Password == "" || strings.TrimSpace(dto.Username) == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email, password, and username are required"})
 		}
-		if dto.Username == "" {
-			dto.Username = utils.GenerateUsername()
+		if len(strings.TrimSpace(dto.Username)) < 6 {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Username must be at least 6 characters long"})
+		}
+		dto.Username = strings.TrimSpace(dto.Username)
+
+		// 使用 Privacy 提权上下文，确保建用户与关联角色/组不受拦截
+		ctx := privacy.DecisionContext(c.Request().Context(), privacy.Allow)
+
+		// 1. 查询目标租户信息
+		tenantObj, tErr := client.Tenant.Query().Where(tenant.IDEQ(tenantID)).Only(ctx)
+		if tErr != nil {
+			log.Printf("Error querying tenant by ID (%s): %v", tenantID, tErr)
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Tenant not found"})
 		}
 
-		// 查找 tenant_admin 角色
-		tenantAdminRole, err := client.Role.Query().Where(role.NameEQ("tenant_admin")).Only(c.Request().Context())
+		// 2. 查询或创建该租户专属 Group
+		groupName := strings.TrimSpace(tenantObj.Name) + "_Group"
+		g, gErr := client.Group.Query().Where(group.NameEQ(groupName)).Only(ctx)
+		if gErr != nil {
+			g, gErr = client.Group.Create().SetName(groupName).Save(ctx)
+			if gErr != nil {
+				log.Printf("Error creating group for tenant (%s): %v", tenantObj.Name, gErr)
+				return c.JSON(http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Failed to create tenant group: %v", gErr)})
+			}
+		}
+
+		// 3. 查找 tenant_admin 角色
+		tenantAdminRole, err := client.Role.Query().Where(role.NameEQ("tenant_admin")).Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "tenant_admin role not found, run init first"})
 			}
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying role"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying tenant_admin role"})
 		}
 
 		hashedPassword, err := utils.GenerateFromPassword([]byte(dto.Password), utils.DefaultCost)
@@ -133,17 +181,18 @@ func CreateTenantAdmin(client *ent.Client) echo.HandlerFunc {
 		}
 
 		us, err := client.User.Create().
-			SetEmail(dto.Email).
+			SetEmail(strings.TrimSpace(dto.Email)).
 			SetUsername(dto.Username).
 			SetPassword(string(hashedPassword)).
-			SetTenantID(tenantID).
 			AddRoleIDs(tenantAdminRole.ID).
+			SetGroup(g).
 			SetOnline(true).
 			SetStatus(true).
-			Save(c.Request().Context())
+			Save(ctx)
+
 		if err != nil {
 			log.Printf("Error creating tenant admin: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error creating tenant admin"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Failed to create tenant admin: %v", err)})
 		}
 
 		return c.JSON(http.StatusCreated, map[string]interface{}{
@@ -151,6 +200,7 @@ func CreateTenantAdmin(client *ent.Client) echo.HandlerFunc {
 			"username": us.Username,
 			"email":    us.Email,
 			"role":     "tenant_admin",
+			"group":    g.Name,
 		})
 	}
 }
@@ -179,19 +229,30 @@ func GetAllUsersByTenant(client *ent.Client) echo.HandlerFunc {
 		roleName := v.RoleName
 		log.Printf("Viewer info: UserID=%s, TenantID=%s, RoleName=%s", userID, tenantID, roleName)
 
-		ctx := c.Request().Context()
+		ctx := privacy.DecisionContext(c.Request().Context(), privacy.Allow)
 		var users []*ent.User
 		var err error
 
 		isSuperAdmin := roleName == "super_admin"
-		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin") // Or use a more precise matching logic
+		isTenantAdmin := strings.Contains(strings.ToLower(roleName), "tenant_admin")
 
-		if isSuperAdmin || isTenantAdmin {
-			// Super admin and tenant admin can view all users in the tenant
-			users, err = client.User.Query().
-				All(ctx)
+		if isSuperAdmin {
+			// 超级管理员能查看平台全局所有用户
+			users, err = client.User.Query().All(ctx)
+		} else if isTenantAdmin {
+			// 租户管理员：强制做租户组隔离，只能查看本租户 Group 组内的用户！
+			currUser, uErr := client.User.Query().Where(user.IDEQ(userID.String())).WithGroup().Only(ctx)
+			if uErr == nil && currUser != nil && currUser.Edges.Group != nil {
+				groupID := currUser.Edges.Group.ID
+				users, err = client.User.Query().
+					Where(user.HasGroupWith(group.IDEQ(groupID))).
+					All(ctx)
+			} else {
+				// 兜底退回：仅能查看自己
+				users, err = client.User.Query().Where(user.IDEQ(userID.String())).All(ctx)
+			}
 		} else {
-			// Regular users can only view their own information
+			// 普通用户：仅能查看自己
 			users, err = client.User.Query().
 				Where(user.IDEQ(userID.String())).
 				All(ctx)
@@ -202,7 +263,6 @@ func GetAllUsersByTenant(client *ent.Client) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error querying users from database"})
 		}
 
-		log.Printf("Users queried: %v", users)
 		return c.JSON(http.StatusOK, users)
 	}
 }

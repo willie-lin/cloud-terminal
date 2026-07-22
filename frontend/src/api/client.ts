@@ -32,10 +32,26 @@ export async function ensureCsrfToken(): Promise<string> {
   });
   if (!res.ok) throw new Error('Failed to fetch CSRF token');
 
+  // 1. Try reading from X-CSRF-Token response header
+  const headerToken = res.headers.get('X-CSRF-Token');
+  if (headerToken) {
+    csrfToken = headerToken;
+    return csrfToken;
+  }
+
+  // 2. Try reading from cookie
   const fromCookieAfter = getCsrfFromCookie();
   if (fromCookieAfter) {
     csrfToken = fromCookieAfter;
     return csrfToken;
+  }
+
+  // 3. Try reading from JSON body
+  const data = await res.json().catch(() => ({}));
+  if (data?.csrfToken && typeof data.csrfToken === 'string') {
+    const token = data.csrfToken;
+    csrfToken = token;
+    return token;
   }
 
   throw new Error('CSRF token not set after fetch');

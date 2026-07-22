@@ -40,6 +40,8 @@ type Session struct {
 	EndedAt *time.Time `json:"ended_at,omitempty"`
 	// RemoteAddress holds the value of the "remote_address" field.
 	RemoteAddress string `json:"remote_address,omitempty"`
+	// Asciinema 录像文件路径
+	RecordingPath string `json:"recording_path,omitempty"`
 	selectValues  sql.SelectValues
 }
 
@@ -48,7 +50,7 @@ func (*Session) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case session.FieldID, session.FieldSessionID, session.FieldPrincipalUrn, session.FieldResourceUrn, session.FieldEnvironmentUrn, session.FieldMode, session.FieldStatus, session.FieldRemoteAddress:
+		case session.FieldID, session.FieldSessionID, session.FieldPrincipalUrn, session.FieldResourceUrn, session.FieldEnvironmentUrn, session.FieldMode, session.FieldStatus, session.FieldRemoteAddress, session.FieldRecordingPath:
 			values[i] = new(sql.NullString)
 		case session.FieldCreatedAt, session.FieldUpdatedAt, session.FieldStartedAt, session.FieldEndedAt:
 			values[i] = new(sql.NullTime)
@@ -140,6 +142,12 @@ func (_m *Session) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.RemoteAddress = value.String
 			}
+		case session.FieldRecordingPath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field recording_path", values[i])
+			} else if value.Valid {
+				_m.RecordingPath = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -210,6 +218,9 @@ func (_m *Session) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("remote_address=")
 	builder.WriteString(_m.RemoteAddress)
+	builder.WriteString(", ")
+	builder.WriteString("recording_path=")
+	builder.WriteString(_m.RecordingPath)
 	builder.WriteByte(')')
 	return builder.String()
 }

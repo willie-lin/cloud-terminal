@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './stores/useAuthStore';
 import { useResourceStore } from './stores/useResourceStore';
 import { useApprovalStore } from './stores/useApprovalStore';
 import { useLanguageStore } from './stores/useLanguageStore';
 import { Navigation } from './components/Navigation';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { TaskRequestModal } from './components/TaskRequestModal';
 import { UserPortalPage } from './pages/UserPortalPage';
 import { AdminApprovalPage } from './pages/AdminApprovalPage';
 import { ResourceManagerPage } from './pages/ResourceManagerPage';
 import { TenantManagementPage } from './pages/TenantManagementPage';
 import { UserManagementPage } from './pages/UserManagementPage';
+import { ForbiddenPage } from './pages/ForbiddenPage';
 import { TerminalPage } from './pages/TerminalPage';
 import type { AccessPolicyToken } from './types';
-import { ShieldCheck, ArrowRight, Lock, Mail, KeyRound } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Mail, KeyRound } from 'lucide-react';
 import './App.css';
 
 export function App() {
@@ -21,19 +24,32 @@ export function App() {
   const { fetchTasks } = useApprovalStore();
   const { t } = useLanguageStore();
 
-  const [activeTab, setActiveTab] = useState<'access' | 'approvals' | 'resources' | 'tenants' | 'users'>('access');
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [registerMode, setRegisterMode] = useState(false);
-  const [tenantName, setTenantName] = useState('');
+
+  const isSuperAdmin = Boolean(user?.isSuperAdmin || user?.roleName === 'super_admin' || user?.role === 'super_admin');
+  const isTenantAdmin = Boolean(user?.isTenantAdmin || user?.roleName === 'tenant_admin' || user?.roleName?.includes('tenant_admin'));
+
+  const getActiveTabFromPath = (path: string): 'access' | 'approvals' | 'resources' | 'tenants' | 'users' => {
+    if (path.startsWith('/tenants')) return 'tenants';
+    if (path.startsWith('/users')) return 'users';
+    if (path.startsWith('/resources')) return 'resources';
+    if (path.startsWith('/approvals')) return 'approvals';
+    return 'access';
+  };
+
+  const activeTab = getActiveTabFromPath(location.pathname);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       fetchResources();
       fetchTasks();
     }
-  }, [isAuthenticated, fetchResources, fetchTasks]);
+  }, [isAuthenticated, user, fetchResources, fetchTasks]);
 
   const handleConnect = (token: AccessPolicyToken) => {
     startSession(token);
@@ -43,10 +59,18 @@ export function App() {
     e.preventDefault();
     if (!email || !password) return;
     try {
-      if (registerMode) {
-        await useAuthStore.getState().register({ email, password, tenant_name: tenantName || email.split('@')[0] });
+      await login({ email, password });
+      // 登录成功后根据角色进行路由跳转
+      const loggedUser = useAuthStore.getState().user;
+      const superAdmin = Boolean(loggedUser?.isSuperAdmin || loggedUser?.roleName === 'super_admin' || loggedUser?.role === 'super_admin');
+      const tenantAdmin = Boolean(loggedUser?.isTenantAdmin || loggedUser?.roleName === 'tenant_admin' || loggedUser?.roleName?.includes('tenant_admin'));
+      
+      if (superAdmin) {
+        navigate('/tenants');
+      } else if (tenantAdmin) {
+        navigate('/users');
       } else {
-        await login({ email, password });
+        navigate('/access');
       }
     } catch {
       // error is stored in useAuthStore.error
@@ -77,10 +101,10 @@ export function App() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">邮箱</label>
+              <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">邮箱 / 用户名</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="email"
+                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com 或 用户名" autoComplete="username"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/[0.08] text-zinc-900 dark:text-white text-sm focus:outline-none focus:border-zinc-400 transition-all" />
               </div>
             </div>
@@ -92,28 +116,29 @@ export function App() {
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/[0.08] text-zinc-900 dark:text-white text-sm focus:outline-none focus:border-zinc-400 transition-all" />
               </div>
             </div>
-            {registerMode && (
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">公司名称</label>
-                <input type="text" value={tenantName} onChange={(e) => setTenantName(e.target.value)} placeholder="your-company"
-                  className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/[0.08] text-zinc-900 dark:text-white text-sm focus:outline-none focus:border-zinc-400 transition-all" />
+            <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] space-y-2 text-xs">
+              <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400 font-semibold">
+                <span>初始超级管理员账号</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('superadmin@example.com');
+                    setPassword('67727a41b5b1d4dfca981e4045b1bb2f1e7fef0e3e8825c028949d186cad4c00');
+                  }}
+                  className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-mono font-bold"
+                >
+                  一键填入超管凭证
+                </button>
               </div>
-            )}
-            <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] flex items-start space-x-3 text-xs text-zinc-500 dark:text-zinc-400">
-              <Lock className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
-              <span>{t('loginSecurityNotice')}</span>
+              <div className="text-[11px] font-mono text-zinc-500 dark:text-zinc-500 break-all leading-tight">
+                账号: superadmin@example.com
+              </div>
             </div>
             <button type="submit" disabled={!email || !password || isLoading}
               className="w-full py-2.5 px-5 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-black font-semibold text-sm hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2">
-              <span>{isLoading ? '登录中...' : (registerMode ? '注册' : t('enterControlPlane'))}</span>
+              <span>{isLoading ? '登录中...' : t('enterControlPlane')}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
-            <div className="text-center">
-              <button type="button" onClick={() => setRegisterMode(!registerMode)}
-                className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                {registerMode ? '已有账号？点此登录' : '没有账号？点此注册'}
-              </button>
-            </div>
           </form>
         </div>
       </div>
@@ -130,13 +155,40 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 flex flex-col font-sans">
-      <Navigation activeTab={activeTab} onSelectTab={setActiveTab} onOpenRequestModal={() => setIsModalOpen(true)} />
+      <Navigation activeTab={activeTab} onSelectTab={(tab) => navigate(`/${tab}`)} onOpenRequestModal={() => setIsModalOpen(true)} />
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-6 pb-20">
-        {activeTab === 'access' && <UserPortalPage onConnectToken={handleConnect} onOpenRequestModal={() => setIsModalOpen(true)} />}
-        {activeTab === 'approvals' && user?.role === 'admin' && <AdminApprovalPage />}
-        {activeTab === 'resources' && user?.role === 'admin' && <ResourceManagerPage />}
-        {activeTab === 'tenants' && user?.roleName === 'super_admin' && <TenantManagementPage />}
-        {activeTab === 'users' && (user?.roleName === 'super_admin' || user?.roleName?.includes('tenant_admin')) && <UserManagementPage />}
+        <Routes>
+          <Route path="/" element={
+            <Navigate to={isSuperAdmin ? '/tenants' : (isTenantAdmin ? '/users' : '/access')} replace />
+          } />
+          <Route path="/access" element={
+            <ProtectedRoute>
+              <UserPortalPage onConnectToken={handleConnect} onOpenRequestModal={() => setIsModalOpen(true)} />
+            </ProtectedRoute>
+          } />
+          <Route path="/approvals" element={
+            <ProtectedRoute requireAdminOrAbove>
+              <AdminApprovalPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/resources" element={
+            <ProtectedRoute requireAdminOrAbove>
+              <ResourceManagerPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/tenants" element={
+            <ProtectedRoute requireSuperAdmin>
+              <TenantManagementPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/users" element={
+            <ProtectedRoute requireTenantAdmin>
+              <UserManagementPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/403" element={<ForbiddenPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
       <TaskRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <footer className="border-t border-zinc-200 dark:border-white/[0.06] py-6 px-6 text-center text-xs text-zinc-500 bg-white dark:bg-[#0e0f14]">
@@ -146,7 +198,6 @@ export function App() {
             <span>Cloud Terminal (MVP) • Secure Gateway Engine</span>
           </div>
           <div className="flex items-center space-x-6 font-mono text-[11px]">
-            <span>Task → Approval → Policy → Resource → Session</span>
             <span className="text-emerald-500 font-semibold">● Operational</span>
           </div>
         </div>

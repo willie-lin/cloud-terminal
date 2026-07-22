@@ -11,19 +11,19 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      // Proxy API requests to the Go backend (port 443)
+      // Proxy API requests to the Go backend (port 8443)
       '/api': {
-        target: 'https://localhost:8443',
+        target: 'http://localhost:8443',
         changeOrigin: true,
         secure: false,
       },
       '/admin': {
-        target: 'https://localhost:8443',
+        target: 'http://localhost:8443',
         changeOrigin: true,
         secure: false,
       },
       '/webhook': {
-        target: 'https://localhost:8443',
+        target: 'http://localhost:8443',
         changeOrigin: true,
         secure: false,
       },

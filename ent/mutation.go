@@ -7750,6 +7750,7 @@ type SessionMutation struct {
 	started_at      *time.Time
 	ended_at        *time.Time
 	remote_address  *string
+	recording_path  *string
 	clearedFields   map[string]struct{}
 	done            bool
 	oldValue        func(context.Context) (*Session, error)
@@ -8308,6 +8309,55 @@ func (m *SessionMutation) ResetRemoteAddress() {
 	delete(m.clearedFields, session.FieldRemoteAddress)
 }
 
+// SetRecordingPath sets the "recording_path" field.
+func (m *SessionMutation) SetRecordingPath(s string) {
+	m.recording_path = &s
+}
+
+// RecordingPath returns the value of the "recording_path" field in the mutation.
+func (m *SessionMutation) RecordingPath() (r string, exists bool) {
+	v := m.recording_path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRecordingPath returns the old "recording_path" field's value of the Session entity.
+// If the Session object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SessionMutation) OldRecordingPath(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRecordingPath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRecordingPath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRecordingPath: %w", err)
+	}
+	return oldValue.RecordingPath, nil
+}
+
+// ClearRecordingPath clears the value of the "recording_path" field.
+func (m *SessionMutation) ClearRecordingPath() {
+	m.recording_path = nil
+	m.clearedFields[session.FieldRecordingPath] = struct{}{}
+}
+
+// RecordingPathCleared returns if the "recording_path" field was cleared in this mutation.
+func (m *SessionMutation) RecordingPathCleared() bool {
+	_, ok := m.clearedFields[session.FieldRecordingPath]
+	return ok
+}
+
+// ResetRecordingPath resets all changes to the "recording_path" field.
+func (m *SessionMutation) ResetRecordingPath() {
+	m.recording_path = nil
+	delete(m.clearedFields, session.FieldRecordingPath)
+}
+
 // Where appends a list predicates to the SessionMutation builder.
 func (m *SessionMutation) Where(ps ...predicate.Session) {
 	m.predicates = append(m.predicates, ps...)
@@ -8342,7 +8392,7 @@ func (m *SessionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SessionMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.created_at != nil {
 		fields = append(fields, session.FieldCreatedAt)
 	}
@@ -8376,6 +8426,9 @@ func (m *SessionMutation) Fields() []string {
 	if m.remote_address != nil {
 		fields = append(fields, session.FieldRemoteAddress)
 	}
+	if m.recording_path != nil {
+		fields = append(fields, session.FieldRecordingPath)
+	}
 	return fields
 }
 
@@ -8406,6 +8459,8 @@ func (m *SessionMutation) Field(name string) (ent.Value, bool) {
 		return m.EndedAt()
 	case session.FieldRemoteAddress:
 		return m.RemoteAddress()
+	case session.FieldRecordingPath:
+		return m.RecordingPath()
 	}
 	return nil, false
 }
@@ -8437,6 +8492,8 @@ func (m *SessionMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldEndedAt(ctx)
 	case session.FieldRemoteAddress:
 		return m.OldRemoteAddress(ctx)
+	case session.FieldRecordingPath:
+		return m.OldRecordingPath(ctx)
 	}
 	return nil, fmt.Errorf("unknown Session field %s", name)
 }
@@ -8523,6 +8580,13 @@ func (m *SessionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRemoteAddress(v)
 		return nil
+	case session.FieldRecordingPath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRecordingPath(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Session field %s", name)
 }
@@ -8565,6 +8629,9 @@ func (m *SessionMutation) ClearedFields() []string {
 	if m.FieldCleared(session.FieldRemoteAddress) {
 		fields = append(fields, session.FieldRemoteAddress)
 	}
+	if m.FieldCleared(session.FieldRecordingPath) {
+		fields = append(fields, session.FieldRecordingPath)
+	}
 	return fields
 }
 
@@ -8590,6 +8657,9 @@ func (m *SessionMutation) ClearField(name string) error {
 		return nil
 	case session.FieldRemoteAddress:
 		m.ClearRemoteAddress()
+		return nil
+	case session.FieldRecordingPath:
+		m.ClearRecordingPath()
 		return nil
 	}
 	return fmt.Errorf("unknown Session nullable field %s", name)
@@ -8631,6 +8701,9 @@ func (m *SessionMutation) ResetField(name string) error {
 		return nil
 	case session.FieldRemoteAddress:
 		m.ResetRemoteAddress()
+		return nil
+	case session.FieldRecordingPath:
+		m.ResetRecordingPath()
 		return nil
 	}
 	return fmt.Errorf("unknown Session field %s", name)

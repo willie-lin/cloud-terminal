@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -61,7 +62,10 @@ func Middleware(auditor Auditor) echo.MiddlewareFunc {
 				errMsg = err.Error()
 			}
 
-			statusCode := c.Response().(*echo.Response).Status
+			statusCode := http.StatusOK
+			if sr, ok := c.Response().(interface{ Status() int }); ok {
+				statusCode = sr.Status()
+			}
 
 			// Log the request
 			details := map[string]interface{}{
